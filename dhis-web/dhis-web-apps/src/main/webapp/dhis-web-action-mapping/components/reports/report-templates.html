@@ -1,0 +1,90 @@
+<tabset justified="true">
+    <tab heading="{{'who_does_what'| translate}}" class="bold">               
+        <div class="vertical-spacing col-sm-12">
+            <table class="table table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>
+                            {{'action' | translate}}
+                        </th>
+                        <th ng-repeat="col in model.whoDoesWhatCols">
+                            {{col.name}}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="de in model.reportDataElements">
+                        <td>
+                            {{de.displayName}}                         
+                        </td>
+                        <td ng-repeat="col in model.whoDoesWhatCols">
+                            {{getStakeholders(col, de.id)}}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </tab>
+    <tab heading="{{'geo_coverage_per_sh'| translate}}" class="bold">                
+        <div class="vertical-spacing col-sm-12">
+            <div class="row">
+                <form class="form-horizontal col-sm-6" role="form" name="geoCoverageForm" novalidate>                
+                    <div class="form-group">
+                        <label class="control-label col-sm-3 remove-left-padding">
+                            {{'stakeholder_role'| translate}}<span class="required">*</span>
+                        </label>                        
+                        <div class="col-sm-9">
+                            <select ng-model="model.selectedRole" 
+                                    ng-required="true"
+                                    name="selectedRole"
+                                    class="form-control"
+                                    ng-options="role as role.name for role in model.roleDataElements" >
+                                <option value="">{{'please_select' | translate}}</option>
+                            </select>
+                            <div ng-messages="geoCoverageForm.selectedRole.$error" ng-if="interacted(geoCoverageForm.selectedRole)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                        
+                            </div>
+                        </div>
+                    </div>                
+                </form>
+            </div>
+            
+            <div class="row">
+                <table class="table table-bordered table-condensed col-sm-12" ng-if="model.selectedRole && model.selectedRole.id && selectedOrgUnit.l < 3">
+                    <thead>
+                        <tr>
+                            <th>
+                                {{'action' | translate}}
+                            </th>
+                            <th ng-repeat="col in model.availableRoles[model.selectedRole.id]">
+                                {{col}}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="de in model.reportDataElements">
+                            <td>
+                                {{de.displayName}}                         
+                            </td>
+                            <td ng-repeat="col in model.availableRoles[model.selectedRole.id]">
+                                {{getValuePerRole(col, de.id)}}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="alert alert-warning remove-left-padding" ng-if="model.selectedRole && model.selectedRole.id && selectedOrgUnit.l >= 3">
+                        {{'please_select_higher_level' | translate}}
+                    </div>
+                </div>                
+            </div>
+        </div>
+    </tab>
+    <tab heading="{{'pop_coverage_per_sh'| translate}}" class="bold">                
+        <div class="vertical-spacing col-sm-12">
+            Report population coverage per stakeholder is under construction.
+        </div>
+    </tab>    
+</tabset>

@@ -1,0 +1,165 @@
+<div class="vertical-spacing" ng-if="model.selectedDataSet && model.selectedPeriod && model.categoryOptionsReady">
+
+    <div class="add-default-right-padding">        
+        <div class="col-sm-12 selectionArea" ng-if="model.selectedProgram">
+            <span class="bold">{{'role_info_1'| translate}}</span>
+            <i class="fa fa-question-circle superscript" tooltip="{{'stakeholder_description'| translate}}" tooltip-class="custom-tooltip-class"></i>
+            <span>{{'role_info_2'| translate}}</span>
+            <table class="table table-bordered table-condensed small-vertical-spacing table-bordered-selection-area">
+                <thead>
+                    <tr>
+                        <td ng-repeat="prStDe in model.selectedProgram.programStages[0].programStageDataElements| orderBy: 'sortOrder'">
+                            <i class="fa fa-question-circle superscript" tooltip="{{prStDe.dataElement.description}}" tooltip-class="custom-tooltip-class"></i>
+                            {{prStDe.dataElement.displayName}}
+                        </td>
+                    </tr>
+                </thead>                            
+                <tr>
+                    <td ng-repeat="prStDe in model.selectedProgram.programStages[0].programStageDataElements| orderBy: 'sortOrder'" ng-init="optionId = prStDe.dataElement.code === 'Responsible Ministry' ? prStDe.dataElement.code : 'Funder'">                            
+                        <ui-select multiple 
+                                   ng-model="model.stakeholderRoles[commonOrgUnit][commonOptionCombo][prStDe.dataElement.id]" 
+                                   ng-disabled="model.rolesAreDifferent && !model.overrideRoles"
+                                   on-select="saveRole(prStDe.dataElement.id)"
+                                   on-remove="saveRole(prStDe.dataElement.id)"
+                                   theme="bootstrap">
+                            <ui-select-match placeholder="{{'select_or_search'| translate}}">{{$item}}</ui-select-match>
+                            <ui-select-choices repeat="item in model.optionSets[optionId].options | filter: $select.search | limitTo:maxOptionSize">
+                                <div ng-bind-html="item | highlight: $select.search"></div>
+                            </ui-select-choices>
+                        </ui-select>                        
+                    </td>
+                </tr>
+            </table>
+            
+            <span>{{'role_info_3'|translate}}</span>
+            <span class="anchor-color"><i class="fa fa-users fa-2x"></i></span>
+            <span>{{'role_info_4'|translate}}</span>
+            <div ng-if="model.rolesAreDifferent">
+                <div class="vertical-spacing">
+                    {{'role_override_info'|translate}}
+                    <form>                    
+                        <input type="checkbox"
+                            ng-model="model.overrideRoles"
+                            name="roleOverride"
+                            ng-change="overrideRole()" />
+                        <label for="roleOverride" class="horizontal-spacing">
+                            {{'override_roles' | translate}}
+                        </label>
+                    </form>
+                </div>                
+            </div>
+        </div>
+    </div>
+
+    <div ng-if="model.allowMultiOrgUnitEntry && model.selectedDataSet.entryMode === 'Multiple Entry'">
+        
+        <div class="remove-left-padding">
+            <div class="col-sm-6 ">
+                <div ng-repeat="dataElement in model.selectedDataSet.dataElements" ng-if="dataElement.code !== 'Catalyst' && dataElement.code !== 'Funder' && dataElement.code !== 'Responsible Ministry'">
+                    <table class="table table-bordered table-condensed vertical-spacing">
+                        <tr>
+                            <th class="active pull-center" colspan="{{model.selectedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos.length + 1}}">
+                                {{dataElement.displayName}}
+                            </th>
+                        </tr>
+                        <tr>
+                            <th class="active">
+                                {{'org_unit'| translate}}
+                            </th>
+                            <th class="active pull-center" ng-repeat="oco in model.selectedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos">
+                                {{oco.displayName !== 'default' ? oco.displayName : 'value' | translate }}
+                            </th>
+                        </tr>
+                        <tr ng-repeat="ou in selectedOrgUnit.c" ng-if="model.selectedDataSet.organisationUnits[ou]">
+                            <td>
+                                <button type="button"
+                                        title="{{'edit_stakeholder_roles'| translate}}"
+                                        class="btn btn-primary horizontal-spacing"
+                                        ng-click="showEditStakeholderRoles(ou, model.selectedDataSet.organisationUnits[ou])">
+                                    <i class="fa fa-users"></i>        
+                                </button>
+                                <button type="button"
+                                        title="{{'save_completeness'| translate}}"
+                                        class="btn btn-success horizontal-spacing"
+                                        ng-click="saveCompletness(ou, false)" 
+                                        ng-if="!model.dataSetCompletness[ou]">
+                                    <i class="fa fa-check"></i>        
+                                </button>
+                                <button type="button"
+                                        title="{{'delete_completeness'| translate}}"
+                                        class="btn btn-danger horizontal-spacing"
+                                        ng-click="deleteCompletness(ou, false)" 
+                                        ng-if="model.dataSetCompletness[ou]">
+                                    <i class="fa fa-times"></i>        
+                                </button>
+                                {{model.selectedDataSet.organisationUnits[ou]}}                                
+                            </td>
+                            <td ng-repeat="oco in model.selectedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos">
+                                <input type="text" 
+                                       class="form-control pull-center" 
+                                       ng-class="getInputNotifcationClass(ou, dataElement.id, oco.id)"
+                                       ng-model="model.dataValues[ou][dataElement.id][oco.id].value"
+                                       ng-dblclick="getAuditInfo(dataElement, ou, oco, model.dataValues[ou][dataElement.id][oco.id].value, model.dataValues[ou][dataElement.id][oco.id].comment)"
+                                       d2-blur="saveDataValue(ou, dataElement.id, oco.id)">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="clear">
+            <div class="col-sm-6 selectionArea">
+                <button type="button" 
+                        class="btn btn-primary" 
+                        ng-disabled="model.dataSetCompleted" 
+                        ng-click="saveCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
+                    {{'save_completeness'| translate}}
+                </button>
+                <button type="button" 
+                        class="btn btn-danger small-horizontal-spacing" 
+                        ng-disabled="!model.dataSetCompleted" 
+                        ng-click="deleteCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
+                    {{'delete_completeness'| translate}}
+                </button>
+                <!--<button type="button" 
+                        class="btn btn-success small-horizontal-spacing" 
+                        ng-click="runValidation()">
+                    {{'run_validation'| translate}}
+                </button>-->
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row" ng-if="!model.allowMultiOrgUnitEntry || model.selectedDataSet.entryMode === 'Single Entry'">
+        <div class="col-sm-6 ">
+            <div ng-repeat="dataElement in model.selectedDataSet.dataElements" ng-if="dataElement.code !== 'Catalyst' && dataElement.code !== 'Funder' && dataElement.code !== 'Responsible Ministry'">
+                <table class="table table-bordered table-condensed">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="active pull-center" ng-repeat="oco in model.selectedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos">
+                                {{oco.displayName}}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="de in model.selectedDataSet.dataElements">
+                            <td>
+                                {{de.displayName}}
+                            </td>
+                            <td ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
+                                <input type="text" 
+                                       class="form-control pull-center" 
+                                       ng-model="model.dataValues[selectedOrgUnit.id][de.id][oco.id].value"
+                                       d2-blur="saveDataValue(selectedOrgUnit.id, dataElement.id, oco.id)">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
