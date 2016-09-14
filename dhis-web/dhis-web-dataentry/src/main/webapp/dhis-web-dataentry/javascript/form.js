@@ -2974,7 +2974,7 @@ dhis2.de.setOptionNameInField = function( fieldId, value )
 				if ( option && option.code == value.val ) {
           option.id = option.code;
           option.text = option.name;
-          $( fieldId ).select2("val", option.text );
+          $( fieldId ).val( option.id ).change();
 					return false;
 				}
 			} );

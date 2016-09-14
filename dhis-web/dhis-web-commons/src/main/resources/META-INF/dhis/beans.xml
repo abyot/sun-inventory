@@ -25,7 +25,8 @@
         <value>dhis-web-visualizer</value>
         <value>dhis-web-mapping</value>
         <value>dhis-web-dataentry</value>
-        <value>dhis-web-action-mapping</value>
+        <value>dhis-web-action-inventory</value>
+        <value>dhis-web-sun-survey</value>
         <value>dhis-web-maintenance</value>        
         <value>dhis-web-maintenance-dataset</value>
         <value>dhis-web-maintenance-organisationunit</value>

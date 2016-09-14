@@ -12,7 +12,13 @@
         </action>
     </package>
     
-    <package name="dhis-web-action-mapping" extends="dhis-web-commons" namespace="/dhis-web-action-mapping">
+    <package name="dhis-web-sun-survey" extends="dhis-web-commons" namespace="/dhis-web-sun-survey">
+        <action name="index" class="org.hisp.dhis.commons.action.NoAction">
+            <result name="success" type="redirect">index.html</result>
+        </action>        
+    </package>
+    
+    <package name="dhis-web-action-inventory" extends="dhis-web-commons" namespace="/dhis-web-action-inventory">
         <action name="index" class="org.hisp.dhis.commons.action.NoAction">
             <result name="success" type="redirect">index.html</result>
         </action>        
