@@ -19,11 +19,9 @@ sunSurvey.controller('DataEntryHistoryController',
                 attributeCategoryOptions,
                 attributeOptionCombo,
                 optionCombo,
-                currentEvent,
                 program,
                 DataValueService,
-                DataValueAuditService,
-                EventValueAuditService) {    
+                DataValueAuditService) {    
     $scope.commentSaveStarted = false;
     $scope.dataElement = dataElement;
     $scope.program = program;
@@ -34,9 +32,15 @@ sunSurvey.controller('DataEntryHistoryController',
     $scope.historyUrl += '&pe=' + period.id;
     $scope.historyUrl += '&cp=' + attributeOptionCombo;
     
-    var dataValueAudit = {de: dataElement.id, pe: period.id, ou: orgUnitId, co: optionCombo.id, cc: attributeOptionCombo};
-    $scope.dataValue = {de: dataElement.id, pe: period.id, ou: orgUnitId, co: optionCombo.id, cc: attributeCategoryCombo.id, cp: attributeCategoryOptions, value: value, comment: comment};
+    var dataValueAudit = {de: dataElement.id, pe: period.id, ou: orgUnitId, co: optionCombo.id};    
+    $scope.dataValue = {de: dataElement.id, pe: period.id, ou: orgUnitId, co: optionCombo.id, value: value, comment: comment};    
     
+    if( attributeCategoryCombo && !attributeCategoryCombo.isDefault ){
+        dataValueAudit.cc = $scope.model.selectedAttributeCategoryCombo.id;        
+        $scope.dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
+        $scope.dataValue.cp = attributeCategoryOptions;
+    }
+        
     $scope.auditColumns = [{id: 'created', name: $translate.instant('created')},
                            {id: 'modifiedBy', name: $translate.instant('modified_by')},
                            {id: 'value', name: $translate.instant('value')},
@@ -46,14 +50,7 @@ sunSurvey.controller('DataEntryHistoryController',
     DataValueAuditService.getDataValueAudit( dataValueAudit ).then(function( response ){
         $scope.dataValueAudits = response && response.dataValueAudits ? response.dataValueAudits : [];
         $scope.dataValueAudits = $filter('filter')($scope.dataValueAudits, {period: {id: period.id}});
-    });
-    
-    if( currentEvent && currentEvent[optionCombo.id] && currentEvent[[optionCombo.id]].event ){
-        $scope.eventValueAudits = [];
-        EventValueAuditService.getEventValueAudit( currentEvent[optionCombo.id].event ).then(function( response ){
-            $scope.eventValueAudits = response && response.trackedEntityDataValueAudits ? response.trackedEntityDataValueAudits : [];
-        });
-    }    
+    });  
     
     $scope.saveComment = function(){
         $scope.commentSaveStarted = true;

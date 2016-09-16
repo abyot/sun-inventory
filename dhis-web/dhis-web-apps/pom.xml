@@ -110,16 +110,7 @@
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-cache-cleaner</outputDirectory>
                   <includes>**/*.*</includes>
-                </artifactItem>
-                <!--  Mapping entry -->
-                <!--<artifactItem>
-                  <groupId>org.hisp.dhis</groupId>
-                  <artifactId>dhis-app-mapping-entry</artifactId>
-                  <version>${apps.version}</version>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-mapping-entry</outputDirectory>
-                  <includes>**/*.*</includes>
-                </artifactItem>-->
+                </artifactItem>                
               </artifactItems>
             </configuration>
           </execution>

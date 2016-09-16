@@ -28,7 +28,7 @@ if( dhis2.sunSurvey.memoryOnly ) {
 dhis2.sunSurvey.store = new dhis2.storage.Store({
     name: 'dhis2sunSurvey',
     adapters: [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter],
-    objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos', 'programs', 'ouLevels', 'indicatorGroups']
+    objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos']
 });
 
 (function($) {
@@ -130,7 +130,6 @@ function downloadMetaData()
 
     promise = promise.then( dhis2.sunSurvey.store.open );
     promise = promise.then( getUserRoles );
-    promise = promise.then( getOrgUnitLevels );
     promise = promise.then( getSystemSetting );
     promise = promise.then( getCalendarSetting );
     
@@ -154,16 +153,6 @@ function downloadMetaData()
     promise = promise.then( filterMissingOptionSets );
     promise = promise.then( getOptionSets );
     
-    //fetch programs
-    promise = promise.then( getMetaPrograms );
-    promise = promise.then( filterMissingPrograms );
-    promise = promise.then( getPrograms );
-    
-    //fetch indicator groups
-    promise = promise.then( getMetaIndicatorGroups );
-    promise = promise.then( filterMissingIndicatorGroups );
-    promise = promise.then( getIndicatorGroups );
-    
     promise.done(function() {        
         //Enable ou selection after meta-data has downloaded
         $( "#orgUnitTree" ).removeClass( "disable-clicks" );
@@ -181,16 +170,6 @@ function getUserRoles(){
        return; 
     }    
     return dhis2.metadata.getMetaObject(null, 'USER_ROLES', '../api/me.json', 'fields=id,displayName,userCredentials[userRoles[id,authorities,dataSets]]', 'sessionStorage', dhis2.sunSurvey.store);
-}
-
-function getOrgUnitLevels()
-{
-    dhis2.sunSurvey.store.getKeys( 'ouLevels').done(function(res){
-        if(res.length > 0){
-            return;
-        }        
-        return dhis2.metadata.getMetaObjects('ouLevels', 'organisationUnitLevels', '../api/organisationUnitLevels.json', 'fields=id,displayName,level&paging=false', 'idb', dhis2.sunSurvey.store);
-    });
 }
 
 function getSystemSetting(){   
@@ -253,28 +232,4 @@ function filterMissingOptionSets( objs ){
 
 function getOptionSets( ids ){    
     return dhis2.metadata.getBatches( ids, batchSize, 'optionSets', 'optionSets', '../api/optionSets.json', 'paging=false&fields=id,name,displayName,version,attributeValues[value,attribute[id,name,code]],options[id,name,displayName,code]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
-}
-
-function getMetaPrograms(){
-    return dhis2.metadata.getMetaObjectIds('programs', '../api/programs.json', 'filter=programType:eq:WITHOUT_REGISTRATION&paging=false&fields=id,version');
-}
-
-function filterMissingPrograms( objs ){
-    return dhis2.metadata.filterMissingObjIds('programs', dhis2.sunSurvey.store, objs);
-}
-
-function getPrograms( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'programs', 'programs', '../api/programs.json', 'paging=false&fields=id,displayName,attributeValues[value,attribute[id,name,code]],categoryCombo[id],organisationUnits[id,displayName],programStages[id,displayName,programStageDataElements[*,dataElement[*,optionSet[id]]]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
-}
-
-function getMetaIndicatorGroups(){
-    return dhis2.metadata.getMetaObjectIds('indicatorGroups', '../api/indicatorGroups.json', 'paging=false&fields=id,version');
-}
-
-function filterMissingIndicatorGroups( objs ){
-    return dhis2.metadata.filterMissingObjIds('indicatorGroups', dhis2.sunSurvey.store, objs);
-}
-
-function getIndicatorGroups( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'indicatorGroups', 'indicatorGroups', '../api/indicatorGroups.json', 'paging=false&fields=id,displayName,attributeValues[value,attribute[id,name,code]],indicators[id,displayName,denominatorDescription,numeratorDescription,dimensionItem,numerator,denominator,annualized,dimensionType,indicatorType[id,displayName,factor,number]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
 }

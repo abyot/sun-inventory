@@ -10,7 +10,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     var store = new dhis2.storage.Store({
         name: "dhis2sunSurvey",
         adapters: [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter],
-        objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos', 'programs', 'ouLevels', 'indicatorGroups']
+        objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos']
     });
     return{
         currentStore: store
@@ -191,6 +191,34 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });            
             return def.promise;            
         },
+        getDataSetsByProperty: function( ou, property, value ){
+            var roles = SessionStorageService.get('USER_ROLES');
+            var userRoles = roles && roles.userCredentials && roles.userCredentials.userRoles ? roles.userCredentials.userRoles : [];
+            var def = $q.defer();
+            
+            PMTStorageService.currentStore.open().done(function(){
+                PMTStorageService.currentStore.getAll('dataSets').done(function(dss){
+                    var dataSets = [];                    
+                    angular.forEach(dss, function(ds){
+                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds.organisationUnits.hasOwnProperty( ou.id ) && ds[property] && ds[property] === value ){
+                            ds.entryMode = 'Single Entry';
+                            dataSets.push(ds);
+                        }
+                    });
+                    
+                    angular.forEach(dataSets, function(ds){                        
+                        angular.forEach(ds.dataElements, function(de){
+                            de = dhis2.metadata.processMetaDataAttribute( de );
+                        });                        
+                    });
+                    
+                    $rootScope.$apply(function(){
+                        def.resolve(dataSets);
+                    });
+                });
+            });            
+            return def.promise;            
+        },
         getTargetDataSets: function(){
             
             var roles = SessionStorageService.get('USER_ROLES');
@@ -344,7 +372,12 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     
     return {        
         saveDataValue: function( dv ){
-            var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co + '&cc='+dv.cc + '&cp='+dv.cp + '&value='+dv.value;            
+            var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co + '&value='+dv.value;            
+            
+            if( dv.cc && dv.cp ){
+                url += '&cc='+dv.cc + '&cp='+dv.cp;
+            }
+            
             if( dv.comment ){
                 url += '&comment=' + dv.comment; 
             }            
@@ -410,7 +443,14 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     
     return {        
         getDataValueAudit: function( dv ){
-            var promise = $http.get('../api/audits/dataValue.json?paging=false&de='+dv.de+'&ou='+dv.ou+'&pe='+dv.pe+'&co='+dv.co+'&cc='+dv.cc).then(function(response){
+            
+            var url = 'de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co;
+            
+            if( dv.cc ){
+                url += '&cc='+dv.cc;
+            }            
+            
+            var promise = $http.get( '../api/audits/dataValue.json?' + url ).then(function(response){
                 return response.data;
             }, function(response){
                 ActionMappingUtils.errorNotifier(response);
@@ -526,7 +566,10 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             return headers;
         },
-        getOptionComboIdFromOptionNames: function(optionComboMap, options){
+        getOptionComboIdFromOptionNames: function(optionComboMap, options, selectedAttributeCategoryCombo){
+            if( selectedAttributeCategoryCombo && selectedAttributeCategoryCombo.isDefault ){
+                return selectedAttributeCategoryCombo.categoryOptionCombos[0].id;
+            }
             
             var optionNames = [];
             angular.forEach(options, function(op){
@@ -656,6 +699,22 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });
             
             return def.promise;
+        },
+        formatDataValue: function(val, valueType){
+            if( !val ){
+                return;
+            }
+            
+            if( valueType === 'NUMBER' ){
+                val = parseFloat( val );
+            }
+            else if(valueType === 'INTEGER' ||
+                    valueType === 'INTEGER_POSITIVE' ||
+                    valueType === 'INTEGER_NEGATIVE' ||
+                    valueType === 'INTEGER_ZERO_OR_POSITIVE' ){
+                val = parseInt( val );
+            }            
+            return val;
         }
     };
 })

@@ -60,7 +60,7 @@ sunSurvey.controller('dataEntryController',
         $scope.model.selectedAttributeOptionCombo = null;
         $scope.model.selectedProgram = null;
         $scope.model.stakeholderRoles = {};
-        $scope.model.dataValues = {};
+        $scope.dataValues = {};
         $scope.model.basicAuditInfo = {};
         $scope.model.selectedEvent = {};
         $scope.model.orgUnitsWithValues = [];
@@ -113,14 +113,15 @@ sunSurvey.controller('dataEntryController',
         $scope.model.stakeholderRoles = {};
         $scope.model.orgUnitsWithValues = [];
         $scope.model.selectedEvent = {};
-        $scope.model.dataValues = {};
+        $scope.dataValues = {};
         $scope.model.valueExists = false;
-        if (angular.isObject($scope.selectedOrgUnit)) {            
-            DataSetFactory.getDataSets( $scope.selectedOrgUnit ).then(function(dataSets){                
+        if (angular.isObject($scope.selectedOrgUnit)) {
+            //get survey data sets
+            DataSetFactory.getDataSetsByProperty( $scope.selectedOrgUnit, 'dataSetDomain', 'SURVEY' ).then(function(dataSets){                
                 $scope.model.dataSets = dataSets;                
                 if($scope.model.dataElementGroupSets.length === 0){
                     $scope.model.degs = {};
-                    $scope.model.deg = {};
+                    $scope.model.deg = {};                    
                     MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                        
                         $scope.model.dataElementGroupSets = [];                        
                         angular.forEach(dataElementGroupSets, function(degs){
@@ -132,7 +133,7 @@ sunSurvey.controller('dataEntryController',
                                     }                                    
                                     angular.forEach(deg.dataElements, function(de){
                                         $scope.model.degs[de.id] = degs.name;
-                                        $scope.model.deg[de.id] = deg.name;
+                                        $scope.model.deg[de.id] = deg.name;                                        
                                     });
                                 }
                             });
@@ -149,7 +150,7 @@ sunSurvey.controller('dataEntryController',
         $scope.model.selectedPeriod = null;
         $scope.model.categoryOptionsReady = false;
         $scope.model.stakeholderRoles = {};
-        $scope.model.dataValues = {};
+        $scope.dataValues = {};
         $scope.model.selectedProgram = null;
         $scope.model.selectedEvent = {};
         $scope.model.orgUnitsWithValues = [];
@@ -160,7 +161,7 @@ sunSurvey.controller('dataEntryController',
     });
     
     $scope.$watch('model.selectedPeriod', function(){        
-        $scope.model.dataValues = {};
+        $scope.dataValues = {};
         $scope.model.valueExists = false;
         $scope.loadDataEntryForm();
     });    
@@ -180,7 +181,9 @@ sunSurvey.controller('dataEntryController',
             $scope.model.selectedCategoryCombos = {};
             $scope.model.dataElements = [];
             $scope.dataValues = {};
+            $scope.model.deValueTypes = {};
             angular.forEach($scope.model.selectedDataSet.dataElements, function(de){
+                $scope.model.deValueTypes[de.id] = de.valueType;
                 if( de.order ){
                     de.order = parseInt(de.order);
                 }
@@ -195,7 +198,7 @@ sunSurvey.controller('dataEntryController',
     };
     
     var resetParams = function(){
-        $scope.model.dataValues = {};
+        $scope.dataValues = {};
         $scope.model.roleValues = {};
         $scope.model.orgUnitsWithValues = [];
         $scope.model.selectedEvent = {};
@@ -215,18 +218,9 @@ sunSurvey.controller('dataEntryController',
                 angular.isObject( $scope.model.selectedPeriod) && $scope.model.selectedPeriod.id &&                
                 $scope.model.categoryOptionsReady ){
             
-            var dataValueSetUrl = 'dataSet=' + $scope.model.selectedDataSet.id + '&period=' + $scope.model.selectedPeriod.id;
-
-            if( $scope.model.allowMultiOrgUnitEntry && $scope.model.selectedDataSet.entryMode === 'Multiple Entry'){
-                angular.forEach($scope.selectedOrgUnit.c, function(c){
-                    dataValueSetUrl += '&orgUnit=' + c;
-                });
-            }
-            else{
-                dataValueSetUrl += '&orgUnit=' + $scope.selectedOrgUnit.id;                
-            }
+            var dataValueSetUrl = 'dataSet=' + $scope.model.selectedDataSet.id + '&period=' + $scope.model.selectedPeriod.id + '&orgUnit=' + $scope.selectedOrgUnit.id;            
             
-            $scope.model.selectedAttributeOptionCombo = ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.selectedAttributeOptionCombos, $scope.model.selectedOptions);
+            $scope.model.selectedAttributeOptionCombo = ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.selectedAttributeOptionCombos, $scope.model.selectedOptions, $scope.model.selectedAttributeCategoryCombo);
 
             //fetch data values...
             DataValueService.getDataValueSet( dataValueSetUrl ).then(function(response){
@@ -235,16 +229,13 @@ sunSurvey.controller('dataEntryController',
                     if( response.dataValues.length > 0 ){
                         $scope.model.valueExists = true;
                         angular.forEach(response.dataValues, function(dv){
-                            if(!$scope.model.dataValues[dv.orgUnit]){
-                                $scope.model.dataValues[dv.orgUnit] = {};
-                                $scope.model.dataValues[dv.orgUnit][dv.dataElement] = {};
-                                $scope.model.dataValues[dv.orgUnit][dv.dataElement][dv.categoryOptionCombo] = dv;
+                            dv.value = ActionMappingUtils.formatDataValue( dv.value, $scope.model.deValueTypes[dv.dataElement] );
+                            if(!$scope.dataValues[dv.dataElement]){
+                                $scope.dataValues[dv.dataElement] = {};
+                                $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
                             }
-                            else{
-                                if(!$scope.model.dataValues[dv.orgUnit][dv.dataElement]){
-                                    $scope.model.dataValues[dv.orgUnit][dv.dataElement] = {};
-                                }
-                                $scope.model.dataValues[dv.orgUnit][dv.dataElement][dv.categoryOptionCombo] = dv;
+                            else{                                
+                                $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
                             }                 
                         });
                         response.dataValues = orderByFilter(response.dataValues, '-created').reverse();                    
@@ -328,56 +319,65 @@ sunSurvey.controller('dataEntryController',
         }
     };
     
-    $scope.saveDataValue = function( deId, ocId, remove ){
+    $scope.saveDataValue = function( deId, ocId, dimensionAsOptionSet ){
         
-        console.log('deId:  ', deId);
-        console.log('ocId:  ', ocId);
-        console.log('remove:  ', remove);
-        console.log('dataValues:  ', $scope.dataValues);
-        /*var ouId = $scope.selectedOrgUnit.id;
-        $scope.saveStatus[ouId + '-' + deId + '-' + ocId] = {saved: false, pending: true, error: false};
+        var dataValue = {ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};        
+        var status = {saved: false, pending: true, error: false};
         
-        var dataValue = {ou: ouId,
-                    pe: $scope.model.selectedPeriod.id,
-                    de: deId,
-                    co: ocId,
-                    cc: $scope.model.selectedAttributeCategoryCombo.id,
-                    cp: ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                    value: $scope.model.dataValues[ouId][deId][ocId].value
-                };
-                
-        DataValueService.saveDataValue( dataValue ).then(function(response){
-           $scope.saveStatus[ouId + '-' + deId + '-' + ocId].saved = true;
-           $scope.saveStatus[ouId + '-' + deId + '-' + ocId].pending = false;
-           $scope.saveStatus[ouId + '-' + deId + '-' + ocId].error = false;
-        }, function(){
-            $scope.saveStatus[ouId + '-' + deId + '-' + ocId].saved = false;
-            $scope.saveStatus[ouId + '-' + deId + '-' + ocId].pending = false;
-            $scope.saveStatus[ouId + '-' + deId + '-' + ocId].error = true;
-        });*/
+        if( $scope.model.selectedAttributeCategoryCombo && !$scope.model.selectedAttributeCategoryCombo.isDefault ){
+            dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
+            dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
+        }
+        
+        if( ocId ){
+            $scope.saveStatus[deId + '-' + ocId ] = status;
+            
+            dataValue.value = $scope.dataValues[deId][ocId].value;
+            dataValue.co = ocId;            
+            
+            DataValueService.saveDataValue( dataValue ).then(function(response){
+                $scope.saveStatus[deId + '-' + ocId].saved = true;
+                $scope.saveStatus[deId + '-' + ocId].pending = false;
+                $scope.saveStatus[deId + '-' + ocId].error = false;
+            }, function(){
+                $scope.saveStatus[deId + '-' + ocId].saved = false;
+                $scope.saveStatus[deId + '-' + ocId].pending = false;
+                $scope.saveStatus[deId + '-' + ocId].error = true;
+            });
+        }
+        else{
+            $scope.saveStatus[deId + '-' + 'OPTIONSET'] = status;
+            
+            
+            
+            
+            
+        }
     };    
     
-    $scope.getInputNotifcationClass = function(ouId, deId, ocId){
+    $scope.getInputNotifcationClass = function(deId, ocId){        
 
-        var currentElement = $scope.saveStatus[ouId + '-' + deId + '-' + ocId];        
+        var currentElement = $scope.saveStatus[deId + '-' + ocId];
+        
+        var style = 'form-control';
         
         if( currentElement ){
             if(currentElement.pending){
-                return 'form-control input-pending';
+                style = 'form-control input-pending';
             }
 
             if(currentElement.saved){
-                return 'form-control input-success';
+                style = 'form-control input-success';
             }            
             else{
-                return 'form-control input-error';
+                style = 'form-control input-error';
             }
-        }    
+        }
         
-        return 'form-control';
+        return style;
     };    
     
-    $scope.getAuditInfo = function(de, ouId, oco, value, comment){        
+    $scope.getAuditInfo = function(de, oco){
         var modalInstance = $modal.open({
             templateUrl: 'components/dataentry/history.html',
             controller: 'DataEntryHistoryController',
@@ -390,16 +390,16 @@ sunSurvey.controller('dataEntryController',
                     return de;
                 },
                 value: function(){
-                    return value;
+                    return $scope.dataValues[de.id][oco.id].value;
                 },
                 comment: function(){
-                    return comment;
+                    return $scope.dataValues[de.id][oco.id].comment;
                 },
                 program: function () {
                     return $scope.model.selectedProgram;
                 },
                 orgUnitId: function(){
-                    return  ouId;
+                    return  $scope.selectedOrgUnit.id;
                 },
                 attributeCategoryCombo: function(){
                     return $scope.model.selectedAttributeCategoryCombo;
@@ -412,9 +412,6 @@ sunSurvey.controller('dataEntryController',
                 },
                 optionCombo: function(){
                     return oco;
-                },
-                currentEvent: function(){
-                    return $scope.model.selectedEvent[ouId];
                 }
             }
         });

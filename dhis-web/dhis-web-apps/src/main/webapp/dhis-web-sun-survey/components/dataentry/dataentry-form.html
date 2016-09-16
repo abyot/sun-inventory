@@ -14,18 +14,44 @@
                             <div class="col-sm-9">
                                 <div ng-if="currentDataElementGroup && currentDataElementGroup.id" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: currentDataElementGroup.name, dataElementGroupSet: dataElementGroupSet.name}">
 
-                                    <table class="table table-bordered table-condensed" ng-if="de.dimensionAsOptionSet">                                        
-                                        <tr>
+                                    <table class="table table-bordered table-condensed">
+                                        <tr ng-if="!de.dimensionAsOptionSet && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
+                                            <th>
+                                            </th>
+                                            <th ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                                {{oco.displayName}}
+                                            </th>
+                                        </tr>
+                                        <tr>                                          
                                             <td>
-                                                {{de.displayName}} - {{de.valueType}}
-                                            </td>                                            
-                                            <td>
+                                                {{de.displayName}}
+                                            </td>
+                                            <td ng-if="!de.dimensionAsOptionSet" ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                                <span ng-if="de.valueType === 'TEXT'">
+                                                    <textarea rows="3"  
+                                                           ng-model="dataValues[de.id][oco.id].value"
+                                                           class="form-control" 
+                                                           ng-class="getInputNotifcationClass(de.id, oco.id)"
+                                                           ng-dblclick="getAuditInfo(de, oco)"
+                                                           d2-blur="saveDataValue(de.id, oco.id)">
+                                                    </textarea>
+                                                </span>
+                                                <span ng-if="de.valueType === 'NUMBER'">
+                                                    <input type="number"   
+                                                           ng-model="dataValues[de.id][oco.id].value"
+                                                           class="form-control" 
+                                                           ng-class="getInputNotifcationClass(de.id, oco.id)"
+                                                           ng-dblclick="getAuditInfo(de, oco)"
+                                                           d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                </span>
+                                            </td>
+                                            <td ng-if="de.dimensionAsOptionSet">
                                                 <ui-select ng-model="dataValues[de.id]" 
-                                                           on-select="saveDataValue(de.id, oco.id)"
-                                                           on-remove="saveDataValue(de.id, oco.id, true)"
+                                                           on-select="saveDataValue(de.id, null)"
+                                                           on-remove="saveDataValue(de.id, null)"
                                                            theme="select2"                                 
                                                            style="width:100%;">
-                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, 'OPTIONSET')" placeholder="{{model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
                                                     <ui-select-choices repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
                                                         <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                                     </ui-select-choices>
@@ -34,44 +60,6 @@
                                         </tr>                                        
                                     </table>
                                     
-                                    <table class="table table-bordered table-condensed" ng-if="!de.dimensionAsOptionSet && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
-                                        <tr>
-                                            <th>
-                                            </th>
-                                            <th ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
-                                                {{oco.displayName}}
-                                            </th>                                            
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                {{de.displayName}} -  {{de.valueType}}
-                                            </td>                    
-                                            <td ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">                                                
-                                                    <input type="text"   
-                                                           ng-model="dataValues[de.id][oco.id]"
-                                                           class="form-control pull-center" 
-                                                           ng-class="getInputNotifcationClass(de.id, oco.id)"
-                                                           ng-dblclick="getAuditInfo(de, ou, oco, model.dataValues[ou][dataElement.id][oco.id].value, model.dataValues[ou][dataElement.id][oco.id].comment)"
-                                                           d2-blur="saveDataValue(de.id, oco.id)">
-                                            </td>
-                                        </tr>
-                                    </table>
-                                    
-                                    <table class="table table-bordered table-condensed" ng-if="!de.dimensionAsOptionSet && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">
-                                        <tr>
-                                            <td>
-                                                {{de.displayName}} - {{de.valueType}}
-                                            </td>                    
-                                            <td> 
-                                                <input type="text"   
-                                                       ng-model="dataValues[de.id][oco.id]"
-                                                       class="form-control pull-center" 
-                                                       ng-class="getInputNotifcationClass(de.id, oco.id)"
-                                                       ng-dblclick="getAuditInfo(de, ou, oco, model.dataValues[ou][dataElement.id][oco.id].value, model.dataValues[ou][dataElement.id][oco.id].comment)"
-                                                       d2-blur="saveDataValue(de.id, oco.id)">
-                                            </td>
-                                        </tr>
-                                    </table>
                                 </div>
                                 <div ng-if="!currentDataElementGroup || !currentDataElementGroup.id">
                                     <div class="alert alert-warning">
@@ -85,42 +73,8 @@
             </tabset>
         </div>
     </div>
-    <!--<div class="remove-left-padding">
-        <div class="col-sm-12">
-            <table class="table table-bordered table-condensed vertical-spacing">
-                <tr ng-repeat="de in model.selectedDataSet.dataElements">
-                    <td>
-                        {{de.displayName}}
-                    </td>                    
-                    <td>                        
-                        <span ng-if="!de.dimensionAsOptionSet">
-                            <input type="text"   
-                                   ng-model="dataValues[de.id][oco.id]"
-                                   class="form-control pull-center" 
-                                   ng-class="getInputNotifcationClass(de.id, oco.id)"
-                                   ng-dblclick="getAuditInfo(de, ou, oco, model.dataValues[ou][dataElement.id][oco.id].value, model.dataValues[ou][dataElement.id][oco.id].comment)"
-                                   d2-blur="saveDataValue(de.id, oco.id)">
-                        </span>
-                        <span ng-if="de.dimensionAsOptionSet">
-                            <ui-select ng-model="dataValues[de.id]" 
-                                       on-select="saveDataValue(de.id, oco.id)"
-                                       on-remove="saveDataValue(de.id, oco.id, true)"
-                                       theme="select2"                                 
-                                       style="width:100%;">
-                                <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                <ui-select-choices repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
-                                    <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
-                                </ui-select-choices>
-                            </ui-select>
-                        </span>
-                    </td>
-                </tr>                                            
-            </table>
-        </div>
-    </div>-->
 
     <hr>
-
 
     <div class="clear vertical-spacing">
         <div class="col-sm-6 selectionArea vertical-spacing">
