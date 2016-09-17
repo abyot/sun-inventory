@@ -700,21 +700,34 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             return def.promise;
         },
-        formatDataValue: function(val, valueType){
-            if( !val ){
+        formatDataValue: function(dv, de, ccs){
+            
+            if(!dv || !dv.value || !de || !de.valueType){
                 return;
+            }            
+            
+            if( de.dimensionAsOptionSet ){                
+                for( var i=0; i<ccs[de.categoryCombo.id].categoryOptionCombos.length; i++ ){
+                    if( dv.categoryOptionCombo === ccs[de.categoryCombo.id].categoryOptionCombos[i].id ){
+                        dv.value = ccs[de.categoryCombo.id].categoryOptionCombos[i];
+                    }
+                }                
+            }            
+            else{
+                if( de.valueType === 'NUMBER' ){
+                    dv.value = parseFloat( dv.value );
+                }
+                else if(de.valueType === 'INTEGER' ||
+                        de.valueType === 'INTEGER_POSITIVE' ||
+                        de.valueType === 'INTEGER_NEGATIVE' ||
+                        de.valueType === 'INTEGER_ZERO_OR_POSITIVE' ){
+                    dv.value = parseInt( dv.value );
+                }
             }
             
-            if( valueType === 'NUMBER' ){
-                val = parseFloat( val );
-            }
-            else if(valueType === 'INTEGER' ||
-                    valueType === 'INTEGER_POSITIVE' ||
-                    valueType === 'INTEGER_NEGATIVE' ||
-                    valueType === 'INTEGER_ZERO_OR_POSITIVE' ){
-                val = parseInt( val );
-            }            
-            return val;
+            //console.log('value:  ', dv.value);
+                        
+            return dv.value;
         }
     };
 })
