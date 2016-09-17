@@ -209,6 +209,7 @@ sunSurvey.controller('dataEntryController',
         $scope.model.basicAuditInfo.exists = false;
         $scope.model.rolesAreDifferent = false;
         $scope.saveStatus = {};
+        $scope.dataSetCompletness = {};
     };
     
     $scope.loadDataEntryForm = function(){
@@ -254,8 +255,7 @@ sunSurvey.controller('dataEntryController',
                 }                
                 $scope.dataValuesCopy = angular.copy($scope.dataValues);
             });
-            
-            $scope.model.dataSetCompleted = false; 
+
             CompletenessService.get( $scope.model.selectedDataSet.id, 
                                     $scope.selectedOrgUnit.id,
                                     $scope.model.selectedPeriod.startDate,
@@ -265,13 +265,9 @@ sunSurvey.controller('dataEntryController',
                         response.completeDataSetRegistrations && 
                         response.completeDataSetRegistrations.length &&
                         response.completeDataSetRegistrations.length > 0){
-                    $scope.model.dataSetCompleted = true;
                     
-                    $scope.model.dataSetCompletness = {};
                     angular.forEach(response.completeDataSetRegistrations, function(cdr){
-                        if( cdr.attributeOptionCombo.id === $scope.model.selectedAttributeOptionCombo ){
-                            $scope.model.dataSetCompletness[cdr.organisationUnit.id] = true;
-                        }                        
+                        $scope.dataSetCompletness[cdr.attributeOptionCombo.id] = true;
                     });
                 }
             });
@@ -443,31 +439,16 @@ sunSurvey.controller('dataEntryController',
         }); 
     };
         
-    function processCompletness( orgUnit, multiOrgUnit, isSave ){
-        if( multiOrgUnit ){
-            angular.forEach($scope.selectedOrgUnit.c, function(ou){                
-                if( isSave ){
-                    if( angular.isUndefined( $scope.model.dataSetCompletness) ){
-                        $scope.model.dataSetCompletness = {};
-                    }
-                    $scope.model.dataSetCompletness[ou] = true;
-                }
-                else{
-                    delete $scope.model.dataSetCompletness[ou];
-                }
-            });
+    function processCompletness( isSave ){
+        if( isSave ){
+            $scope.dataSetCompletness[$scope.model.selectedAttributeOptionCombo] = true;
         }
         else{
-            if( isSave ){
-                $scope.model.dataSetCompletness[orgUnit] = true;
-            }
-            else{
-                delete $scope.model.dataSetCompletness[orgUnit];
-            }
+            delete $scope.dataSetCompletness[$scope.model.selectedAttributeOptionCombo];
         }
     };
     
-    $scope.saveCompletness = function(orgUnit, multiOrgUnit){
+    $scope.saveCompletness = function(){
         var modalOptions = {
             closeButtonText: 'no',
             actionButtonText: 'yes',
@@ -479,18 +460,17 @@ sunSurvey.controller('dataEntryController',
             
             CompletenessService.save($scope.model.selectedDataSet.id, 
                 $scope.model.selectedPeriod.id, 
-                orgUnit,
-                $scope.model.selectedAttributeCategoryCombo.id,
-                ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                multiOrgUnit).then(function(response){
+                $scope.selectedOrgUnit.id,
+                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
+                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
+                false).then(function(response){
                     
                 var dialogOptions = {
                     headerText: 'success',
                     bodyText: 'marked_complete'
                 };
                 DialogService.showDialog({}, dialogOptions);
-                processCompletness(orgUnit, multiOrgUnit, true);
-                $scope.model.dataSetCompleted = angular.equals({}, $scope.model.dataSetCompletness);
+                processCompletness(true);
                 
             }, function(response){
                 ActionMappingUtils.errorNotifier( response );
@@ -498,7 +478,7 @@ sunSurvey.controller('dataEntryController',
         });        
     };
     
-    $scope.deleteCompletness = function( orgUnit, multiOrgUnit){
+    $scope.deleteCompletness = function(){
         var modalOptions = {
             closeButtonText: 'no',
             actionButtonText: 'yes',
@@ -510,18 +490,17 @@ sunSurvey.controller('dataEntryController',
             
             CompletenessService.delete($scope.model.selectedDataSet.id, 
                 $scope.model.selectedPeriod.id, 
-                orgUnit,
-                $scope.model.selectedAttributeCategoryCombo.id,
-                ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                multiOrgUnit).then(function(response){
+                $scope.selectedOrgUnit.id,
+                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
+                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
+                false).then(function(response){
                 
                 var dialogOptions = {
                     headerText: 'success',
                     bodyText: 'marked_not_complete'
                 };
                 DialogService.showDialog({}, dialogOptions);
-                processCompletness(orgUnit, multiOrgUnit, false);
-                $scope.model.dataSetCompleted = !angular.equals({}, $scope.model.dataSetCompletness);
+                processCompletness(false);
                 
             }, function(response){
                 ActionMappingUtils.errorNotifier( response );

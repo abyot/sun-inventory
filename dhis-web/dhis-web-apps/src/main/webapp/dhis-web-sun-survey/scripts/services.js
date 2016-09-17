@@ -421,7 +421,12 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             return promise;
         },
         save: function( ds, pe, ou, cc, cp, multiOu){
-            var promise = $http.post('../api/completeDataSetRegistrations?ds='+ ds + '&pe=' + pe + '&ou=' + ou + '&cc=' + cc + '&cp=' + cp + '&multiOu=' + multiOu ).then(function(response){
+            
+            var url = 'ds='+ ds + '&pe=' + pe + '&ou=' + ou;            
+            if( cc && cp ){
+                url += '&cc=' + cc + '&cp=' + cp;
+            }            
+            var promise = $http.post( '../api/completeDataSetRegistrations?' + url + '&multiOu=' + multiOu ).then(function(response){
                 return response.data;
             }, function(response){
                 ActionMappingUtils.errorNotifier(response);
@@ -429,7 +434,12 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             return promise;
         },
         delete: function( ds, pe, ou, cc, cp, multiOu){
-            var promise = $http.delete('../api/completeDataSetRegistrations?ds='+ ds + '&pe=' + pe + '&ou=' + ou + '&cc=' + cc + '&cp=' + cp + '&multiOu=' + multiOu ).then(function(response){
+            var url = 'ds='+ ds + '&pe=' + pe + '&ou=' + ou;            
+            if( cc && cp ){
+                url += '&cc=' + cc + '&cp=' + cp;
+            }
+            
+            var promise = $http.delete( '../api/completeDataSetRegistrations?' + url + '&multiOu=' + multiOu ).then(function(response){
                 return response.data;
             }, function(response){
                 ActionMappingUtils.errorNotifier(response);

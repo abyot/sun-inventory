@@ -83,14 +83,14 @@
         <div class="col-sm-6 selectionArea vertical-spacing">
             <button type="button" 
                     class="btn btn-primary" 
-                    ng-disabled="model.dataSetCompleted" 
-                    ng-click="saveCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
+                    ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                    ng-click="saveCompletness()">
                 {{'save_completeness'| translate}}
             </button>
             <button type="button" 
                     class="btn btn-danger small-horizontal-spacing" 
-                    ng-disabled="!model.dataSetCompleted" 
-                    ng-click="deleteCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
+                    ng-disabled="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                    ng-click="deleteCompletness()">
                 {{'delete_completeness'| translate}}
             </button>
         </div>
