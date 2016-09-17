@@ -724,8 +724,6 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                     dv.value = parseInt( dv.value );
                 }
             }
-            
-            //console.log('value:  ', dv.value);
                         
             return dv.value;
         }
