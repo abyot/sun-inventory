@@ -12,13 +12,13 @@
                                 </a>
                             </div>
                             <div class="col-sm-9">
-                                <div ng-if="currentDataElementGroup && currentDataElementGroup.id" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: currentDataElementGroup.name, dataElementGroupSet: dataElementGroupSet.name}">
+                                <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de)" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: currentDataElementGroup.name, dataElementGroupSet: dataElementGroupSet.name}">
 
                                     <table class="table table-bordered table-condensed">
                                         <tr ng-if="!de.dimensionAsOptionSet && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
-                                            <th>
+                                            <th>                                                
                                             </th>
-                                            <th ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                            <th ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
                                                 {{oco.displayName}}
                                             </th>
                                         </tr>
@@ -26,7 +26,7 @@
                                             <td>
                                                 {{de.displayName}}
                                             </td>
-                                            <td ng-if="!de.dimensionAsOptionSet" ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                            <td ng-if="!de.dimensionAsOptionSet" ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">                                                
                                                 <span ng-if="de.valueType === 'TEXT'">
                                                     <textarea rows="3"  
                                                            ng-model="dataValues[de.id][oco.id].value"
@@ -56,9 +56,6 @@
                                                         <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                                     </ui-select-choices>
                                                 </ui-select>
-                                                <!--<span>
-                                                    <i class="fa fa-eye" aria-hidden="true"></i>
-                                                </span>-->
                                             </td>
                                         </tr>                                        
                                     </table>

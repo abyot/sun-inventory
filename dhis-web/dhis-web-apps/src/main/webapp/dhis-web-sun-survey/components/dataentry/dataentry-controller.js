@@ -130,11 +130,15 @@ sunSurvey.controller('dataEntryController',
                                 if( deg.survey ){                                    
                                     if( deg.survey && $scope.model.dataElementGroupSets.indexOf( degs ) === -1 ){
                                         $scope.model.dataElementGroupSets.push( degs );
-                                    }                                    
+                                    }
+                                    
                                     angular.forEach(deg.dataElements, function(de){
+                                        de = dhis2.metadata.processMetaDataAttribute( de );
                                         $scope.model.degs[de.id] = degs.name;
                                         $scope.model.deg[de.id] = deg.name;                                        
                                     });
+                                    
+                                    deg.dataElements = orderByFilter(deg.dataElements, '-order').reverse(); 
                                 }
                             });
                         });
@@ -181,15 +185,16 @@ sunSurvey.controller('dataEntryController',
             $scope.model.selectedCategoryCombos = {};
             $scope.model.dataElements = [];
             $scope.dataValues = {};
-            $scope.model.desById = {};
+            $scope.desById = {};
             angular.forEach($scope.model.selectedDataSet.dataElements, function(de){
-                $scope.model.desById[de.id] = de;
+                $scope.desById[de.id] = de;
                 if( de.order ){
                     de.order = parseInt(de.order);
                 }
                 MetaDataFactory.get('categoryCombos', de.categoryCombo.id).then(function(coc){
                     if( coc.isDefault ){
                         $scope.model.defaultCategoryCombo = coc;
+                        $scope.model.defaultOptionCombo = coc.categoryOptionCombos[0];
                     }
                     $scope.model.selectedCategoryCombos[de.categoryCombo.id] = coc;
                 });                
@@ -212,6 +217,67 @@ sunSurvey.controller('dataEntryController',
         $scope.dataSetCompletness = {};
     };
     
+    $scope.isHidden = function( dataElement ){
+        
+        if( dataElement.skipLogicParentId && 
+                $scope.currentDataElementGroup && 
+                $scope.currentDataElementGroup.dataElements &&
+                $scope.currentDataElementGroup.dataElements[dataElement.skipLogicParentId] ){
+            
+            var index = dataElement.skipLogicParentId - 1;
+            
+            if( index >= 0 ){
+                var skipParent = $scope.currentDataElementGroup.dataElements[index];
+                
+                if( skipParent && skipParent.id && $scope.desById[skipParent.id] ) {
+                    
+                    var de = $scope.desById[skipParent.id];
+                    
+                    if( de ){
+                        var value = '';
+                        if( de.dimensionAsOptionSet ){
+                            value = $scope.dataValues[skipParent.id];
+                            
+                            if( value && value.displayName === 'Yes' ){
+                                return false;
+                            }
+                        }
+                        else{
+                            if( $scope.model.defaultCategoryCombo && de.categoryCombo &&
+                                $scope.model.defaultOptionCombo && $scope.model.defaultOptionCombo.id &&
+                                de.categoryCombo.id === $scope.model.defaultCategoryCombo.id && 
+                                $scope.dataValues[skipParent.id] ){
+                                value = $scope.dataValues[skipParent.id][$scope.model.defaultOptionCombo.id];                                
+                                if( value !== 'undefined' || value !== ''){
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }                
+            }
+            
+            // need to hide / remove exsiting value
+            if( $scope.dataValues[dataElement.id] ){                
+                if( dataElement.dimensionAsOptionSet ){                    
+                    var oldValue = angular.copy($scope.dataValues[dataElement.id]);                    
+                    delete $scope.dataValues[dataElement.id];
+                    $scope.saveDataValue(dataElement.id, oldValue.id, true);
+                }
+                else{
+                    var props = Object.getOwnPropertyNames($scope.dataValues[dataElement.id]);
+                    
+                    if( props[0] && $scope.dataValues[dataElement.id][props[0]] ){
+                        delete $scope.dataValues[dataElement.id][props[0]];
+                        $scope.saveDataValue(dataElement.id, props[0], false);
+                    }
+                }
+            }            
+            return true;
+        }        
+        return false;
+    };    
+    
     $scope.loadDataEntryForm = function(){
         
         resetParams();
@@ -231,9 +297,9 @@ sunSurvey.controller('dataEntryController',
                     if( response.dataValues.length > 0 ){
                         $scope.model.valueExists = true;
                         angular.forEach(response.dataValues, function(dv){
-                            dv.value = ActionMappingUtils.formatDataValue( dv, $scope.model.desById[dv.dataElement], $scope.model.selectedCategoryCombos );
+                            dv.value = ActionMappingUtils.formatDataValue( dv, $scope.desById[dv.dataElement], $scope.model.selectedCategoryCombos );
                             
-                            if( $scope.model.desById[dv.dataElement].dimensionAsOptionSet){
+                            if( $scope.desById[dv.dataElement].dimensionAsOptionSet){
                                 $scope.dataValues[dv.dataElement] = dv.value;
                             }
                             else{
@@ -338,7 +404,10 @@ sunSurvey.controller('dataEntryController',
         
         if( !dimensionAsOptionSet ){
             dataValue.co = ocId;
-            dataValue.value = $scope.dataValues[deId][ocId].value;
+            dataValue.value = '';            
+            if( $scope.dataValues[deId][ocId] && $scope.dataValues[deId][ocId].value ){
+                dataValue.value = $scope.dataValues[deId][ocId].value;
+            }
         }
         else{
             if( $scope.dataValues[deId] ){                
@@ -350,7 +419,7 @@ sunSurvey.controller('dataEntryController',
                     if( $scope.model.selectedAttributeCategoryCombo && !$scope.model.selectedAttributeCategoryCombo.isDefault ){
                         _dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
                         _dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
-                    }
+                    }                    
                     DataValueService.saveDataValue( _dataValue );
                 }                
             }
@@ -358,7 +427,7 @@ sunSurvey.controller('dataEntryController',
                 dataValue.co = $scope.dataValuesCopy[deId].id;
                 dataValue.value = '';
             }
-        }        
+        }
         
         DataValueService.saveDataValue( dataValue ).then(function(response){
             $scope.saveStatus[deId + '-' + ocId].saved = true;
@@ -396,7 +465,7 @@ sunSurvey.controller('dataEntryController',
         return style;
     };    
     
-    $scope.getAuditInfo = function(de, oco){
+    $scope.getAuditInfo = function(de, oco){        
         var modalInstance = $modal.open({
             templateUrl: 'components/dataentry/history.html',
             controller: 'DataEntryHistoryController',
@@ -409,10 +478,10 @@ sunSurvey.controller('dataEntryController',
                     return de;
                 },
                 value: function(){
-                    return $scope.dataValues[de.id][oco.id].value;
+                    return $scope.dataValues[de.id] && $scope.dataValues[de.id][oco.id] && $scope.dataValues[de.id][oco.id].value ? $scope.dataValues[de.id][oco.id].value : '';
                 },
                 comment: function(){
-                    return $scope.dataValues[de.id][oco.id].comment;
+                    return $scope.dataValues[de.id] && $scope.dataValues[de.id][oco.id] && $scope.dataValues[de.id][oco.id].comment ? $scope.dataValues[de.id][oco.id].comment : '';
                 },
                 program: function () {
                     return $scope.model.selectedProgram;
@@ -434,9 +503,9 @@ sunSurvey.controller('dataEntryController',
                 }
             }
         });
-        
+
         modalInstance.result.then(function () {
-        }); 
+        });
     };
         
     function processCompletness( isSave ){

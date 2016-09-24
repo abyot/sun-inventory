@@ -51,8 +51,8 @@ dhis2.metadata.processMetaDataAttribute = function( obj )
     
     if(obj.attributeValues){
         for(var i=0; i<obj.attributeValues.length; i++){
-            if(obj.attributeValues[i].value && obj.attributeValues[i].attribute && obj.attributeValues[i].attribute.code){
-                obj[obj.attributeValues[i].attribute.code] = obj.attributeValues[i].value;
+            if(obj.attributeValues[i].value && obj.attributeValues[i].attribute && obj.attributeValues[i].attribute.code){                
+                obj[obj.attributeValues[i].attribute.code] = obj.attributeValues[i].value === 'true' ? true : obj.attributeValues[i].value === 'false' ? false : obj.attributeValues[i].value;
             }
         }
     }
