@@ -1,7 +1,8 @@
 <div class="vertical-spacing" ng-if="model.selectedDataSet && model.selectedPeriod && model.categoryOptionsReady">
 
     <div class="remove-left-padding">
-        <div class="col-sm-12 ">
+        <div class="col-sm-12" equal-height-nav-tabs>
+            
             <tabset justified="true">
                 <tab heading="{{dataElementGroupSet.name}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
                     <div class="row vertical-spacing">
