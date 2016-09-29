@@ -6,6 +6,10 @@ html, body {
     overflow: auto;
 }
 
+.page p, .page td, .page th, .page input, .page select, .page textarea {
+    font-size: inherit !important;
+}
+
 .not-for-screen {
     display: none;
 }
@@ -333,7 +337,7 @@ select {
     clear: both
 }
 
-.horizontal-spacing{
+.horizontal-spacing {
     margin-right: 20px;    
 }
 
@@ -436,9 +440,7 @@ div#orgUnitTree {
 }
 
 .form-control-ui-select {
-    width:100%; 
-    height:34px; 
-    line-height:1.0; 
+    width:100%;     
     padding: 20px 6px;
     border-radius: 4px;
 }
@@ -451,6 +453,7 @@ div#orgUnitTree {
 .form-control{
     color: black;
     padding: 5px !important;
+    color: #555 !important;
 }
 
 .bold {
@@ -839,6 +842,21 @@ div#orgUnitTree {
 
 .report-table {
     border-collapse: collapse !important;
+    overflow: auto;
+}
+
+/*.main-question>thead>tr, 
+.main-question>tbody>tr {    
+    border: 1px solid red !important;
+}*/
+
+.main-question {    
+    color: #1f3bb7 !important;
+    font-weight: bold !important;
+}
+
+.sub-question {
+    /*margin-left: 20px;*/
 }
 
 .report-table>thead>tr>th, 
@@ -847,8 +865,9 @@ div#orgUnitTree {
 .report-table>thead>tr>td, 
 .report-table>tbody>tr>td, 
 .report-table>tfoot>tr>td {
-    border: 1px solid black !important;
-    color: #000;
+    border: 1px solid #ddd;
+    padding: 0 10px;
+    font-weight: bold;
 }
 
 .empty-data-row {

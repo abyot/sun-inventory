@@ -1,0 +1,107 @@
+2016-09-26 22:14:48,815 - Log4JLogChute initialized using file 'velocity.log'
+2016-09-26 22:14:48,815 - Initializing Velocity, Calling init()...
+2016-09-26 22:14:48,815 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2016-09-26 22:14:48,815 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2016-09-26 22:14:48,815 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2016-09-26 22:14:48,815 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2016-09-26 22:14:48,815 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2016-09-26 22:14:48,815 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2016-09-26 22:14:48,817 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2016-09-26 22:14:48,817 - Do unicode file recognition:  false
+2016-09-26 22:14:48,817 - FileResourceLoader : adding path 'src/main/webapp'
+2016-09-26 22:14:48,817 - FileResourceLoader : adding path '../dhis-web-commons-resources/src/main/webapp'
+2016-09-26 22:14:48,817 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2016-09-26 22:14:48,818 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2016-09-26 22:14:48,820 - Loaded User Directive: org.apache.struts2.views.velocity.components.ActionDirective
+2016-09-26 22:14:48,821 - Loaded User Directive: org.apache.struts2.views.velocity.components.BeanDirective
+2016-09-26 22:14:48,822 - Loaded User Directive: org.apache.struts2.views.velocity.components.CheckBoxDirective
+2016-09-26 22:14:48,823 - Loaded User Directive: org.apache.struts2.views.velocity.components.CheckBoxListDirective
+2016-09-26 22:14:48,824 - Loaded User Directive: org.apache.struts2.views.velocity.components.ComboBoxDirective
+2016-09-26 22:14:48,825 - Loaded User Directive: org.apache.struts2.views.velocity.components.ComponentDirective
+2016-09-26 22:14:48,826 - Loaded User Directive: org.apache.struts2.views.velocity.components.DateDirective
+2016-09-26 22:14:48,826 - Loaded User Directive: org.apache.struts2.views.velocity.components.DivDirective
+2016-09-26 22:14:48,829 - Loaded User Directive: org.apache.struts2.views.velocity.components.DoubleSelectDirective
+2016-09-26 22:14:48,830 - Loaded User Directive: org.apache.struts2.views.velocity.components.FileDirective
+2016-09-26 22:14:48,831 - Loaded User Directive: org.apache.struts2.views.velocity.components.FormDirective
+2016-09-26 22:14:48,831 - Loaded User Directive: org.apache.struts2.views.velocity.components.HeadDirective
+2016-09-26 22:14:48,831 - Loaded User Directive: org.apache.struts2.views.velocity.components.HiddenDirective
+2016-09-26 22:14:48,832 - Loaded User Directive: org.apache.struts2.views.velocity.components.AnchorDirective
+2016-09-26 22:14:48,833 - Loaded User Directive: org.apache.struts2.views.velocity.components.I18nDirective
+2016-09-26 22:14:48,834 - Loaded User Directive: org.apache.struts2.views.velocity.components.IncludeDirective
+2016-09-26 22:14:48,834 - Loaded User Directive: org.apache.struts2.views.velocity.components.LabelDirective
+2016-09-26 22:14:48,835 - Loaded User Directive: org.apache.struts2.views.velocity.components.ParamDirective
+2016-09-26 22:14:48,835 - Loaded User Directive: org.apache.struts2.views.velocity.components.PasswordDirective
+2016-09-26 22:14:48,835 - Loaded User Directive: org.apache.struts2.views.velocity.components.PushDirective
+2016-09-26 22:14:48,836 - Loaded User Directive: org.apache.struts2.views.velocity.components.PropertyDirective
+2016-09-26 22:14:48,836 - Loaded User Directive: org.apache.struts2.views.velocity.components.RadioDirective
+2016-09-26 22:14:48,837 - Loaded User Directive: org.apache.struts2.views.velocity.components.SelectDirective
+2016-09-26 22:14:48,837 - Loaded User Directive: org.apache.struts2.views.velocity.components.SetDirective
+2016-09-26 22:14:48,838 - Loaded User Directive: org.apache.struts2.views.velocity.components.SubmitDirective
+2016-09-26 22:14:48,839 - Loaded User Directive: org.apache.struts2.views.velocity.components.ResetDirective
+2016-09-26 22:14:48,839 - Loaded User Directive: org.apache.struts2.views.velocity.components.TextAreaDirective
+2016-09-26 22:14:48,840 - Loaded User Directive: org.apache.struts2.views.velocity.components.TextDirective
+2016-09-26 22:14:48,841 - Loaded User Directive: org.apache.struts2.views.velocity.components.TextFieldDirective
+2016-09-26 22:14:48,842 - Loaded User Directive: org.apache.struts2.views.velocity.components.TokenDirective
+2016-09-26 22:14:48,842 - Loaded User Directive: org.apache.struts2.views.velocity.components.URLDirective
+2016-09-26 22:14:48,843 - Loaded User Directive: org.apache.struts2.views.velocity.components.ActionErrorDirective
+2016-09-26 22:14:48,843 - Loaded User Directive: org.apache.struts2.views.velocity.components.ActionMessageDirective
+2016-09-26 22:14:48,844 - Loaded User Directive: org.apache.struts2.views.velocity.components.FieldErrorDirective
+2016-09-26 22:14:48,844 - Loaded User Directive: org.apache.struts2.views.velocity.components.OptionTransferSelectDirective
+2016-09-26 22:14:48,845 - Loaded User Directive: org.apache.struts2.views.velocity.components.UpDownSelectDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.ActionDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.BeanDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.CheckBoxDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.CheckBoxListDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.ComboBoxDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.ComponentDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.DateDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.DivDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.DoubleSelectDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.FileDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.FormDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.HeadDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.HiddenDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.AnchorDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.I18nDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.IncludeDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.LabelDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.ParamDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.PasswordDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.PushDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.PropertyDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.RadioDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.SelectDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.SetDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.SubmitDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.ResetDirective
+2016-09-26 22:14:48,847 - Loaded User Directive: org.apache.struts2.views.velocity.components.TextAreaDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.TextDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.TextFieldDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.TokenDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.URLDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.ActionErrorDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.ActionMessageDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.FieldErrorDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.OptionTransferSelectDirective
+2016-09-26 22:14:48,848 - Loaded User Directive: org.apache.struts2.views.velocity.components.UpDownSelectDirective
+2016-09-26 22:14:48,850 - Created '20' parsers.
+2016-09-26 22:14:48,850 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2016-09-26 22:14:48,850 - Velocimacro : Default library not found.
+2016-09-26 22:14:48,850 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2016-09-26 22:14:48,850 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2016-09-26 22:14:48,850 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2016-09-26 22:14:48,850 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2016-09-26 22:14:48,872 - ResourceManager : found /dhis-web-commons/security/login.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2016-09-26 22:14:52,928 - ResourceManager : found /dhis-web-commons/security/login.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2016-09-26 22:14:54,813 - ResourceManager : found /dhis-web-commons/security/login.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2016-09-26 22:14:55,173 - ResourceManager : found /dhis-web-commons/security/login.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2016-09-26 22:15:16,857 - ResourceManager : found /dhis-web-commons/security/login.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2016-09-26 22:15:20,481 - ResourceManager : found /dhis-web-commons/security/login.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader

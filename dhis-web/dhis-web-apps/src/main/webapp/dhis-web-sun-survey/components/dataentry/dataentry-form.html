@@ -2,9 +2,9 @@
 
     <div class="remove-left-padding">
         <div class="col-sm-12" equal-height-nav-tabs>
-            
+
             <tabset justified="true">
-                <tab heading="{{dataElementGroupSet.name}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
+                <tab heading="{{dataElementGroupSet.name}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets" ng-click="setCurrentDataElementGroupSet( dataElementGroupSet )" active="dataElementGroupSet.active">
                     <div class="row vertical-spacing">
                         <div class="col-sm-12">
                             <div class="list-group col-sm-3">
@@ -15,20 +15,20 @@
                             <div class="col-sm-9">
                                 <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de)" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: currentDataElementGroup.name, dataElementGroupSet: dataElementGroupSet.name}">
 
-                                    <table class="table table-bordered table-condensed">
-                                        <tr ng-if="!de.dimensionAsOptionSet && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
+                                    <table class="table table-bordered table-condensed" ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">
+                                        <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
                                             <th>                                                
                                             </th>
-                                            <th ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
+                                            <th ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
                                                 {{oco.displayName}}
                                             </th>
                                         </tr>
                                         <tr>                                          
-                                            <td>
+                                            <td ng-class="getMainQuestionTableStyle(de)">
                                                 {{de.displayName}}
                                             </td>
-                                            <td ng-if="!de.dimensionAsOptionSet" ng-repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">                                                
-                                                <span ng-if="de.valueType === 'TEXT'">
+                                            <td ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
+                                                <span ng-if="de.valueType === 'TEXT' || de.valueType === 'LONG_TEXT'">
                                                     <textarea rows="3"  
                                                            ng-model="dataValues[de.id][oco.id].value"
                                                            class="form-control" 
@@ -52,8 +52,20 @@
                                                            on-remove="saveDataValue(de.id, $select.selected.id, true)"
                                                            theme="select2"                                 
                                                            style="width:100%;">
-                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, $select.selected.id)" placeholder="{{model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName || $select.selected}}</ui-select-match>
-                                                    <ui-select-choices repeat="oco in model.selectedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, $select.selected.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName || $select.selected}}</ui-select-match>
+                                                    <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                                        <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
+                                            </td>
+                                            <td ng-if="de.dimensionAsMultiOptionSet">
+                                                <ui-select multiple
+                                                           ng-model="dataValues[de.id]" 
+                                                           on-select="saveDataValue(de.id, $select.selected.id, true)"
+                                                           on-remove="saveDataValue(de.id, $select.selected.id, true)"
+                                                           theme="bootstrap">
+                                                    <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass1(de.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
+                                                    <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
                                                         <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                                     </ui-select-choices>
                                                 </ui-select>
@@ -61,6 +73,44 @@
                                         </tr>                                        
                                     </table>
                                     
+                                    <table class="table table-bordered table-condensed" ng-class="getMainQuestionTableStyle(de)" ng-if="!de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">
+                                        <tr>
+                                            <td colspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories.length}}">
+                                            </td>
+                                            <td ng-class="getMainQuestionTableStyle(de)">
+                                                {{de.displayName}}
+                                            </td>
+                                        </tr>
+                                        <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
+                                            <td ng-repeat="optionName in oco.displayName.split(',')"                                                  
+                                                rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
+                                                ng-if="$index === 0 && (mainIndex % getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName) === 0)">
+                                                {{optionName}}
+                                            </td>
+                                            <td ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
+                                                {{optionName}}
+                                            </td>
+                                            <td>
+                                                <span ng-if="de.valueType === 'TEXT' || de.valueType === 'LONG_TEXT'">
+                                                    <textarea rows="3"  
+                                                           ng-model="dataValues[de.id][oco.id].value"
+                                                           class="form-control" 
+                                                           ng-class="getInputNotifcationClass(de.id, oco.id)"
+                                                           ng-dblclick="getAuditInfo(de, oco)"
+                                                           d2-blur="saveDataValue(de.id, oco.id)">
+                                                    </textarea>
+                                                </span>
+                                                <span ng-if="de.valueType === 'NUMBER'">
+                                                    <input type="number"   
+                                                           ng-model="dataValues[de.id][oco.id].value"
+                                                           class="form-control" 
+                                                           ng-class="getInputNotifcationClass(de.id, oco.id)"
+                                                           ng-dblclick="getAuditInfo(de, oco)"
+                                                           d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                </span>
+                                            </td>
+                                        </tr>                                       
+                                    </table>
                                 </div>
                                 <div ng-if="!currentDataElementGroup || !currentDataElementGroup.id">
                                     <div class="alert alert-warning">

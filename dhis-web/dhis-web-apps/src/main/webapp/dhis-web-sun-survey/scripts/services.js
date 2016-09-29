@@ -576,9 +576,9 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             return headers;
         },
-        getOptionComboIdFromOptionNames: function(optionComboMap, options, selectedAttributeCategoryCombo){
-            if( selectedAttributeCategoryCombo && selectedAttributeCategoryCombo.isDefault ){
-                return selectedAttributeCategoryCombo.categoryOptionCombos[0].id;
+        getOptionComboIdFromOptionNames: function(optionComboMap, options, categoryCombo){
+            if( categoryCombo && categoryCombo.isDefault ){
+                return categoryCombo.categoryOptionCombos[0].id;
             }
             
             var optionNames = [];
@@ -586,17 +586,17 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 optionNames.push(op.displayName);
             });
             
-            var selectedAttributeOcboName = optionNames.toString();
-            selectedAttributeOcboName = selectedAttributeOcboName.replace(",", ", ");
-            var selectedAttributeOcobo = optionComboMap['"' + selectedAttributeOcboName + '"'];
+            var selectedOptionComboName = optionNames.toString();
+            selectedOptionComboName = selectedOptionComboName.replace(",", ", ");
+            var selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
             
-            if( !selectedAttributeOcobo || angular.isUndefined( selectedAttributeOcobo ) ){
-                selectedAttributeOcboName = optionNames.reverse().toString();
-                selectedAttributeOcboName = selectedAttributeOcboName.replace(",", ", ");
-                selectedAttributeOcobo = optionComboMap['"' + selectedAttributeOcboName + '"'];
+            if( !selectedAttributeOptionCombo || angular.isUndefined( selectedAttributeOptionCombo ) ){
+                selectedOptionComboName = optionNames.reverse().toString();
+                selectedOptionComboName = selectedOptionComboName.replace(",", ", ");
+                selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
             }
             
-            return selectedAttributeOcobo;
+            return selectedAttributeOptionCombo;
         },
         splitRoles: function( roles ){
             return roles.split(","); 
