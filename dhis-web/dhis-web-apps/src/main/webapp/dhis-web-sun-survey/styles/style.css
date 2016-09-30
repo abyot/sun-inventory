@@ -6,10 +6,6 @@ html, body {
     overflow: auto;
 }
 
-.page p, .page td, .page th, .page input, .page select, .page textarea {
-    font-size: inherit !important;
-}
-
 .not-for-screen {
     display: none;
 }
@@ -836,8 +832,8 @@ div#orgUnitTree {
     cursor: pointer;
 }
 
-.basic-audit-info {
-    font-size: 12pt;
+.label-10 {
+    font-size: 10pt;
 }
 
 .report-table {
@@ -845,14 +841,10 @@ div#orgUnitTree {
     overflow: auto;
 }
 
-/*.main-question>thead>tr, 
-.main-question>tbody>tr {    
-    border: 1px solid red !important;
-}*/
-
 .main-question {    
-    color: #1f3bb7 !important;
+    /*color: #1f3bb7 !important;*/
     font-weight: bold !important;
+    font-size: 11pt !important;
 }
 
 .sub-question {

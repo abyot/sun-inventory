@@ -14,8 +14,11 @@
                                     </a>
                                 </div>
                                 <div class="col-sm-9">
+                                    <div class="alert selectionArea label-10 bold">
+                                        {{'show_definition_info' | translate}}
+                                    </div>
                                     <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">
-
+                                        
                                         <table class="table table-bordered table-condensed" ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">
                                             <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
                                                 <th>                                                
@@ -77,27 +80,28 @@
                                             <tr ng-if="de.showDescription">
                                                 <td colspan="2">
                                                     <div class="alert alert-info">
-                                                        {{de.description}}
+                                                        {{de.description ? de.description : 'missing_definition' | translate}}
                                                     </div>
                                                 </td>
                                             </tr>
                                         </table>
 
-                                        <table class="table table-bordered table-condensed" ng-class="getMainQuestionTableStyle(de)" ng-if="!de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">
-                                            <tr>
-                                                <td colspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories.length}}">
-                                                </td>
-                                                <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" ng-click="de.showDescription = !de.showDescription">
+                                        <table class="table table-bordered table-condensed"                                                
+                                               ng-if="!de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                            
+                                            <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
+                                                <td class="vertical-center mouse-pointer"
+                                                    ng-class="getMainQuestionTableStyle(de)" 
+                                                    rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
+                                                    ng-if="$index===0"
+                                                    ng-click="de.showDescription = !de.showDescription">
                                                     {{de.displayName}}<span class="required">*</span>
                                                 </td>
-                                            </tr>
-                                            <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
-                                                <td ng-repeat="optionName in oco.displayName.split(',')"                                                  
+                                                <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
                                                     rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
                                                     ng-if="$index === 0 && (mainIndex % getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName) === 0)">
                                                     {{optionName}}
                                                 </td>
-                                                <td ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
+                                                <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
                                                     {{optionName}}
                                                 </td>
                                                 <td>
@@ -119,8 +123,16 @@
                                                                d2-blur="saveDataValue(de.id, oco.id, false)">
                                                     </span>
                                                 </td>
-                                            </tr>                                       
+                                            </tr>
+                                            <tr ng-if="de.showDescription">
+                                                <td colspan="4">
+                                                    <div class="alert alert-info">
+                                                        {{de.description ? de.description : 'missing_definition' | translate}}
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         </table>
+                                        
                                     </div>                                    
                                 </div>
                             </div>                        

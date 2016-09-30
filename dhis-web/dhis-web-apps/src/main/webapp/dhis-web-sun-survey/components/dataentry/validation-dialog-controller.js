@@ -10,19 +10,11 @@ sunSurvey.controller('ValidationDialogController',
                 $modalInstance,
                 $filter,
                 invalidFields,
-                dataElementGroupSets) {    
+                dataElementGroupSets) {
     
-    //$scope.uniqueOutputs = [];
-    $scope.invalidFields = invalidFields;
     $scope.dataElementGroupSets = dataElementGroupSets;
     
-    $scope.invalidFields = $filter('orderBy')(invalidFields, ['dataElementGroupSet.code', 'dataElementGroup.code', 'order']);
-    
-    /*angular.forEach($scope.invlaidFields, function(de){
-        if( $scope.uniqueOutputs.indexOf(de.dataElementGroup.id) === -1 ){
-            $scope.uniqueOutputs.push( de.dataElementGroup.id );
-        } 
-    });*/
+    $scope.invalidFields = $filter('orderBy')(invalidFields, ['dataElementGroupSet.code', 'dataElementGroup.code', 'order']);    
     
     $scope.close = function(status) {        
         $modalInstance.close( status );
