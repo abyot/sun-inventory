@@ -888,3 +888,8 @@ div#orgUnitTree {
 .nav-tabs.nav-justified > li > a:link {
     background: #eee;
 }
+
+.scroll {
+    height: 500px;
+    overflow: auto;
+}

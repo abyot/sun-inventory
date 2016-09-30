@@ -140,7 +140,8 @@ sunSurvey.controller('dataEntryController',
                 $scope.model.dataSets = dataSets;                
                 if($scope.model.dataElementGroupSets.length === 0){
                     $scope.model.degs = {};
-                    $scope.model.deg = {};                    
+                    $scope.model.deg = {}; 
+                    $scope.model.dataElementGroupsById = {};
                     MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                        
                         $scope.model.dataElementGroupSets = [];                        
                         angular.forEach(dataElementGroupSets, function(degs){
@@ -153,12 +154,13 @@ sunSurvey.controller('dataEntryController',
                                     
                                     angular.forEach(deg.dataElements, function(de){
                                         de = dhis2.metadata.processMetaDataAttribute( de );
-                                        $scope.model.degs[de.id] = degs.name;
-                                        $scope.model.deg[de.id] = deg.name;                                        
+                                        $scope.model.degs[de.id] = {name: degs.name, id: degs.id, code: degs.code};
+                                        $scope.model.deg[de.id] = {name: deg.name, id: deg.id, code: deg.shortName};
                                     });
                                     
                                     deg.dataElements = orderByFilter(deg.dataElements, '-order').reverse(); 
                                 }
+                                $scope.model.dataElementGroupsById[deg.id] = deg;
                             });
                         });                        
                     });
@@ -249,17 +251,17 @@ sunSurvey.controller('dataEntryController',
         $scope.dataSetCompletness = {};
     };
     
-    $scope.isHidden = function( dataElement ){
+    $scope.isHidden = function( dataElement, dataElementGroup ){
         
         if( dataElement.skipLogicParentId && 
-                $scope.currentDataElementGroup && 
-                $scope.currentDataElementGroup.dataElements &&
-                $scope.currentDataElementGroup.dataElements[dataElement.skipLogicParentId] ){
+                dataElementGroup && 
+                dataElementGroup.dataElements &&
+                dataElementGroup.dataElements[dataElement.skipLogicParentId] ){
             
             var index = dataElement.skipLogicParentId - 1;
             
             if( index >= 0 ){
-                var skipParent = $scope.currentDataElementGroup.dataElements[index];
+                var skipParent = dataElementGroup.dataElements[index];
                 
                 if( skipParent && skipParent.id && $scope.desById[skipParent.id] ) {
                     
@@ -269,20 +271,24 @@ sunSurvey.controller('dataEntryController',
                         var value = '';
                         if( de.dimensionAsOptionSet ){
                             value = $scope.dataValues[skipParent.id];
-                            
-                            if( dataElement.skipValue ){
-                                if( value && value.displayName === dataElement.skipValue ){                                    
-                                    return false;
+                            if( value ){
+                                if( dataElement.skipValue && dataElement.skipValue !== ''){
+                                    if( value && value.displayName === dataElement.skipValue ){                                    
+                                        return false;
+                                    }
                                 }
-                            }
-                            else{
-                                if( value && value.displayName === 'Yes' ){
-                                    return false;
+                                else{
+                                    if( value.displayName === 'Yes' ){
+                                        return false;
+                                    }
                                 }
-                            }
+                            }                            
                         }
                         else if( de.dimensionAsMultiOptionSet ){
                             value = $scope.dataValues[skipParent.id];
+                            if( value && value.length > 1 ){
+                                return false;
+                            }
                         }
                         else{                            
                             if( $scope.model.defaultCategoryCombo && de.categoryCombo &&
@@ -335,7 +341,7 @@ sunSurvey.controller('dataEntryController',
                         $scope.saveDataValue(dataElement.id, props[0], false);
                     }
                 }
-            }
+            }            
             return true;
         }
         return false;
@@ -646,33 +652,65 @@ sunSurvey.controller('dataEntryController',
     };
     
     $scope.saveCompletness = function(){
-        var modalOptions = {
-            closeButtonText: 'no',
-            actionButtonText: 'yes',
-            headerText: 'save_completeness',
-            bodyText: 'are_you_sure_to_save_completeness'
-        };
-
-        ModalService.showModal({}, modalOptions).then(function(result){
+        
+        //check for form validity
+        var invalidFields = [];
+        angular.forEach($scope.model.selectedDataSet.dataElements, function(dataElement){            
+            if( !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
+                if( !$scope.dataValues[dataElement.id] || $scope.dataValues[dataElement.id] === ''){
+                    invalidFields.push( $scope.desById[dataElement.id] );
+                }
+            }
+        });
+        
+        if( invalidFields.length > 0 ){
             
-            CompletenessService.save($scope.model.selectedDataSet.id, 
-                $scope.model.selectedPeriod.id, 
-                $scope.selectedOrgUnit.id,
-                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
-                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                false).then(function(response){
-                    
-                var dialogOptions = {
-                    headerText: 'success',
-                    bodyText: 'marked_complete'
-                };
-                DialogService.showDialog({}, dialogOptions);
-                processCompletness(true);
-                
-            }, function(response){
-                ActionMappingUtils.errorNotifier( response );
+            var modalInstance = $modal.open({
+                templateUrl: 'components/dataentry/validation-dialog.html',
+                controller: 'ValidationDialogController',
+                windowClass: 'modal-full-window',
+                resolve: {
+                    invalidFields: function(){
+                        return invalidFields;
+                    },
+                    dataElementGroupSets: function(){
+                        return $scope.model.dataElementGroupSets;
+                    }
+                }
             });
-        });        
+
+            modalInstance.result.then(function () {
+            });            
+        }
+        else{
+            var modalOptions = {
+                closeButtonText: 'no',
+                actionButtonText: 'yes',
+                headerText: 'save_completeness',
+                bodyText: 'are_you_sure_to_save_completeness'
+            };
+
+            ModalService.showModal({}, modalOptions).then(function(result){
+
+                CompletenessService.save($scope.model.selectedDataSet.id, 
+                    $scope.model.selectedPeriod.id, 
+                    $scope.selectedOrgUnit.id,
+                    $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
+                    $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
+                    false).then(function(response){
+
+                    var dialogOptions = {
+                        headerText: 'success',
+                        bodyText: 'marked_complete'
+                    };
+                    DialogService.showDialog({}, dialogOptions);
+                    processCompletness(true);
+
+                }, function(response){
+                    ActionMappingUtils.errorNotifier( response );
+                });
+            });
+        }      
     };
     
     $scope.deleteCompletness = function(){

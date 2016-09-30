@@ -1,0 +1,42 @@
+<div class="modal-header page">
+    <h2>{{'required_fields_list'| translate}}</h2>
+</div>
+<div class="modal-body">
+
+    <div class="scroll">
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>
+                        {{'outcome' | translate}}
+                    </th>
+                    <th>
+                        {{'output' | translate}}
+                    </th>
+                    <th>
+                        {{'question' | translate}}
+                    </th>
+                </tr>
+            </thead>
+            <tbody ng-repeat="degs in dataElementGroupSets" ng-if="(invalidFields | filter: {dataElementGroupSet: {id: degs.id}}).length > 0" ng-init="groupSetSpan = (invalidFields | filter: {dataElementGroupSet: {id: degs.id}}).length; groupSetIndex = $index">                
+                <tr ng-repeat="invalidField in invalidFields | filter: {dataElementGroupSet:{id: degs.id}}" ng-init="deIndex = $index">
+                    <td class="col-sm-1 vertical-center" ng-if="$index === 0" rowspan="{{groupSetSpan}}">
+                        {{invalidField.dataElementGroupSet.code}}
+                    </td>
+                    <td class="col-sm-1 vertical-center">
+                        {{invalidField.dataElementGroup.code}}                    
+                    </td>
+                    <td class="col-sm-10 vertical-center">
+                        {{invalidField.displayName}}
+                    </td>
+                </tr>
+            </tbody>                                                    
+        </table>
+
+    </div>
+
+</div>
+<div class="modal-footer">    
+    <button class="btn btn-default" ng-click="close()">{{'close'| translate}}</button>    
+</div>
