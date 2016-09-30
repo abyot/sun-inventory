@@ -25,7 +25,7 @@
                                                 </th>
                                             </tr>
                                             <tr>                                          
-                                                <td ng-class="getMainQuestionTableStyle(de)">
+                                                <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" ng-click="de.showDescription = !de.showDescription">
                                                     {{de.displayName}}<span class="required">*</span>
                                                 </td>
                                                 <td>
@@ -73,14 +73,21 @@
                                                         </ui-select>
                                                     </div>                                                    
                                                 </td>                                                
-                                            </tr>                                        
+                                            </tr>
+                                            <tr ng-if="de.showDescription">
+                                                <td colspan="2">
+                                                    <div class="alert alert-info">
+                                                        {{de.description}}
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         </table>
 
                                         <table class="table table-bordered table-condensed" ng-class="getMainQuestionTableStyle(de)" ng-if="!de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">
                                             <tr>
                                                 <td colspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories.length}}">
                                                 </td>
-                                                <td ng-class="getMainQuestionTableStyle(de)">
+                                                <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" ng-click="de.showDescription = !de.showDescription">
                                                     {{de.displayName}}<span class="required">*</span>
                                                 </td>
                                             </tr>
