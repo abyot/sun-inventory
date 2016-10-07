@@ -124,6 +124,7 @@ public class Preheat
         return objects;
     }
 
+    @SuppressWarnings( "unchecked" )
     public <T extends IdentifiableObject> T get( PreheatIdentifier identifier, T object )
     {
         if ( object == null )
@@ -133,14 +134,16 @@ public class Preheat
 
         T reference = null;
 
+        Class<? extends IdentifiableObject> klass = (Class<? extends IdentifiableObject>) getRealClass( object.getClass() );
+
         if ( PreheatIdentifier.UID == identifier || PreheatIdentifier.AUTO == identifier )
         {
-            reference = get( PreheatIdentifier.UID, object.getClass(), object.getUid() );
+            reference = get( PreheatIdentifier.UID, klass, object.getUid() );
         }
 
         if ( PreheatIdentifier.CODE == identifier || (reference == null && PreheatIdentifier.AUTO == identifier) )
         {
-            reference = get( PreheatIdentifier.CODE, object.getClass(), object.getCode() );
+            reference = get( PreheatIdentifier.CODE, klass, object.getCode() );
         }
 
         return reference;
@@ -323,9 +326,10 @@ public class Preheat
         return this;
     }
 
+    @SuppressWarnings( "unchecked" )
     public Preheat remove( PreheatIdentifier identifier, IdentifiableObject object )
     {
-        Class<? extends IdentifiableObject> klass = object.getClass();
+        Class<? extends IdentifiableObject> klass = (Class<? extends IdentifiableObject>) getRealClass( object.getClass() );
 
         if ( PreheatIdentifier.UID == identifier || PreheatIdentifier.AUTO == identifier )
         {
@@ -387,7 +391,7 @@ public class Preheat
 
     public static boolean isDefaultClass( IdentifiableObject object )
     {
-        return object != null && isDefaultClass( object.getClass() );
+        return object != null && isDefaultClass( getRealClass( object.getClass() ) );
     }
 
     public static boolean isDefaultClass( Class<?> klass )

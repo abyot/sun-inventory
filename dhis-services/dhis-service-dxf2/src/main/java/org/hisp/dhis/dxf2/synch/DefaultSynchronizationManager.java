@@ -28,24 +28,28 @@ package org.hisp.dhis.dxf2.synch;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import java.io.IOException;
-import java.util.Date;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hisp.dhis.common.IdSchemes;
 import org.hisp.dhis.configuration.Configuration;
 import org.hisp.dhis.configuration.ConfigurationService;
 import org.hisp.dhis.datavalue.DataValueService;
-import org.hisp.dhis.common.IdSchemes;
+import org.hisp.dhis.dxf2.common.ImportSummariesResponseExtractor;
 import org.hisp.dhis.dxf2.common.ImportSummaryResponseExtractor;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
 import org.hisp.dhis.dxf2.datavalueset.DataValueSetService;
+import org.hisp.dhis.dxf2.events.event.EventService;
+import org.hisp.dhis.dxf2.events.event.Events;
 import org.hisp.dhis.dxf2.importsummary.ImportStatus;
+import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
 import org.hisp.dhis.dxf2.importsummary.ImportSummary;
-import org.hisp.dhis.dxf2.metadata.ImportService;
+import org.hisp.dhis.dxf2.metadata.AtomicMode;
 import org.hisp.dhis.dxf2.metadata.Metadata;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
+import org.hisp.dhis.dxf2.metadata.MetadataImportService;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
+import org.hisp.dhis.render.DefaultRenderService;
+import org.hisp.dhis.render.RenderService;
+import org.hisp.dhis.schema.SchemaService;
 import org.hisp.dhis.setting.SettingKey;
 import org.hisp.dhis.setting.SystemSettingManager;
 import org.hisp.dhis.system.util.CodecUtils;
@@ -66,6 +70,11 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.IOException;
+import java.util.Date;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * @author Lars Helge Overland
@@ -89,7 +98,10 @@ public class DefaultSynchronizationManager
     private ConfigurationService configurationService;
 
     @Autowired
-    private ImportService importService;
+    private MetadataImportService importService;
+
+    @Autowired
+    private SchemaService schemaService;
 
     @Autowired
     private CurrentUserService currentUserService;
@@ -99,6 +111,12 @@ public class DefaultSynchronizationManager
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private EventService eventService;
+
+    @Autowired
+    private RenderService renderService;
 
     // -------------------------------------------------------------------------
     // SynchronizatonManager implementation
@@ -146,7 +164,7 @@ public class DefaultSynchronizationManager
         {
             return new AvailabilityStatus( false, "Network is unreachable", HttpStatus.BAD_GATEWAY );
         }
-        
+
         log.debug( "Response status code: " + sc );
 
         if ( HttpStatus.FOUND.equals( sc ) )
@@ -189,15 +207,15 @@ public class DefaultSynchronizationManager
         String url = systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_URL ) + "/api/dataValueSets";
         String username = (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_USERNAME );
         String password = (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_PASSWORD );
-        
+
         SystemInstance instance = new SystemInstance( url, username, password );
-        
+
         return executeDataPush( instance );
     }
-    
+
     /**
      * Executes a push of data values to the given remote instance.
-     * 
+     *
      * @param instance the remote system instance.
      * @return an ImportSummary.
      */
@@ -210,8 +228,10 @@ public class DefaultSynchronizationManager
 
         final Date startTime = new Date();
         final Date lastSuccessTime = getLastSynchSuccessFallback();
-        
+
         final int lastUpdatedCount = dataValueService.getDataValueCountLastUpdatedAfter( lastSuccessTime );
+
+        log.info( "Values: " + lastUpdatedCount + " since last synch success: " + lastSuccessTime );
 
         if ( lastUpdatedCount == 0 )
         {
@@ -222,13 +242,13 @@ public class DefaultSynchronizationManager
         log.info( "Values: " + lastUpdatedCount + " since last synch success: " + lastSuccessTime );
 
         log.info( "Remote server POST URL: " + instance.getUrl() );
-        
+
         final RequestCallback requestCallback = new RequestCallback()
         {
             @Override
             public void doWithRequest( ClientHttpRequest request )
                 throws IOException
-            {   
+            {
                 request.getHeaders().setContentType( MediaType.APPLICATION_JSON );
                 request.getHeaders().add( HEADER_AUTHORIZATION, CodecUtils.getBasicAuthString( instance.getUsername(), instance.getPassword() ) );
 
@@ -257,13 +277,88 @@ public class DefaultSynchronizationManager
     }
 
     @Override
+    public ImportSummaries executeAnonymousEventPush()
+    {
+        AvailabilityStatus availability = isRemoteServerAvailable();
+
+        if ( !availability.isAvailable() )
+        {
+            log.info( "Aborting synch, server not available" );
+            return null;
+        }
+
+        // ---------------------------------------------------------------------
+        // Set time for last success to start of process to make data saved
+        // subsequently part of next synch process without being ignored
+        // ---------------------------------------------------------------------
+
+        final Date startTime = new Date();
+        final Date lastSuccessTime = getLastEventSynchSuccessFallback();
+
+        int lastUpdatedEventsCount = eventService.getAnonymousEventValuesCountLastUpdatedAfter( lastSuccessTime );
+
+        log.info( "Event Values: " + lastUpdatedEventsCount + " since last synch success: " + lastSuccessTime );
+
+        if ( lastUpdatedEventsCount == 0 )
+        {
+            log.info( "Skipping synch, no new or updated data values for events" );
+            return null;
+        }
+
+        String url = systemSettingManager.getSystemSetting(
+            SettingKey.REMOTE_INSTANCE_URL ) + "/api/events";
+
+        log.info( "Remote server events POST URL: " + url );
+
+        final String username = (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_USERNAME );
+        final String password = (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_PASSWORD );
+
+        final RequestCallback requestCallback = new RequestCallback()
+        {
+            @Override
+            public void doWithRequest( ClientHttpRequest request )
+                throws IOException
+            {
+                request.getHeaders().setContentType( MediaType.APPLICATION_JSON );
+                request.getHeaders().add( HEADER_AUTHORIZATION, CodecUtils.getBasicAuthString( username, password ) );
+                Events result = eventService.getAnonymousEventValuesLastUpdatedAfter( lastSuccessTime );
+                renderService.toJson( request.getBody(), result );
+            }
+        };
+
+        ResponseExtractor<ImportSummaries> responseExtractor = new ImportSummariesResponseExtractor();
+        ImportSummaries summaries = restTemplate.execute( url, HttpMethod.POST, requestCallback, responseExtractor );
+
+        log.info( "Event synch summary: " + summaries );
+        boolean isError = false;
+
+        for ( ImportSummary summary : summaries.getImportSummaries() )
+        {
+            if ( ImportStatus.ERROR.equals( summary.getStatus() ) || ImportStatus.WARNING.equals( summary.getStatus() ) )
+            {
+                isError = true;
+                log.debug( "Sync failed: " + summaries );
+                break;
+            }
+        }
+
+        if ( !isError )
+        {
+            setLastEventSynchSuccess( startTime );
+            log.info( "Synch successful, setting last success time: " + startTime );
+        }
+
+        return summaries;
+    }
+
+    @Override
     public Date getLastSynchSuccess()
     {
         return (Date) systemSettingManager.getSystemSetting( SettingKey.LAST_SUCCESSFUL_DATA_SYNC );
     }
 
     @Override
-    public org.hisp.dhis.dxf2.metadata.ImportSummary executeMetadataPull( String url )
+    public ImportReport executeMetadataPull( String url )
     {
         User user = currentUserService.getCurrentUser();
 
@@ -277,16 +372,19 @@ public class DefaultSynchronizationManager
 
         try
         {
-            metadata = JacksonUtils.fromJson( json, Metadata.class );
+            metadata = DefaultRenderService.getJsonMapper().readValue( json, Metadata.class );
         }
         catch ( IOException ex )
         {
             throw new RuntimeException( "Failed to parse remote JSON document", ex );
         }
 
-        org.hisp.dhis.dxf2.metadata.ImportSummary summary = importService.importMetaData( userUid, metadata );
+        MetadataImportParams importParams = new MetadataImportParams();
+        importParams.setSkipSharing( true );
+        importParams.setAtomicMode( AtomicMode.NONE );
+        importParams.addMetadata( schemaService.getMetadataSchemas(), metadata );
 
-        return summary;
+        return importService.importMetadata( importParams );
     }
 
     // -------------------------------------------------------------------------
@@ -304,12 +402,29 @@ public class DefaultSynchronizationManager
         return (Date) systemSettingManager.getSystemSetting( SettingKey.LAST_SUCCESSFUL_DATA_SYNC, fallback );
     }
 
+    private Date getLastEventSynchSuccessFallback()
+    {
+        Date fallback = new DateTime().minusDays( 3 ).toDate();
+
+        return (Date) systemSettingManager.getSystemSetting( SettingKey.LAST_SUCCESSFUL_EVENT_DATA_SYNC, fallback );
+    }
+
     /**
      * Sets the time of the last successful synchronization operation.
      */
     private void setLastSynchSuccess( Date time )
     {
         systemSettingManager.saveSystemSetting( SettingKey.LAST_SUCCESSFUL_DATA_SYNC, time );
+    }
+
+    /**
+     * Sets the time of the last successful synchronization for Anonymous events
+     *
+     * @param time
+     */
+    private void setLastEventSynchSuccess( Date time )
+    {
+        systemSettingManager.saveSystemSetting( SettingKey.LAST_SUCCESSFUL_EVENT_DATA_SYNC, time );
     }
 
     /**
@@ -320,7 +435,7 @@ public class DefaultSynchronizationManager
         String url = (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_URL );
         String username = (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_USERNAME );
         String password = (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_PASSWORD );
-        
+
         if ( isEmpty( url ) )
         {
             log.info( "Remote server URL not set" );

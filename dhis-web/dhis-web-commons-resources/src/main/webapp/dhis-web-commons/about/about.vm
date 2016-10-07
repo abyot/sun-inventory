@@ -13,15 +13,23 @@
   <dt>$i18n.getString( "time_since_last_analytics_table_generation" ):</dt><dd>$!info.intervalSinceLastAnalyticsTableSuccess</dd>
   <dt>$i18n.getString( "last_analytics_table_runtime" ):</dt><dd>$!info.lastAnalyticsTableRuntime</dd>
   <dt>$i18n.getString( "environment_variable" ):</dt><dd>$!info.environmentVariable</dd>
+
+  #if ( $info.isMetadataVersionEnabled && $!info.systemMetadataVersion )
+    <dt>$i18n.getString( "metadata_version" ):</dt><dd>$!info.systemMetadataVersion</dd>
+  #end
+
+  #if ( $info.isMetadataSyncEnabled && $!info.lastMetadataVersionSyncAttempt)
+    <dt>$i18n.getString( "last_metadata_sync_attempt_time" ):</dt><dd>$!format.formatDateTime( $!info.lastMetadataVersionSyncAttempt )</dd>
+  #end
+
   #if ( $currentUserIsSuper )
   <dt>$i18n.getString( "external_configuration_directory" ):</dt><dd>$!info.externalDirectory</dd>
   <dt>$i18n.getString( "file_store_provider" ):</dt><dd>$!info.fileStoreProvider</dd>
   <dt>$i18n.getString( "database_type" ):</dt><dd>$!info.databaseInfo.type</dd>
   <dt>$i18n.getString( "database_name" ):</dt><dd>$!info.databaseInfo.name</dd>
   <dt>$i18n.getString( "database_user" ):</dt><dd>$!info.databaseInfo.user</dd>
+  <dt>$i18n.getString( "read_replica_count" ):</dt><dd>$info.readReplicaCount</dd>
   <dt>$i18n.getString( "java_opts" ):</dt><dd>$!info.javaOpts</dd>
-  <dt>$i18n.getString( "java_home" ):</dt><dd>$!info.javaHome</dd>
-  <dt>$i18n.getString( "java_tmp_dir" ):</dt><dd>$!info.javaIoTmpDir</dd>
   <dt>$i18n.getString( "java_version" ):</dt><dd>$!info.javaVersion</dd>
   <dt>$i18n.getString( "java_vendor" ):</dt><dd>$!info.javaVendor</dd>
   <dt>$i18n.getString( "os_name" ):</dt><dd>$!info.osName</dd>

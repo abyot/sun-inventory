@@ -21,7 +21,7 @@
 
     <property name="compulsory" />
 
-    <property name="dataDimension" />
+    <property name="dataDimension" column="datadimension" not-null="true" />
 
     <list name="members" table="dataelementgroupsetmembers">
       <cache usage="read-write" />
@@ -32,14 +32,10 @@
     </list>
 
     <!-- Object Translation -->
-    <set name="translations" table="dataelementgroupsettranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="dataelementgroupsettranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="dataelementgroupsetid" foreign-key="fk_objecttranslation_dataelementgroupsetid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
     <!-- Access properties -->
@@ -55,7 +51,4 @@
 
   </class>
 
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 </hibernate-mapping>

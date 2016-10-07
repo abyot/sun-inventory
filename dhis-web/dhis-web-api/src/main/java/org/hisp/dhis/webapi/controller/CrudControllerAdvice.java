@@ -37,18 +37,21 @@ import org.hisp.dhis.common.exception.InvalidIdentifierReferenceException;
 import org.hisp.dhis.dataapproval.exceptions.DataApprovalException;
 import org.hisp.dhis.dxf2.adx.AdxException;
 import org.hisp.dhis.dxf2.common.Status;
-import org.hisp.dhis.dxf2.metadata2.MetadataExportException;
-import org.hisp.dhis.dxf2.metadata2.MetadataImportException;
+import org.hisp.dhis.dxf2.metadata.MetadataExportException;
+import org.hisp.dhis.dxf2.metadata.MetadataImportException;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
+import org.hisp.dhis.fieldfilter.FieldFilterException;
 import org.hisp.dhis.query.QueryException;
 import org.hisp.dhis.query.QueryParserException;
 import org.hisp.dhis.sms.SmsServiceNotEnabledException;
 import org.hisp.dhis.system.util.DateUtils;
+import org.hisp.dhis.webapi.controller.exception.BadRequestException;
+import org.hisp.dhis.webapi.controller.exception.MetadataSyncException;
+import org.hisp.dhis.webapi.controller.exception.MetadataVersionException;
 import org.hisp.dhis.webapi.controller.exception.NotAuthenticatedException;
 import org.hisp.dhis.webapi.controller.exception.NotFoundException;
 import org.hisp.dhis.webapi.service.WebMessageService;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
-import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -91,12 +94,6 @@ public class CrudControllerAdvice
         } );
     }
 
-    @ExceptionHandler( { EncryptionOperationNotPossibleException.class } )
-    public void encryptionOperationNotPossibleException( EncryptionOperationNotPossibleException ex, HttpServletResponse response, HttpServletRequest request )
-    {
-        webMessageService.send( WebMessageUtils.conflict( "Could not encrypt data, indicates a configuration issue" ), response, request );
-    }
-
     @ExceptionHandler( { IllegalQueryException.class, DeleteNotAllowedException.class, InvalidIdentifierReferenceException.class } )
     public void conflictsExceptionHandler( Exception ex, HttpServletResponse response, HttpServletRequest request )
     {
@@ -117,6 +114,12 @@ public class CrudControllerAdvice
 
     @ExceptionHandler( { QueryParserException.class, QueryException.class } )
     public void queryExceptionHandler( Exception ex, HttpServletResponse response, HttpServletRequest request )
+    {
+        webMessageService.send( WebMessageUtils.conflict( ex.getMessage() ), response, request );
+    }
+
+    @ExceptionHandler( FieldFilterException.class )
+    public void fieldFilterExceptionHandler( FieldFilterException ex, HttpServletRequest request, HttpServletResponse response )
     {
         webMessageService.send( WebMessageUtils.conflict( ex.getMessage() ), response, request );
     }
@@ -198,6 +201,24 @@ public class CrudControllerAdvice
     public void servletExceptionHandler( ServletException ex ) throws ServletException
     {
         throw ex;
+    }
+
+    @ExceptionHandler( BadRequestException.class )
+    public void handleBadRequest( BadRequestException badRequestException, HttpServletResponse response, HttpServletRequest request )
+    {
+        webMessageService.send( WebMessageUtils.badRequest( badRequestException.getMessage() ), response, request );
+    }
+
+    @ExceptionHandler( MetadataVersionException.class )
+    public void handleMetaDataVersionException( MetadataVersionException metadataVersionException, HttpServletResponse response, HttpServletRequest request )
+    {
+        webMessageService.send( WebMessageUtils.error( metadataVersionException.getMessage() ), response, request );
+    }
+
+    @ExceptionHandler( MetadataSyncException.class )
+    public void handleMetaDataSyncException( MetadataSyncException metadataSyncException, HttpServletResponse response, HttpServletRequest request )
+    {
+        webMessageService.send( WebMessageUtils.error( metadataSyncException.getMessage() ), response, request );
     }
 
     // Catch default exception and send back to user, but rethrow internally so it still ends up in server logs

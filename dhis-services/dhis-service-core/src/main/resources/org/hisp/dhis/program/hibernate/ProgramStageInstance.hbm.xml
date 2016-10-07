@@ -12,9 +12,9 @@
 
     <property name="uid" column="uid" unique="true" length="11" />
 
-    <property name="created" type="timestamp" />
+    <property name="created" type="timestamp" not-null="true" />
 
-    <property name="lastUpdated" type="timestamp" />
+    <property name="lastUpdated" type="timestamp" not-null="true" />
 
     <many-to-one name="programInstance" class="org.hisp.dhis.program.ProgramInstance"
       column="programinstanceid" not-null="true" foreign-key="fk_programstageinstance_programinstanceid" />
@@ -22,10 +22,7 @@
     <many-to-one name="programStage" class="org.hisp.dhis.program.ProgramStage"
       column="programstageid" not-null="true" foreign-key="fk_programstageinstance_programstageid" />
 
-	<many-to-one name="categoryOptionCombo" class="org.hisp.dhis.dataelement.DataElementCategoryOptionCombo" 
-      column="categoryoptioncomboid" foreign-key="fk_programstageinstance_categoryoptioncomboid" />
-      
-    <many-to-one name="attributeOptionCombo" class="org.hisp.dhis.dataelement.DataElementCategoryOptionCombo" 
+    <many-to-one name="attributeOptionCombo" class="org.hisp.dhis.dataelement.DataElementCategoryOptionCombo"
       column="attributeoptioncomboid" foreign-key="fk_programstageinstance_attributeoptioncomboid" />
 
     <property name="storedBy" />
@@ -33,17 +30,9 @@
     <property name="dueDate" column="duedate" />
 
     <property name="executionDate" column="executiondate" type="timestamp" index="programstageinstance_executiondate" />
-    
-    <many-to-one name="organisationUnit"
-      class="org.hisp.dhis.organisationunit.OrganisationUnit" column="organisationunitid"
-      foreign-key="fk_programstageinstance_organisationunitid" index="programstageinstance_organisationunitid" />
 
-    <list name="outboundSms" table="programstageinstance_outboundsms">
-      <key column="programstageinstanceid" />
-      <list-index column="sort_order" base="1" />
-      <many-to-many class="org.hisp.dhis.sms.outbound.OutboundSms"
-        column="outboundsmsid" />
-    </list>
+    <many-to-one name="organisationUnit" class="org.hisp.dhis.organisationunit.OrganisationUnit" column="organisationunitid"
+      foreign-key="fk_programstageinstance_organisationunitid" index="programstageinstance_organisationunitid" />
 
     <list name="messageConversations" table="programstageinstance_messageconversation">
       <key column="programstageinstanceid" />
@@ -68,21 +57,6 @@
       <many-to-many column="trackedentitycommentid" unique="true" class="org.hisp.dhis.trackedentitycomment.TrackedEntityComment" />
     </list>
 
-    <!-- Object Translation -->
-    <set name="translations" table="programstageinstancetranslations" cascade="delete-orphan" lazy="false">
-      <cache usage="read-write" />
-      <key column="programstageinstanceid" foreign-key="fk_objecttranslation_programstageinstanceid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
-    </set>
-
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

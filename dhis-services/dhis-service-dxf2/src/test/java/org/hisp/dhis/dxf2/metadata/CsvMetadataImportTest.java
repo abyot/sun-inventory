@@ -28,24 +28,24 @@ package org.hisp.dhis.dxf2.metadata;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import org.hisp.dhis.DhisSpringTest;
+import org.hisp.dhis.dataelement.DataElement;
+import org.hisp.dhis.dataelement.DataElementService;
+import org.hisp.dhis.dxf2.csv.CsvImportService;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
+import org.hisp.dhis.option.OptionService;
+import org.hisp.dhis.option.OptionSet;
+import org.hisp.dhis.schema.SchemaService;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.hisp.dhis.DhisSpringTest;
-import org.hisp.dhis.dataelement.DataElement;
-import org.hisp.dhis.dataelement.DataElementService;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.csv.CsvImportService;
-import org.hisp.dhis.importexport.ImportStrategy;
-import org.hisp.dhis.option.OptionService;
-import org.hisp.dhis.option.OptionSet;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Lars Helge Overland
@@ -55,39 +55,43 @@ public class CsvMetadataImportTest
 {
     @Autowired
     private DataElementService dataElementService;
-    
+
     @Autowired
     private OptionService optionService;
-    
+
     @Autowired
     private CsvImportService csvImportService;
-    
+
     @Autowired
-    private ImportService importService;
-    
+    private MetadataImportService importService;
+
+    @Autowired
+    private SchemaService schemaService;
+
     private InputStream input;
-    
-    private final ImportOptions importOptions = new ImportOptions().setImportStrategy( ImportStrategy.NEW_AND_UPDATES );
-    
+
     @Test
     public void testDataElementImport()
         throws Exception
-    {        
+    {
         input = new ClassPathResource( "metadata/dataElements.csv" ).getInputStream();
-        
+
         Metadata metadata = csvImportService.fromCsv( input, DataElement.class );
-        
+
         assertEquals( 2, metadata.getDataElements().size() );
-        
-        ImportSummary summary = importService.importMetaData( null, metadata, importOptions );
-        
-        assertEquals( 2, summary.getImportCount().getImported() );
-        
+
+        MetadataImportParams params = new MetadataImportParams();
+        params.addMetadata( schemaService.getMetadataSchemas(), metadata );
+
+        ImportReport importReport = importService.importMetadata( params );
+
+        assertEquals( 2, importReport.getStats().getCreated() );
+
         Collection<DataElement> dataElements = dataElementService.getAllDataElements();
-        
+
         assertEquals( 2, dataElements.size() );
     }
-    
+
     @Test
     public void testOptionSetImport()
         throws Exception
@@ -95,19 +99,22 @@ public class CsvMetadataImportTest
         input = new ClassPathResource( "metadata/optionSets.csv" ).getInputStream();
 
         Metadata metadata = csvImportService.fromCsv( input, OptionSet.class );
-        
+
         assertEquals( 4, metadata.getOptionSets().size() );
         assertEquals( 3, metadata.getOptionSets().get( 0 ).getOptions().size() );
         assertEquals( 3, metadata.getOptionSets().get( 1 ).getOptions().size() );
         assertEquals( 3, metadata.getOptionSets().get( 2 ).getOptions().size() );
         assertEquals( 3, metadata.getOptionSets().get( 3 ).getOptions().size() );
 
-        ImportSummary summary = importService.importMetaData( null, metadata, importOptions );
+        MetadataImportParams params = new MetadataImportParams();
+        params.addMetadata( schemaService.getMetadataSchemas(), metadata );
 
-        assertEquals( 16, summary.getImportCount().getImported() );
-        
+        ImportReport importReport = importService.importMetadata( params );
+
+        assertEquals( 16, importReport.getStats().getCreated() );
+
         List<OptionSet> optionSets = new ArrayList<>( optionService.getAllOptionSets() );
-        
+
         assertEquals( 4, optionSets.size() );
         assertEquals( 3, optionSets.get( 0 ).getOptions().size() );
         assertEquals( 3, optionSets.get( 1 ).getOptions().size() );

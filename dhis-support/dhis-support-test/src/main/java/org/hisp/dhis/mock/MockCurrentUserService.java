@@ -61,17 +61,20 @@ public class MockCurrentUserService
     public MockCurrentUserService( boolean superUserFlag, Set<OrganisationUnit> organisationUnits, Set<OrganisationUnit> dataViewOrganisationUnits, String... auths )
     {
         UserAuthorityGroup userRole = new UserAuthorityGroup();
+        userRole.setAutoFields();
         userRole.getAuthorities().addAll( Arrays.asList( auths ) );
 
         this.superUserFlag = superUserFlag;
         UserCredentials credentials = new UserCredentials();
         credentials.setUsername( "currentUser" );
         credentials.getUserAuthorityGroups().add( userRole );
+        credentials.setAutoFields();
         
         User user = new User();
         user.setOrganisationUnits( organisationUnits );
         user.setDataViewOrganisationUnits( dataViewOrganisationUnits );
         user.setUserCredentials( credentials );
+        user.setAutoFields();
         credentials.setUserInfo( user );
         
         this.currentUser = user;

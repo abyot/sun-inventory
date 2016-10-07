@@ -28,10 +28,12 @@ package org.hisp.dhis.eventchart;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.analytics.EventOutputType;
 import org.hisp.dhis.chart.BaseChart;
 import org.hisp.dhis.common.AnalyticsType;
@@ -44,9 +46,6 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.EventAnalyticalObject;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
@@ -56,13 +55,9 @@ import org.hisp.dhis.trackedentity.TrackedEntityAttribute;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.util.ObjectUtils;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Jan Henrik Overland
@@ -96,7 +91,7 @@ public class EventChart
      * Data element value dimension.
      */
     private DataElement dataElementValueDimension;
-    
+
     /**
      * Attribute value dimension.
      */
@@ -125,8 +120,8 @@ public class EventChart
     /**
      * Indicates whether to hide n/a data.
      */
-    private boolean hideNaData;   
-    
+    private boolean hideNaData;
+
     // -------------------------------------------------------------------------
     // Analytical properties
     // -------------------------------------------------------------------------
@@ -158,7 +153,7 @@ public class EventChart
         List<OrganisationUnit> organisationUnitsAtLevel, List<OrganisationUnit> organisationUnitsInGroups,
         I18nFormat format )
     {
-        this.user = user;
+        this.relativeUser = user;
         this.format = format;
     }
 
@@ -179,8 +174,14 @@ public class EventChart
         {
             filters.add( getDimensionalObject( filter ) );
         }
-        
+
         value = ObjectUtils.firstNonNull( dataElementValueDimension, attributeValueDimension );
+    }
+
+    @Override
+    protected void clearTransientChartStateProperties()
+    {
+        value = null;
     }
 
     @Override
@@ -188,7 +189,7 @@ public class EventChart
     {
         String series = columnDimensions.get( 0 );
 
-        DimensionalObject object = getDimensionalObject( series, relativePeriodDate, user, true,
+        DimensionalObject object = getDimensionalObject( series, relativePeriodDate, relativeUser, true,
             organisationUnitsAtLevel, organisationUnitsInGroups, format );
 
         DimensionalObjectUtils.setDimensionItemsForFilters( object, dataItemGrid, true );
@@ -201,7 +202,7 @@ public class EventChart
     {
         String category = rowDimensions.get( 0 );
 
-        DimensionalObject object = getDimensionalObject( category, relativePeriodDate, user, true,
+        DimensionalObject object = getDimensionalObject( category, relativePeriodDate, relativeUser, true,
             organisationUnitsAtLevel, organisationUnitsInGroups, format );
 
         DimensionalObjectUtils.setDimensionItemsForFilters( object, dataItemGrid, true );
@@ -222,7 +223,6 @@ public class EventChart
     @Override
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Program getProgram()
     {
@@ -237,7 +237,6 @@ public class EventChart
     @Override
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ProgramStage getProgramStage()
     {
@@ -251,7 +250,6 @@ public class EventChart
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getStartDate()
     {
@@ -265,7 +263,6 @@ public class EventChart
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getEndDate()
     {
@@ -279,7 +276,6 @@ public class EventChart
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataElement getDataElementValueDimension()
     {
@@ -294,7 +290,6 @@ public class EventChart
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntityAttribute getAttributeValueDimension()
     {
@@ -308,7 +303,6 @@ public class EventChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "columnDimensions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "columnDimension", namespace = DxfNamespaces.DXF_2_0 )
     public List<String> getColumnDimensions()
@@ -322,7 +316,6 @@ public class EventChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "rowDimensions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "rowDimension", namespace = DxfNamespaces.DXF_2_0 )
     public List<String> getRowDimensions()
@@ -337,7 +330,6 @@ public class EventChart
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public EventOutputType getOutputType()
     {
@@ -350,7 +342,6 @@ public class EventChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isCollapseDataDimensions()
     {
@@ -363,7 +354,6 @@ public class EventChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isHideNaData()
     {
@@ -382,7 +372,6 @@ public class EventChart
     @Override
     @JsonProperty
     @JsonDeserialize( as = BaseDimensionalItemObject.class )
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DimensionalItemObject getValue()
     {

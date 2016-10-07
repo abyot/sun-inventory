@@ -69,8 +69,8 @@ public class SchedulingController
     private RenderService renderService;
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SCHEDULING_ADMIN')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( method = { RequestMethod.POST, RequestMethod.PUT }, consumes = { ContextUtils.CONTENT_TYPE_JSON } )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void schedule( HttpServletRequest request, HttpServletResponse response )
         throws IOException
     {

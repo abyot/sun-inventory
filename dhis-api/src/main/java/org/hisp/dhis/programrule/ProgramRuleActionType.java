@@ -31,7 +31,8 @@ package org.hisp.dhis.programrule;
 /**
  * @author markusbekken
  */
-public enum ProgramRuleActionType {
+public enum ProgramRuleActionType 
+{
     DISPLAYTEXT( "displaytext" ),
     DISPLAYKEYVALUEPAIR( "displaykeyvaluepair" ),
     HIDEFIELD( "hidefield" ),
@@ -41,7 +42,8 @@ public enum ProgramRuleActionType {
     WARNINGONCOMPLETE( "warningoncomplete" ),
     SHOWERROR( "showerror" ),
     ERRORONCOMPLETE( "erroroncomplete" ),
-    CREATEEVENT("createevent");
+    CREATEEVENT("createevent"),
+    SETMANDATORYFIELD("setmandatoryfield");
 
     final String value;
 

@@ -107,7 +107,7 @@ function sendInternalReply()
 
     $("#replyButton").attr("disabled", "disabled");
 
-    setHeaderWaitMessage(i18n_sending_message);
+    setHeaderWaitMessage( i18n_sending_message );
 
     $.postUTF8("sendReply.action", {id: id, text: text, internal: internal}, function () {
         window.location.href = "readMessage.action?id=" + id;
@@ -139,6 +139,8 @@ function togglePriority( id, priority) {
         url: "../api/messageConversations/"+id+"/priority",
         type: "POST",
         data: {"messageConversationPriority": priority}
+    }).then(function() {
+        $("#savedMessage").show().delay( 2400).fadeOut();
     });
 
 }
@@ -160,6 +162,8 @@ function toggleStatus( id, status) {
         url: "../api/messageConversations/"+id+"/status",
         type: "POST",
         data: {"messageConversationStatus": status}
+    }).then(function() {
+        $("#savedMessage").show().delay( 2400).fadeOut();
     });
 
 }

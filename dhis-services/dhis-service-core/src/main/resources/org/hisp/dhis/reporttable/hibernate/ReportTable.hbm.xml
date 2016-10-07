@@ -16,6 +16,8 @@
     &identifiableProperties;
 
     <property name="name" column="name" not-null="true" unique="false" length="230" />
+    
+    <property name="description" type="text" />
 
     <property name="regression" />
 
@@ -147,6 +149,13 @@
 
     <property name="completedOnly" column="completedonly" />
 
+    <property name="title" />
+    
+    <set name="interpretations" inverse="true">
+      <key column="reporttableid" />
+      <one-to-many class="org.hisp.dhis.interpretation.Interpretation" />
+    </set>
+
     <property name="digitGroupSeparator" length="40">
       <type name="org.hibernate.type.EnumType">
         <param name="enumClass">org.hisp.dhis.common.DigitGroupSeparator</param>
@@ -200,20 +209,12 @@
     </set>
 
     <!-- Object Translation -->
-    <set name="translations" table="reporttabletranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="reporttabletranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="reporttableid" foreign-key="fk_objecttranslation_reporttableid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

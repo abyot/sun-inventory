@@ -1,5 +1,23 @@
+<script type="text/javascript">
+        var i18n_months = {
+            january: '$encoder.jsEscape( $i18n.getString( "month.january" ) , "'")',
+            february: '$encoder.jsEscape( $i18n.getString( "month.february" ) , "'")',
+            march: '$encoder.jsEscape( $i18n.getString( "month.march" ) , "'")',
+            april: '$encoder.jsEscape( $i18n.getString( "month.april" ) , "'")',
+            may: '$encoder.jsEscape( $i18n.getString( "month.may" ) , "'")',
+            june: '$encoder.jsEscape( $i18n.getString( "month.june" ) , "'")',
+            july: '$encoder.jsEscape( $i18n.getString( "month.july" ) , "'")',
+            august: '$encoder.jsEscape( $i18n.getString( "month.august" ) , "'")',
+            september: '$encoder.jsEscape( $i18n.getString( "month.september" ) , "'")',
+            october: '$encoder.jsEscape( $i18n.getString( "month.october" ) , "'")',
+            november: '$encoder.jsEscape( $i18n.getString( "month.november" ) , "'")',
+            december: '$encoder.jsEscape( $i18n.getString( "month.december" ) , "'")'
+        }
+        var metadata_sync_scheduler_alert = '$encoder.jsEscape( $i18n.getString( "metadata_sync_scheduler_alert" ) , "'")';
+</script>
+<link type="text/css" rel="stylesheet" href="style/custom-scheduler.css">
 
-<h3>$i18n.getString( "scheduling_management" ) #openHelp( "scheduling" )</h3>
+    <h3>$i18n.getString( "scheduling_management" ) #openHelp( "scheduling" )</h3>
 
 <input id="isRunning" type="hidden" value="${running}">
 
@@ -67,20 +85,97 @@
 </select>
 </div>
 
-<!-- SMS -->
+<!-- Metadata Sync-->
+    <div class="settingHeader">$i18n.getString( "metadata_synchronization")</div>
 
-<div class="settingHeader">$i18n.getString( "sms_scheduler")</div>
+    <div class="settingLabel settingIndent">$i18n.getString( "metadata_synchronization_strategy")</div>
 
-<div class="settingLabel settingIndent">$i18n.getString( "sms_scheduler_strategy" )</div>
+    <div class="settingLabel settingIndent tipText">$i18n.getString( "last_success" ): $!format.formatDateTime( $lastMetaDataSyncSuccess )</div>
 
-<div class="settingLabel settingIndent tipText">$i18n.getString( "last_success" ): $!format.formatDateTime( $lastSmsSchedulerSuccess )</div>
+    <div class="setting settingIndent">
+        <select id="metadataSyncStrategy" name="metadataSyncStrategy" class="scheduling">
+            <option value="disabled">$i18n.getString( "disabled" )</option>
+            <option value="enabled"#if( $metadataSyncStrategy && $metadataSyncStrategy == "enabled" ) selected="selected"#end>$i18n.getString( "enabled" )</option>
+        </select>
+      <input id="submitSyncNow" type="button" style="width:140px" value="$i18n.getString( 'synchronize_now' )"/>
+    </div>
+
+    <div id="scheduler" class="setting settingIndent schedulerWrapper scheduling">
+
+        <div class="syncActionWrapper">
+
+            <div class="radioButtonGroup">
+                <input type="radio" class="radio" name="datepick" id="daily" value="daily">$i18n.getString( "Daily" )<br>
+                <input type="radio" class="radio" name="datepick" id="weekly" value="weekly">$i18n.getString( "Weekly" )<br>
+                <input type="radio" class="radio" name="datepick" id="monthly" value="monthly">$i18n.getString( "Monthly" )<br>
+                <input type="radio" class="radio" name="datepick" id="yearly" value="yearly">$i18n.getString( "Yearly" )<br>
+            </div>
+            <div class="dateTimePicker">
+                <span id="addSchedulerLabel" class="schedulerHeader"></span>
+
+                <table class="weekPickerContainer">
+                    <tr>
+                        <td class="schedulerLabel">$i18n.getString( "Every" )</td>
+                        <td id="weekPeriod">
+                            <select id="weekPeriodNumber" name="value" class="customScheduling inline" >
+                                <option value="1-7" selected="selected">1st</option>
+                                <option value="8-14">2nd</option>
+                                <option value="15-21">3rd</option>
+                                <option value="22-28">4th</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select id="weekPicker" name="weekPicker" class="customScheduling inline">
+                                <option value="0" selected="selected">$i18n.getString( "weekday.sunday" )</option>
+                                <option value="1">$i18n.getString( "weekday.monday" )</option>
+                                <option value="2">$i18n.getString( "weekday.tuesday" )</option>
+                                <option value="3">$i18n.getString( "weekday.wednesday" )</option>
+                                <option value="4">$i18n.getString( "weekday.thursday" )</option>
+                                <option value="5">$i18n.getString( "weekday.friday" )</option>
+                                <option value="6">$i18n.getString( "weekday.saturday" )</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <table class="yearPickerContainer">
+                    <tr>
+                        <td class="schedulerLabel">$i18n.getString( "Every" )</td>
+                        <td><select name="monthPicker" id="monthPicker" class="customScheduling inline"></select></td>
+                        <td><select name="dayPicker" id="dayPicker" class="customScheduling inline"></select></td>
+                    </tr>
+                </table>
+                <table class="timePickerContainer">
+                    <tr>
+                        <td class="schedulerLabel">$i18n.getString( "At" )</td>
+                        <td>
+                            <select id="timePicker" name="timePicker" class="customScheduling inline"></select>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+        </div>
+        <input type="text" id="metadataSyncCron" name="metadataSyncCron" class="scheduling" value="${metadataSyncCron}" hidden>
+    </div>
+
+<!-- Program notifications -->
+
+<div class="settingHeader">$i18n.getString( "program_notifications_scheduler" )</div>
+
+<div class="settingLabel settingIndent">$i18n.getString( "program_notifications_scheduling_strategy" )</div>
+
+<div class="settingLabel settingIndent tipText">$i18n.getString( "last_success" ): $!format.formatDateTime( $!lastProgramNotificationSchedulerSuccess )</div>
 
 <div class="setting settingIndent">
-<select id="smsSchedulerStrategy" name="smsSchedulerStrategy" class="scheduling">
-    <option value="disabled">$i18n.getString( "disabled" )</option>
-    <option value="everyMidNight"#if ( $smsSchedulerStrategy && $smsSchedulerStrategy == "everyMidNight" ) selected="selected"#end>$i18n.getString( "all_daily" )</option>
-</select>
-<input type="button" style="width:140px" onclick="window.location.href='executeTask.action?taskKey=sendScheduledMessageTaskNow'" value="$i18n.getString( 'Run Now' )"/>
+    <select id="programNotificationSchedulerStrategy" name="programNotificationSchedulerStrategy" class="scheduling">
+        <option value="disabled">$i18n.getString( "disabled" )</option>
+        #set( $dailyStr = $i18n.getString( "daily") )
+        <option value="dailyFiveAM"#if ( $programNotificationSchedulerStrategy && $programNotificationSchedulerStrategy == "dailyFiveAM" ) selected="selected"#end>${dailyStr} 5:00</option>
+        <option value="dailySixAM"#if ( $programNotificationSchedulerStrategy && $programNotificationSchedulerStrategy == "dailySixAM" ) selected="selected"#end>${dailyStr} 6:00</option>
+        <option value="dailySevenAM"#if ( $programNotificationSchedulerStrategy && $programNotificationSchedulerStrategy == "dailySevenAM" ) selected="selected"#end>${dailyStr} 7:00</option>
+        <option value="dailyEightAM"#if ( $programNotificationSchedulerStrategy && $programNotificationSchedulerStrategy == "dailyEightAM" ) selected="selected"#end>${dailyStr} 8:00</option>
+    </select>
+    <input type="button" style="width:140px" onclick="window.location.href='executeTask.action?taskKey=scheduledProgramNotificationsTask'" value="$i18n.getString( 'run_now' )"/>
 </div>
 
 <!-- Submit -->
@@ -97,4 +192,13 @@
 
 </form>
 
+<form id="metadataSyncNowForm" method="post" action="executeMetaDataSyncTask.action"></form>
+
+<input type="hidden" id="currentRunningTaskStatus" name="currentRunningTaskStatus" type="hidden"
+    #if ( ${currentRunningTaskStatus} == "task_already_running" )
+           value="$i18n.getString( "metadata_sync_in_progress" )"
+    #elseif ( ${currentRunningTaskStatus} == "task_started" )
+           value="$i18n.getString( "metadata_sync_has_started" )"
+    #end
+    >
 <span id="info">$i18n.getString( "scheduling_is" ) $!i18n.getString( $!status.key )</span>

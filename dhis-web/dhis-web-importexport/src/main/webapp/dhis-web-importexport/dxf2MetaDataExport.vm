@@ -16,8 +16,8 @@
     <tr>
       <td colspan="2">
         <select id="format" style="width: 204px;">
-          <option value="xml">XML</option>
           <option value="json">JSON</option>
+          <option value="xml">XML</option>
         </select>
       </td>
     </tr>
@@ -25,9 +25,18 @@
     <tr>
       <td colspan="2">
         <select id="compression" style="width: 204px;">
-          <option value="zip">Zipped</option>
-          <option value="gz">GZipped</option>
-          <option value="uncompressed">Uncompressed</option>
+          <option value="zip">$i18n.getString( 'compression_zip' )</option>
+          <option value="gz">$i18n.getString( 'compression_gzip' )</option>
+          <option value="uncompressed">$i18n.getString( 'uncompressed' )</option>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="2">
+        <select id="sharing" style="width: 204px;">
+          <option value="true">$i18n.getString( 'include_sharing' )</option>
+          <option value="false">$i18n.getString( 'exclude_sharing' )</option>
         </select>
       </td>
     </tr>

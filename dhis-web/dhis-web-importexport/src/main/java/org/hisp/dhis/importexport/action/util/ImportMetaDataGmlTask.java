@@ -28,11 +28,10 @@ package org.hisp.dhis.importexport.action.util;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.security.SecurityContextRunnable;
-import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.dxf2.gml.GmlImportService;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
 import org.hisp.dhis.importexport.ImportStrategy;
-import org.hisp.dhis.scheduling.TaskId;
+import org.hisp.dhis.security.SecurityContextRunnable;
 
 import java.io.InputStream;
 
@@ -42,33 +41,23 @@ import java.io.InputStream;
 public class ImportMetaDataGmlTask
     extends SecurityContextRunnable
 {
-    private TaskId taskId;
+    private final GmlImportService gmlImportService;
 
-    private String userUid;
+    private final MetadataImportParams importParams;
 
-    // -------------------------------------------------------------------------
-    // Dependencies
-    // -------------------------------------------------------------------------
-
-    private GmlImportService gmlImportService;
-
-    private ImportOptions importOptions;
-
-    private InputStream inputStream;
+    private final InputStream inputStream;
 
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
 
-    public ImportMetaDataGmlTask( String userUid, GmlImportService gmlImportService,
-        ImportOptions importOptions, InputStream inputStream, TaskId taskId )
+    public ImportMetaDataGmlTask( GmlImportService gmlImportService,
+        MetadataImportParams importParams, InputStream inputStream )
     {
         super();
-        this.userUid = userUid;
         this.gmlImportService = gmlImportService;
-        this.importOptions = importOptions;
+        this.importParams = importParams;
         this.inputStream = inputStream;
-        this.taskId = taskId;
     }
 
     // -------------------------------------------------------------------------
@@ -78,7 +67,7 @@ public class ImportMetaDataGmlTask
     @Override
     public void call()
     {
-        importOptions.setImportStrategy( ImportStrategy.UPDATE );
-        gmlImportService.importGml( inputStream, userUid, importOptions, taskId );
+        importParams.setImportStrategy( ImportStrategy.UPDATE );
+        gmlImportService.importGml( inputStream, importParams );
     }
 }

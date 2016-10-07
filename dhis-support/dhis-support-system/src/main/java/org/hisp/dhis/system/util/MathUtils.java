@@ -33,18 +33,16 @@ import java.math.MathContext;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.apache.commons.validator.routines.DoubleValidator;
 import org.apache.commons.validator.routines.IntegerValidator;
 import org.hisp.dhis.expression.Operator;
 import org.hisp.dhis.system.jep.CustomFunctions;
 import org.nfunk.jep.JEP;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 
 /**
  * @author Lars Helge Overland
@@ -54,7 +52,7 @@ public class MathUtils
     /**
      * Cache for JEP expression evaluation.
      */
-    private static Cache<String, Double> EXPR_EVAL_CACHE = CacheBuilder.newBuilder()
+    private static Cache<String, Double> EXPR_EVAL_CACHE = Caffeine.newBuilder()
         .expireAfterAccess( 1, TimeUnit.HOURS )
         .initialCapacity( 200 )
         .maximumSize( 5000 )
@@ -118,14 +116,7 @@ public class MathUtils
      */
     public static double calculateExpression( String expression )
     {
-        try
-        {
-            return EXPR_EVAL_CACHE.get( expression, () -> calculateExpressionInternal( expression ) );
-        }
-        catch ( ExecutionException ex )
-        {
-            throw new RuntimeException( "Expression calculation error", ex );
-        }
+        return EXPR_EVAL_CACHE.get( expression, c -> calculateExpressionInternal( expression ) );
     }
 
     /**

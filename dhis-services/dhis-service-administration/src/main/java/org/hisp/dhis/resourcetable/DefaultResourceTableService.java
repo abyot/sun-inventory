@@ -38,7 +38,7 @@ import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
-import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
+import org.hisp.dhis.dataelement.DataElementCategoryService;
 import org.hisp.dhis.dataelement.DataElementGroupSet;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.indicator.IndicatorGroupSet;
@@ -49,7 +49,6 @@ import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.PeriodService;
 import org.hisp.dhis.resourcetable.table.CategoryOptionComboNameResourceTable;
 import org.hisp.dhis.resourcetable.table.CategoryOptionComboResourceTable;
-import org.hisp.dhis.resourcetable.table.CategoryOptionGroupSetResourceTable;
 import org.hisp.dhis.resourcetable.table.CategoryResourceTable;
 import org.hisp.dhis.resourcetable.table.DataApprovalMinLevelResourceTable;
 import org.hisp.dhis.resourcetable.table.DataElementGroupSetResourceTable;
@@ -118,6 +117,13 @@ public class DefaultResourceTableService
         this.dataApprovalLevelService = dataApprovalLevelService;
     }
     
+    private DataElementCategoryService categoryService;
+    
+    public void setCategoryService( DataElementCategoryService categoryService )
+    {
+        this.categoryService = categoryService;
+    }
+
     private StatementBuilder statementBuilder;
     
     public void setStatementBuilder( StatementBuilder statementBuilder )
@@ -143,7 +149,7 @@ public class DefaultResourceTableService
     public void generateDataSetOrganisationUnitCategoryTable()
     {
         resourceTableStore.generateResourceTable( new DataSetOrganisationUnitCategoryResourceTable( 
-            idObjectManager.getAllNoAcl( DataSet.class ) ) );
+            idObjectManager.getAllNoAcl( DataSet.class ), categoryService.getDefaultDataElementCategoryOptionCombo() ) );
     }
     
     @Override
@@ -153,15 +159,6 @@ public class DefaultResourceTableService
         resourceTableStore.generateResourceTable( new CategoryOptionComboNameResourceTable( 
             idObjectManager.getAllNoAcl( DataElementCategoryCombo.class ), 
             statementBuilder.getColumnQuote() ) );
-    }
-
-    @Override
-    @Transactional
-    public void generateCategoryOptionGroupSetTable()
-    {
-        resourceTableStore.generateResourceTable( new CategoryOptionGroupSetResourceTable(
-            idObjectManager.getAllNoAcl( CategoryOptionGroupSet.class ),
-            statementBuilder.getColumnQuote(), idObjectManager.getAllNoAcl( DataElementCategoryOptionCombo.class ) ) );
     }
 
     @Override

@@ -28,19 +28,19 @@ package org.hisp.dhis.common;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import org.hisp.dhis.dataelement.CategoryOptionGroup;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
 * @author Lars Helge Overland
 */
 public interface AnalyticalObject
-    extends IdentifiableObject
+    extends IdentifiableObject, InterpretableObject
 {
     void populateAnalyticalProperties();
     
@@ -65,4 +65,10 @@ public interface AnalyticalObject
     boolean addDataDimensionItem( DimensionalItemObject object );
     
     boolean removeDataDimensionItem( DimensionalItemObject object );
+    
+    String getTitle();
+    
+    boolean hasUserOrgUnit();
+
+    void clearTransientState();
 }

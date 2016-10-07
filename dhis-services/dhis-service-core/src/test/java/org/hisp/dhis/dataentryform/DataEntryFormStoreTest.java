@@ -74,46 +74,44 @@ public class DataEntryFormStoreTest
     @Test
     public void testAddDataEntryForm()
     {
-        DataSet dataSetA = new DataSet( "DataSet-A", periodType );
+        DataSet dataSetA = createDataSet( 'A', periodType );
 
         dataSetService.addDataSet( dataSetA );
 
-        DataEntryForm dataEntryFormA = new DataEntryForm( "DataEntryForm-A" );
+        DataEntryForm dataEntryFormA = createDataEntryForm( 'A' );
 
         int dataEntryFormAid = dataEntryFormStore.save(dataEntryFormA );
 
         dataEntryFormA = dataEntryFormStore.get( dataEntryFormAid );
 
         assertEquals( dataEntryFormAid, dataEntryFormA.getId() );
-        assertEquals( "DataEntryForm-A", dataEntryFormA.getName() );
+        assertEquals( "DataEntryFormA", dataEntryFormA.getName() );
     }
 
     @Test
     public void testUpdateDataEntryForm()
     {
-
-        DataEntryForm dataEntryForm = new DataEntryForm( "DataEntryForm-A" );
+        DataEntryForm dataEntryForm = createDataEntryForm( 'A' );
 
         int id = dataEntryFormStore.save( dataEntryForm );
 
         dataEntryForm = dataEntryFormStore.get( id );
 
-        assertEquals( "DataEntryForm-A", dataEntryForm.getName() );
+        assertEquals( "DataEntryFormA", dataEntryForm.getName() );
 
-        dataEntryForm.setName( "DataEntryForm-X" );
+        dataEntryForm.setName( "DataEntryFormX" );
 
         dataEntryFormStore.update( dataEntryForm );
 
         dataEntryForm = dataEntryFormStore.get( id );
 
-        assertEquals( dataEntryForm.getName(), "DataEntryForm-X" );
+        assertEquals( dataEntryForm.getName(), "DataEntryFormX" );
     }
 
     @Test
     public void testDeleteAndGetDataEntryForm()
     {
-
-        DataEntryForm dataEntryForm = new DataEntryForm( "DataEntryForm-A" );
+        DataEntryForm dataEntryForm = createDataEntryForm( 'A' );
 
         int id = dataEntryFormStore.save( dataEntryForm );
 
@@ -129,22 +127,21 @@ public class DataEntryFormStoreTest
     @Test
     public void testGetDataEntryFormByName()
     {
-        DataEntryForm dataEntryForm = new DataEntryForm( "DataEntryForm-A" );
+        DataEntryForm dataEntryForm = createDataEntryForm( 'A' );
 
         int id = dataEntryFormStore.save( dataEntryForm );
 
         dataEntryForm = dataEntryFormStore.get( id );
 
-        assertEquals( dataEntryFormStore.getDataEntryFormByName( "DataEntryForm-A" ), dataEntryForm );
-        assertNull( dataEntryFormStore.getDataEntryFormByName( "DataEntryForm-X" ) );
+        assertEquals( dataEntryFormStore.getDataEntryFormByName( "DataEntryFormA" ), dataEntryForm );
+        assertNull( dataEntryFormStore.getDataEntryFormByName( "DataEntryFormX" ) );
     }
 
     @Test
     public void testGetAllDataEntryForms()
     {
-
-        DataEntryForm dataEntryFormA = new DataEntryForm( "DataEntryForm-A" );
-        DataEntryForm dataEntryFormB = new DataEntryForm( "DataEntryForm-B" );
+        DataEntryForm dataEntryFormA = createDataEntryForm( 'A' );
+        DataEntryForm dataEntryFormB = createDataEntryForm( 'B' );
 
         dataEntryFormStore.save( dataEntryFormA );
         dataEntryFormStore.save( dataEntryFormB );

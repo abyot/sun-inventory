@@ -28,25 +28,15 @@ package org.hisp.dhis.indicator;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.getCountByName;
-import static org.hisp.dhis.i18n.I18nUtils.getObjectsBetween;
-import static org.hisp.dhis.i18n.I18nUtils.getObjectsBetweenByName;
-import static org.hisp.dhis.i18n.I18nUtils.getObjectsByName;
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
+import org.hisp.dhis.common.GenericIdentifiableObjectStore;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.hisp.dhis.common.GenericIdentifiableObjectStore;
-import org.hisp.dhis.commons.filter.Filter;
-import org.hisp.dhis.commons.filter.FilterUtils;
-import org.hisp.dhis.i18n.I18nService;
-import org.springframework.transaction.annotation.Transactional;
-
 /**
  * @author Lars Helge Overland
- * @version $Id$
  */
 @Transactional
 public class DefaultIndicatorService
@@ -84,13 +74,6 @@ public class DefaultIndicatorService
         this.indicatorGroupSetStore = indicatorGroupSetStore;
     }
 
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
-    }
-
     // -------------------------------------------------------------------------
     // Indicator
     // -------------------------------------------------------------------------
@@ -116,91 +99,43 @@ public class DefaultIndicatorService
     @Override
     public Indicator getIndicator( int id )
     {
-        return i18n( i18nService, indicatorStore.get( id ) );
+        return indicatorStore.get( id );
     }
 
     @Override
     public Indicator getIndicator( String uid )
     {
-        return i18n( i18nService, indicatorStore.getByUid( uid ) );
+        return indicatorStore.getByUid( uid );
     }
 
     @Override
     public List<Indicator> getAllIndicators()
     {
-        return i18n( i18nService, indicatorStore.getAll() );
+        return indicatorStore.getAll();
     }
 
     @Override
     public List<Indicator> getIndicatorsByUid( Collection<String> uids )
     {
-        return i18n( i18nService, indicatorStore.getByUid( uids ) );
-    }
-
-    @Override
-    public List<Indicator> getIndicatorByName( String name )
-    {
-        return new ArrayList<>( i18n( i18nService, indicatorStore.getAllEqName( name ) ) );
-    }
-
-    @Override
-    public List<Indicator> getIndicatorByShortName( String shortName )
-    {
-        return new ArrayList<>( i18n( i18nService, indicatorStore.getAllEqShortName( shortName ) ) );
-    }
-
-    @Override
-    public Indicator getIndicatorByCode( String code )
-    {
-        return i18n( i18nService, indicatorStore.getByCode( code ) );
+        return indicatorStore.getByUid( uids );
     }
 
     @Override
     public List<Indicator> getIndicatorsWithGroupSets()
     {
-        return i18n( i18nService, indicatorStore.getIndicatorsWithGroupSets() );
+        return indicatorStore.getIndicatorsWithGroupSets();
     }
 
     @Override
     public List<Indicator> getIndicatorsWithoutGroups()
     {
-        return i18n( i18nService, indicatorStore.getIndicatorsWithoutGroups() );
+        return indicatorStore.getIndicatorsWithoutGroups();
     }
 
     @Override
     public List<Indicator> getIndicatorsWithDataSets()
     {
-        return i18n( i18nService, indicatorStore.getIndicatorsWithDataSets() );
-    }
-
-    @Override
-    public List<Indicator> getIndicatorsLikeName( String name )
-    {
-        return getObjectsByName( i18nService, indicatorStore, name );
-    }
-
-    @Override
-    public int getIndicatorCount()
-    {
-        return indicatorStore.getCount();
-    }
-
-    @Override
-    public int getIndicatorCountByName( String name )
-    {
-        return getCountByName( i18nService, indicatorStore, name );
-    }
-
-    @Override
-    public List<Indicator> getIndicatorsBetween( int first, int max )
-    {
-        return getObjectsBetween( i18nService, indicatorStore, first, max );
-    }
-
-    @Override
-    public List<Indicator> getIndicatorsBetweenByName( String name, int first, int max )
-    {
-        return getObjectsBetweenByName( i18nService, indicatorStore, name, first, max );
+        return indicatorStore.getIndicatorsWithDataSets();
     }
 
     // -------------------------------------------------------------------------
@@ -228,49 +163,19 @@ public class DefaultIndicatorService
     @Override
     public IndicatorType getIndicatorType( int id )
     {
-        return i18n( i18nService, indicatorTypeStore.get( id ) );
+        return indicatorTypeStore.get( id );
     }
 
     @Override
     public IndicatorType getIndicatorType( String uid )
     {
-        return i18n( i18nService, indicatorTypeStore.getByUid( uid ) );
+        return indicatorTypeStore.getByUid( uid );
     }
 
     @Override
     public List<IndicatorType> getAllIndicatorTypes()
     {
-        return i18n( i18nService, indicatorTypeStore.getAll() );
-    }
-
-    @Override
-    public IndicatorType getIndicatorTypeByName( String name )
-    {
-        return i18n( i18nService, indicatorTypeStore.getByName( name ) );
-    }
-
-    @Override
-    public int getIndicatorTypeCount()
-    {
-        return indicatorTypeStore.getCount();
-    }
-
-    @Override
-    public int getIndicatorTypeCountByName( String name )
-    {
-        return getCountByName( i18nService, indicatorTypeStore, name );
-    }
-
-    @Override
-    public List<IndicatorType> getIndicatorTypesBetween( int first, int max )
-    {
-        return getObjectsBetween( i18nService, indicatorTypeStore, first, max );
-    }
-
-    @Override
-    public List<IndicatorType> getIndicatorTypesBetweenByName( String name, int first, int max )
-    {
-        return getObjectsBetweenByName( i18nService, indicatorTypeStore, name, first, max );
+        return indicatorTypeStore.getAll();
     }
 
     // -------------------------------------------------------------------------
@@ -298,62 +203,19 @@ public class DefaultIndicatorService
     @Override
     public IndicatorGroup getIndicatorGroup( int id )
     {
-        return i18n( i18nService, indicatorGroupStore.get( id ) );
-    }
-
-    @Override
-    public IndicatorGroup getIndicatorGroup( int id, boolean i18nIndicators )
-    {
-        IndicatorGroup group = getIndicatorGroup( id );
-
-        if ( i18nIndicators )
-        {
-            i18n( i18nService, group.getMembers() );
-        }
-
-        return group;
+        return indicatorGroupStore.get( id );
     }
 
     @Override
     public IndicatorGroup getIndicatorGroup( String uid )
     {
-        return i18n( i18nService, indicatorGroupStore.getByUid( uid ) );
+        return indicatorGroupStore.getByUid( uid );
     }
 
     @Override
     public List<IndicatorGroup> getAllIndicatorGroups()
     {
-        return i18n( i18nService, indicatorGroupStore.getAll() );
-    }
-
-    @Override
-    public List<IndicatorGroup> getIndicatorGroupByName( String name )
-    {
-        return new ArrayList<>( i18n( i18nService, indicatorGroupStore.getAllEqName( name ) ) );
-    }
-
-    @Override
-    public int getIndicatorGroupCount()
-    {
-        return indicatorGroupStore.getCount();
-    }
-
-    @Override
-    public int getIndicatorGroupCountByName( String name )
-    {
-        return getCountByName( i18nService, indicatorGroupStore, name );
-    }
-
-    @Override
-    public List<IndicatorGroup> getIndicatorGroupsBetween( int first, int max )
-    {
-        return getObjectsBetween( i18nService, indicatorGroupStore, first, max );
-    }
-
-    @Override
-    public List<IndicatorGroup> getIndicatorGroupsBetweenByName( String name, int first, int max )
-    {
-        return getObjectsBetweenByName( i18nService, indicatorGroupStore, name, first, max );
+        return indicatorGroupStore.getAll();
     }
 
     // -------------------------------------------------------------------------
@@ -381,74 +243,25 @@ public class DefaultIndicatorService
     @Override
     public IndicatorGroupSet getIndicatorGroupSet( int id )
     {
-        return i18n( i18nService, indicatorGroupSetStore.get( id ) );
-    }
-
-    @Override
-    public IndicatorGroupSet getIndicatorGroupSet( int id, boolean i18nGroups )
-    {
-        IndicatorGroupSet groupSet = getIndicatorGroupSet( id );
-
-        if ( i18nGroups )
-        {
-            i18n( i18nService, groupSet.getMembers() );
-        }
-
-        return groupSet;
+        return indicatorGroupSetStore.get( id );
     }
 
     @Override
     public IndicatorGroupSet getIndicatorGroupSet( String uid )
     {
-        return i18n( i18nService, indicatorGroupSetStore.getByUid( uid ) );
+        return indicatorGroupSetStore.getByUid( uid );
     }
 
     @Override
     public List<IndicatorGroupSet> getIndicatorGroupSetByName( String name )
     {
-        return new ArrayList<>( i18n( i18nService, indicatorGroupSetStore.getAllEqName( name ) ) );
+        return new ArrayList<>( indicatorGroupSetStore.getAllEqName( name ) );
     }
 
-    @Override
-    public List<IndicatorGroupSet> getCompulsoryIndicatorGroupSetsWithMembers()
-    {
-        return FilterUtils.filter( getAllIndicatorGroupSets(), new Filter<IndicatorGroupSet>()
-        {
-            @Override
-            public boolean retain( IndicatorGroupSet object )
-            {
-                return object.isCompulsory() && object.hasIndicatorGroups();
-            }
-        } );
-    }
 
     @Override
     public List<IndicatorGroupSet> getAllIndicatorGroupSets()
     {
-        return i18n( i18nService, indicatorGroupSetStore.getAll() );
-    }
-
-    @Override
-    public int getIndicatorGroupSetCount()
-    {
-        return indicatorGroupSetStore.getCount();
-    }
-
-    @Override
-    public int getIndicatorGroupSetCountByName( String name )
-    {
-        return getCountByName( i18nService, indicatorGroupSetStore, name );
-    }
-
-    @Override
-    public List<IndicatorGroupSet> getIndicatorGroupSetsBetween( int first, int max )
-    {
-        return getObjectsBetween( i18nService, indicatorGroupSetStore, first, max );
-    }
-
-    @Override
-    public List<IndicatorGroupSet> getIndicatorGroupSetsBetweenByName( String name, int first, int max )
-    {
-        return getObjectsBetweenByName( i18nService, indicatorGroupSetStore, name, first, max );
+        return indicatorGroupSetStore.getAll();
     }
 }

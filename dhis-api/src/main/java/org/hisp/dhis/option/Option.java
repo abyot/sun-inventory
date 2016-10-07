@@ -29,14 +29,11 @@ package org.hisp.dhis.option;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
 
@@ -48,7 +45,11 @@ public class Option
     extends BaseIdentifiableObject
 {
     private OptionSet optionSet;
-    
+
+    // -------------------------------------------------------------------------
+    // Constructors
+    // -------------------------------------------------------------------------
+
     public Option()
     {
         setAutoFields();
@@ -60,6 +61,10 @@ public class Option
         this.name = name;
         this.code = code;
     }
+
+    // -------------------------------------------------------------------------
+    // Logic
+    // -------------------------------------------------------------------------
 
     @Override
     public boolean haveUniqueNames()
@@ -73,6 +78,11 @@ public class Option
         return false;
     }
 
+
+    // -------------------------------------------------------------------------
+    // Getters and setters
+    // -------------------------------------------------------------------------
+
     @Override
     @JsonProperty
     @JacksonXmlProperty( isAttribute = true )
@@ -84,7 +94,6 @@ public class Option
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public OptionSet getOptionSet()
     {
@@ -95,4 +104,5 @@ public class Option
     {
         this.optionSet = optionSet;
     }
+
 }

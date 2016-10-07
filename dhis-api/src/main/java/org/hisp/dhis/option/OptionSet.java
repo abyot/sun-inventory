@@ -29,7 +29,6 @@ package org.hisp.dhis.option;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -40,9 +39,6 @@ import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.ValueType;
 import org.hisp.dhis.common.VersionedObject;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +53,6 @@ public class OptionSet
     extends BaseIdentifiableObject
     implements VersionedObject
 {
-    @Scanned
     private List<Option> options = new ArrayList<>();
 
     private ValueType valueType;
@@ -72,9 +67,10 @@ public class OptionSet
     {
     }
 
-    public OptionSet( String name )
+    public OptionSet( String name, ValueType valueType )
     {
         this.name = name;
+        this.valueType = valueType;
     }
 
     // -------------------------------------------------------------------------
@@ -86,7 +82,7 @@ public class OptionSet
         this.options.add( option );
         option.setOptionSet( this );
     }
-    
+
     public void removeAllOptions()
     {
         options.clear();
@@ -132,7 +128,6 @@ public class OptionSet
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "options", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "option", namespace = DxfNamespaces.DXF_2_0 )
     public List<Option> getOptions()

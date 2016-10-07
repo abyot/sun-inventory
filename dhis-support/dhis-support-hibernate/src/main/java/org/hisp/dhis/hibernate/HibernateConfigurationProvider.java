@@ -47,4 +47,6 @@ public interface HibernateConfigurationProvider
     List<Resource> getJarResources();
     
     List<Resource> getDirectoryResources();
+    
+    List<String> getClusterHostnames();
 }

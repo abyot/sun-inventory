@@ -1,5 +1,8 @@
 package org.hisp.dhis.dxf2.events.enrollment;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /*
  * Copyright (c) 2004-2016, University of Oslo
  * All rights reserved.
@@ -37,6 +40,7 @@ import org.hisp.dhis.common.exception.InvalidIdentifierReferenceException;
 import org.hisp.dhis.commons.collection.CachingMap;
 import org.hisp.dhis.dbms.DbmsManager;
 import org.hisp.dhis.dxf2.common.ImportOptions;
+import org.hisp.dhis.dxf2.events.event.Coordinate;
 import org.hisp.dhis.dxf2.events.event.Note;
 import org.hisp.dhis.dxf2.events.trackedentity.Attribute;
 import org.hisp.dhis.dxf2.events.trackedentity.TrackedEntityInstance;
@@ -65,6 +69,7 @@ import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -119,6 +124,8 @@ public abstract class AbstractEnrollmentService
     private CachingMap<String, Program> programCache = new CachingMap<>();
 
     private CachingMap<String, TrackedEntityAttribute> trackedEntityAttributeCache = new CachingMap<>();
+    
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     // -------------------------------------------------------------------------
     // READ
@@ -165,6 +172,32 @@ public abstract class AbstractEnrollmentService
         {
             enrollment.setOrgUnit( programInstance.getOrganisationUnit().getUid() );
             enrollment.setOrgUnitName( programInstance.getOrganisationUnit().getName() );
+        }
+        
+        if ( programInstance.getProgram().getCaptureCoordinates() )
+        {
+            Coordinate coordinate = null;
+
+            if ( programInstance.getLongitude() != null && programInstance.getLatitude() != null )
+            {
+                coordinate = new Coordinate( programInstance.getLongitude(), programInstance.getLatitude() );
+
+                try
+                {
+                    List<Double> list = OBJECT_MAPPER.readValue( coordinate.getCoordinateString(),  new TypeReference<List<Double>>() {} );
+
+                    coordinate.setLongitude( list.get( 0 ) );
+                    coordinate.setLatitude( list.get( 1 ) );
+                }
+                catch ( IOException ignored )
+                {
+                }
+            }
+
+            if ( coordinate != null && coordinate.isValid() )
+            {
+                enrollment.setCoordinate( coordinate );
+            }
         }
 
         enrollment.setCreated( programInstance.getCreated() );
@@ -307,6 +340,29 @@ public abstract class AbstractEnrollmentService
             return importSummary;
         }
 
+        if ( program.getDisplayIncidentDate() && programInstance.getIncidentDate() == null )
+        {
+            importSummary.setStatus( ImportStatus.ERROR );
+            importSummary.setDescription( "DisplayIncidentDate is true but IncidentDate is null ");
+            importSummary.incrementIgnored();
+
+            return importSummary;
+        }
+        
+        if( program.getCaptureCoordinates() )
+        {
+            if ( enrollment.getCoordinate().isValid() )
+            {
+                programInstance.setLatitude( enrollment.getCoordinate().getLatitude() );
+                programInstance.setLongitude( enrollment.getCoordinate().getLongitude() );
+            }
+            else
+            {
+                programInstance.setLatitude( null );
+                programInstance.setLongitude( null );
+            }
+        }
+
         updateAttributeValues( enrollment, importOptions );
         programInstance.setFollowup( enrollment.getFollowup() );
         programInstanceService.updateProgramInstance( programInstance );
@@ -393,6 +449,29 @@ public abstract class AbstractEnrollmentService
         programInstance.setEnrollmentDate( enrollment.getEnrollmentDate() );
         programInstance.setFollowup( enrollment.getFollowup() );
 
+        if ( program.getDisplayIncidentDate() && programInstance.getIncidentDate() == null )
+        {
+            importSummary.setStatus( ImportStatus.ERROR );
+            importSummary.setDescription( "DisplayIncidentDate is true but IncidentDate is null ");
+            importSummary.incrementIgnored();
+
+            return importSummary;
+        }
+        
+        if( program.getCaptureCoordinates() )
+        {
+            if ( enrollment.getCoordinate().isValid() )
+            {
+                programInstance.setLatitude( enrollment.getCoordinate().getLatitude() );
+                programInstance.setLongitude( enrollment.getCoordinate().getLongitude() );
+            }
+            else
+            {
+                programInstance.setLatitude( null );
+                programInstance.setLongitude( null );
+            }
+        }
+
         if ( EnrollmentStatus.fromProgramStatus( programInstance.getStatus() ) != enrollment.getStatus() )
         {
             if ( EnrollmentStatus.CANCELLED == enrollment.getStatus() )
@@ -403,9 +482,9 @@ public abstract class AbstractEnrollmentService
             {
                 programInstanceService.completeProgramInstanceStatus( programInstance );
             }
-            else
+            else if ( EnrollmentStatus.ACTIVE == enrollment.getStatus() )
             {
-                return new ImportSummary( ImportStatus.ERROR, "Re-enrollment is not allowed, please create a new enrollment." ).incrementIgnored();
+                programInstanceService.incompleteProgramInstanceStatus( programInstance );
             }
         }
 

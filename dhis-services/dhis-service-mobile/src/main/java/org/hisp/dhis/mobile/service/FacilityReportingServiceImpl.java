@@ -28,19 +28,6 @@ package org.hisp.dhis.mobile.service;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,6 +60,19 @@ import org.hisp.dhis.program.ProgramService;
 import org.hisp.dhis.user.CurrentUserService;
 import org.springframework.beans.factory.annotation.Required;
 
+import com.google.common.collect.Sets;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
+
 public class FacilityReportingServiceImpl
     implements FacilityReportingService
 {
@@ -91,8 +91,6 @@ public class FacilityReportingServiceImpl
     private org.hisp.dhis.datavalue.DataValueService dataValueService;
 
     private org.hisp.dhis.dataset.DataSetService dataSetService;
-
-    private org.hisp.dhis.i18n.I18nService i18nService;
 
     private CompleteDataSetRegistrationService registrationService;
 
@@ -232,8 +230,6 @@ public class FacilityReportingServiceImpl
             return null;
         }
 
-        dataSet = i18n( i18nService, locale, dataSet );
-
         DataSet ds = new DataSet();
 
         ds.setId( dataSet.getId() );
@@ -328,8 +324,6 @@ public class FacilityReportingServiceImpl
 
         for ( org.hisp.dhis.dataelement.DataElement dataElement : dataElements )
         {
-            dataElement = i18n( i18nService, locale, dataElement );
-
             DataElement de = ModelMapping.getDataElement( dataElement );
 
             // For facility Reporting, no data elements are mandatory
@@ -438,7 +432,7 @@ public class FacilityReportingServiceImpl
                     {
                         Collection<org.hisp.dhis.dataelement.DataElement> dataElements = apiDataSet.getDataElements();
                         Collection<org.hisp.dhis.datavalue.DataValue> dataValues = dataValueService.getDataValues(
-                            unit, period, dataElements );
+                            dataElements, Sets.newHashSet( period ), Sets.newHashSet( unit ) );
 
                         if ( dataValues != null && !dataValues.isEmpty() )
                         {
@@ -577,12 +571,6 @@ public class FacilityReportingServiceImpl
     public void setDataSetService( org.hisp.dhis.dataset.DataSetService dataSetService )
     {
         this.dataSetService = dataSetService;
-    }
-
-    @Required
-    public void setI18nService( org.hisp.dhis.i18n.I18nService i18nService )
-    {
-        this.i18nService = i18nService;
     }
 
     @Required

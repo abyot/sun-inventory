@@ -28,7 +28,6 @@ package org.hisp.dhis.webapi.controller.user;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.dxf2.common.TranslateParams;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.hibernate.exception.DeleteAccessDeniedException;
 import org.hisp.dhis.hibernate.exception.UpdateAccessDeniedException;
@@ -43,10 +42,12 @@ import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.hisp.dhis.webapi.webdomain.WebMetadata;
 import org.hisp.dhis.webapi.webdomain.WebOptions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -63,10 +64,10 @@ public class UserRoleController
     private UserService userService;
 
     @Override
-    protected List<UserAuthorityGroup> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters,
-        List<Order> orders, TranslateParams translateParams ) throws QueryParserException
+    protected List<UserAuthorityGroup> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters, List<Order> orders )
+        throws QueryParserException
     {
-        List<UserAuthorityGroup> entityList = super.getEntityList( metadata, options, filters, orders, translateParams );
+        List<UserAuthorityGroup> entityList = super.getEntityList( metadata, options, filters, orders );
 
         if ( options.getOptions().containsKey( "canIssue" ) && Boolean.parseBoolean( options.getOptions().get( "canIssue" ) ) )
         {
@@ -77,6 +78,7 @@ public class UserRoleController
     }
 
     @RequestMapping( value = "/{id}/users/{userId}", method = { RequestMethod.POST, RequestMethod.PUT } )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void addUserToRole( @PathVariable( value = "id" ) String pvId, @PathVariable( "userId" ) String pvUserId, HttpServletResponse response ) throws WebMessageException
     {
         UserAuthorityGroup userAuthorityGroup = userService.getUserAuthorityGroup( pvId );
@@ -103,11 +105,10 @@ public class UserRoleController
             user.getUserCredentials().getUserAuthorityGroups().add( userAuthorityGroup );
             userService.updateUserCredentials( user.getUserCredentials() );
         }
-
-        response.setStatus( HttpServletResponse.SC_NO_CONTENT );
     }
 
     @RequestMapping( value = "/{id}/users/{userId}", method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeUserFromRole( @PathVariable( value = "id" ) String pvId, @PathVariable( "userId" ) String pvUserId, HttpServletResponse response ) throws WebMessageException
     {
         UserAuthorityGroup userAuthorityGroup = userService.getUserAuthorityGroup( pvId );
@@ -134,7 +135,5 @@ public class UserRoleController
             user.getUserCredentials().getUserAuthorityGroups().remove( userAuthorityGroup );
             userService.updateUserCredentials( user.getUserCredentials() );
         }
-
-        response.setStatus( HttpServletResponse.SC_NO_CONTENT );
     }
 }

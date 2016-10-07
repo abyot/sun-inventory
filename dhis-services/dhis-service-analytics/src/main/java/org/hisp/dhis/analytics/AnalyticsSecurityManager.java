@@ -29,6 +29,7 @@ package org.hisp.dhis.analytics;
  */
 
 import org.hisp.dhis.common.IllegalQueryException;
+import org.hisp.dhis.user.User;
 
 /**
  * @author Lars Helge Overland
@@ -45,7 +46,16 @@ public interface AnalyticsSecurityManager
     void decideAccess( DataQueryParams params );
     
     /**
-     * Adds relevant data approval levels to the given query if system is configured
+     * Returns the current user. Looks for a current user to be specified for the
+     * given query, if not uses the current user from the security context.
+     * 
+     * @param params the data query parameters.
+     * @return the current user.
+     */
+    User getCurrentUser( DataQueryParams params );
+    
+    /**
+     * Returns a query with relevant data approval levels if system is configured
      * to hide unapproved data from analytics and if there are relevant approval
      * levels for current user. Populates the approvalLevels property of the given
      * query and sets the level property of each related organisation unit.
@@ -53,11 +63,11 @@ public interface AnalyticsSecurityManager
      * @param params the data query parameters.
      * @throws IllegalQueryException is the specified approval level does not exist.
      */
-    void applyDataApprovalConstraints( DataQueryParams params );
+    DataQueryParams withDataApprovalConstraints( DataQueryParams params );
     
     /**
-     * Applies dimension constraints to the given parameters. Dimension constraints
-     * with all accessible dimension items will be added as filters to this query.
+     * Returns a query with dimension constraints. Dimension constraints with 
+     * all accessible dimension items will be added as filters to this query.
      * If current user has no dimension constraints, no action is taken. If the 
      * constraint dimensions are already specified with accessible items in the 
      * query, no action is taken. If the current user does not have accessible 
@@ -66,5 +76,5 @@ public interface AnalyticsSecurityManager
      * @param pamrams the data query parameters.
      * @throws IllegalQueryException is the specified approval level does not exist.
      */
-    void applyDimensionConstraints( DataQueryParams params );
+    DataQueryParams withDimensionConstraints( DataQueryParams params );
 }

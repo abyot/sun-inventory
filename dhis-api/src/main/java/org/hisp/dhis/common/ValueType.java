@@ -31,6 +31,7 @@ package org.hisp.dhis.common;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.collect.ImmutableSet;
 import org.hisp.dhis.trackedentity.TrackedEntityInstance;
+import org.hisp.dhis.organisationunit.OrganisationUnit;
 
 import java.util.Date;
 import java.util.Set;
@@ -41,27 +42,28 @@ import java.util.Set;
 @JacksonXmlRootElement( localName = "valueType", namespace = DxfNamespaces.DXF_2_0 )
 public enum ValueType
 {
-    TEXT( String.class ),
-    LONG_TEXT( String.class ),
-    LETTER( String.class ),
-    PHONE_NUMBER( String.class ),
-    EMAIL( String.class ),
-    BOOLEAN( Boolean.class ),
-    TRUE_ONLY( Boolean.class ),
-    DATE( Date.class ),
-    DATETIME( Date.class ),
-    TIME( String.class ),
-    NUMBER( Double.class ),
-    UNIT_INTERVAL( Double.class ),
-    PERCENTAGE( Double.class ),
-    INTEGER( Integer.class ),
-    INTEGER_POSITIVE( Integer.class ),
-    INTEGER_NEGATIVE( Integer.class ),
-    INTEGER_ZERO_OR_POSITIVE( Integer.class ),
-    TRACKER_ASSOCIATE( TrackedEntityInstance.class ),
-    USERNAME( String.class ),
-    FILE_RESOURCE( String.class ),
-    COORDINATE( String.class );
+    TEXT( String.class, true ),
+    LONG_TEXT( String.class, true ),
+    LETTER( String.class, true ),
+    PHONE_NUMBER( String.class, false ),
+    EMAIL( String.class, false ),
+    BOOLEAN( Boolean.class, true ),
+    TRUE_ONLY( Boolean.class, true ),
+    DATE( Date.class, false ),
+    DATETIME( Date.class, false ),
+    TIME( String.class, false ),
+    NUMBER( Double.class, true ),
+    UNIT_INTERVAL( Double.class, true ),
+    PERCENTAGE( Double.class, true ),
+    INTEGER( Integer.class, true ),
+    INTEGER_POSITIVE( Integer.class, true ),
+    INTEGER_NEGATIVE( Integer.class, true ),
+    INTEGER_ZERO_OR_POSITIVE( Integer.class, true ),
+    TRACKER_ASSOCIATE( TrackedEntityInstance.class, false ),
+    USERNAME( String.class, false ),
+    FILE_RESOURCE( String.class, false ),
+    COORDINATE( String.class, true ),
+    ORGANISATION_UNIT( OrganisationUnit.class, false );
 
     public static final Set<ValueType> INTEGER_TYPES = ImmutableSet.<ValueType>builder().add(
         INTEGER, INTEGER_POSITIVE, INTEGER_NEGATIVE, INTEGER_ZERO_OR_POSITIVE ).build();
@@ -79,15 +81,18 @@ public enum ValueType
         DATE, DATETIME ).build();
     
     private final Class<?> javaClass;
+    
+    private boolean aggregateable;
 
     private ValueType()
     {
         this.javaClass = null;
     }
 
-    private ValueType( Class<?> javaClass )
+    private ValueType( Class<?> javaClass, boolean aggregateable )
     {
         this.javaClass = javaClass;
+        this.aggregateable = aggregateable;
     }
 
     public Class<?> getJavaClass()
@@ -128,5 +133,10 @@ public enum ValueType
     public boolean isCoordinate()
     {
         return this == COORDINATE;
+    }
+    
+    public boolean isAggregateable()
+    {
+        return aggregateable;
     }
 }

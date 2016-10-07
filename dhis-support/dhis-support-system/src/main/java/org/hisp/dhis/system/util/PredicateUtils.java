@@ -29,9 +29,7 @@ package org.hisp.dhis.system.util;
  */
 
 import org.hisp.dhis.common.IdentifiableObject;
-import org.hisp.dhis.common.annotation.Scanned;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -43,15 +41,9 @@ import java.util.function.Predicate;
  */
 public class PredicateUtils
 {
-    public static final Predicate<Field> idObjects = new ObjectWithTypePredicate( IdentifiableObject.class );
-
-    public static final Predicate<Field> collections = new CollectionPredicate();
-
     public static final Predicate<Field> idObjectCollections = new CollectionWithTypePredicate( IdentifiableObject.class );
 
-    public static final Predicate<Field> idObjectCollectionsWithScanned = new CollectionWithTypeAndAnnotationPredicate( IdentifiableObject.class, Scanned.class );
-
-    public static class CollectionPredicate
+    private static class CollectionPredicate
         implements Predicate<Field>
     {
         @Override
@@ -61,14 +53,14 @@ public class PredicateUtils
         }
     }
 
-    public static class CollectionWithTypePredicate
+    private static class CollectionWithTypePredicate
         implements Predicate<Field>
     {
         private CollectionPredicate collectionPredicate = new CollectionPredicate();
 
         private Class<?> type;
 
-        public CollectionWithTypePredicate( Class<?> type )
+        CollectionWithTypePredicate( Class<?> type )
         {
             this.type = type;
         }
@@ -91,51 +83,6 @@ public class PredicateUtils
             }
 
             return false;
-        }
-    }
-
-    public static class CollectionWithTypeAndAnnotationPredicate
-        implements Predicate<Field>
-    {
-        private final CollectionWithTypePredicate collectionWithTypePredicate;
-
-        private Class<? extends Annotation> annotation;
-
-        public CollectionWithTypeAndAnnotationPredicate( Class<?> type, Class<? extends Annotation> annotation )
-        {
-            this.annotation = annotation;
-            this.collectionWithTypePredicate = new CollectionWithTypePredicate( type );
-        }
-
-        @Override
-        public boolean test( Field field )
-        {
-            if ( field.isAnnotationPresent( annotation ) )
-            {
-                if ( collectionWithTypePredicate.test( field ) )
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
-
-    public static class ObjectWithTypePredicate
-        implements Predicate<Field>
-    {
-        private Class<?> type;
-
-        public ObjectWithTypePredicate( Class<?> type )
-        {
-            this.type = type;
-        }
-
-        @Override
-        public boolean test( Field field )
-        {
-            return type.isAssignableFrom( field.getType() );
         }
     }
 }

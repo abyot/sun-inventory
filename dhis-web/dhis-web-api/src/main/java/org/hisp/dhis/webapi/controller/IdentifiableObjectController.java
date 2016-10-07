@@ -31,7 +31,6 @@ package org.hisp.dhis.webapi.controller;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import org.hisp.dhis.common.IdentifiableObject;
-import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.webapi.webdomain.WebOptions;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -67,19 +66,19 @@ public class IdentifiableObjectController
     }
 
     @Override
-    public void postXmlObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void postXmlObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         throw new HttpRequestMethodNotSupportedException( "POST" );
     }
 
     @Override
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void postJsonObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         throw new HttpRequestMethodNotSupportedException( "POST" );
     }
 
     @Override
-    public void putJsonObjectLegacy( ImportOptions importOptions, @PathVariable( "uid" ) String pvUid, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void putJsonObject( @PathVariable( "uid" ) String pvUid, HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         throw new HttpRequestMethodNotSupportedException( "PUT" );
     }

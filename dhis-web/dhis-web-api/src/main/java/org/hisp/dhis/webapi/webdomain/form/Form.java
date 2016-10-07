@@ -53,6 +53,8 @@ public class Form
 
     private Map<String, Object> options = new HashMap<>();
 
+    private CategoryCombo categoryCombo;
+
     public Form()
     {
     }
@@ -105,6 +107,19 @@ public class Form
     {
         this.options = options;
     }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public CategoryCombo getCategoryCombo()
+    {
+        return categoryCombo;
+    }
+
+    public void setCategoryCombo( CategoryCombo categoryCombo )
+    {
+        this.categoryCombo = categoryCombo;
+    }
+
 
     @Override
     public String toString()

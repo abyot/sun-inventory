@@ -55,6 +55,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -81,8 +82,8 @@ public class OrganisationUnitController
 
     @Override
     @SuppressWarnings( "unchecked" )
-    protected List<OrganisationUnit> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters,
-        List<Order> orders, TranslateParams translateParams ) throws QueryParserException
+    protected List<OrganisationUnit> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters, List<Order> orders )
+        throws QueryParserException
     {
         List<OrganisationUnit> objects = Lists.newArrayList();
 
@@ -141,7 +142,7 @@ public class OrganisationUnitController
         // Standard Query handling
         // ---------------------------------------------------------------------
 
-        Query query = queryService.getQueryFromUrl( getEntityClass(), filters, orders );
+        Query query = queryService.getQueryFromUrl( getEntityClass(), filters, orders, options.getRootJunction() );
         query.setDefaultOrder();
 
         if ( anySpecialPropertySet || anyQueryPropertySet )
@@ -200,7 +201,7 @@ public class OrganisationUnitController
     }
 
     @RequestMapping( value = "/{uid}/parents", method = RequestMethod.GET )
-    public List<OrganisationUnit> getEntityList( @PathVariable( "uid" ) String uid,
+    public @ResponseBody List<OrganisationUnit> getEntityList( @PathVariable( "uid" ) String uid,
         @RequestParam Map<String, String> parameters, Model model, TranslateParams translateParams,
         HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
@@ -221,10 +222,6 @@ public class OrganisationUnitController
 
         WebMetadata metadata = new WebMetadata();
         metadata.setOrganisationUnits( organisationUnits );
-        WebOptions options = new WebOptions( parameters );
-
-        model.addAttribute( "model", metadata );
-        model.addAttribute( "viewClass", options.getViewClass( "basic" ) );
 
         return organisationUnits;
     }

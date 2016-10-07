@@ -210,7 +210,7 @@ public class GeoUtils
         }
 
         svg = replaceText( svg );
-        svg = replaceFont( svg );
+        svg = replaceInvalidPatterns( svg );
         
         return svg;
     }
@@ -235,8 +235,11 @@ public class GeoUtils
         return textMatcher.appendTail( sb ).toString();        
     }
     
-    private static String replaceFont( String svg )
+    private static String replaceInvalidPatterns( String svg )
     {
-        return svg.replaceAll( SVG_FONT_REGEX, StringUtils.EMPTY );
+        svg = svg.replaceAll( SVG_FONT_REGEX, StringUtils.EMPTY );
+        svg = svg.replaceAll( "fill=\"transparent\"", "fill=\"none\"" );
+        
+        return svg;
     }
 }

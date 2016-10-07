@@ -28,17 +28,8 @@ package org.hisp.dhis.reporttable.impl;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import org.hisp.dhis.analytics.AnalyticsService;
-import org.hisp.dhis.common.AnalyticalObjectStore;
-import org.hisp.dhis.common.DisplayProperty;
-import org.hisp.dhis.common.GenericAnalyticalObjectService;
-import org.hisp.dhis.common.GenericIdentifiableObjectStore;
-import org.hisp.dhis.common.Grid;
+import org.hisp.dhis.common.*;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.i18n.I18nManager;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
@@ -48,7 +39,13 @@ import org.hisp.dhis.reporttable.ReportTable;
 import org.hisp.dhis.reporttable.ReportTableService;
 import org.hisp.dhis.system.grid.ListGrid;
 import org.hisp.dhis.user.CurrentUserService;
+import org.hisp.dhis.user.User;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Lars Helge Overland
@@ -89,21 +86,21 @@ public class DefaultReportTableService
     {
         this.organisationUnitService = organisationUnitService;
     }
-    
+
     private CurrentUserService currentUserService;
 
     public void setCurrentUserService( CurrentUserService currentUserService )
     {
         this.currentUserService = currentUserService;
     }
-    
+
     private I18nManager i18nManager;
-    
+
     public void setI18nManager( I18nManager i18nManager )
     {
         this.i18nManager = i18nManager;
     }
-    
+
     // -------------------------------------------------------------------------
     // ReportTableService implementation
     // -------------------------------------------------------------------------
@@ -112,35 +109,50 @@ public class DefaultReportTableService
     protected AnalyticalObjectStore<ReportTable> getAnalyticalObjectStore()
     {
         return reportTableStore;
-    }    
-    
+    }
+
     @Override
     public Grid getReportTableGrid( String uid, Date reportingPeriod, String organisationUnitUid )
     {
+        return getReportTableGridByUser( uid, reportingPeriod, organisationUnitUid,
+            currentUserService.getCurrentUser() );
+
+    }
+
+    @Override
+    public Grid getReportTableGridByUser( String uid, Date reportingPeriod, String organisationUnitUid, User user )
+    {
         I18nFormat format = i18nManager.getI18nFormat();
-        
+
         ReportTable reportTable = getReportTable( uid );
-                
+
         OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( organisationUnitUid );
 
         List<OrganisationUnit> atLevels = new ArrayList<>();
         List<OrganisationUnit> inGroups = new ArrayList<>();
-        
+
         if ( reportTable.hasOrganisationUnitLevels() )
         {
-            atLevels.addAll( organisationUnitService.getOrganisationUnitsAtLevels( reportTable.getOrganisationUnitLevels(), reportTable.getOrganisationUnits() ) );
+            atLevels.addAll( organisationUnitService
+                .getOrganisationUnitsAtLevels( reportTable.getOrganisationUnitLevels(),
+                    reportTable.getOrganisationUnits() ) );
         }
-        
+
         if ( reportTable.hasItemOrganisationUnitGroups() )
         {
-            inGroups.addAll( organisationUnitService.getOrganisationUnits( reportTable.getItemOrganisationUnitGroups(), reportTable.getOrganisationUnits() ) );
+            inGroups.addAll( organisationUnitService.getOrganisationUnits( reportTable.getItemOrganisationUnitGroups(),
+                reportTable.getOrganisationUnits() ) );
         }
-        
-        reportTable.init( currentUserService.getCurrentUser(), reportingPeriod, organisationUnit, atLevels, inGroups, format );
+
+        reportTable.init( user, reportingPeriod, organisationUnit, atLevels, inGroups, format );
 
         Map<String, Object> valueMap = analyticsService.getAggregatedDataValueMapping( reportTable );
 
-        return reportTable.getGrid( new ListGrid(), valueMap, DisplayProperty.SHORTNAME, true );
+        Grid reportTableGrid = reportTable.getGrid( new ListGrid(), valueMap, DisplayProperty.SHORTNAME, true );
+
+        reportTable.clearTransientState();
+
+        return reportTableGrid;
     }
 
     @Override

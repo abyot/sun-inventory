@@ -29,7 +29,6 @@ package org.hisp.dhis.trackedentity;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -38,8 +37,6 @@ import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.program.ProgramInstance;
 import org.hisp.dhis.trackedentityattributevalue.TrackedEntityAttributeValue;
@@ -98,7 +95,6 @@ public class TrackedEntityInstance
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public OrganisationUnit getOrganisationUnit()
     {
@@ -111,7 +107,6 @@ public class TrackedEntityInstance
     }
 
     @JsonProperty( "trackedEntityAttributeValues" )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "trackedEntityAttributeValues", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "trackedEntityAttributeValue", namespace = DxfNamespaces.DXF_2_0 )
     public Set<TrackedEntityAttributeValue> getTrackedEntityAttributeValues()
@@ -125,7 +120,6 @@ public class TrackedEntityInstance
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "programInstances", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "programInstance", namespace = DxfNamespaces.DXF_2_0 )
     public Set<ProgramInstance> getProgramInstances()
@@ -140,7 +134,6 @@ public class TrackedEntityInstance
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntityInstance getRepresentative()
     {
@@ -153,7 +146,6 @@ public class TrackedEntityInstance
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "trackedEntity", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "trackedEntity", namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntity getTrackedEntity()
@@ -167,7 +159,6 @@ public class TrackedEntityInstance
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "inactive", namespace = DxfNamespaces.DXF_2_0 )
     public Boolean isInactive()
     {

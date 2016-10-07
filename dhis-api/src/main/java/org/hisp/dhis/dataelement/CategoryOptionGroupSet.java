@@ -29,13 +29,11 @@ package org.hisp.dhis.dataelement;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.collect.Lists;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.hisp.dhis.common.BaseDimensionalItemObject;
 import org.hisp.dhis.common.BaseDimensionalObject;
@@ -46,10 +44,6 @@ import org.hisp.dhis.common.DimensionalItemObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +56,6 @@ import java.util.Set;
 public class CategoryOptionGroupSet
     extends BaseDimensionalObject
 {
-    @Scanned
     private List<CategoryOptionGroup> members = new ArrayList<>();
 
     private DataDimensionType dataDimensionType;
@@ -122,7 +115,6 @@ public class CategoryOptionGroupSet
     @Override
     @JsonProperty
     @JsonSerialize( contentAs = BaseDimensionalItemObject.class )
-    @JsonView( { DetailedView.class, DimensionalView.class } )
     @JacksonXmlElementWrapper( localName = "items", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "item", namespace = DxfNamespaces.DXF_2_0 )
     public List<DimensionalItemObject> getItems()
@@ -142,7 +134,6 @@ public class CategoryOptionGroupSet
 
     @JsonProperty( "categoryOptionGroups" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "categoryOptionGroups", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "categoryOptionGroup", namespace = DxfNamespaces.DXF_2_0 )
     public List<CategoryOptionGroup> getMembers()
@@ -156,7 +147,6 @@ public class CategoryOptionGroupSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataDimensionType getDataDimensionType()
     {
@@ -201,7 +191,7 @@ public class CategoryOptionGroupSet
             {
                 dataDimensionType = categoryOptionGroupSet.getDataDimensionType() == null ? dataDimensionType : categoryOptionGroupSet.getDataDimensionType();
             }
-            
+
             members.clear();
 
             for ( CategoryOptionGroup categoryOptionGroup : categoryOptionGroupSet.getMembers() )

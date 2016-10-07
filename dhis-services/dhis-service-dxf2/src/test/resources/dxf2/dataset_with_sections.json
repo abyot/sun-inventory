@@ -227,7 +227,9 @@
       "description": "Person",
       "id": "MDvmqCKmXQM",
       "attributeValues": [ ],
-      "name": "Person"
+      "name": "Person",
+      "created": "2016-03-08T07:28:58.738+0000",
+      "lastUpdated": "2016-03-08T07:28:58.740+0000"
     }
   ],
   "sections": [
@@ -322,8 +324,36 @@
       "lastUpdated": "2016-03-08T07:27:22.449+0000"
     }
   ],
+  "dataSetElements": [
+    {
+      "id": "WTOZ7gqbASV",
+      "dataElement": {
+        "id": "nHwIqKAudKN"
+      },
+      "dataSet": {
+        "id": "em8Bg4LCr5k"
+      }
+    },
+    {
+      "id": "rSChycu6mOY",
+      "dataElement": {
+        "id": "VolAzjFe5zP"
+      },
+      "dataSet": {
+        "id": "em8Bg4LCr5k"
+      }
+    }
+  ],
   "dataSets": [
     {
+      "dataSetElements": [
+        {
+          "id": "WTOZ7gqbASV"
+        },
+        {
+          "id": "rSChycu6mOY"
+        }
+      ],
       "compulsoryDataElementOperands": [ ],
       "timelyDays": 15,
       "fieldCombinationRequired": false,
@@ -356,14 +386,6 @@
         }
       ],
       "renderHorizontally": false,
-      "dataElements": [
-        {
-          "id": "nHwIqKAudKN"
-        },
-        {
-          "id": "VolAzjFe5zP"
-        }
-      ],
       "user": {
         "id": "T12jeH7KPzk"
       }

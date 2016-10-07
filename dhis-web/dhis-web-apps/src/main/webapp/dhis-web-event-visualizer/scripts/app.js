@@ -126,6 +126,7 @@ Ext.onReady( function() {
         Ext.define('Ext.ux.panel.DataElementIntegerContainer', {
 			extend: 'Ext.container.Container',
 			alias: 'widget.dataelementintegerpanel',
+            cls: 'ns-dxselector',
 			layout: 'column',
             bodyStyle: 'border:0 none',
             style: 'margin: ' + margin,
@@ -167,7 +168,9 @@ Ext.onReady( function() {
                     }
                 }
                 else if (record.filter) {
-                    this.rangeSetCmp.pendingValue = defaultRangeSetId;
+                    //this.rangeSetCmp.pendingValue = defaultRangeSetId;
+                    this.rangeSetCmp.setValue(defaultRangeSetId); //todo?
+                    this.onRangeSetSelect(defaultRangeSetId);
 
 					var a = record.filter.split(':');
 
@@ -175,7 +178,6 @@ Ext.onReady( function() {
                         this.operatorCmp.setValue(a[0]);
                         this.valueCmp.setValue(a[1]);
                     }
-                    else {}
 				}
 			},
             initComponent: function() {
@@ -415,24 +417,21 @@ Ext.onReady( function() {
                                 name: 'No range set'
                             });
 
-                            //cb.setValue(defaultRangeSetId);
+                            var de = container.dataElement;
 
-                            Ext.Ajax.request({
-                                url: ns.core.init.contextPath + '/api/dataElements/' + container.dataElement.id + '.json?fields=legendSet[id,name]',
-                                success: function(r) {
-                                    r = Ext.decode(r.responseText);
+                            if (de.legendSet || de.storageLegendSet) {
+                                var id = de.legendSet ? de.legendSet.id : (de.storageLegendSet ? de.storageLegendSet.id : null),
+                                    legendSet = ns.core.init.idLegendSetMap[id];
 
-                                    if (Ext.isObject(r) && Ext.isObject(r.legendSet)) {
-                                        cb.store.add(r.legendSet);
+                                if (Ext.isObject(legendSet)) {
+                                    cb.store.add(legendSet);
 
-                                        cb.setValue(r.legendSet.id);
-                                        container.onRangeSetSelect(r.legendSet.id);
-                                    }
-                                },
-                                callback: function() {
-                                    cb.setPendingValue();
+                                    cb.setValue(legendSet.id);
+                                    container.onRangeSetSelect(legendSet.id);
                                 }
-                            });
+                            }
+
+                            cb.setPendingValue();
                         },
                         select: function(cb, r) {
                             var id = Ext.Array.from(r)[0].data.id;
@@ -466,6 +465,7 @@ Ext.onReady( function() {
         Ext.define('Ext.ux.panel.DataElementStringContainer', {
 			extend: 'Ext.container.Container',
 			alias: 'widget.dataelementstringpanel',
+            cls: 'ns-dxselector',
 			layout: 'column',
             bodyStyle: 'border:0 none',
             style: 'margin: ' + margin,
@@ -559,6 +559,7 @@ Ext.onReady( function() {
         Ext.define('Ext.ux.panel.DataElementDateContainer', {
 			extend: 'Ext.container.Container',
 			alias: 'widget.dataelementdatepanel',
+            cls: 'ns-dxselector',
 			layout: 'column',
             bodyStyle: 'border:0 none',
             style: 'margin: ' + margin,
@@ -660,6 +661,7 @@ Ext.onReady( function() {
 		Ext.define('Ext.ux.panel.DataElementBooleanContainer', {
 			extend: 'Ext.container.Container',
 			alias: 'widget.dataelementbooleanpanel',
+            cls: 'ns-dxselector',
 			layout: 'column',
             bodyStyle: 'border:0 none',
             style: 'margin: ' + margin,
@@ -896,6 +898,7 @@ Ext.onReady( function() {
 		Ext.define('Ext.ux.panel.OrganisationUnitGroupSetContainer', {
 			extend: 'Ext.container.Container',
 			alias: 'widget.organisationunitgroupsetpanel',
+            cls: 'ns-dxselector',
 			layout: 'column',
             bodyStyle: 'border:0 none',
             style: 'margin: ' + margin,
@@ -3798,18 +3801,12 @@ Ext.onReady( function() {
 		});
 
 		dataElementsByStageStore = Ext.create('Ext.data.Store', {
-			fields: ['id', 'name', 'isAttribute'],
+			fields: ['id', 'name', 'isAttribute', 'isProgramIndicator'],
 			data: [],
-			sorters: [
-                {
-                    property: 'isAttribute',
-                    direction: 'DESC'
-                },
-                {
-                    property: 'name',
-                    direction: 'ASC'
-                }
-            ],
+			sorters: [{
+                property: 'name',
+                direction: 'ASC'
+            }],
             onLoadData: function() {
                 var layoutWindow = ns.app.aggregateLayoutWindow;
 
@@ -3885,10 +3882,6 @@ Ext.onReady( function() {
 			// data
             programStore.add(layout.program);
             program.setValue(layout.program.id);
-
-            stagesByProgramStore.add(layout.programStage);
-            stage.setValue(layout.programStage.id);
-            stage.enable();
 
             // periods
 			period.reset();
@@ -3984,7 +3977,7 @@ Ext.onReady( function() {
 			}
 
 			// data items
-            onStageSelect(null, layout);
+            onProgramSelect(layout.program.id, layout);
         };
 
 		program = Ext.create('Ext.form.field.ComboBox', {
@@ -4082,7 +4075,7 @@ Ext.onReady( function() {
                         if (Ext.isArray(programIndicators) && programIndicators.length) {
                             programIndicatorStorage[programId] = programIndicators;
                         }
-                        
+
                         if (Ext.isArray(stages) && stages.length) {
 
                             // stages cache
@@ -4144,7 +4137,8 @@ Ext.onReady( function() {
 
 			load = function(dataElements) {
                 var attributes = attributeStorage[programId],
-                    data = Ext.Array.clean([].concat(attributes || [], dataElements || []));
+                    programIndicators = programIndicatorStorage[programId],
+                    data = Ext.Array.clean([].concat(attributes || [], programIndicators || [], dataElements || []));
 
 				dataElementsByStageStore.loadData(data);
                 dataElementsByStageStore.onLoadData();
@@ -4190,7 +4184,7 @@ Ext.onReady( function() {
                             item.isDataElement = true;
                             return Ext.Array.contains(types, item.valueType);
                         });
-                        
+
                         // data elements cache
                         dataElementStorage[stageId] = dataElements;
 
@@ -4427,6 +4421,9 @@ Ext.onReady( function() {
 				dataElement: element
 			}));
 
+            ux.isAttribute = element.isAttribute;
+            ux.isProgramIndicator = element.isProgramIndicator;
+
 			ux.removeDataElement = function(reset) {
 				dataElementSelected.remove(ux);
 
@@ -4463,7 +4460,8 @@ Ext.onReady( function() {
 					'ou': {id: 'ou', name: 'Organisation units'}
 				},
                 extendDim = function(dim) {
-                    var md = ns.app.response.metaData;
+                    var md = ns.app.response.metaData,
+                        dimConf = ns.core.conf.finals.dimension;
 
                     dim.id = dim.id || dim.dimension;
                     dim.name = dim.name || md.names[dim.dimension] || dimConf.objectNameMap[dim.dimension].name;
@@ -5171,7 +5169,7 @@ Ext.onReady( function() {
             store: periodTypeStore,
             periodOffset: 0,
             listeners: {
-                select: function() {
+                select: function(cmp) {
                     periodType.periodOffset = 0;
                     onPeriodTypeSelect();
                 }
@@ -5385,6 +5383,8 @@ Ext.onReady( function() {
 			recordsToSelect: [],
 			recordsToRestore: [],
 			multipleSelectIf: function(map, doUpdate) {
+                this.recordsToSelect = Ext.Array.clean(this.recordsToSelect);
+
 				if (this.recordsToSelect.length === ns.core.support.prototype.object.getLength(map)) {
 					this.getSelectionModel().select(this.recordsToSelect);
 					this.recordsToSelect = [];
@@ -6164,9 +6164,7 @@ Ext.onReady( function() {
 			//}
 		};
 
-        setGui = function(layout, xLayout, response, updateGui, table) {
-			var dimensions = Ext.Array.clean([].concat(layout.columns || [], layout.rows || [], layout.filters || [])),
-				recMap = ns.core.service.layout.getObjectNameDimensionItemsMapFromDimensionArray(dimensions);
+        setGui = function(layout, response, updateGui) {
 
 			// state
 			ns.app.downloadButton.enable();
@@ -6178,13 +6176,11 @@ Ext.onReady( function() {
             //ns.app.statusBar.setStatus(layout, response);
 
 			// set gui
-			if (!updateGui) {
-				return;
+			if (updateGui) {
+				ns.app.viewport.chartType.setChartType(layout.type);
+
+                setLayout(layout);
 			}
-
-			ns.app.viewport.chartType.setChartType(layout.type);
-
-            setLayout(layout);
 		};
 
 		getView = function(config) {
@@ -7042,6 +7038,12 @@ Ext.onReady( function() {
                         console.log("core", ns.core);
                         console.log("app", ns.app);
                     }
+
+                    // data statistics
+                    Ext.Ajax.request({
+                        url: ns.core.init.contextPath + '/api/dataStatistics?eventType=EVENT_CHART_VIEW' + (ns.app.layout.id ? '&favorite=' + ns.app.layout.id : ''),
+                        method: 'POST'
+                    });
                 };
 
                 getReport = function() {

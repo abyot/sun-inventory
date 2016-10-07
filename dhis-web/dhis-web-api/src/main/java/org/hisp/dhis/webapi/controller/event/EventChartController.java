@@ -31,7 +31,6 @@ package org.hisp.dhis.webapi.controller.event;
 import org.hisp.dhis.chart.ChartService;
 import org.hisp.dhis.common.DimensionService;
 import org.hisp.dhis.common.cache.CacheStrategy;
-import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.eventchart.EventChart;
 import org.hisp.dhis.eventchart.EventChartService;
@@ -40,8 +39,6 @@ import org.hisp.dhis.i18n.I18nManager;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.Period;
-import org.hisp.dhis.program.ProgramService;
-import org.hisp.dhis.program.ProgramStageService;
 import org.hisp.dhis.schema.descriptors.EventChartSchemaDescriptor;
 import org.hisp.dhis.system.util.CodecUtils;
 import org.hisp.dhis.webapi.controller.AbstractCrudController;
@@ -82,12 +79,6 @@ public class EventChartController
     private DimensionService dimensionService;
 
     @Autowired
-    private ProgramService programService;
-
-    @Autowired
-    private ProgramStageService programStageService;
-
-    @Autowired
     private OrganisationUnitService organisationUnitService;
 
     @Autowired
@@ -101,51 +92,12 @@ public class EventChartController
     //--------------------------------------------------------------------------
 
     @Override
-    @RequestMapping( method = RequestMethod.POST, consumes = "application/json" )
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    protected EventChart deserializeJsonEntity( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
-        EventChart eventChart = renderService.fromJson( request.getInputStream(), EventChart.class );
-
+        EventChart eventChart = super.deserializeJsonEntity( request, response );
         mergeEventChart( eventChart );
 
-        eventChartService.saveEventChart( eventChart );
-
-        response.addHeader( "Location", EventChartSchemaDescriptor.API_ENDPOINT + "/" + eventChart.getUid() );
-        webMessageService.send( WebMessageUtils.created( "Event chart created" ), response, request );
-    }
-
-    @Override
-    @RequestMapping( value = "/{uid}", method = RequestMethod.PUT, consumes = "application/json" )
-    public void putJsonObjectLegacy( ImportOptions importOptions, @PathVariable String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
-    {
-        EventChart eventChart = eventChartService.getEventChart( uid );
-
-        if ( eventChart == null )
-        {
-            throw new WebMessageException( WebMessageUtils.notFound( "Event chart does not exist: " + uid ) );
-        }
-
-        EventChart newEventChart = renderService.fromJson( request.getInputStream(), EventChart.class );
-
-        mergeEventChart( newEventChart );
-
-        eventChart.mergeWith( newEventChart, importOptions.getMergeMode() );
-
-        eventChartService.updateEventChart( eventChart );
-    }
-
-    @Override
-    @RequestMapping( value = "/{uid}", method = RequestMethod.DELETE )
-    public void deleteObject( @PathVariable String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
-    {
-        EventChart eventChart = eventChartService.getEventChart( uid );
-
-        if ( eventChart == null )
-        {
-            throw new WebMessageException( WebMessageUtils.notFound( "Event chart does not exist: " + uid ) );
-        }
-
-        eventChartService.deleteEventChart( eventChart );
+        return eventChart;
     }
 
     //--------------------------------------------------------------------------
@@ -224,15 +176,5 @@ public class EventChartController
         chart.getColumnDimensions().addAll( getDimensions( chart.getColumns() ) );
         chart.getRowDimensions().addAll( getDimensions( chart.getRows() ) );
         chart.getFilterDimensions().addAll( getDimensions( chart.getFilters() ) );
-
-        if ( chart.getProgram() != null )
-        {
-            chart.setProgram( programService.getProgram( chart.getProgram().getUid() ) );
-        }
-
-        if ( chart.getProgramStage() != null )
-        {
-            chart.setProgramStage( programStageService.getProgramStage( chart.getProgramStage().getUid() ) );
-        }
     }
 }

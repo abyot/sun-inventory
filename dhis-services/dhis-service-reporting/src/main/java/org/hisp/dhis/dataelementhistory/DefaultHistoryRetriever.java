@@ -78,8 +78,8 @@ public class DefaultHistoryRetriever
     // -------------------------------------------------------------------------
 
     @Override
-    public DataElementHistory getHistory( DataElement dataElement, DataElementCategoryOptionCombo optionCombo, DataElementCategoryOptionCombo attributeOptionCombo,
-        OrganisationUnit organisationUnit, Period lastPeriod, int historyLength )
+    public DataElementHistory getHistory( DataElement dataElement, DataElementCategoryOptionCombo optionCombo,
+    		DataElementCategoryOptionCombo attributeOptionCombo, OrganisationUnit organisationUnit, Period lastPeriod, int historyLength )
     {
         if ( !dataElement.getValueType().isNumeric() )
         {
@@ -93,7 +93,6 @@ public class DefaultHistoryRetriever
         DataElementHistory history = new DataElementHistory();
         history.setDataElement( dataElement );
         history.setOptionCombo( optionCombo );
-        history.setAttributeOptionCombo( attributeOptionCombo );
         history.setOrganisationUnit( organisationUnit );
         history.setHistoryLength( historyLength );
         addMinMaxLimits( organisationUnit, dataElement, optionCombo, history );
@@ -225,8 +224,8 @@ public class DefaultHistoryRetriever
         return value;
     }
 
-    private Double getValue( DataElement dataElement, DataElementCategoryOptionCombo optionCombo, DataElementCategoryOptionCombo attributeOptionCombo,
-        OrganisationUnit organisationUnit, Period period )
+    private Double getValue( DataElement dataElement, DataElementCategoryOptionCombo optionCombo,
+    		DataElementCategoryOptionCombo attributeOptionCombo, OrganisationUnit organisationUnit, Period period )
     {
         DataValue dataValue = dataValueService.getDataValue( dataElement, period, organisationUnit, optionCombo, attributeOptionCombo );
 

@@ -28,7 +28,7 @@ package org.hisp.dhis.webapi.controller;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.i18n.I18nService;
+import org.hisp.dhis.i18n.I18nLocaleService;
 import org.hisp.dhis.i18n.locale.LocaleManager;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.webdomain.WebLocale;
@@ -37,6 +37,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.Locale;
@@ -51,27 +52,22 @@ public class LocaleController
     private LocaleManager localeManager;
 
     @Autowired
-    private I18nService i18nService;
+    private I18nLocaleService localeService;
 
     @RequestMapping( value = "/ui", method = RequestMethod.GET )
-    public String getUiLocales( Model model )
+    public @ResponseBody List<WebLocale> getUiLocales( Model model )
     {
         List<Locale> locales = localeManager.getAvailableLocales();
-
         List<WebLocale> webLocales = locales.stream().map( WebLocale::fromLocale ).collect( Collectors.toList() );
 
-        model.addAttribute( "model", webLocales );
-        return "locales";
+        return webLocales;
     }
 
     @RequestMapping( value = "/db", method = RequestMethod.GET )
-    public String getDbLocales( Model model )
+    public @ResponseBody List<WebLocale> getDbLocales()
     {
-        List<Locale> locales = i18nService.getAvailableLocales();
-
+        List<Locale> locales = localeService.getAllLocales();
         List<WebLocale> webLocales = locales.stream().map( WebLocale::fromLocale ).collect( Collectors.toList() );
-
-        model.addAttribute( "model", webLocales );
-        return "locales";
+        return webLocales;
     }
 }

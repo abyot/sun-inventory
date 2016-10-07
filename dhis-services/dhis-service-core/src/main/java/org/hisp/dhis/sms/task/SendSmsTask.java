@@ -1,7 +1,5 @@
 package org.hisp.dhis.sms.task;
 
-import java.util.HashSet;
-
 /*
  * Copyright (c) 2004-2016, University of Oslo
  * All rights reserved.
@@ -31,11 +29,13 @@ import java.util.HashSet;
  */
 
 import java.util.List;
+import java.util.HashSet;
 
 import javax.annotation.Resource;
 
 import org.hisp.dhis.i18n.I18n;
 import org.hisp.dhis.scheduling.TaskId;
+import org.hisp.dhis.sms.MessageResponseStatus;
 import org.hisp.dhis.message.MessageSender;
 import org.hisp.dhis.system.notification.Notifier;
 import org.hisp.dhis.user.User;
@@ -65,6 +65,8 @@ public class SendSmsTask
 
     private String message;
 
+    private MessageResponseStatus status;
+
     private TaskId taskId;
 
     // -------------------------------------------------------------------------
@@ -83,9 +85,22 @@ public class SendSmsTask
     {
         notifier.notify( taskId, "Sending SMS" );
 
-        message = smsSender.sendMessage( smsSubject, text, null, currentUser, new HashSet<>( recipientsList ), false );
-        
-        notifier.notify( taskId, "All Message Sent" );
+        status = smsSender.sendMessage( smsSubject, text, null, currentUser, new HashSet<>( recipientsList ), false );
+
+        if ( status.isOk() )
+        {
+            notifier.notify( taskId, "All Messages Sent" );
+        }
+    }
+
+    public MessageResponseStatus getStatus()
+    {
+        return status;
+    }
+
+    public void setStatus( MessageResponseStatus status )
+    {
+        this.status = status;
     }
 
     public String getSmsSubject()

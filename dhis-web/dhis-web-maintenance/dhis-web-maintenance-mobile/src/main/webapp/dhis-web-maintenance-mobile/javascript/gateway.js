@@ -232,11 +232,12 @@ function removeItem( itemId, itemName, confirmation, action, success )
 function generateaddKeyValueParamForm()
 {
 	var rowId = jQuery('.trNewParam').length + 1;
+	var rowName = '\'#trNewParam'+rowId;
 	var contend = '<tr id="trNewParam' + rowId + '" name="trNewParam' + rowId + '" class="trNewParam">'
-		+	'<td><input id="name' + rowId + '" name="name' + rowId + '" style="width:9em" type="text" onblur="checkDuplicatedKeyName(this.value,' + rowId + ')" placeholder="' + i18_new_key + '" />:</td>'
+		+	'<td><input id="name' + rowId + '" name="name' + rowId + '" style="width:9em" type="text" onblur="checkDuplicatedKeyName(this.value,' + rowId + ') " placeholder="' + i18_new_key + '" />:</td>'
 		+	'<td><input id="value' + rowId + '" name="value' + rowId + '" type="text" style="width: 10em" placeholder="' + i18_value + '"/>'
-		+   	'<input type="radio" name="inputType'+rowId+'" onclick="updateInputType(' + rowId + ',\'text\')" checked>'+i18_text+'</input>'
-		+   	'<input type="radio" name="inputType'+rowId+'" onclick="updateInputType(' + rowId + ',\'password\')" style="margin-left: 1em" >'+i18_password+'</input>'
+		+   	'<input type="radio" name="inputType'+rowId+'" value="text" onclick="updateInputType(' + rowId + ',\'text\')" checked>'+i18_text+'</input>'
+		+   	'<input type="radio" name="inputType'+rowId+'" value="classified" onclick="updateInputType(' + rowId + ',\'classified\')" style="margin-left: 1em" >'+i18_password+'</input>'
 		+   	'<input style="margin-left: 3em" type="button" value="remove" onclick="removeNewParamForm(' + rowId + ')"/></td>'
 		+ '</tr>';
 	jQuery('#genericHTTPFields').append(contend);
@@ -244,7 +245,11 @@ function generateaddKeyValueParamForm()
 
 function removeNewParamForm( rowId )
 {
-	jQuery("[name=trNewParam" + rowId + "]").remove();
+	jQuery('#trNewParam'+rowId).remove();
+}
+function removeOldParamForm( rowId )
+{
+	jQuery('#trOldParam'+rowId).remove();
 }
 
 function updateInputType( rowId, type )
@@ -270,7 +275,7 @@ function saveSettings ()
 	} else {
 
 		if (newParams) {
-			data['keyValueParameters'] = newParams;
+			data['parameters'] = newParams;
 		}
 
 		jQuery.ajax({
@@ -290,18 +295,63 @@ function saveSettings ()
 	}
 }
 
+function validateParameters(data)
+{
+	if (data.key =="" || data.value =="")
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 function getHttpKeyValueParamsAddedByTheUser(allFields)
 {
 	var newParamName, newParamValue;
 	var newParamsCount = jQuery('.trNewParam').length;
-	var newParams = {};
+	var oldParamsCount = jQuery('.trOldParam').length;
+	
+	var parameters = [];
+	
 	for (var rowIndex = 1; rowIndex <= newParamsCount; rowIndex++) {
+		var object = {};
 		newParamName = allFields.find('#trNewParam'+rowIndex).find('#name'+rowIndex)[0].value;
-		newParamValue = allFields.find('#trNewParam'+rowIndex).find('#value'+rowIndex)[0].value;
-		newParams[newParamName] = newParamValue;
+		newParamValue = allFields.find('#trNewParam'+rowIndex).find('#value'+rowIndex)[0].value;	
+		newParamType = $('input[name=inputType'+rowIndex+']:checked').val();
+		
+		object.key=newParamName;
+		object.value=newParamValue;
+		
+		if(newParamType == 'classified')
+		{
+			object.classified=true;
+		}
+		else
+		{
+			object.classified=false;
+		}
+		
+		if(validateParameters(object))
+		{
+			parameters.push(object);
+		}	
 	}
-	if (Object.keys(newParams).length === 0) {
+	
+	for (var rowIndex = 1; rowIndex <= oldParamsCount; rowIndex++) {
+		var object = {};
+		oldParamName = allFields.find('#trOldParam'+rowIndex).find('#oldVName'+rowIndex)[0].value;
+		oldParamValue = allFields.find('#trOldParam'+rowIndex).find('#oldValue'+rowIndex)[0].value;
+		oldParamType = allFields.find('#trOldParam'+rowIndex).find('#oldHidden'+rowIndex)[0].value;
+
+		object.key=oldParamName;
+		object.value=oldParamValue;
+		object.classified=oldParamType;
+		parameters.push(object);
+	}
+	if (Object.keys(parameters).length === 0) {
 		return null;
 	}
-	return newParams;
+	return parameters;
 }

@@ -28,8 +28,8 @@ package org.hisp.dhis.user;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.Sets;
 import org.hisp.dhis.common.DimensionalObject;
 import org.hisp.dhis.setting.SettingKey;
@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -64,7 +63,7 @@ public class DefaultUserSettingService
     /**
      * Cache for user settings. Does not accept nulls. Key is "name-username".
      */
-    private static Cache<String, Optional<Serializable>> SETTING_CACHE = CacheBuilder.newBuilder()
+    private static Cache<String, Optional<Serializable>> SETTING_CACHE = Caffeine.newBuilder()
         .expireAfterAccess( 1, TimeUnit.HOURS )
         .initialCapacity( 200 )
         .maximumSize( SystemUtils.isTestRun() ? 0 : 10000 )
@@ -286,28 +285,21 @@ public class DefaultUserSettingService
             return Optional.empty();
         }
 
-        try
+        String username = user.isPresent() ? user.get().getUsername() : currentUserService.getCurrentUsername();
+
+        String cacheKey = getCacheKey( key.getName(), username );
+
+        Optional<Serializable> result = SETTING_CACHE.
+            get( cacheKey, c -> getUserSettingOptional( key, username ) );
+
+        if ( !result.isPresent() && NAME_SETTING_KEY_MAP.containsKey( key.getName() ) )
         {
-            String username = user.isPresent() ? user.get().getUsername() : currentUserService.getCurrentUsername();
-
-            String cacheKey = getCacheKey( key.getName(), username );
-
-            Optional<Serializable> result = SETTING_CACHE.
-                get( cacheKey, () -> getUserSettingOptional( key, username ) );
-
-            if ( !result.isPresent() && NAME_SETTING_KEY_MAP.containsKey( key.getName() ) )
-            {
-                return Optional.ofNullable(
-                    systemSettingManager.getSystemSetting( NAME_SETTING_KEY_MAP.get( key.getName() ) ) );
-            }
-            else
-            {
-                return result;
-            }
+            return Optional.ofNullable(
+                systemSettingManager.getSystemSetting( NAME_SETTING_KEY_MAP.get( key.getName() ) ) );
         }
-        catch ( ExecutionException ignored )
+        else
         {
-            return Optional.empty();
+            return result;
         }
     }
 

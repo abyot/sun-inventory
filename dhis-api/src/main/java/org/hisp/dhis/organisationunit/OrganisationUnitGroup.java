@@ -29,7 +29,6 @@ package org.hisp.dhis.organisationunit;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -40,9 +39,6 @@ import org.hisp.dhis.common.DimensionItemType;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
 
@@ -58,7 +54,6 @@ public class OrganisationUnitGroup
 {
     private String symbol;
 
-    @Scanned
     private Set<OrganisationUnit> members = new HashSet<>();
 
     private OrganisationUnitGroupSet groupSet;
@@ -139,7 +134,6 @@ public class OrganisationUnitGroup
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getSymbol()
     {
@@ -153,7 +147,6 @@ public class OrganisationUnitGroup
 
     @JsonProperty( "organisationUnits" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "organisationUnits", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "organisationUnit", namespace = DxfNamespaces.DXF_2_0 )
     public Set<OrganisationUnit> getMembers()
@@ -168,9 +161,8 @@ public class OrganisationUnitGroup
 
     @JsonProperty( "organisationUnitGroupSet" )
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    @Property( value = PropertyType.REFERENCE, required = Property.Required.FALSE )
+    @Property( value = PropertyType.REFERENCE, required = Property.Value.FALSE )
     public OrganisationUnitGroupSet getGroupSet()
     {
         return groupSet;

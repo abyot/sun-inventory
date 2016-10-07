@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -47,6 +49,8 @@ import java.util.Set;
 @Service
 public class DefaultContextService implements ContextService
 {
+    private static Pattern API_VERSION = Pattern.compile( "(/api/(\\d+)?/)" );
+
     @Override
     public String getServletPath()
     {
@@ -96,7 +100,16 @@ public class DefaultContextService implements ContextService
     @Override
     public String getApiPath()
     {
-        return getContextPath() + "/api";
+        HttpServletRequest request = getRequest();
+        Matcher matcher = API_VERSION.matcher( request.getRequestURI() );
+        String version = "";
+
+        if ( matcher.find() )
+        {
+            version = "/" + matcher.group( 2 );
+        }
+
+        return getServletPath() + version;
     }
 
     @Override

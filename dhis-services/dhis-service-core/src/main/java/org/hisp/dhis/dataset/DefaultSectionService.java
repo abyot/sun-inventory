@@ -28,12 +28,9 @@ package org.hisp.dhis.dataset;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import org.hisp.dhis.i18n.I18nService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Tri
@@ -52,13 +49,6 @@ public class DefaultSectionService
     public void setSectionStore( SectionStore sectionStore )
     {
         this.sectionStore = sectionStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     private DataSetService dataSetService;
@@ -89,25 +79,25 @@ public class DefaultSectionService
     @Override
     public List<Section> getAllSections()
     {
-        return i18n( i18nService, sectionStore.getAll() );
+        return sectionStore.getAll();
     }
 
     @Override
     public Section getSection( int id )
     {
-        return i18n( i18nService, sectionStore.get( id ) );
+        return sectionStore.get( id );
     }
 
     @Override
     public Section getSection( String uid )
     {
-        return i18n( i18nService, sectionStore.getByUid( uid ) );
+        return sectionStore.getByUid( uid );
     }
 
     @Override
     public Section getSectionByName( String name, Integer dataSetId )
     {
-        return i18n( i18nService, sectionStore.getSectionByName( name, dataSetService.getDataSet( dataSetId ) ) );
+        return sectionStore.getSectionByName( name, dataSetService.getDataSet( dataSetId ) );
     }
 
     @Override

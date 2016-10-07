@@ -29,7 +29,6 @@ package org.hisp.dhis.attribute;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.base.MoreObjects;
@@ -38,15 +37,13 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.ValueType;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.constant.Constant;
 import org.hisp.dhis.dataelement.CategoryOptionGroup;
 import org.hisp.dhis.dataelement.DataElement;
-import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementGroup;
 import org.hisp.dhis.dataset.DataSet;
+import org.hisp.dhis.dataset.Section;
 import org.hisp.dhis.document.Document;
 import org.hisp.dhis.indicator.Indicator;
 import org.hisp.dhis.indicator.IndicatorGroup;
@@ -81,8 +78,6 @@ public class Attribute
     private boolean dataElementAttribute;
 
     private boolean dataElementGroupAttribute;
-    
-    private boolean categoryAttribute;
 
     private boolean indicatorAttribute;
 
@@ -126,6 +121,8 @@ public class Attribute
 
     private boolean sqlViewAttribute;
 
+    private boolean sectionAttribute;
+
     private boolean mandatory;
 
     private boolean unique;
@@ -148,10 +145,10 @@ public class Attribute
     @Override
     public int hashCode()
     {
-        return 31 * super.hashCode() + Objects.hash( valueType, dataElementAttribute, dataElementGroupAttribute, categoryAttribute, indicatorAttribute, indicatorGroupAttribute,
+        return 31 * super.hashCode() + Objects.hash( valueType, dataElementAttribute, dataElementGroupAttribute, indicatorAttribute, indicatorGroupAttribute,
             dataSetAttribute, organisationUnitAttribute, organisationUnitGroupAttribute, organisationUnitGroupSetAttribute, userAttribute, userGroupAttribute,
             programAttribute, programStageAttribute, trackedEntityAttribute, trackedEntityAttributeAttribute, categoryOptionAttribute, categoryOptionGroupAttribute,
-            mandatory, unique, optionSet, optionAttribute, constantAttribute, legendSetAttribute, programIndicatorAttribute, sqlViewAttribute);
+            mandatory, unique, optionSet, optionAttribute, constantAttribute, legendSetAttribute, programIndicatorAttribute, sqlViewAttribute, sectionAttribute );
     }
 
     @Override
@@ -175,7 +172,6 @@ public class Attribute
         return Objects.equals( this.valueType, other.valueType )
             && Objects.equals( this.dataElementAttribute, other.dataElementAttribute )
             && Objects.equals( this.dataElementGroupAttribute, other.dataElementGroupAttribute )
-            && Objects.equals( this.categoryAttribute, other.categoryAttribute )
             && Objects.equals( this.indicatorAttribute, other.indicatorAttribute )
             && Objects.equals( this.indicatorGroupAttribute, other.indicatorGroupAttribute )
             && Objects.equals( this.dataSetAttribute, other.dataSetAttribute )
@@ -195,6 +191,7 @@ public class Attribute
             && Objects.equals( this.legendSetAttribute, other.legendSetAttribute )
             && Objects.equals( this.programIndicatorAttribute, other.programIndicatorAttribute )
             && Objects.equals( this.sqlViewAttribute, other.sqlViewAttribute )
+            && Objects.equals( this.sectionAttribute, other.sectionAttribute )
 
             && Objects.equals( this.mandatory, other.mandatory )
             && Objects.equals( this.unique, other.unique )
@@ -202,7 +199,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ValueType getValueType()
     {
@@ -215,7 +211,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isMandatory()
     {
@@ -228,7 +223,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isUnique()
     {
@@ -241,7 +235,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isDataElementAttribute()
     {
@@ -254,7 +247,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isDataElementGroupAttribute()
     {
@@ -265,22 +257,8 @@ public class Attribute
     {
         this.dataElementGroupAttribute = dataElementGroupAttribute;
     }
-    
-    @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public boolean isCategoryAttribute()
-    {
-        return categoryAttribute;
-    }
-
-    public void setCategoryAttribute( Boolean categoryAttribute )
-    {
-        this.categoryAttribute = categoryAttribute;
-    }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isIndicatorAttribute()
     {
@@ -293,7 +271,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isIndicatorGroupAttribute()
     {
@@ -306,7 +283,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isDataSetAttribute()
     {
@@ -319,7 +295,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isOrganisationUnitAttribute()
     {
@@ -332,7 +307,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isOrganisationUnitGroupAttribute()
     {
@@ -345,7 +319,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isOrganisationUnitGroupSetAttribute()
     {
@@ -358,7 +331,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isUserAttribute()
     {
@@ -371,7 +343,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isUserGroupAttribute()
     {
@@ -384,7 +355,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isProgramAttribute()
     {
@@ -397,7 +367,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isProgramStageAttribute()
     {
@@ -410,7 +379,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isTrackedEntityAttribute()
     {
@@ -423,7 +391,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isTrackedEntityAttributeAttribute()
     {
@@ -436,7 +403,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isCategoryOptionAttribute()
     {
@@ -449,7 +415,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isCategoryOptionGroupAttribute()
     {
@@ -462,7 +427,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isDocumentAttribute()
     {
@@ -475,7 +439,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isOptionAttribute()
     {
@@ -488,7 +451,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isOptionSetAttribute()
     {
@@ -501,7 +463,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isLegendSetAttribute()
     {
@@ -514,7 +475,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isConstantAttribute()
     {
@@ -527,21 +487,42 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public boolean isProgramIndicatorAttribute() { return programIndicatorAttribute; }
+    public boolean isProgramIndicatorAttribute()
+    {
+        return programIndicatorAttribute;
+    }
 
-    public void setProgramIndicatorAttribute( boolean programIndicatorAttribute ) { this.programIndicatorAttribute = programIndicatorAttribute; }
+    public void setProgramIndicatorAttribute( boolean programIndicatorAttribute )
+    {
+        this.programIndicatorAttribute = programIndicatorAttribute;
+    }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public boolean isSqlViewAttribute() { return sqlViewAttribute; }
+    public boolean isSqlViewAttribute()
+    {
+        return sqlViewAttribute;
+    }
 
-    public void setSqlViewAttribute( boolean sqlViewAttribute ) { this.sqlViewAttribute = sqlViewAttribute; }
+    public void setSqlViewAttribute( boolean sqlViewAttribute )
+    {
+        this.sqlViewAttribute = sqlViewAttribute;
+    }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public boolean isSectionAttribute()
+    {
+        return sectionAttribute;
+    }
+
+    public void setSectionAttribute( boolean sectionAttribute )
+    {
+        this.sectionAttribute = sectionAttribute;
+    }
+
+    @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public OptionSet getOptionSet()
     {
@@ -554,7 +535,6 @@ public class Attribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getSortOrder()
     {
@@ -572,7 +552,6 @@ public class Attribute
 
         if ( dataElementAttribute ) klasses.add( DataElement.class );
         if ( dataElementGroupAttribute ) klasses.add( DataElementGroup.class );
-        if ( categoryAttribute ) klasses.add( DataElementCategory.class );
         if ( categoryOptionAttribute ) klasses.add( DataElementCategoryOption.class );
         if ( categoryOptionGroupAttribute ) klasses.add( CategoryOptionGroup.class );
         if ( indicatorAttribute ) klasses.add( Indicator.class );
@@ -594,6 +573,7 @@ public class Attribute
         if ( constantAttribute ) klasses.add( Constant.class );
         if ( programIndicatorAttribute ) klasses.add( ProgramIndicator.class );
         if ( sqlViewAttribute ) klasses.add( SqlView.class );
+        if ( sectionAttribute ) klasses.add( Section.class );
 
         return klasses;
     }
@@ -609,7 +589,6 @@ public class Attribute
 
             dataElementAttribute = attribute.isDataElementAttribute();
             dataElementGroupAttribute = attribute.isDataElementGroupAttribute();
-            categoryAttribute = attribute.isCategoryAttribute();
             indicatorAttribute = attribute.isIndicatorAttribute();
             indicatorGroupAttribute = attribute.isIndicatorGroupAttribute();
             dataSetAttribute = attribute.isDataSetAttribute();
@@ -631,8 +610,10 @@ public class Attribute
             legendSetAttribute = attribute.isLegendSetAttribute();
             programIndicatorAttribute = attribute.isProgramIndicatorAttribute();
             sqlViewAttribute = attribute.isSqlViewAttribute();
+            sectionAttribute = attribute.isSectionAttribute();
             mandatory = attribute.isMandatory();
             unique = attribute.isUnique();
+            optionSet = attribute.getOptionSet();
 
             if ( mergeMode.isReplace() )
             {
@@ -655,7 +636,6 @@ public class Attribute
             .add( "valueType", valueType )
             .add( "dataElementAttribute", dataElementAttribute )
             .add( "dataElementGroupAttribute", dataElementGroupAttribute )
-            .add( "categoryAttribute", categoryAttribute )
             .add( "indicatorAttribute", indicatorAttribute )
             .add( "indicatorGroupAttribute", indicatorGroupAttribute )
             .add( "dataSetAttribute", dataSetAttribute )
@@ -674,6 +654,7 @@ public class Attribute
             .add( "legendSetAttribute", legendSetAttribute )
             .add( "programIndicatorAttribute", programIndicatorAttribute )
             .add( "sqlViewAttribute", sqlViewAttribute )
+            .add( "sectionAttribute", sectionAttribute )
             .add( "mandatory", mandatory )
             .toString();
     }

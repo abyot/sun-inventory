@@ -28,10 +28,6 @@ package org.hisp.dhis.webapi.controller.event;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.hisp.dhis.schema.descriptors.TrackedEntityAttributeSchemaDescriptor;
 import org.hisp.dhis.trackedentity.TrackedEntityAttribute;
 import org.hisp.dhis.trackedentity.TrackedEntityAttributeService;
@@ -47,6 +43,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -58,58 +58,45 @@ public class TrackedEntityAttributeController
 {
     @Autowired
     TrackedEntityAttributeReservedValueService trackedEntityAttributeReservedValueService;
-    
+
     @Autowired
     TrackedEntityAttributeService trackedEntityAttributeService;
-    
+
     @RequestMapping( value = "/{id}/generateAndReserve", method = RequestMethod.GET, produces = { ContextUtils.CONTENT_TYPE_JSON, ContextUtils.CONTENT_TYPE_JAVASCRIPT } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_TRACKED_ENTITY_INSTANCE_ADD')" )
-    public String queryTrackedEntityInstancesJson(
+    public @ResponseBody List<TrackedEntityAttributeReservedValue> queryTrackedEntityInstancesJson(
         @RequestParam( required = false ) Integer numberToReserve,
         @PathVariable String id,
         Model model,
         HttpServletResponse response ) throws Exception
     {
-        if ( numberToReserve == null || numberToReserve < 1 ) 
+        if ( numberToReserve == null || numberToReserve < 1 )
         {
             numberToReserve = 1;
         }
-        
+
         TrackedEntityAttribute attribute = trackedEntityAttributeService.getTrackedEntityAttribute( id );
-        if ( attribute == null ) 
+        if ( attribute == null )
         {
-            throw new Exception("No attribute found with id " + id);
+            throw new Exception( "No attribute found with id " + id );
         }
-        
-        List<TrackedEntityAttributeReservedValue> generated =
-            trackedEntityAttributeReservedValueService.createTrackedEntityReservedValues( 
-                attribute, numberToReserve );
 
-        model.addAttribute( "model", generated );
-        model.addAttribute( "viewClass", "detailed" );
-
-        return "generated";
+        return trackedEntityAttributeReservedValueService.createTrackedEntityReservedValues(
+            attribute, numberToReserve );
     }
-    
+
     @RequestMapping( value = "/{id}/generate", method = RequestMethod.GET, produces = { ContextUtils.CONTENT_TYPE_JSON, ContextUtils.CONTENT_TYPE_JAVASCRIPT } )
-    public String queryTrackedEntityInstancesJson(
+    public @ResponseBody String queryTrackedEntityInstancesJson(
         @PathVariable String id,
         Model model,
         HttpServletResponse response ) throws Exception
     {
         TrackedEntityAttribute attribute = trackedEntityAttributeService.getTrackedEntityAttribute( id );
-        if ( attribute == null ) 
+        if ( attribute == null )
         {
             throw new Exception( "No attribute found with id " + id );
         }
-        
-        String generated =
-            trackedEntityAttributeReservedValueService.getGeneratedValue( attribute );
 
-        model.addAttribute( "model", generated );
-        model.addAttribute( "viewClass", "detailed" );
-
-        return "generated";
+        return trackedEntityAttributeReservedValueService.getGeneratedValue( attribute );
     }
-    
 }

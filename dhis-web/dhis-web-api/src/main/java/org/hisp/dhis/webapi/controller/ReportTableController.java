@@ -31,8 +31,6 @@ package org.hisp.dhis.webapi.controller;
 import org.hisp.dhis.common.DimensionService;
 import org.hisp.dhis.common.Grid;
 import org.hisp.dhis.common.cache.CacheStrategy;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.i18n.I18nManager;
 import org.hisp.dhis.legend.LegendService;
@@ -44,7 +42,6 @@ import org.hisp.dhis.reporttable.ReportTableService;
 import org.hisp.dhis.schema.descriptors.ReportTableSchemaDescriptor;
 import org.hisp.dhis.system.grid.GridUtils;
 import org.hisp.dhis.webapi.utils.ContextUtils;
-import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -52,9 +49,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
 
@@ -93,52 +92,12 @@ public class ReportTableController
     //--------------------------------------------------------------------------
 
     @Override
-    @RequestMapping( method = RequestMethod.POST, consumes = "application/json" )
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    protected ReportTable deserializeJsonEntity( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
-        ReportTable reportTable = renderService.fromJson( request.getInputStream(), ReportTable.class );
-
+        ReportTable reportTable = super.deserializeJsonEntity( request, response );
         mergeReportTable( reportTable );
 
-        reportTableService.saveReportTable( reportTable );
-
-        response.addHeader( "Location", ReportTableSchemaDescriptor.API_ENDPOINT + "/" + reportTable.getUid() );
-
-        webMessageService.send( WebMessageUtils.created( "Report table created" ), response, request );
-    }
-
-    @Override
-    @RequestMapping( value = "/{uid}", method = RequestMethod.PUT, consumes = "application/json" )
-    public void putJsonObjectLegacy( ImportOptions importOptions, @PathVariable String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
-    {
-        ReportTable reportTable = reportTableService.getReportTable( uid );
-
-        if ( reportTable == null )
-        {
-            throw new WebMessageException( WebMessageUtils.notFound( "Report table does not exist: " + uid ) );
-        }
-
-        ReportTable newReportTable = renderService.fromJson( request.getInputStream(), ReportTable.class );
-
-        mergeReportTable( newReportTable );
-
-        reportTable.mergeWith( newReportTable, importOptions.getMergeMode() );
-
-        reportTableService.updateReportTable( reportTable );
-    }
-
-    @Override
-    @RequestMapping( value = "/{uid}", method = RequestMethod.DELETE )
-    public void deleteObject( @PathVariable String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
-    {
-        ReportTable reportTable = reportTableService.getReportTable( uid );
-
-        if ( reportTable == null )
-        {
-            throw new WebMessageException( WebMessageUtils.notFound( "Report table does not exist: " + uid ) );
-        }
-
-        reportTableService.deleteReportTable( reportTable );
+        return reportTable;
     }
 
     //--------------------------------------------------------------------------
@@ -146,15 +105,12 @@ public class ReportTableController
     //--------------------------------------------------------------------------
 
     @RequestMapping( value = "/{uid}/data", method = RequestMethod.GET ) // For json, jsonp
-    public String getReportTableData( @PathVariable( "uid" ) String uid, Model model,
+    public @ResponseBody Grid getReportTableData( @PathVariable( "uid" ) String uid, Model model,
         @RequestParam( value = "ou", required = false ) String organisationUnitUid,
         @RequestParam( value = "date", required = false ) Date date,
         HttpServletResponse response ) throws Exception
     {
-        model.addAttribute( "model", getReportTableGrid( uid, organisationUnitUid, date ) );
-        model.addAttribute( "viewClass", "detailed" );
-
-        return "grid";
+        return getReportTableGrid( uid, organisationUnitUid, date );
     }
 
     @RequestMapping( value = "/{uid}/data.html", method = RequestMethod.GET )

@@ -75,7 +75,7 @@ public enum SettingKey
     EMAIL_PASSWORD( "keyEmailPassword", "", String.class, true ),
     INSTANCE_BASE_URL( "keyInstanceBaseUrl" ),
     SCHEDULED_TASKS( "keySchedTasks", ListMap.class ),
-    SMS_CONFIG( "keySmsConfiguration", SmsConfiguration.class ),
+    SMS_CONFIG( "keySmsConfigurations", SmsConfiguration.class ),
     CACHE_STRATEGY( "keyCacheStrategy", "CACHE_6AM_TOMORROW", String.class ),
     PHONE_NUMBER_AREA_CODE( "phoneNumberAreaCode" ),
     MULTI_ORGANISATION_UNIT_FORMS( "multiOrganisationUnitForms", Boolean.FALSE, Boolean.class ),
@@ -96,12 +96,12 @@ public enum SettingKey
     LAST_SUCCESSFUL_ANALYTICS_TABLES_RUNTIME( "keyLastSuccessfulAnalyticsTablesRuntime" ),
     LAST_MONITORING_RUN( "keyLastMonitoringRun", Date.class ),
     LAST_SUCCESSFUL_DATA_SYNC( "keyLastSuccessfulDataSynch", Date.class ),
+    LAST_SUCCESSFUL_EVENT_DATA_SYNC("keyLastSuccessfulEventsDataSynch", Date.class  ),
     LAST_SUCCESSFUL_ANALYTICS_TABLES_UPDATE( "keyLastSuccessfulAnalyticsTablesUpdate", Date.class ),
     LAST_SUCCESSFUL_RESOURCE_TABLES_UPDATE( "keyLastSuccessfulResourceTablesUpdate", Date.class ),
     LAST_SUCCESSFUL_MONITORING( "keyLastSuccessfulMonitoring", Date.class ),
-    LAST_SUCCESSFUL_SMS_SCHEDULING( "lastSuccessfulSmsScheduling", Date.class ),
     LAST_SUCCESSFUL_DATA_STATISTIC( "lastSuccessfulDataStatistics", Date.class ),
-    HELP_PAGE_LINK( "helpPageLink", "../dhis-web-commons-about/help.action", String.class ),
+    HELP_PAGE_LINK( "helpPageLink", "https://dhis2.github.io/dhis2-docs/master/en/user/html/dhis2_user_manual_en.html", String.class ),
     ACCEPTANCE_REQUIRED_FOR_APPROVAL( "keyAcceptanceRequiredForApproval", Boolean.FALSE, Boolean.class ),
     SYSTEM_NOTIFICATIONS_EMAIL( "keySystemNotificationsEmail" ),
     ANALYSIS_RELATIVE_PERIOD( "keyAnalysisRelativePeriod", "LAST_12_MONTHS", String.class ),
@@ -110,7 +110,6 @@ public enum SettingKey
     USE_CUSTOM_LOGO_FRONT( "keyUseCustomLogoFront", Boolean.FALSE, Boolean.class ),
     USE_CUSTOM_LOGO_BANNER( "keyUseCustomLogoBanner", Boolean.FALSE, Boolean.class ),
     METADATA_REPO_URL( "keyMetaDataRepoUrl", "https://raw.githubusercontent.com/dhis2/dhis2-metadata-repo/master/repo/221/index.json", String.class ),
-    DATA_IMPORT_DATASET_ALLOWS_PERIODS( "keyDataImportDatasetAllowsPeriods", Boolean.FALSE, Boolean.class ),
     DATA_IMPORT_STRICT_PERIODS( "keyDataImportStrictPeriods", Boolean.FALSE, Boolean.class ),
     DATA_IMPORT_STRICT_CATEGORY_OPTION_COMBOS( "keyDataImportStrictCategoryOptionCombos", Boolean.FALSE, Boolean.class ),
     DATA_IMPORT_STRICT_ORGANISATION_UNITS( "keyDataImportStrictOrganisationUnits", Boolean.FALSE, Boolean.class ),
@@ -127,8 +126,17 @@ public enum SettingKey
     REMOTE_INSTANCE_URL( "keyRemoteInstanceUrl", "", String.class ),
     REMOTE_INSTANCE_USERNAME( "keyRemoteInstanceUsername", "", String.class ),
     REMOTE_INSTANCE_PASSWORD( "keyRemoteInstancePassword", "", String.class, true ),
-    MAPZEN_SEARCH_API_KEY( "keyMapzenSearchApiKey", "search-Se1CFzK", String.class );
-    
+    MAPZEN_SEARCH_API_KEY( "keyMapzenSearchApiKey", "search-Se1CFzK", String.class ),
+    GOOGLE_MAPS_API_KEY( "keyGoogleMapsApiKey", "AIzaSyBjlDmwuON9lJbPMDlh_LI3zGpGtpK9erc", String.class ),
+    LAST_SUCCESSFUL_METADATA_SYNC( "keyLastMetaDataSyncSuccess", Date.class ),
+    METADATAVERSION_ENABLED( "keyVersionEnabled",Boolean.FALSE, Boolean.class),
+    METADATA_FAILED_VERSION( "keyMetadataFailedVersion", String.class ),
+    METADATA_LAST_FAILED_TIME("keyMetadataLastFailedTime", Date.class ),
+    METADATA_SYNC_CRON( "metaDataSyncCron",String.class ),
+    LAST_SUCCESSFUL_SCHEDULED_PROGRAM_NOTIFICATIONS( "keyLastSuccessfulScheduledProgramNotifications", Date.class ),
+    REMOTE_METADATA_VERSION( "keyRemoteMetadataVersion", String.class),
+    SYSTEM_METADATA_VERSION( "keySystemMetadataVersion", String.class);
+
     private final String name;
     
     private final Serializable defaultValue;
@@ -188,7 +196,7 @@ public enum SettingKey
                 return Optional.of( setting );
             }
         }
-        
+
         return Optional.empty();
     }
 
@@ -253,12 +261,11 @@ public enum SettingKey
         return name;
     }
 
-
     public Serializable getDefaultValue()
     {
         return defaultValue;
     }
-
+    
     public Class<?> getClazz()
     {
         return clazz;

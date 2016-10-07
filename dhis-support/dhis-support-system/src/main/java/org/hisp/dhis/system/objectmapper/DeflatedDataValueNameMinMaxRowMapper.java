@@ -32,7 +32,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.amplecode.quick.mapper.RowMapper;
+import org.hisp.quick.mapper.RowMapper;
 import org.hisp.dhis.datavalue.DeflatedDataValue;
 
 /**
@@ -97,8 +97,8 @@ public class DeflatedDataValueNameMinMaxRowMapper
         value.setDataElementName( resultSet.getString( "dataelementname" ) );
         value.setPeriod( 
             resultSet.getString( "periodtypename" ), 
-            resultSet.getString( "startdate" ),
-            resultSet.getString( "enddate" ) );
+            resultSet.getDate( "startdate" ),
+            resultSet.getDate( "enddate" ) );
         value.setSourceName( resultSet.getString( "sourcename" ) );
         value.setCategoryOptionComboName( resultSet.getString( "categoryoptioncomboname" ) );
         

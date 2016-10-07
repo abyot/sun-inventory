@@ -29,21 +29,19 @@ package org.hisp.dhis.predictor;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.BaseNameableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeDeserializer;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeSerializer;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.expression.Expression;
+import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
@@ -56,7 +54,7 @@ import java.util.Set;
  */
 @JacksonXmlRootElement( localName = "Predictor", namespace = DxfNamespaces.DXF_2_0 )
 public class Predictor
-    extends BaseIdentifiableObject
+    extends BaseNameableObject
 {
     /**
      * The data element into which the predictor writes
@@ -67,11 +65,6 @@ public class Predictor
      * The generator used to compute the value of the predictor.
      */
     private Expression generator;
-
-    /**
-     * A description of the Predictor for use in prompts and display.
-     */
-    private String description;
 
     /**
      * The type of period in which this rule is evaluated.
@@ -87,7 +80,7 @@ public class Predictor
     /**
      * The org unit level for which this predictor is defined, if any
      */
-    private Set<Integer> organisationUnitLevels;
+    private Set<OrganisationUnitLevel> organisationUnitLevels;
 
     /**
      * The number of sequential periods from which to collect samples
@@ -155,7 +148,6 @@ public class Predictor
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataElement getOutput()
     {
@@ -168,7 +160,6 @@ public class Predictor
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Expression getGenerator()
     {
@@ -181,36 +172,20 @@ public class Predictor
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    @PropertyRange( min = 2 )
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription( String description )
-    {
-        this.description = description;
-    }
-
-    @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public Set<Integer> getOrganisationUnitLevels()
+    public Set<OrganisationUnitLevel> getOrganisationUnitLevels()
     {
         return organisationUnitLevels;
     }
 
-    public void setOrganisationUnitLevels(Set<Integer> levels)
+    public void setOrganisationUnitLevels( Set<OrganisationUnitLevel> organisationUnitLevels )
     {
-        this.organisationUnitLevels =levels;
+        this.organisationUnitLevels = organisationUnitLevels;
     }
 
     @JsonProperty
     @JsonSerialize( using = JacksonPeriodTypeSerializer.class )
     @JsonDeserialize( using = JacksonPeriodTypeDeserializer.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.TEXT )
     public PeriodType getPeriodType()
@@ -224,7 +199,6 @@ public class Predictor
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getSequentialSampleCount()
     {
@@ -237,7 +211,6 @@ public class Predictor
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 0, max = 10 )
     public Integer getAnnualSampleCount()
@@ -251,7 +224,6 @@ public class Predictor
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getSequentialSkipCount()
     {
@@ -264,7 +236,6 @@ public class Predictor
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Expression getSampleSkipTest()
     {
@@ -290,18 +261,33 @@ public class Predictor
             if ( mergeMode.isReplace() )
             {
                 description = predictor.getDescription();
+                output = predictor.getOutput();
                 generator = predictor.getGenerator();
                 periodType = predictor.getPeriodType();
+                sequentialSampleCount = predictor.getSequentialSampleCount();
+                sequentialSkipCount = predictor.getSequentialSkipCount();
+                annualSampleCount = predictor.getAnnualSampleCount();
+                organisationUnitLevels = predictor.getOrganisationUnitLevels();
             }
             else if ( mergeMode.isMerge() )
             {
                 description = predictor.getDescription() == null ? description : predictor.getDescription();
                 periodType = predictor.getPeriodType() == null ? periodType : predictor.getPeriodType();
+                output = predictor.getOutput() == null ? output : predictor.getOutput();
+                sequentialSampleCount = predictor.getSequentialSampleCount() == null ? sequentialSampleCount : predictor.getSequentialSampleCount();
+                sequentialSkipCount = predictor.getSequentialSkipCount() == null ? sequentialSkipCount : predictor.getSequentialSkipCount();
+                annualSampleCount = predictor.getAnnualSampleCount() == null ? annualSampleCount : predictor.getAnnualSampleCount();
+                organisationUnitLevels = predictor.getOrganisationUnitLevels() == null ? organisationUnitLevels : predictor.getOrganisationUnitLevels();
             }
 
             if ( generator != null && predictor.getGenerator() != null )
             {
                 generator.mergeWith( predictor.getGenerator() );
+            }
+
+            if ( sampleSkipTest != null && predictor.getSampleSkipTest() != null )
+            {
+                sampleSkipTest.mergeWith( predictor.getSampleSkipTest() );
             }
         }
     }

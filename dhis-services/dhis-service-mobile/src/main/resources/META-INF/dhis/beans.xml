@@ -8,7 +8,6 @@
 	<bean id="org.hisp.dhis.mobile.api.FacilityReportingService"
 		class="org.hisp.dhis.mobile.service.FacilityReportingServiceImpl">
 		<property name="dataSetService" ref="org.hisp.dhis.dataset.DataSetService" />
-		<property name="i18nService" ref="org.hisp.dhis.i18n.I18nService" />
 		<property name="periodService" ref="org.hisp.dhis.period.PeriodService" />
 		<property name="categoryService"
 			ref="org.hisp.dhis.dataelement.DataElementCategoryService" />
@@ -50,7 +49,6 @@
 		<property name="chartService" ref="org.hisp.dhis.chart.ChartService" />
 		<property name="trackedEntityService" ref="org.hisp.dhis.trackedentity.TrackedEntityService" />
 		<property name="i18nManager" ref="org.hisp.dhis.i18n.I18nManager" />
-		<property name="reminderService" ref="org.hisp.dhis.trackedentity.TrackedEntityInstanceReminderService" />
 
 	</bean>
 

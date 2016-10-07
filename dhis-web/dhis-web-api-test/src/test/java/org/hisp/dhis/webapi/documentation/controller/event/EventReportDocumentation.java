@@ -14,7 +14,6 @@ public class EventReportDocumentation
     protected void setStatues()
     {
         createdStatus = HttpStatus.SC_CREATED;
-        deleteStatus = HttpStatus.SC_OK;
     }
 }
 

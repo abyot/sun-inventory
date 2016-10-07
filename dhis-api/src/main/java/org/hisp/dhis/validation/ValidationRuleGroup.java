@@ -29,7 +29,6 @@ package org.hisp.dhis.validation;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -38,9 +37,6 @@ import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.user.UserGroup;
 
@@ -56,10 +52,8 @@ public class ValidationRuleGroup
 {
     private String description;
 
-    @Scanned
     private Set<ValidationRule> members = new HashSet<>();
 
-    @Scanned
     private Set<UserGroup> userGroupsToAlert = new HashSet<>();
 
     private boolean alertByOrgUnits;
@@ -114,7 +108,6 @@ public class ValidationRuleGroup
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getDescription()
@@ -129,7 +122,6 @@ public class ValidationRuleGroup
 
     @JsonProperty( "validationRules" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "validationRules", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "validationRule", namespace = DxfNamespaces.DXF_2_0 )
     public Set<ValidationRule> getMembers()
@@ -144,7 +136,6 @@ public class ValidationRuleGroup
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "userGroupsToAlert", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "userGroupToAlert", namespace = DxfNamespaces.DXF_2_0 )
     public Set<UserGroup> getUserGroupsToAlert()
@@ -158,7 +149,6 @@ public class ValidationRuleGroup
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isAlertByOrgUnits()
     {

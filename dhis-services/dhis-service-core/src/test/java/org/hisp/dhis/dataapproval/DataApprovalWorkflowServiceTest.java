@@ -49,7 +49,7 @@ public class DataApprovalWorkflowServiceTest
     extends DhisSpringTest
 {
     @Autowired
-    private DataApprovalWorkflowService dataApprovalWorkflowService;
+    private DataApprovalService dataApprovalService;
 
     @Autowired
     private DataApprovalLevelService dataApprovalLevelService;
@@ -101,11 +101,11 @@ public class DataApprovalWorkflowServiceTest
     @Test
     public void testAddDataApprovalWorkflow() throws Exception
     {
-        int id = dataApprovalWorkflowService.addWorkflow( workflowA );
+        int id = dataApprovalService.addWorkflow( workflowA );
 
         assertTrue( id != 0 );
 
-        DataApprovalWorkflow workflow = dataApprovalWorkflowService.getWorkflow( id );
+        DataApprovalWorkflow workflow = dataApprovalService.getWorkflow( id );
 
         assertEquals( "A", workflow.getName() );
 
@@ -120,17 +120,17 @@ public class DataApprovalWorkflowServiceTest
     @Test
     public void testUpdateDataApprovalWorkflow() throws Exception
     {
-        int id = dataApprovalWorkflowService.addWorkflow( workflowA );
+        int id = dataApprovalService.addWorkflow( workflowA );
 
-        DataApprovalWorkflow workflow = dataApprovalWorkflowService.getWorkflow( id );
+        DataApprovalWorkflow workflow = dataApprovalService.getWorkflow( id );
 
         workflow.setName( "workflowB" );
         workflow.setPeriodType( periodType );
         workflow.setLevels( newHashSet( level2, level3 ) );
 
-        dataApprovalWorkflowService.updateWorkflow( workflow );
+        dataApprovalService.updateWorkflow( workflow );
 
-        workflow = dataApprovalWorkflowService.getWorkflow( id );
+        workflow = dataApprovalService.getWorkflow( id );
 
         assertEquals( "workflowB", workflow.getName() );
 
@@ -147,15 +147,15 @@ public class DataApprovalWorkflowServiceTest
     @Test
     public void testDeleteDataApprovalWorkflow() throws Exception
     {
-        int id = dataApprovalWorkflowService.addWorkflow( workflowA );
+        int id = dataApprovalService.addWorkflow( workflowA );
 
-        dataApprovalWorkflowService.deleteWorkflow( workflowA );
+        dataApprovalService.deleteWorkflow( workflowA );
 
-        DataApprovalWorkflow workflow = dataApprovalWorkflowService.getWorkflow( id );
+        DataApprovalWorkflow workflow = dataApprovalService.getWorkflow( id );
 
         assertNull( workflow );
 
-        List<DataApprovalWorkflow> workflows = dataApprovalWorkflowService.getAllWorkflows();
+        List<DataApprovalWorkflow> workflows = dataApprovalService.getAllWorkflows();
 
         assertEquals( 0, workflows.size() );
     }
@@ -163,37 +163,37 @@ public class DataApprovalWorkflowServiceTest
     @Test
     public void testGetDataApprovalWorkflow() throws Exception
     {
-        int idA = dataApprovalWorkflowService.addWorkflow( workflowA );
-        int idB = dataApprovalWorkflowService.addWorkflow( workflowB );
-        int idC = dataApprovalWorkflowService.addWorkflow( workflowC );
+        int idA = dataApprovalService.addWorkflow( workflowA );
+        int idB = dataApprovalService.addWorkflow( workflowB );
+        int idC = dataApprovalService.addWorkflow( workflowC );
 
-        assertEquals( workflowA, dataApprovalWorkflowService.getWorkflow( idA ) );
-        assertEquals( workflowB, dataApprovalWorkflowService.getWorkflow( idB ) );
-        assertEquals( workflowC, dataApprovalWorkflowService.getWorkflow( idC ) );
+        assertEquals( workflowA, dataApprovalService.getWorkflow( idA ) );
+        assertEquals( workflowB, dataApprovalService.getWorkflow( idB ) );
+        assertEquals( workflowC, dataApprovalService.getWorkflow( idC ) );
 
-        assertNull( dataApprovalWorkflowService.getWorkflow( 0 ) );
-        assertNull( dataApprovalWorkflowService.getWorkflow( idA + idB + idC ) );
+        assertNull( dataApprovalService.getWorkflow( 0 ) );
+        assertNull( dataApprovalService.getWorkflow( idA + idB + idC ) );
     }
 
     @Test
     public void testGetAllDataApprovalWorkflows() throws Exception
     {
-        List<DataApprovalWorkflow> workflows = dataApprovalWorkflowService.getAllWorkflows();
+        List<DataApprovalWorkflow> workflows = dataApprovalService.getAllWorkflows();
         assertEquals( 0, workflows.size() );
 
-        dataApprovalWorkflowService.addWorkflow( workflowA );
-        workflows = dataApprovalWorkflowService.getAllWorkflows();
+        dataApprovalService.addWorkflow( workflowA );
+        workflows = dataApprovalService.getAllWorkflows();
         assertEquals( 1, workflows.size() );
         assertTrue( workflows.contains( workflowA ) );
 
-        dataApprovalWorkflowService.addWorkflow( workflowB );
-        workflows = dataApprovalWorkflowService.getAllWorkflows();
+        dataApprovalService.addWorkflow( workflowB );
+        workflows = dataApprovalService.getAllWorkflows();
         assertEquals( 2, workflows.size() );
         assertTrue( workflows.contains( workflowA ) );
         assertTrue( workflows.contains( workflowB ) );
 
-        dataApprovalWorkflowService.addWorkflow( workflowC );
-        workflows = dataApprovalWorkflowService.getAllWorkflows();
+        dataApprovalService.addWorkflow( workflowC );
+        workflows = dataApprovalService.getAllWorkflows();
         assertEquals( 3, workflows.size() );
         assertTrue( workflows.contains( workflowA ) );
         assertTrue( workflows.contains( workflowB ) );

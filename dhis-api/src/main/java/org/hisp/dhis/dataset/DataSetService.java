@@ -30,6 +30,7 @@ package org.hisp.dhis.dataset;
 
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.PeriodType;
@@ -37,7 +38,6 @@ import org.hisp.dhis.period.PeriodType;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Lars Helge Overland
@@ -80,41 +80,6 @@ public interface DataSetService
      * @return The DataSet with the given id or null if it does not exist.
      */
     DataSet getDataSet( int id );
-
-    /**
-     * Get a DataSet
-     *
-     * @param id               The unique identifier for the DataSet to get.
-     * @param i18nDataElements whether to i18n the data elements of this data set.
-     * @param i18nIndicators   whether to i18n the indicators of this data set.
-     * @param i18nOrgUnits     whether to i18n the org units of this data set.
-     * @return The DataSet with the given id or null if it does not exist.
-     */
-    DataSet getDataSet( int id, boolean i18nDataElements, boolean i18nIndicators, boolean i18nOrgUnits );
-
-    /**
-     * Get a DataSet
-     *
-     * @param id               The unique identifier for the DataSet to get.
-     * @param i18nDataElements whether to i18n the data elements of this data set.
-     * @param i18nIndicators   whether to i18n the indicators of this data set.
-     * @param i18nOrgUnits     whether to i18n the org units of this data set.
-     * @param i18nSections     whether to i18n the sections of this data set.
-     * @return The DataSet with the given id or null if it does not exist.
-     */
-    DataSet getDataSet( int id, boolean i18nDataElements, boolean i18nIndicators, boolean i18nOrgUnits, boolean i18nSections );
-
-    /**
-     * Get a DataSet
-     *
-     * @param id               The unique identifier for the DataSet to get.
-     * @param i18nDataElements whether to i18n the data elements of this data set.
-     * @param i18nIndicators   whether to i18n the indicators of this data set.
-     * @param i18nOrgUnits     whether to i18n the org units of this data set.
-     * @param i18nSections     whether to i18n the sections of this data set.
-     * @return The DataSet with the given id or null if it does not exist.
-     */
-    DataSet getDataSet( String id, boolean i18nDataElements, boolean i18nIndicators, boolean i18nOrgUnits, boolean i18nSections );
 
     /**
      * Returns the DataSet with the given UID.
@@ -162,6 +127,14 @@ public interface DataSetService
     List<DataSet> getDataSetsBySources( Collection<OrganisationUnit> sources );
 
     /**
+     * Returns all DataSets associated with the given DataEntryForm.
+     *
+     * @param dataEntryForm the DataEntryForm.
+     * @return a list of DataSets.
+     */
+    List<DataSet> getDataSetsByDataEntryForm( DataEntryForm dataEntryForm );
+
+    /**
      * Get all DataSets.
      *
      * @return A list containing all DataSets.
@@ -193,15 +166,6 @@ public interface DataSetService
     List<DataSet> getDataSetsByUidNoAcl( Collection<String> uids );
 
     /**
-     * Returns a collection of data elements associated with the given
-     * corresponding data set.
-     *
-     * @param dataSet the data set object.
-     * @return a list of data elements.
-     */
-    Set<DataElement> getDataElements( DataSet dataSet );
-
-    /**
      * Returns all DataSets that can be collected through mobile (one
      * organisation unit).
      */
@@ -213,20 +177,12 @@ public interface DataSetService
      */
     List<DataSet> getDataSetsForMobile();
 
-    int getDataSetCountByName( String name );
-
-    List<DataSet> getDataSetsBetweenByName( String name, int first, int max );
-
-    int getDataSetCount();
-
-    List<DataSet> getDataSetsBetween( int first, int max );
-    
     /**
      * Returns the data sets associated with the current user. If the current
      * user has the ALL authority then all data sets are returned.
      */
     List<DataSet> getCurrentUserDataSets();
-    
+
     // -------------------------------------------------------------------------
     // DataSet LockExceptions
     // -------------------------------------------------------------------------
@@ -301,14 +257,24 @@ public interface DataSetService
      */
     void deleteLockExceptionCombination( DataSet dataSet, Period period );
 
+
+    /**
+     * Delete a dataSet + period + organisationUnit combination
+     *
+     * @param dataSet          DataSet part of the combination
+     * @param period           Period part of the combination
+     * @param organisationUnit OrganisationUnit part of the combination
+     */
+    void deleteLockExceptionCombination( DataSet dataSet, Period period, OrganisationUnit organisationUnit );
+
     /**
      * Checks whether the period is locked for data entry for the given input,
      * checking the dataset's expiryDays and lockExceptions.
      *
-     * @param dataSet the data set
-     * @param period the period.
+     * @param dataSet          the data set
+     * @param period           the period.
      * @param organisationUnit the organisation unit.
-     * @param now the base date for deciding locked date, current date if null.
+     * @param now              the base date for deciding locked date, current date if null.
      * @return true or false indicating whether the system is locked or not.
      */
     boolean isLockedPeriod( DataSet dataSet, Period period, OrganisationUnit organisationUnit, Date now );
@@ -317,11 +283,11 @@ public interface DataSetService
      * Checks whether the system is locked for data entry for the given input,
      * checking expiryDays, lockExceptions and approvals.
      *
-     * @param dataSet the data set
-     * @param period the period.
-     * @param organisationUnit the organisation unit.
+     * @param dataSet              the data set
+     * @param period               the period.
+     * @param organisationUnit     the organisation unit.
      * @param attributeOptionCombo the attribute option combo.
-     * @param now the base date for deciding locked date, current date if null.
+     * @param now                  the base date for deciding locked date, current date if null.
      * @return true or false indicating whether the system is locked or not.
      */
     boolean isLocked( DataSet dataSet, Period period, OrganisationUnit organisationUnit, DataElementCategoryOptionCombo attributeOptionCombo, Date now );
@@ -330,12 +296,12 @@ public interface DataSetService
      * Checks whether the system is locked for data entry for the given input,
      * checking expiryDays, lockExceptions and approvals.
      *
-     * @param dataSet the data set
-     * @param period the period.
-     * @param organisationUnit the organisation unit.
+     * @param dataSet              the data set
+     * @param period               the period.
+     * @param organisationUnit     the organisation unit.
      * @param attributeOptionCombo the attribute option combo.
-     * @param now the base date for deciding locked date, current date if null.
-     * @param useOrgUnitChildren whether to check children of the given org unit or the org unit only.
+     * @param now                  the base date for deciding locked date, current date if null.
+     * @param useOrgUnitChildren   whether to check children of the given org unit or the org unit only.
      * @return true or false indicating whether the system is locked or not.
      */
     boolean isLocked( DataSet dataSet, Period period, OrganisationUnit organisationUnit, DataElementCategoryOptionCombo attributeOptionCombo, Date now, boolean useOrgUnitChildren );
@@ -344,19 +310,29 @@ public interface DataSetService
      * Checks whether the system is locked for data entry for the given input,
      * checking expiryDays, lockExceptions and approvals.
      *
-     * @param dataElement the data element.
-     * @param period the period.
-     * @param organisationUnit the organisation unit.
+     * @param dataElement          the data element.
+     * @param period               the period.
+     * @param organisationUnit     the organisation unit.
      * @param attributeOptionCombo the attribute option combo.
-     * @param now the base date for deciding locked date, current date if null.
+     * @param now                  the base date for deciding locked date, current date if null.
      * @return true or false indicating whether the system is locked or not.
      */
     boolean isLocked( DataElement dataElement, Period period, OrganisationUnit organisationUnit, DataElementCategoryOptionCombo attributeOptionCombo, Date now );
 
     /**
      * Take
+     *
      * @param dataSet
      * @param organisationUnits
      */
     void mergeWithCurrentUserOrganisationUnits( DataSet dataSet, Collection<OrganisationUnit> organisationUnits );
+
+    /**
+     * Return a list of LockException with given filter list
+     *
+     * @param filters
+     * @return a list of LockException with given filter list
+     */
+    List<LockException> filterLockExceptions( List<String> filters );
+
 }

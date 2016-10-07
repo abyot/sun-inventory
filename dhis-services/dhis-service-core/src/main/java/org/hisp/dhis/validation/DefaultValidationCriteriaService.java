@@ -28,13 +28,10 @@ package org.hisp.dhis.validation;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
+import org.hisp.dhis.common.GenericNameableObjectStore;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import org.hisp.dhis.common.GenericNameableObjectStore;
-import org.hisp.dhis.i18n.I18nService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Chau Thu Tran
@@ -53,13 +50,6 @@ public class DefaultValidationCriteriaService
     public void setValidationCriteriaStore( GenericNameableObjectStore<ValidationCriteria> validationCriteriaStore )
     {
         this.validationCriteriaStore = validationCriteriaStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     // -------------------------------------------------------------------------
@@ -87,19 +77,19 @@ public class DefaultValidationCriteriaService
     @Override
     public ValidationCriteria getValidationCriteria( int id )
     {
-        return i18n( i18nService, validationCriteriaStore.get( id ) );
+        return validationCriteriaStore.get( id );
     }
 
     @Override
     public List<ValidationCriteria> getAllValidationCriterias()
     {
-        return i18n( i18nService, validationCriteriaStore.getAll() );
+        return validationCriteriaStore.getAll();
     }
 
     @Override
     public ValidationCriteria getValidationCriteria( String name )
     {
-        return i18n( i18nService, validationCriteriaStore.getByName( name ) );
+        return validationCriteriaStore.getByName( name );
     }
 
 }

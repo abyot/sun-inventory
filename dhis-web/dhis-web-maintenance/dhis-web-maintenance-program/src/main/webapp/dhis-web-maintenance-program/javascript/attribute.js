@@ -30,7 +30,7 @@ function showAttributeDetails(context) {
       setInnerHTML('uniqueField', unique);
       
       var generated = ( json.attribute.generated == 'true') ? i18n_yes : i18n_no;
-      setInnerHTML('generatedField', unique);
+      setInnerHTML('generatedField', generated);
       
       setInnerHTML('patternField', json.attribute.pattern);
 
@@ -97,7 +97,8 @@ function typeOnChange() {
     enable("trackedEntityId");
   }
 
-  if( type == "NUMBER" || type == 'TEXT' || type == 'LETTER' || type == 'PHONE_NUMBER' ) {
+  if( type == "INTEGER" || type == "INTEGER_POSITIVE" || type == "INTEGER_NEGATIVE" || type == "INTEGER_ZERO_OR_POSITIVE" ||
+	type == "NUMBER" || type == 'TEXT' || type == 'LETTER' || type == 'PHONE_NUMBER' ) {
     enable("unique");
   }
   else {
@@ -126,7 +127,13 @@ function uniqueOnChange() {
     jQuery('#valueType [value=TRACKER_ASSOCIATE]').hide();
     jQuery('#valueType [value=USERNAME]').hide();
     
-    jQuery('[name=generatedTR]').show();
+    if( $('#scope').find(":selected").val() == "" ) {
+        jQuery('[name=generatedTR]').show();
+    }
+    else {
+        jQuery('[name=generatedTR]').hide();
+    }
+    
     generatedOnChange();
   }
   else {

@@ -30,10 +30,10 @@ package org.hisp.dhis.i18n.action;
 
 import static org.hisp.dhis.common.IdentifiableObjectUtils.CLASS_ALIAS;
 
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -42,8 +42,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.struts2.ServletActionContext;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.IdentifiableObjectManager;
-import org.hisp.dhis.i18n.I18nService;
-import org.hisp.dhis.system.util.LocaleUtils;
+import org.hisp.dhis.translation.ObjectTranslation;
+import org.hisp.dhis.translation.TranslationProperty;
 
 import com.opensymphony.xwork2.Action;
 
@@ -69,13 +69,6 @@ public class TranslateAction
     // -------------------------------------------------------------------------
     // Dependencies
     // -------------------------------------------------------------------------
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService i18nService )
-    {
-        this.i18nService = i18nService;
-    }
 
     private IdentifiableObjectManager identifiableObjectManager;
 
@@ -151,30 +144,27 @@ public class TranslateAction
 
         IdentifiableObject object = identifiableObjectManager.getObject( uid , className );
 
-        List<String> propertyNames = i18nService.getObjectPropertyNames( object );
-        
-        Locale thisLocale = LocaleUtils.getLocale( loc );
-
         HttpServletRequest request = ServletActionContext.getRequest();
 
-        Map<String, String> translations = new Hashtable<>();
-        
-        for ( String propertyName : propertyNames )
+        Set<ObjectTranslation> listObjectTranslation = new HashSet<>(object.getTranslations());
+
+        for ( TranslationProperty p :  TranslationProperty.values()  )
         {
-            String[] translation = request.getParameterValues( propertyName );
-            
-            if ( translation != null && translation.length > 0 )
-            {
-                translations.put( propertyName, translation[0] );
-            }
+            Enumeration<String> paramNames = request.getParameterNames();
+            Collections.list(paramNames).forEach( paramName -> {
+                if ( paramName.equalsIgnoreCase( p.name().toString().replace( "_", "" ) ) )
+                {
+                    String[] paramValues = request.getParameterValues( paramName );
+                    if ( paramValues != null && paramValues.length > 0 )
+                    {
+                        listObjectTranslation.removeIf( o -> o.getProperty().name().equalsIgnoreCase( p.name() ) && o.getLocale().equalsIgnoreCase( loc )  );
+                        listObjectTranslation.add( new ObjectTranslation( loc, p, paramValues[0] ) );
+                    }
+                }
+            });
         }
 
-        log.info( "Translations: " + translations );
-
-        if ( thisLocale != null && !loc.equals( "NONE" ) )
-        {
-            i18nService.updateTranslation( className, thisLocale, translations,object.getUid() );
-        }
+        identifiableObjectManager.updateTranslations( object, listObjectTranslation );
 
         return SUCCESS;
     }

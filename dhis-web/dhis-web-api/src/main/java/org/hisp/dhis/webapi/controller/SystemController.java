@@ -28,6 +28,10 @@ package org.hisp.dhis.webapi.controller;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.fasterxml.jackson.dataformat.csv.CsvFactory;
+import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.collect.Lists;
 import org.hisp.dhis.common.CodeGenerator;
 import org.hisp.dhis.common.Objects;
@@ -106,6 +110,8 @@ public class SystemController
     @Autowired
     private StatisticsProvider statisticsProvider;
 
+    private static final CsvFactory CSV_FACTORY = new CsvMapper().getFactory();
+
     // -------------------------------------------------------------------------
     // UID Generator
     // -------------------------------------------------------------------------
@@ -126,6 +132,24 @@ public class SystemController
         }
 
         return rootNode;
+    }
+
+    @RequestMapping( value = { "/uid", "/id" }, method = RequestMethod.GET, produces = { "application/csv" } )
+    public void getUidCsv( @RequestParam( required = false, defaultValue = "1" ) Integer limit, HttpServletResponse response )
+        throws IOException, InvalidTypeException
+    {
+        limit = Math.min( limit, 10000 );
+        CsvGenerator csvGenerator = CSV_FACTORY.createGenerator( response.getOutputStream() );
+        CsvSchema.Builder schemaBuilder = CsvSchema.builder().setUseHeader( true );
+        schemaBuilder.addColumn( "uid" );
+        csvGenerator.setSchema( schemaBuilder.build() );
+
+        for ( int i = 0; i < limit; i++ )
+        {
+            csvGenerator.writeStartObject();
+            csvGenerator.writeStringField( "uid", CodeGenerator.generateCode() );
+            csvGenerator.writeEndObject();
+        }
     }
 
     @RequestMapping( value = "/uuid", method = RequestMethod.GET, produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE } )
@@ -190,7 +214,7 @@ public class SystemController
     }
 
     @RequestMapping( value = "/info", method = RequestMethod.GET, produces = { "application/json", "application/javascript" } )
-    public String getSystemInfo( Model model, HttpServletRequest request )
+    public @ResponseBody SystemInfo getSystemInfo( Model model, HttpServletRequest request )
     {
         SystemInfo info = systemService.getSystemInfo();
 
@@ -202,9 +226,7 @@ public class SystemController
             info.clearSensitiveInfo();
         }
 
-        model.addAttribute( "model", info );
-
-        return "info";
+        return info;
     }
 
     @RequestMapping( value = "/objectCounts", method = RequestMethod.GET )
@@ -222,7 +244,7 @@ public class SystemController
     }
 
     @RequestMapping( value = "/ping", method = RequestMethod.GET, produces = "text/plain" )
-    @ApiVersion( exclude = Version.V24 )
+    @ApiVersion( exclude = { Version.V24, Version.V25 } )
     public @ResponseBody String pingLegacy()
     {
         return "pong";

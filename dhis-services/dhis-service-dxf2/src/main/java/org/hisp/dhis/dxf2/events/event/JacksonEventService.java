@@ -32,13 +32,16 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
+import org.hisp.dhis.render.EmptyStringToNullStdDeserializer;
+import org.hisp.dhis.render.ParseDateStdDeserializer;
+import org.hisp.dhis.render.WriteDateStdSerializer;
 import org.hisp.dhis.scheduling.TaskId;
 import org.hisp.dhis.system.notification.NotificationLevel;
 import org.hisp.dhis.system.util.Clock;
@@ -49,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,6 +88,11 @@ public class JacksonEventService extends AbstractEventService
 
     static
     {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer( String.class, new EmptyStringToNullStdDeserializer() );
+        module.addDeserializer( Date.class, new ParseDateStdDeserializer() );
+        module.addSerializer( Date.class, new WriteDateStdSerializer() );
+
         XML_MAPPER.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true );
         XML_MAPPER.configure( DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true );
         XML_MAPPER.configure( DeserializationFeature.WRAP_EXCEPTIONS, true );
@@ -102,46 +111,25 @@ public class JacksonEventService extends AbstractEventService
         JSON_MAPPER.disable( MapperFeature.AUTO_DETECT_GETTERS );
         JSON_MAPPER.disable( MapperFeature.AUTO_DETECT_SETTERS );
         JSON_MAPPER.disable( MapperFeature.AUTO_DETECT_IS_GETTERS );
+
+        JSON_MAPPER.registerModule( module );
+        XML_MAPPER.registerModule( module );
     }
 
     @Override
     public List<Event> getEventsXml( InputStream inputStream ) throws IOException
     {
         String input = StreamUtils.copyToString( inputStream, Charset.forName( "UTF-8" ) );
-        List<Event> events = new ArrayList<>();
 
-        try
-        {
-            Events fromXml = fromXml( input, Events.class );
-            events.addAll( fromXml.getEvents() );
-        }
-        catch ( JsonMappingException ex )
-        {
-            Event fromXml = fromXml( input, Event.class );
-            events.add( fromXml );
-        }
-
-        return events;
+        return parseXmlEvents( input );
     }
 
     @Override
     public List<Event> getEventsJson( InputStream inputStream ) throws IOException
     {
         String input = StreamUtils.copyToString( inputStream, Charset.forName( "UTF-8" ) );
-        List<Event> events = new ArrayList<>();
 
-        try
-        {
-            Events fromXml = fromJson( input, Events.class );
-            events.addAll( fromXml.getEvents() );
-        }
-        catch ( JsonMappingException ex )
-        {
-            Event fromXml = fromJson( input, Event.class );
-            events.add( fromXml );
-        }
-
-        return events;
+        return parseJsonEvents( input );
     }
 
     @Override
@@ -154,18 +142,7 @@ public class JacksonEventService extends AbstractEventService
     public ImportSummaries addEventsXml( InputStream inputStream, TaskId taskId, ImportOptions importOptions ) throws IOException
     {
         String input = StreamUtils.copyToString( inputStream, Charset.forName( "UTF-8" ) );
-        List<Event> events = new ArrayList<>();
-
-        try
-        {
-            Events fromXml = fromXml( input, Events.class );
-            events.addAll( fromXml.getEvents() );
-        }
-        catch ( JsonMappingException ex )
-        {
-            Event fromXml = fromXml( input, Event.class );
-            events.add( fromXml );
-        }
+        List<Event> events = parseXmlEvents( input );
 
         return addEvents( events, taskId, importOptions );
     }
@@ -180,21 +157,50 @@ public class JacksonEventService extends AbstractEventService
     public ImportSummaries addEventsJson( InputStream inputStream, TaskId taskId, ImportOptions importOptions ) throws IOException
     {
         String input = StreamUtils.copyToString( inputStream, Charset.forName( "UTF-8" ) );
+
+        List<Event> events = parseJsonEvents( input );
+
+        return addEvents( events, taskId, importOptions );
+    }
+
+    // -------------------------------------------------------------------------
+    // Supportive methods
+    // -------------------------------------------------------------------------
+
+    private List<Event> parseXmlEvents( String input ) throws IOException
+    {
         List<Event> events = new ArrayList<>();
 
         try
         {
-            Events fromJson = fromJson( input, Events.class );
-            events.addAll( fromJson.getEvents() );
+            Events multiple = fromXml( input, Events.class );
+            events.addAll( multiple.getEvents() );
         }
         catch ( JsonMappingException ex )
         {
-            Event fromJson = fromJson( input, Event.class );
-            events.add( fromJson );
-            importOptions.setSendNotifications( true );
+            Event single = fromXml( input, Event.class );
+            events.add( single );
         }
 
-        return addEvents( events, taskId, importOptions );
+        return events;
+    }
+
+    private List<Event> parseJsonEvents( String input ) throws IOException
+    {
+        List<Event> events = new ArrayList<>();
+
+        try
+        {
+            Events multiple = fromJson( input, Events.class );
+            events.addAll( multiple.getEvents() );
+        }
+        catch ( JsonMappingException ex )
+        {
+            Event single = fromJson( input, Event.class );
+            events.add( single );
+        }
+
+        return events;
     }
 
     private ImportSummaries addEvents( List<Event> events, TaskId taskId, ImportOptions importOptions )

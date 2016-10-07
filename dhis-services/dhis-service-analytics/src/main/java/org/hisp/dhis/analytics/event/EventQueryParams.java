@@ -57,6 +57,7 @@ import org.hisp.dhis.common.OrganisationUnitSelectionMode;
 import org.hisp.dhis.common.QueryItem;
 import org.hisp.dhis.commons.collection.ListUtils;
 import org.hisp.dhis.dataelement.DataElement;
+import org.hisp.dhis.event.EventStatus;
 import org.hisp.dhis.legend.Legend;
 import org.hisp.dhis.option.OptionSet;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
@@ -139,6 +140,11 @@ public class EventQueryParams
      * or tracked entity instance.
      */
     private EventOutputType outputType;
+    
+    /**
+     * Indicates the event status.
+     */
+    private EventStatus eventStatus;
 
     /**
      * Indicates whether the data dimension items should be collapsed into a
@@ -191,6 +197,7 @@ public class EventQueryParams
 
         params.dimensions = new ArrayList<>( this.dimensions );
         params.filters = new ArrayList<>( this.filters );
+        params.includeNumDen = this.includeNumDen;
         params.displayProperty = this.displayProperty;
         params.aggregationType = this.aggregationType;
         params.skipRounding = this.skipRounding;
@@ -216,6 +223,7 @@ public class EventQueryParams
         params.sortOrder = this.sortOrder;
         params.limit = this.limit;
         params.outputType = this.outputType;
+        params.eventStatus = this.eventStatus;
         params.collapseDataDimensions = this.collapseDataDimensions;
         params.coordinatesOnly = this.coordinatesOnly;
         params.geometryOnly = this.geometryOnly;
@@ -498,6 +506,11 @@ public class EventQueryParams
     {
         return limit != null && limit > 0;
     }
+    
+    public boolean hasEventStatus()
+    {
+        return eventStatus != null;
+    }
 
     public boolean hasValueDimension()
     {
@@ -559,7 +572,7 @@ public class EventQueryParams
     }
 
     // -------------------------------------------------------------------------
-    // Helper get methods
+    // Get methods
     // -------------------------------------------------------------------------
 
     public List<QueryItem> getItems()
@@ -632,6 +645,11 @@ public class EventQueryParams
     {
         return outputType;
     }
+    
+    public EventStatus getEventStatus()
+    {
+        return eventStatus;
+    }
 
     public boolean isCollapseDataDimensions()
     {
@@ -688,7 +706,14 @@ public class EventQueryParams
         {
             this.params = new EventQueryParams();
         }
-        
+
+        public Builder( DataQueryParams dataQueryParams )
+        {
+            EventQueryParams eventQueryParams = EventQueryParams.fromDataQueryParams( dataQueryParams );
+            
+            this.params = eventQueryParams.instance();
+        }
+
         public Builder( EventQueryParams params )
         {
             this.params = params.instance();
@@ -889,6 +914,12 @@ public class EventQueryParams
         public Builder withOutputType( EventOutputType outputType )
         {
             this.params.outputType = outputType;
+            return this;
+        }
+        
+        public Builder withEventStatus( EventStatus eventStatus )
+        {
+            this.params.eventStatus = eventStatus;
             return this;
         }
 

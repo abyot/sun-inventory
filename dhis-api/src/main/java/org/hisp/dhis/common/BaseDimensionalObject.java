@@ -1,6 +1,19 @@
 package org.hisp.dhis.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.base.MoreObjects;
+import org.hisp.dhis.analytics.AggregationType;
+import org.hisp.dhis.legend.LegendSet;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /*
  * Copyright (c) 2004-2016, University of Oslo
@@ -30,25 +43,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.google.common.base.MoreObjects;
-
-import org.hisp.dhis.analytics.AggregationType;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
-import org.hisp.dhis.legend.LegendSet;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 @JacksonXmlRootElement( localName = "dimension", namespace = DxfNamespaces.DXF_2_0 )
 public class BaseDimensionalObject
     extends BaseNameableObject implements DimensionalObject
@@ -69,7 +63,7 @@ public class BaseDimensionalObject
      * The dimensional items for this dimension.
      */
     private List<DimensionalItemObject> items = new ArrayList<>();
-    
+
     /**
      * Indicates whether all available items in this dimension are included.
      */
@@ -79,19 +73,19 @@ public class BaseDimensionalObject
      * The legend set for this dimension.
      */
     protected LegendSet legendSet;
-    
+
     /**
      * The aggregation type for this dimension.
      */
     protected AggregationType aggregationType;
-    
+
     /**
      * Filter. Applicable for events. Contains operator and filter on this format:
      * <operator>:<filter>;<operator>:<filter>
      * Operator and filter pairs can be repeated any number of times.
      */
     private String filter;
-    
+
     //--------------------------------------------------------------------------
     // Persistent properties
     //--------------------------------------------------------------------------
@@ -149,7 +143,7 @@ public class BaseDimensionalObject
         this.legendSet = legendSet;
         this.filter = filter;
     }
-    
+
     // TODO aggregationType in constructors
 
     // -------------------------------------------------------------------------
@@ -158,24 +152,24 @@ public class BaseDimensionalObject
 
     public DimensionalObject instance()
     {
-        BaseDimensionalObject object = new BaseDimensionalObject( this.uid, 
+        BaseDimensionalObject object = new BaseDimensionalObject( this.uid,
             this.dimensionType, this.dimensionName, this.displayName, this.items, this.allItems );
-        
+
         object.legendSet = this.legendSet;
         object.aggregationType = this.aggregationType;
         object.filter = this.filter;
         object.dataDimension = this.dataDimension;
         object.fixed = this.fixed;
-        
+
         return object;
     }
-    
+
     @Override
     public boolean hasItems()
     {
         return !getItems().isEmpty();
     }
-    
+
     @Override
     public boolean hasLegendSet()
     {
@@ -193,8 +187,8 @@ public class BaseDimensionalObject
     {
         return
             DimensionType.PROGRAM_ATTRIBUTE.equals( dimensionType ) ||
-            DimensionType.PROGRAM_DATA_ELEMENT.equals( dimensionType ) ?
-            AnalyticsType.EVENT : AnalyticsType.AGGREGATE;
+                DimensionType.PROGRAM_DATA_ELEMENT.equals( dimensionType ) ?
+                AnalyticsType.EVENT : AnalyticsType.AGGREGATE;
     }
 
     /**
@@ -223,7 +217,6 @@ public class BaseDimensionalObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDimension()
     {
@@ -237,7 +230,6 @@ public class BaseDimensionalObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DimensionType getDimensionType()
     {
@@ -257,7 +249,6 @@ public class BaseDimensionalObject
     @Override
     @JsonProperty
     @JsonDeserialize( contentAs = BaseDimensionalItemObject.class )
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlElementWrapper( localName = "items", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "item", namespace = DxfNamespaces.DXF_2_0 )
     public List<DimensionalItemObject> getItems()
@@ -272,7 +263,6 @@ public class BaseDimensionalObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isAllItems()
     {
@@ -287,7 +277,6 @@ public class BaseDimensionalObject
     @Override
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DimensionalView.class, DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public LegendSet getLegendSet()
     {
@@ -301,7 +290,6 @@ public class BaseDimensionalObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class, DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public AggregationType getAggregationType()
     {
@@ -315,7 +303,6 @@ public class BaseDimensionalObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getFilter()
     {
@@ -329,7 +316,6 @@ public class BaseDimensionalObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isDataDimension()
     {
@@ -367,7 +353,7 @@ public class BaseDimensionalObject
             DimensionalObject dimensionalObject = (DimensionalObject) other;
 
             dataDimension = dimensionalObject.isDataDimension();
-            
+
             if ( mergeMode.isReplace() )
             {
                 dimensionType = dimensionalObject.getDimensionType();

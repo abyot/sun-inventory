@@ -74,7 +74,7 @@ public class DefaultFieldParser implements FieldParser
                 continue;
             }
 
-            if ( StringUtils.isAlpha( c ) || c.equals( "*" ) || c.equals( ":" ) || c.equals( "!" )
+            if ( StringUtils.isAlphanumeric( c ) || c.equals( "*" ) || c.equals( ":" ) || c.equals( ";" ) || c.equals( "~" ) || c.equals( "!" )
                 || c.equals( "|" ) || c.equals( "{" ) || c.equals( "}" ) || c.equals( "(" ) || c.equals( ")" ) )
             {
                 builder.append( c );
@@ -105,11 +105,7 @@ public class DefaultFieldParser implements FieldParser
 
         for ( String p : path.split( "\\." ) )
         {
-            if ( fieldMap.get( p ) == null )
-            {
-                fieldMap.put( p, new FieldMap() );
-            }
-
+            fieldMap.putIfAbsent( p, new FieldMap() );
             fieldMap = fieldMap.get( p );
         }
     }

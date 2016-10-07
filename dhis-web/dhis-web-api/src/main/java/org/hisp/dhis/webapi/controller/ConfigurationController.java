@@ -54,6 +54,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
@@ -91,28 +92,28 @@ public class ConfigurationController
     // -------------------------------------------------------------------------
 
     @RequestMapping( method = RequestMethod.GET )
-    public String getConfiguration( Model model, HttpServletRequest request )
+    public @ResponseBody Configuration getConfiguration( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration() );
+        return configurationService.getConfiguration();
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
     @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/systemId", method = RequestMethod.GET )
-    public String getSystemId( Model model, HttpServletRequest request )
+    public @ResponseBody String getSystemId( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getSystemId() );
+        return configurationService.getConfiguration().getSystemId();
     }
 
     @RequestMapping( value = "/feedbackRecipients", method = RequestMethod.GET )
-    public String getFeedbackRecipients( Model model, HttpServletRequest request )
+    public @ResponseBody UserGroup getFeedbackRecipients( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getFeedbackRecipients() );
+        return configurationService.getConfiguration().getFeedbackRecipients();
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/feedbackRecipients", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setFeedbackRecipients( @RequestBody String uid )
         throws NotFoundException
     {
@@ -131,8 +132,8 @@ public class ConfigurationController
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/feedbackRecipients", method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeFeedbackRecipients()
     {
         Configuration config = configurationService.getConfiguration();
@@ -143,14 +144,14 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/offlineOrganisationUnitLevel", method = RequestMethod.GET )
-    public String getOfflineOrganisationUnitLevel( Model model, HttpServletRequest request )
+    public @ResponseBody OrganisationUnitLevel getOfflineOrganisationUnitLevel( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getOfflineOrganisationUnitLevel() );
+        return configurationService.getConfiguration().getOfflineOrganisationUnitLevel();
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/offlineOrganisationUnitLevel", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setOfflineOrganisationUnitLevel( @RequestBody String uid )
         throws NotFoundException
     {
@@ -169,8 +170,8 @@ public class ConfigurationController
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/offlineOrganisationUnitLevel", method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeOfflineOrganisationUnitLevel()
     {
         Configuration config = configurationService.getConfiguration();
@@ -181,14 +182,14 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/infrastructuralIndicators", method = RequestMethod.GET )
-    public String getInfrastructuralIndicators( Model model, HttpServletRequest request )
+    public @ResponseBody IndicatorGroup getInfrastructuralIndicators( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getInfrastructuralIndicators() );
+        return configurationService.getConfiguration().getInfrastructuralIndicators();
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/infrastructuralIndicators", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setInfrastructuralIndicators( @RequestBody String uid )
         throws NotFoundException
     {
@@ -207,14 +208,14 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/infrastructuralDataElements", method = RequestMethod.GET )
-    public String getInfrastructuralDataElements( Model model, HttpServletRequest request )
+    public @ResponseBody DataElementGroup getInfrastructuralDataElements( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getInfrastructuralDataElements() );
+        return configurationService.getConfiguration().getInfrastructuralDataElements();
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/infrastructuralDataElements", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setInfrastructuralDataElements( @RequestBody String uid )
         throws NotFoundException
     {
@@ -233,17 +234,15 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/infrastructuralPeriodType", method = RequestMethod.GET )
-    public String getInfrastructuralPeriodType( Model model, HttpServletRequest request )
+    public @ResponseBody BaseIdentifiableObject getInfrastructuralPeriodType( Model model, HttpServletRequest request )
     {
         String name = configurationService.getConfiguration().getInfrastructuralPeriodTypeDefaultIfNull().getName();
-        BaseIdentifiableObject entity = new BaseIdentifiableObject( name, name, name );
-
-        return setModel( model, entity );
+        return new BaseIdentifiableObject( name, name, name );
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/infrastructuralPeriodType", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setInfrastructuralPeriodType( @RequestBody String name )
         throws NotFoundException
     {
@@ -264,14 +263,14 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/selfRegistrationRole", method = RequestMethod.GET )
-    public String getSelfRegistrationRole( Model model, HttpServletRequest request )
+    public @ResponseBody UserAuthorityGroup getSelfRegistrationRole( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getSelfRegistrationRole() );
+        return configurationService.getConfiguration().getSelfRegistrationRole();
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/selfRegistrationRole", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setSelfRegistrationRole( @RequestBody String uid )
         throws NotFoundException
     {
@@ -290,8 +289,8 @@ public class ConfigurationController
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/selfRegistrationRole", method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeSelfRegistrationRole()
     {
         Configuration config = configurationService.getConfiguration();
@@ -302,9 +301,9 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/selfRegistrationOrgUnit", method = RequestMethod.GET )
-    public String getSelfRegistrationOrgUnit( Model model, HttpServletRequest request )
+    public @ResponseBody OrganisationUnit getSelfRegistrationOrgUnit( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getSelfRegistrationOrgUnit() );
+        return configurationService.getConfiguration().getSelfRegistrationOrgUnit();
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
@@ -327,8 +326,8 @@ public class ConfigurationController
     }
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/selfRegistrationOrgUnit", method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeSelfRegistrationOrgUnit()
     {
         Configuration config = configurationService.getConfiguration();
@@ -339,29 +338,27 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/remoteServerUrl", method = RequestMethod.GET )
-    public String getRemoteServerUrl( Model model, HttpServletRequest request )
+    public @ResponseBody String getRemoteServerUrl( Model model, HttpServletRequest request )
     {
-        return setModel( model, systemSettingManager.getSystemSetting(
-            SettingKey.REMOTE_INSTANCE_URL ) );
+        return (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_URL );
     }
 
     @RequestMapping( value = "/remoteServerUsername", method = RequestMethod.GET )
-    public String getRemoteServerUsername( Model model, HttpServletRequest request )
+    public @ResponseBody String getRemoteServerUsername( Model model, HttpServletRequest request )
     {
-        return setModel( model, systemSettingManager.getSystemSetting(
-            SettingKey.REMOTE_INSTANCE_USERNAME ) );
+        return (String) systemSettingManager.getSystemSetting( SettingKey.REMOTE_INSTANCE_USERNAME );
     }
 
     @RequestMapping( value = "/corsWhitelist", method = RequestMethod.GET, produces = "application/json" )
-    public String getCorsWhitelist( Model model, HttpServletRequest request )
+    public @ResponseBody Set<String> getCorsWhitelist( Model model, HttpServletRequest request )
     {
-        return setModel( model, configurationService.getConfiguration().getCorsWhitelist() );
+        return configurationService.getConfiguration().getCorsWhitelist();
     }
 
     @SuppressWarnings( "unchecked" )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/corsWhitelist", method = RequestMethod.POST, consumes = "application/json" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setCorsWhitelist( @RequestBody String input )
         throws IOException
     {
@@ -375,18 +372,8 @@ public class ConfigurationController
     }
 
     @RequestMapping( value = "/systemReadOnlyMode", method = RequestMethod.GET )
-    public String getSystemReadOnlyMode( Model model, HttpServletRequest request )
+    public @ResponseBody boolean getSystemReadOnlyMode( Model model, HttpServletRequest request )
     {
-        return setModel( model, config.isReadOnlyMode() );
-    }
-
-    // -------------------------------------------------------------------------
-    // Supportive methods
-    // -------------------------------------------------------------------------
-
-    private String setModel( Model model, Object entity )
-    {
-        model.addAttribute( "model", entity );
-        return "config";
+        return config.isReadOnlyMode();
     }
 }

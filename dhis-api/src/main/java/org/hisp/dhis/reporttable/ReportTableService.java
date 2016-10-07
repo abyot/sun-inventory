@@ -28,11 +28,12 @@ package org.hisp.dhis.reporttable;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Date;
-import java.util.List;
-
 import org.hisp.dhis.common.AnalyticalObjectService;
 import org.hisp.dhis.common.Grid;
+import org.hisp.dhis.user.User;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Lars Helge Overland
@@ -124,6 +125,8 @@ public interface ReportTableService
      * @return a Grid.
      */
     Grid getReportTableGrid( String uid, Date reportingPeriod, String organisationUnitUid );
+
+    Grid getReportTableGridByUser( String uid, Date reportingPeriod, String organisationUnitUid, User user );
 
     ReportTable getReportTable( String uid, String mode );
 

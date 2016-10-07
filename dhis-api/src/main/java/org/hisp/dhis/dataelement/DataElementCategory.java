@@ -29,7 +29,6 @@ package org.hisp.dhis.dataelement;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -44,10 +43,6 @@ import org.hisp.dhis.common.DimensionalItemObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +63,6 @@ public class DataElementCategory
 
     private DataDimensionType dataDimensionType;
 
-    @Scanned
     private List<DataElementCategoryOption> categoryOptions = new ArrayList<>();
 
     private List<DataElementCategoryCombo> categoryCombos = new ArrayList<>();
@@ -167,7 +161,6 @@ public class DataElementCategory
     @Override
     @JsonProperty
     @JsonSerialize( contentAs = BaseDimensionalItemObject.class )
-    @JsonView( { DetailedView.class, DimensionalView.class } )
     @JacksonXmlElementWrapper( localName = "items", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "item", namespace = DxfNamespaces.DXF_2_0 )
     public List<DimensionalItemObject> getItems()
@@ -209,7 +202,6 @@ public class DataElementCategory
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataDimensionType getDataDimensionType()
     {
@@ -223,7 +215,6 @@ public class DataElementCategory
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "categoryOptions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "categoryOption", namespace = DxfNamespaces.DXF_2_0 )
     public List<DataElementCategoryOption> getCategoryOptions()
@@ -238,7 +229,6 @@ public class DataElementCategory
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "categoryCombos", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "categoryCombo", namespace = DxfNamespaces.DXF_2_0 )
     public List<DataElementCategoryCombo> getCategoryCombos()

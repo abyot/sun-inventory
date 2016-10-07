@@ -4,7 +4,7 @@
 <div id="inputCriteria" class="inputCriteria" style="width: 380px">
 <form id="importForm" name="importForm" method="post" enctype="multipart/form-data" action="importMetaData.action">
 <table>
-<col width="140">
+<col width="160">
 <col>
 <tr>
 	<td>$i18n.getString( "file" )</td>
@@ -13,9 +13,9 @@
 <tr>
     <td>$i18n.getString( "format" )</td>
     <td>
-        <select id="importFormat" name="importFormat" style="width: 190px;" onchange="metaDataImportFormatChanged()">
-            <option value="xml">XML</option>
+        <select id="importFormat" name="importFormat" style="width: 210px;" onchange="metaDataImportFormatChanged()">
             <option value="json">JSON</option>
+            <option value="xml">XML</option>
             <option value="csv">CSV</option>
         </select>
     </td>
@@ -36,14 +36,14 @@
 </tr>
 <tr>
 	<td>$i18n.getString( "dry_run" )</td>
-	<td><select id="dryRun" name="dryRun" style="width:190px">
+	<td><select id="dryRun" name="dryRun" style="width:210px">
 		<option value="false">$i18n.getString( "no" )</option>
 		<option value="true">$i18n.getString( "yes" )</option>
     </select></td>
 </tr>
 <tr>
 	<td>$i18n.getString( "strategy" )</td>
-	<td><select id="strategy" name="strategy" style="width:190px">
+	<td><select id="strategy" name="strategy" style="width:210px">
 		<option value="NEW_AND_UPDATES">$i18n.getString( "new_and_updates" )</option>
 		<option value="NEW">$i18n.getString( "new_only" )</option>
 		<option value="UPDATES">$i18n.getString( "updates_only" )</option>
@@ -54,10 +54,10 @@
 	<td><a href="javascript:toggleOptions()">$i18n.getString( "more_options" )</a></td>
 </tr>
 <tr class="moreOptions" style="display:none">
-	<td>$i18n.getString( "preload_cache" )</td>
-	<td><select id="preheatCache" name="preheatCache" style="width:190px">
-		<option value="true">$i18n.getString( "yes" )</option>
-		<option value="false">$i18n.getString( "no" ) ($i18n.getString( "faster_for_small_imports" ))</option>
+	<td>$i18n.getString( "reference_mode" )</td>
+	<td><select id="atomicMode" name="atomicMode" style="width:210px">
+		<option value="NONE">$i18n.getString( "reference_mode_allow" )</option>
+		<option value="ALL">$i18n.getString( "reference_mode_deny" )</option>
     </select></td>
 </tr>
 <tr>

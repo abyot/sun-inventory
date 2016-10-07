@@ -29,14 +29,15 @@ package org.hisp.dhis.dataset;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import org.hisp.dhis.common.BaseDimensionalItemObject;
+
+import org.hisp.dhis.common.BaseDataDimensionalItemObject;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DimensionItemType;
 import org.hisp.dhis.common.DxfNamespaces;
@@ -45,9 +46,6 @@ import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.VersionedObject;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeDeserializer;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeSerializer;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataapproval.DataApprovalWorkflow;
 import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
 import org.hisp.dhis.dataelement.DataElement;
@@ -59,13 +57,17 @@ import org.hisp.dhis.dataelement.DataElementOperand;
 import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.indicator.Indicator;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
+import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
+import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.user.UserGroup;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class is used for defining the standardized DataSets. A DataSet consists
@@ -75,7 +77,7 @@ import java.util.Set;
  */
 @JacksonXmlRootElement( localName = "dataSet", namespace = DxfNamespaces.DXF_2_0 )
 public class DataSet
-    extends BaseDimensionalItemObject
+    extends BaseDataDimensionalItemObject
     implements VersionedObject
 {
     public static final int NO_EXPIRY = 0;
@@ -88,14 +90,12 @@ public class DataSet
     /**
      * All DataElements associated with this DataSet.
      */
-    @Scanned
-    private Set<DataElement> dataElements = new HashSet<>();
+    private Set<DataSetElement> dataSetElements = new HashSet<>();
 
     /**
      * Indicators associated with this data set. Indicators are used for view
      * and output purposes, such as calculated fields in forms and reports.
      */
-    @Scanned
     private Set<Indicator> indicators = new HashSet<>();
 
     /**
@@ -107,7 +107,6 @@ public class DataSet
     /**
      * All Sources that register data with this DataSet.
      */
-    @Scanned
     private Set<OrganisationUnit> sources = new HashSet<>();
 
     /**
@@ -127,7 +126,7 @@ public class DataSet
     private boolean mobile;
 
     /**
-     * Indicating custom data entry form.
+     * Indicating custom data entry form, can be null.
      */
     private DataEntryForm dataEntryForm;
 
@@ -142,13 +141,23 @@ public class DataSet
     private int expiryDays;
 
     /**
+     * The start date.
+     */
+    private Date startDate;
+
+    /**
+     * The end date.
+     */
+    private Date endDate;
+
+    /**
      * Days after period end to qualify for timely data submission
      */
     private int timelyDays;
 
     /**
      * User group which will receive notifications when data set is marked
-     * complete.
+     * complete, can be null.
      */
     private UserGroup notificationRecipients;
 
@@ -159,7 +168,7 @@ public class DataSet
     private boolean notifyCompletingUser;
 
     /**
-     * The approval workflow (if any) for this data set.
+     * The approval workflow for this data set, can be null.
      */
     private DataApprovalWorkflow workflow;
 
@@ -280,28 +289,37 @@ public class DataSet
         sources.addAll( updates );
     }
 
-    public void addDataElement( DataElement dataElement )
+    /**
+     * Adds a data set element using this data set, the given data element and
+     * no category combo.
+     * 
+     * @param dataElement the data element.
+     */
+    public boolean addDataSetElement( DataElement dataElement )
     {
-        dataElements.add( dataElement );
-        dataElement.getDataSets().add( this );
+        DataSetElement element = new DataSetElement( this, dataElement, null );      
+        dataElement.getDataSetElements().add( element );
+        return dataSetElements.add( element );
     }
 
-    public boolean removeDataElement( DataElement dataElement )
+    /**
+     * Adds a data set element using this data set, the given data element and
+     * the given category combo.
+     * 
+     * @param dataElement the data element.
+     * @param categoryCombo the category combination.
+     */
+    public boolean addDataSetElement( DataElement dataElement, DataElementCategoryCombo categoryCombo )
     {
-        dataElements.remove( dataElement );
-        return dataElement.getDataSets().remove( dataElement );
+        DataSetElement element = new DataSetElement( this, dataElement, categoryCombo );
+        dataElement.getDataSetElements().add( element );
+        return dataSetElements.add( element );
     }
 
-    public void updateDataElements( Set<DataElement> updates )
+    public boolean removeDataSetElement( DataSetElement element )
     {
-        Set<DataElement> toRemove = Sets.difference( dataElements, updates );
-        Set<DataElement> toAdd = Sets.difference( updates, dataElements );
-
-        toRemove.stream().forEach( d -> d.getDataSets().remove( this ) );
-        toAdd.stream().forEach( d -> d.getDataSets().add( this ) );
-
-        dataElements.clear();
-        dataElements.addAll( updates );
+        dataSetElements.remove( element );
+        return element.getDataElement().getDataSetElements().remove( element );
     }
 
     public void addIndicator( Indicator indicator )
@@ -346,7 +364,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public FormType getFormType()
     {
@@ -362,7 +379,17 @@ public class DataSet
 
         return FormType.DEFAULT;
     }
-
+    
+    /**
+     * Note that this method returns an immutable set and can not be used to
+     * modify the model. Returns an immutable set of data sets associated with 
+     * this data element.
+     */
+    public Set<DataElement> getDataElements()
+    {
+        return ImmutableSet.copyOf( dataSetElements.stream().map( e -> e.getDataElement() ).collect( Collectors.toSet() ) );
+    }
+    
     public Set<DataElement> getDataElementsInSections()
     {
         Set<DataElement> dataElements = new HashSet<>();
@@ -379,12 +406,9 @@ public class DataSet
     {
         Set<DataElementCategoryOptionCombo> optionCombos = new HashSet<>();
 
-        for ( DataElement element : dataElements )
+        for ( DataSetElement element : dataSetElements )
         {
-            if ( element.hasCategoryCombo() )
-            {
-                optionCombos.addAll( element.getCategoryCombo().getOptionCombos() );
-            }
+            optionCombos.addAll( element.getResolvedCategoryCombo().getOptionCombos() );
         }
 
         return optionCombos;
@@ -427,6 +451,23 @@ public class DataSet
         return categoryCombo != null && !DataElementCategoryCombo.DEFAULT_CATEGORY_COMBO_NAME.equals( categoryCombo.getName() );
     }
 
+    /**
+     * Indicates if the given period is valid for data entry for this data set.
+     * Returns true if the given period is null.
+     *
+     * @param period the period.
+     */
+    public boolean isValidPeriodForDataEntry( Period period )
+    {
+        if ( period != null )
+        {
+            return (startDate == null || startDate.compareTo( period.getStartDate() ) <= 0)
+                && (endDate == null || endDate.compareTo( period.getEndDate() ) >= 0);
+        }
+
+        return true;
+    }
+
     // -------------------------------------------------------------------------
     // DimensionalItemObject
     // -------------------------------------------------------------------------
@@ -450,7 +491,6 @@ public class DataSet
     @JsonProperty
     @JsonSerialize( using = JacksonPeriodTypeSerializer.class )
     @JsonDeserialize( using = JacksonPeriodTypeDeserializer.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.TEXT )
     public PeriodType getPeriodType()
@@ -464,7 +504,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataEntryForm getDataEntryForm()
     {
@@ -478,22 +517,20 @@ public class DataSet
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlElementWrapper( localName = "dataElements", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "dataElement", namespace = DxfNamespaces.DXF_2_0 )
-    public Set<DataElement> getDataElements()
+    @JacksonXmlElementWrapper( localName = "dataSetElements", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "dataSetElement", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<DataSetElement> getDataSetElements()
     {
-        return dataElements;
+        return dataSetElements;
     }
 
-    public void setDataElements( Set<DataElement> dataElements )
+    public void setDataSetElements( Set<DataSetElement> dataSetElements )
     {
-        this.dataElements = dataElements;
+        this.dataSetElements = dataSetElements;
     }
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "indicators", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "indicator", namespace = DxfNamespaces.DXF_2_0 )
     public Set<Indicator> getIndicators()
@@ -507,7 +544,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "compulsoryDataElementOperands", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "compulsoryDataElementOperand", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElementOperand> getCompulsoryDataElementOperands()
@@ -522,7 +558,6 @@ public class DataSet
 
     @JsonProperty( value = "organisationUnits" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "organisationUnits", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "organisationUnit", namespace = DxfNamespaces.DXF_2_0 )
     public Set<OrganisationUnit> getSources()
@@ -537,7 +572,6 @@ public class DataSet
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "sections", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "section", namespace = DxfNamespaces.DXF_2_0 )
     public Set<Section> getSections()
@@ -552,7 +586,6 @@ public class DataSet
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataElementCategoryCombo getCategoryCombo()
     {
@@ -565,7 +598,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isMobile()
     {
@@ -579,7 +611,6 @@ public class DataSet
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getVersion()
     {
@@ -593,8 +624,8 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @PropertyRange( min = -Double.MIN_VALUE )
     public int getExpiryDays()
     {
         return expiryDays;
@@ -606,7 +637,32 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
+    @Property( value = PropertyType.DATE, required = Property.Value.FALSE )
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Date getStartDate()
+    {
+        return startDate;
+    }
+
+    public void setStartDate( Date startDate )
+    {
+        this.startDate = startDate;
+    }
+
+    @JsonProperty
+    @Property( value = PropertyType.DATE, required = Property.Value.FALSE )
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Date getEndDate()
+    {
+        return endDate;
+    }
+
+    public void setEndDate( Date endDate )
+    {
+        this.endDate = endDate;
+    }
+
+    @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getTimelyDays()
     {
@@ -619,7 +675,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public UserGroup getNotificationRecipients()
     {
@@ -632,7 +687,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isNotifyCompletingUser()
     {
@@ -645,7 +699,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataApprovalWorkflow getWorkflow()
     {
@@ -658,7 +711,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getOpenFuturePeriods()
     {
@@ -671,7 +723,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isFieldCombinationRequired()
     {
@@ -684,7 +735,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isValidCompleteOnly()
     {
@@ -697,7 +747,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isNoValueRequiresComment()
     {
@@ -710,7 +759,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isSkipOffline()
     {
@@ -723,7 +771,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isRenderAsTabs()
     {
@@ -736,7 +783,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isRenderHorizontally()
     {
@@ -749,7 +795,6 @@ public class DataSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isDataElementDecoration()
     {
@@ -780,22 +825,30 @@ public class DataSet
             mobile = dataSet.isMobile();
             validCompleteOnly = dataSet.isValidCompleteOnly();
             version = dataSet.getVersion();
+            timelyDays = dataSet.getTimelyDays();
+            notifyCompletingUser = dataSet.isNotifyCompletingUser();
 
             if ( mergeMode.isReplace() )
             {
                 periodType = dataSet.getPeriodType();
+                categoryCombo = dataSet.getCategoryCombo();
                 dataEntryForm = dataSet.getDataEntryForm();
                 notificationRecipients = dataSet.getNotificationRecipients();
+                startDate = dataSet.getStartDate();
+                endDate = dataSet.getEndDate();
             }
             else if ( mergeMode.isMerge() )
             {
                 periodType = dataSet.getPeriodType() == null ? periodType : dataSet.getPeriodType();
+                categoryCombo = dataSet.getCategoryCombo() == null ? categoryCombo : dataSet.getCategoryCombo();
                 dataEntryForm = dataSet.getDataEntryForm() == null ? dataEntryForm : dataSet.getDataEntryForm();
                 notificationRecipients = dataSet.getNotificationRecipients() == null ? notificationRecipients : dataSet.getNotificationRecipients();
+                startDate = dataSet.getStartDate() == null ? startDate : dataSet.getStartDate();
+                endDate = dataSet.getEndDate() == null ? endDate : dataSet.getEndDate();
             }
 
-            dataElements.clear();
-            dataSet.getDataElements().forEach( this::addDataElement );
+            dataSetElements.clear();            
+            dataSet.getDataSetElements().forEach( e -> dataSetElements.add( e ) );
 
             indicators.clear();
             dataSet.getIndicators().forEach( this::addIndicator );

@@ -36,12 +36,11 @@ import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.calendar.Calendar;
 import org.hisp.dhis.common.IdSchemes;
 import org.hisp.dhis.commons.util.TextUtils;
-import org.hisp.dhis.dataelement.DataElement;
-import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dxf2.datavalue.DataValue;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.system.util.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 
@@ -50,8 +49,6 @@ import java.io.Writer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.hisp.dhis.common.IdentifiableObjectUtils.getIdentifiers;
 import static org.hisp.dhis.commons.util.TextUtils.getCommaDelimitedString;
@@ -68,12 +65,8 @@ public class SpringDataValueSetStore
 
     private static final char CSV_DELIM = ',';
 
+    @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    public void setJdbcTemplate( JdbcTemplate jdbcTemplate )
-    {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     //--------------------------------------------------------------------------
     // DataValueSetStore implementation
@@ -82,7 +75,7 @@ public class SpringDataValueSetStore
     @Override
     public void writeDataValueSetXml( DataExportParams params, Date completeDate, OutputStream out )
     {
-        DataValueSet dataValueSet = new StreamingDataValueSet( XMLFactory.getXMLWriter( out ) );
+        DataValueSet dataValueSet = new StreamingXmlDataValueSet( XMLFactory.getXMLWriter( out ) );
 
         String sql = getDataValueSql( params );
 
@@ -127,7 +120,7 @@ public class SpringDataValueSetStore
         final String sql =
             "select de." + deScheme + " as deid, pe.startdate as pestart, pt.name as ptname, ou." + ouScheme + " as ouid, " +
             "coc." + ocScheme + " as cocid, aoc." + ocScheme + " as aocid, " +
-            "dv.value, dv.storedby, dv.created, dv.lastupdated, dv.comment, dv.followup " +
+            "dv.value, dv.storedby, dv.created, dv.lastupdated, dv.comment, dv.followup, dv.deleted " +
             "from datavalue dv " +
             "join dataelement de on (dv.dataelementid=de.dataelementid) " +
             "join period pe on (dv.periodid=pe.periodid) " +
@@ -159,6 +152,7 @@ public class SpringDataValueSetStore
             {
                 DataValue dataValue = dataValueSet.getDataValueInstance();
                 PeriodType pt = PeriodType.getPeriodTypeByName( rs.getString( "ptname" ) );
+                boolean deleted = rs.getBoolean( "deleted" );
 
                 dataValue.setDataElement( rs.getString( "deid" ) );
                 dataValue.setPeriod( pt.createPeriod( rs.getDate( "pestart" ), calendar ).getIsoDate() );
@@ -171,6 +165,12 @@ public class SpringDataValueSetStore
                 dataValue.setLastUpdated( getLongGmtDateString( rs.getTimestamp( "lastupdated" ) ) );
                 dataValue.setComment( rs.getString( "comment" ) );
                 dataValue.setFollowup( rs.getBoolean( "followup" ) );
+
+                if ( deleted )
+                {
+                    dataValue.setDeleted( deleted );
+                }
+                
                 dataValue.close();
             }
         } );
@@ -193,7 +193,7 @@ public class SpringDataValueSetStore
         String sql =
             "select de." + deScheme + " as deid, pe.startdate as pestart, pt.name as ptname, ou." + ouScheme + " as ouid, " +
             "coc." + ocScheme + " as cocid, aoc." + ocScheme + " as aocid, " +
-            "dv.value, dv.storedby, dv.created, dv.lastupdated, dv.comment, dv.followup " +
+            "dv.value, dv.storedby, dv.created, dv.lastupdated, dv.comment, dv.followup, dv.deleted " +
             "from datavalue dv " +
             "join dataelement de on (dv.dataelementid=de.dataelementid) " +
             "join period pe on (dv.periodid=pe.periodid) " +
@@ -201,7 +201,7 @@ public class SpringDataValueSetStore
             "join organisationunit ou on (dv.sourceid=ou.organisationunitid) " +
             "join categoryoptioncombo coc on (dv.categoryoptioncomboid=coc.categoryoptioncomboid) " +
             "join categoryoptioncombo aoc on (dv.attributeoptioncomboid=aoc.categoryoptioncomboid) " +
-            "where de.dataelementid in (" + getCommaDelimitedString( getIdentifiers( getDataElements( params.getDataSets() ) ) ) + ") ";
+            "where de.dataelementid in (" + getCommaDelimitedString( getIdentifiers( params.getAllDataElements() ) ) + ") ";
 
         if ( params.isIncludeChildren() )
         {
@@ -218,12 +218,17 @@ public class SpringDataValueSetStore
         {
             sql += "and dv.sourceid in (" + getCommaDelimitedString( getIdentifiers( params.getOrganisationUnits() ) ) + ") ";
         }
+        
+        if ( !params.isIncludeDeleted() )
+        {
+            sql += "and dv.deleted is false ";
+        }
 
         if ( params.hasStartEndDate() )
         {
             sql += "and (pe.startdate >= '" + getMediumDateString( params.getStartDate() ) + "' and pe.enddate <= '" + getMediumDateString( params.getEndDate() ) + "') ";
         }
-        else
+        else if ( params.hasPeriods() )
         {
             sql += "and dv.periodid in (" + getCommaDelimitedString( getIdentifiers( params.getPeriods() ) ) + ") ";
         }
@@ -231,6 +236,10 @@ public class SpringDataValueSetStore
         if ( params.hasLastUpdated() )
         {
             sql += "and dv.lastupdated >= '" + getLongGmtDateString( params.getLastUpdated() ) + "' ";
+        }
+        else if ( params.hasLastUpdatedDuration() )
+        {
+            sql += "and dv.lastupdated >= '" + getLongGmtDateString( DateUtils.nowMinusDuration( params.getLastUpdatedDuration() ) ) + "' ";
         }
 
         if ( params.hasLimit() )
@@ -241,17 +250,5 @@ public class SpringDataValueSetStore
         log.debug( "Get data value set SQL: " + sql );
 
         return sql;
-    }
-
-    private Set<DataElement> getDataElements( Set<DataSet> dataSets )
-    {
-        Set<DataElement> elements = new HashSet<>();
-
-        for ( DataSet dataSet : dataSets )
-        {
-            elements.addAll( dataSet.getDataElements() );
-        }
-
-        return elements;
     }
 }

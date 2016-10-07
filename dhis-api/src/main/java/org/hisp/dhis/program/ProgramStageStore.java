@@ -29,6 +29,9 @@ package org.hisp.dhis.program;
  */
 
 import org.hisp.dhis.common.GenericIdentifiableObjectStore;
+import org.hisp.dhis.dataentryform.DataEntryForm;
+
+import java.util.List;
 
 /**
  * @author Chau Thu Tran
@@ -47,4 +50,11 @@ public interface ProgramStageStore
      * @return ProgramStage
      */
     ProgramStage getByNameAndProgram( String name, Program program );
+
+    /**
+     * Get all ProgramStages associated with the given DataEntryForm.
+     * @param dataEntryForm the DataEntryForm.
+     * @return a list of ProgramStages.
+     */
+    List<ProgramStage> getByDataEntryForm( DataEntryForm dataEntryForm );
 }

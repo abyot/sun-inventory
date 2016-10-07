@@ -113,7 +113,6 @@ public class UpdateSqlViewAction
             sqlView.setCacheStrategy( cacheStrategy != null ? cacheStrategy : SqlView.DEFAULT_CACHE_STRATEGY );
         }
 
-        System.out.println("jsonAttributeValues: "+jsonAttributeValues);
         if ( jsonAttributeValues != null )
         {
             attributeService.updateAttributeValues( sqlView, jsonAttributeValues );

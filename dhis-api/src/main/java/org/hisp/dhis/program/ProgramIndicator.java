@@ -28,33 +28,31 @@ package org.hisp.dhis.program;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Set;
-import java.util.regex.Pattern;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.Sets;
 import org.hisp.dhis.analytics.AggregationType;
-import org.hisp.dhis.common.BaseDimensionalItemObject;
+import org.hisp.dhis.common.BaseDataDimensionalItemObject;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DimensionItemType;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.RegexUtils;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.google.common.collect.Sets;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * @author Chau Thu Tran
  */
 @JacksonXmlRootElement( localName = "programIndicator", namespace = DxfNamespaces.DXF_2_0 )
 public class ProgramIndicator
-    extends BaseDimensionalItemObject
+    extends BaseDataDimensionalItemObject
 {
     public static final String SEPARATOR_ID = "\\.";
     public static final String SEP_OBJECT = ":";
@@ -104,6 +102,8 @@ public class ProgramIndicator
 
     private Boolean displayInForm;
 
+    private Set<ProgramIndicatorGroup> groups = new HashSet<>();
+
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
@@ -125,7 +125,7 @@ public class ProgramIndicator
     {
         return decimals != null && decimals >= 0;
     }
-    
+
     /**
      * Returns aggregation type, if not exists returns AVERAGE.
      */
@@ -148,6 +148,34 @@ public class ProgramIndicator
             RegexUtils.getMatches( ATTRIBUTE_PATTERN, input, 1 ) );
     }
 
+    public void addProgramIndicatorGroup( ProgramIndicatorGroup group )
+    {
+        groups.add( group );
+        group.getMembers().add( this );
+    }
+
+    public void removeIndicatorGroup( ProgramIndicatorGroup group )
+    {
+        groups.remove( group );
+        group.getMembers().remove( this );
+    }
+
+    public void updateIndicatorGroups( Set<ProgramIndicatorGroup> updates )
+    {
+        for ( ProgramIndicatorGroup group : new HashSet<>( groups ) )
+        {
+            if ( !updates.contains( group ) )
+            {
+                removeIndicatorGroup( group );
+            }
+        }
+
+        for ( ProgramIndicatorGroup group : updates )
+        {
+            addProgramIndicatorGroup( group );
+        }
+    }
+
     // -------------------------------------------------------------------------
     // DimensionalItemObject
     // -------------------------------------------------------------------------
@@ -157,14 +185,13 @@ public class ProgramIndicator
     {
         return DimensionItemType.PROGRAM_INDICATOR;
     }
-    
+
     // -------------------------------------------------------------------------
     // Getters and setters
     // -------------------------------------------------------------------------
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Program getProgram()
     {
@@ -177,7 +204,6 @@ public class ProgramIndicator
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getExpression()
     {
@@ -190,7 +216,6 @@ public class ProgramIndicator
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getFilter()
     {
@@ -203,7 +228,6 @@ public class ProgramIndicator
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getDecimals()
     {
@@ -216,7 +240,6 @@ public class ProgramIndicator
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getDisplayInForm()
     {
@@ -226,6 +249,21 @@ public class ProgramIndicator
     public void setDisplayInForm( Boolean displayInForm )
     {
         this.displayInForm = displayInForm;
+    }
+
+
+    @JsonProperty( "programIndicatorGroups" )
+    @JsonSerialize( contentAs = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "programIndicatorGroups", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "programIndicatorGroups", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<ProgramIndicatorGroup> getGroups()
+    {
+        return groups;
+    }
+
+    public void setGroups( Set<ProgramIndicatorGroup> groups )
+    {
+        this.groups = groups;
     }
 
     @Override

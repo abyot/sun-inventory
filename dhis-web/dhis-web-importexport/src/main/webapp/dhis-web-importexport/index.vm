@@ -16,9 +16,6 @@
     #if( $auth.hasAccess( "dhis-web-importexport", "dxf2MetaDataExport" ) )
     #introListImgItem( "dxf2MetaDataExport.action" "metadata_export" "export" )
     #end
-    #if( $auth.hasAccess( "dhis-web-importexport", "dxf2FilteredMetaDataExport" ) )
-    #introListImgItem( "dxf2FilteredMetaDataExport.action" "filtered_metadata_export" "export")
-    #end
     #if( $auth.hasAccess( "dhis-web-importexport", "displayDataValueExportForm" ) )
     #introListImgItem( "displayDataValueExportForm.action" "data_export" "export" )
     #end

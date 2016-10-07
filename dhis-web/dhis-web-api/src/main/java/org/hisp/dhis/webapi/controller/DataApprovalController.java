@@ -68,6 +68,7 @@ import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.hisp.dhis.webapi.webdomain.approval.Approval;
 import org.hisp.dhis.webapi.webdomain.approval.Approvals;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -76,6 +77,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -149,41 +151,20 @@ public class DataApprovalController
 
     @RequestMapping( value = APPROVALS_PATH, method = RequestMethod.GET, produces = ContextUtils.CONTENT_TYPE_JSON )
     public void getApprovalPermissions(
-        @RequestParam String ds,
+        @RequestParam( required=false ) String ds,
+        @RequestParam( required=false) String wf,
         @RequestParam String pe,
         @RequestParam String ou, HttpServletResponse response )
         throws IOException, WebMessageException
     {
-        DataSet dataSet = dataSetService.getDataSet( ds );
-
-        if ( dataSet == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal data set identifier: " + ds ) );
-        }
-
-        if ( dataSet.getWorkflow() == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "DataSet does not have an approval workflow: " + ds ) );
-        }
-
-        Period period = PeriodType.getPeriodFromIsoString( pe );
-
-        if ( period == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + pe ) );
-        }
-
-        OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( ou );
-
-        if ( organisationUnit == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal organisation unit identifier: " + ou ) );
-        }
+        DataApprovalWorkflow workflow = getAndValidateWorkflow( ds, wf );
+        Period period = getAndValidatePeriod( pe );
+        OrganisationUnit organisationUnit = getAndValidateOrgUnit( ou );
 
         DataElementCategoryOptionCombo optionCombo = categoryService.getDefaultDataElementCategoryOptionCombo();
 
         DataApprovalStatus status = dataApprovalService
-            .getDataApprovalStatusAndPermissions( dataSet.getWorkflow(), period, organisationUnit, optionCombo );
+            .getDataApprovalStatusAndPermissions( workflow, period, organisationUnit, optionCombo );
 
         DataApprovalPermissions permissions = status.getPermissions();
         permissions.setState( status.getState().toString() );
@@ -203,7 +184,6 @@ public class DataApprovalController
         HttpServletResponse response )
         throws IOException, WebMessageException
     {
-
         List<String> fields = Lists.newArrayList( contextService.getParameterValues( "fields" ) );
 
         if ( fields.isEmpty() )
@@ -354,53 +334,28 @@ public class DataApprovalController
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_APPROVE_DATA') or hasRole('F_APPROVE_DATA_LOWER_LEVELS')" )
     @RequestMapping( value = APPROVALS_PATH, method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void saveApproval(
-        @RequestParam String ds,
+        @RequestParam( required=false ) String ds,
+        @RequestParam( required=false) String wf,
         @RequestParam String pe,
         @RequestParam String ou, HttpServletResponse response ) throws WebMessageException
     {
-        DataSet dataSet = dataSetService.getDataSet( ds );
-
-        if ( dataSet == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal data set identifier: " + ds ) );
-        }
-
-        if ( dataSet.getWorkflow() == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "DataSet does not have an approval workflow: " + ds ) );
-        }
-
-        Period period = PeriodType.getPeriodFromIsoString( pe );
-
-        if ( period == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + pe ) );
-        }
-
-        OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( ou );
-
-        if ( organisationUnit == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal organisation unit identifier: " + ou ) );
-        }
-
-        DataApprovalLevel dataApprovalLevel = dataApprovalLevelService.getHighestDataApprovalLevel( organisationUnit );
-
-        if ( dataApprovalLevel == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Approval level not found." ) );
-        }
+        DataApprovalWorkflow workflow = getAndValidateWorkflow( ds, wf );
+        Period period = getAndValidatePeriod( pe );
+        OrganisationUnit organisationUnit = getAndValidateOrgUnit( ou );
+        DataApprovalLevel dataApprovalLevel = getAndValidateApprovalLevel( organisationUnit );
 
         User user = currentUserService.getCurrentUser();
 
-        List<DataApproval> dataApprovalList = getApprovalsAsList( dataApprovalLevel, dataSet,
+        List<DataApproval> dataApprovalList = getApprovalsAsList( dataApprovalLevel, workflow,
             period, organisationUnit, false, new Date(), user ); //TODO fix category stuff
 
         dataApprovalService.approveData( dataApprovalList );
     }
 
     @RequestMapping( value = APPROVALS_PATH + "/approvals", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void saveApprovalBatch( @RequestBody Approvals approvals,
         HttpServletRequest request, HttpServletResponse response ) throws WebMessageException
     {
@@ -413,6 +368,7 @@ public class DataApprovalController
     }
 
     @RequestMapping( value = APPROVALS_PATH + "/unapprovals", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeApprovalBatch( @RequestBody Approvals approvals,
         HttpServletRequest request, HttpServletResponse response ) throws WebMessageException
     {
@@ -426,49 +382,26 @@ public class DataApprovalController
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_APPROVE_DATA') or hasRole('F_APPROVE_DATA_LOWER_LEVELS')" )
     @RequestMapping( value = MULTIPLE_SAVE_RESOURCE_PATH, method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void saveApprovalMultiple( @RequestBody DataApprovalStateRequests dataApprovalStateRequests,
         HttpServletResponse response ) throws WebMessageException
     {
         List<DataApproval> dataApprovalList = new ArrayList<>();
 
-        for ( DataApprovalStateRequest dataApprovalStateRequest : dataApprovalStateRequests )
+        for ( DataApprovalStateRequest approvalStateRequest : dataApprovalStateRequests )
         {
-            DataSet dataSet = dataSetService.getDataSet( dataApprovalStateRequest.getDs() );
+            DataApprovalWorkflow workflow = getAndValidateWorkflow( approvalStateRequest.getDs(), null );
+            Period period = getAndValidatePeriod( approvalStateRequest.getPe() );
+            OrganisationUnit organisationUnit = getAndValidateOrgUnit( approvalStateRequest.getOu() );
+            DataApprovalLevel dataApprovalLevel = getAndValidateApprovalLevel( organisationUnit );
 
-            if ( dataSet == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Illegal data set identifier: " + dataApprovalStateRequest.getDs() ) );
-            }
-
-            Period period = PeriodType.getPeriodFromIsoString( dataApprovalStateRequest.getPe() );
-
-            if ( period == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + dataApprovalStateRequest.getPe() ) );
-            }
-
-            OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit(
-                dataApprovalStateRequest.getOu() );
-
-            if ( organisationUnit == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Illegal organisation unit identifier: " + dataApprovalStateRequest.getOu() ) );
-            }
-
-            DataApprovalLevel dataApprovalLevel = dataApprovalLevelService.getHighestDataApprovalLevel( organisationUnit );
-
-            if ( dataApprovalLevel == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Approval level not found." ) );
-            }
-
-            User user = dataApprovalStateRequest.getAb() == null ?
+            User user = approvalStateRequest.getAb() == null ?
                 currentUserService.getCurrentUser() :
-                userService.getUserCredentialsByUsername( dataApprovalStateRequest.getAb() ).getUserInfo();
+                userService.getUserCredentialsByUsername( approvalStateRequest.getAb() ).getUserInfo();
 
-            Date approvalDate = dataApprovalStateRequest.getAd() == null ? new Date() : dataApprovalStateRequest.getAd();
+            Date approvalDate = approvalStateRequest.getAd() == null ? new Date() : approvalStateRequest.getAd();
 
-            dataApprovalList.addAll( getApprovalsAsList( dataApprovalLevel, dataSet,
+            dataApprovalList.addAll( getApprovalsAsList( dataApprovalLevel, workflow,
                 period, organisationUnit, false, approvalDate, user ) );
         }
 
@@ -481,53 +414,28 @@ public class DataApprovalController
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_ACCEPT_DATA_LOWER_LEVELS')" )
     @RequestMapping( value = ACCEPTANCES_PATH, method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void acceptApproval(
-        @RequestParam String ds,
+        @RequestParam( required=false ) String ds,
+        @RequestParam( required=false) String wf,
         @RequestParam String pe,
         @RequestParam String ou, HttpServletResponse response ) throws WebMessageException
     {
-        DataSet dataSet = dataSetService.getDataSet( ds );
-
-        if ( dataSet == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal data set identifier: " + ds ) );
-        }
-
-        if ( dataSet.getWorkflow() == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "DataSet does not have an approval workflow: " + ds ) );
-        }
-
-        Period period = PeriodType.getPeriodFromIsoString( pe );
-
-        if ( period == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + pe ) );
-        }
-
-        OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( ou );
-
-        if ( organisationUnit == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal organisation unit identifier: " + ou ) );
-        }
-
-        DataApprovalLevel dataApprovalLevel = dataApprovalLevelService.getHighestDataApprovalLevel( organisationUnit );
-
-        if ( dataApprovalLevel == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Approval level not found." ) );
-        }
+        DataApprovalWorkflow workflow = getAndValidateWorkflow( ds, wf );
+        Period period = getAndValidatePeriod( pe );
+        OrganisationUnit organisationUnit = getAndValidateOrgUnit( ou );
+        DataApprovalLevel dataApprovalLevel = getAndValidateApprovalLevel( organisationUnit );
 
         User user = currentUserService.getCurrentUser();
 
-        List<DataApproval> dataApprovalList = getApprovalsAsList( dataApprovalLevel, dataSet,
+        List<DataApproval> dataApprovalList = getApprovalsAsList( dataApprovalLevel, workflow,
             period, organisationUnit, false, new Date(), user );
 
         dataApprovalService.acceptData( dataApprovalList );
     }
 
     @RequestMapping( value = ACCEPTANCES_PATH + "/acceptances", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void saveAcceptanceBatch( @RequestBody Approvals approvals,
         HttpServletRequest request, HttpServletResponse response ) throws WebMessageException
     {
@@ -540,6 +448,7 @@ public class DataApprovalController
     }
 
     @RequestMapping( value = ACCEPTANCES_PATH + "/unacceptances", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeAcceptancesBatch( @RequestBody Approvals approvals,
         HttpServletRequest request, HttpServletResponse response ) throws WebMessageException
     {
@@ -553,48 +462,25 @@ public class DataApprovalController
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_ACCEPT_DATA_LOWER_LEVELS')" )
     @RequestMapping( value = MULTIPLE_ACCEPTANCES_RESOURCE_PATH, method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void acceptApprovalMultiple( @RequestBody DataApprovalStateRequests dataApprovalStateRequests,
         HttpServletResponse response ) throws WebMessageException
     {
         List<DataApproval> dataApprovalList = new ArrayList<>();
 
-        for ( DataApprovalStateRequest dataApprovalStateRequest : dataApprovalStateRequests )
+        for ( DataApprovalStateRequest approvalStateRequest : dataApprovalStateRequests )
         {
-            DataSet dataSet = dataSetService.getDataSet( dataApprovalStateRequest.getDs() );
+            DataApprovalWorkflow workflow = getAndValidateWorkflow( approvalStateRequest.getDs(), null );
+            Period period = getAndValidatePeriod( approvalStateRequest.getPe() );
+            OrganisationUnit organisationUnit = getAndValidateOrgUnit( approvalStateRequest.getOu() );
+            DataApprovalLevel dataApprovalLevel = getAndValidateApprovalLevel( organisationUnit );
 
-            if ( dataSet == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Illegal data set identifier: " + dataApprovalStateRequest.getDs() ) );
-            }
+            User user = approvalStateRequest.getAb() == null ?
+                currentUserService.getCurrentUser() : userService.getUserCredentialsByUsername( approvalStateRequest.getAb() ).getUserInfo();
 
-            Period period = PeriodType.getPeriodFromIsoString( dataApprovalStateRequest.getPe() );
+            Date approvalDate = (approvalStateRequest.getAd() == null) ? new Date() : approvalStateRequest.getAd();
 
-            if ( period == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + dataApprovalStateRequest.getPe() ) );
-            }
-
-            OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit(
-                dataApprovalStateRequest.getOu() );
-
-            if ( organisationUnit == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Illegal organisation unit identifier: " + dataApprovalStateRequest.getOu() ) );
-            }
-
-            DataApprovalLevel dataApprovalLevel = dataApprovalLevelService.getHighestDataApprovalLevel( organisationUnit );
-
-            if ( dataApprovalLevel == null )
-            {
-                throw new WebMessageException( WebMessageUtils.conflict( "Approval level not found." ) );
-            }
-
-            User user = dataApprovalStateRequest.getAb() == null ?
-                currentUserService.getCurrentUser() : userService.getUserCredentialsByUsername( dataApprovalStateRequest.getAb() ).getUserInfo();
-
-            Date approvalDate = (dataApprovalStateRequest.getAd() == null) ? new Date() : dataApprovalStateRequest.getAd();
-
-            dataApprovalList.addAll( getApprovalsAsList( dataApprovalLevel, dataSet,
+            dataApprovalList.addAll( getApprovalsAsList( dataApprovalLevel, workflow,
                 period, organisationUnit, false, approvalDate, user ) );
         }
 
@@ -607,6 +493,7 @@ public class DataApprovalController
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_APPROVE_DATA') or hasRole('F_APPROVE_DATA_LOWER_LEVELS')" )
     @RequestMapping( value = APPROVALS_PATH, method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeApproval(
         @RequestParam Set<String> ds,
         @RequestParam String pe,
@@ -619,26 +506,9 @@ public class DataApprovalController
             throw new WebMessageException( WebMessageUtils.conflict( "Illegal data set identifier in this list: " + ds ) );
         }
 
-        Period period = PeriodType.getPeriodFromIsoString( pe );
-
-        if ( period == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + pe ) );
-        }
-
-        OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( ou );
-
-        if ( organisationUnit == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal organisation unit identifier: " + ou ) );
-        }
-
-        DataApprovalLevel dataApprovalLevel = dataApprovalLevelService.getHighestDataApprovalLevel( organisationUnit );
-
-        if ( dataApprovalLevel == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Approval level not found." ) );
-        }
+        Period period = getAndValidatePeriod( pe );
+        OrganisationUnit organisationUnit = getAndValidateOrgUnit( ou );
+        DataApprovalLevel dataApprovalLevel = getAndValidateApprovalLevel( organisationUnit );
 
         User user = currentUserService.getCurrentUser();
 
@@ -646,7 +516,7 @@ public class DataApprovalController
 
         for ( DataSet dataSet : dataSets )
         {
-            dataApprovalList.addAll( getApprovalsAsList( dataApprovalLevel, dataSet,
+            dataApprovalList.addAll( getApprovalsAsList( dataApprovalLevel, dataSet.getWorkflow(),
                 period, organisationUnit, false, new Date(), user ) );
         }
 
@@ -655,47 +525,21 @@ public class DataApprovalController
 
     @PreAuthorize( "hasRole('ALL') or hasRole('F_ACCEPT_DATA_LOWER_LEVELS')" )
     @RequestMapping( value = ACCEPTANCES_PATH, method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void unacceptApproval(
-        @RequestParam String ds,
+        @RequestParam( required=false ) String ds,
+        @RequestParam( required=false) String wf,
         @RequestParam String pe,
         @RequestParam String ou, HttpServletResponse response ) throws WebMessageException
     {
-        DataSet dataSet = dataSetService.getDataSet( ds );
-
-        if ( dataSet == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal data set identifier: " + ds ) );
-        }
-
-        if ( dataSet.getWorkflow() == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "DataSet does not have an approval workflow: " + ds ) );
-        }
-
-        Period period = PeriodType.getPeriodFromIsoString( pe );
-
-        if ( period == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + pe ) );
-        }
-
-        OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( ou );
-
-        if ( organisationUnit == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Illegal organisation unit identifier: " + ou ) );
-        }
-
-        DataApprovalLevel dataApprovalLevel = dataApprovalLevelService.getHighestDataApprovalLevel( organisationUnit );
-
-        if ( dataApprovalLevel == null )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Approval level not found." ) );
-        }
+        DataApprovalWorkflow workflow = getAndValidateWorkflow( ds, wf );
+        Period period = getAndValidatePeriod( pe );
+        OrganisationUnit organisationUnit = getAndValidateOrgUnit( ou );
+        DataApprovalLevel dataApprovalLevel = getAndValidateApprovalLevel( organisationUnit );
 
         User user = currentUserService.getCurrentUser();
 
-        List<DataApproval> dataApprovalList = getApprovalsAsList( dataApprovalLevel, dataSet,
+        List<DataApproval> dataApprovalList = getApprovalsAsList( dataApprovalLevel, workflow,
             period, organisationUnit, false, new Date(), user );
 
         dataApprovalService.unacceptData( dataApprovalList );
@@ -720,7 +564,7 @@ public class DataApprovalController
         return dataSets;
     }
 
-    private List<DataApproval> getApprovalsAsList( DataApprovalLevel dataApprovalLevel, DataSet dataSet,
+    private List<DataApproval> getApprovalsAsList( DataApprovalLevel dataApprovalLevel, DataApprovalWorkflow workflow,
         Period period, OrganisationUnit organisationUnit, boolean accepted, Date created, User creator )
     {
         List<DataApproval> approvals = new ArrayList<>();
@@ -728,7 +572,7 @@ public class DataApprovalController
         DataElementCategoryOptionCombo combo = categoryService.getDefaultDataElementCategoryOptionCombo();
         period = periodService.reloadPeriod( period );
 
-        approvals.add( new DataApproval( dataApprovalLevel, dataSet.getWorkflow(), period, organisationUnit, combo, accepted, created, creator ) );
+        approvals.add( new DataApproval( dataApprovalLevel, workflow, period, organisationUnit, combo, accepted, created, creator ) );
 
         return approvals;
     }
@@ -770,5 +614,92 @@ public class DataApprovalController
         }
 
         return new ArrayList<>( set );
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Validates the input parameters and returns a data approval workflow.
+     * 
+     * @param ds the data set identifier.
+     * @param wf the data approval workflow identifier.
+     * @return a DataApprovalWorkflow.
+     * @throws WebMessageException if object is not found.
+     */
+    private DataApprovalWorkflow getAndValidateWorkflow( String ds, String wf )
+        throws WebMessageException
+    {
+        if ( ds != null )
+        {
+            DataSet dataSet = dataSetService.getDataSet( ds );
+    
+            if ( dataSet == null )
+            {
+                throw new WebMessageException( WebMessageUtils.conflict( "Data set does not exist: " + ds ) );
+            }
+    
+            if ( dataSet.getWorkflow() == null )
+            {
+                throw new WebMessageException( WebMessageUtils.conflict( "Data set does not have an approval workflow: " + ds ) );
+            }
+            
+            return dataSet.getWorkflow();
+        }
+        else if ( wf != null )
+        {
+            DataApprovalWorkflow workflow = dataApprovalService.getWorkflow( wf );
+            
+            if ( workflow == null )
+            {
+                throw new WebMessageException( WebMessageUtils.conflict( "Data approval workflow does not exist: " + wf ) );
+            }
+            
+            return workflow;
+        }
+        else
+        {
+            throw new WebMessageException( WebMessageUtils.conflict( "Either data set or data approval workflow must be specified" ) );
+        }
+    }
+
+    private Period getAndValidatePeriod( String pe )
+        throws WebMessageException
+    {
+        Period period = PeriodType.getPeriodFromIsoString( pe );
+
+        if ( period == null )
+        {
+            throw new WebMessageException( WebMessageUtils.conflict( "Illegal period identifier: " + pe ) );
+        }
+
+        return period;
+    }
+
+    private OrganisationUnit getAndValidateOrgUnit( String ou )
+        throws WebMessageException
+    {
+        OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( ou );
+
+        if ( organisationUnit == null )
+        {
+            throw new WebMessageException( WebMessageUtils.conflict( "Organisation unit does not exist: " + ou ) );
+        }
+
+        return organisationUnit;
+    }
+
+    private DataApprovalLevel getAndValidateApprovalLevel( OrganisationUnit unit )
+        throws WebMessageException
+    {
+        DataApprovalLevel dataApprovalLevel = dataApprovalLevelService.getHighestDataApprovalLevel( unit );
+
+        if ( dataApprovalLevel == null )
+        {
+            throw new WebMessageException( WebMessageUtils.conflict( "Approval level not found for org unit: " + unit.getUid() ) );
+        }
+
+        return dataApprovalLevel;
     }
 }

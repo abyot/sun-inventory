@@ -14,7 +14,6 @@ public class EventChartDocumentation
     protected void setStatues()
     {
         createdStatus = HttpStatus.SC_CREATED;
-        deleteStatus = HttpStatus.SC_OK;
     }
 }
 

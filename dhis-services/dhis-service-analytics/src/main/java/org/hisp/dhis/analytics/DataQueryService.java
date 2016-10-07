@@ -63,6 +63,8 @@ public interface DataQueryService
      *        table layout.
      * @param showHierarchy whether to show the organisation unit hierarchy
      *        together with the name.
+     * @param includeNumDen whether to include the numerator and denominator of
+     *        values in the response.
      * @param displayProperty the property to display for meta-data.
      * @param outputIdScheme the identifier scheme to use in the query response.
      * @param inputIdScheme the identifier scheme to interpret dimension and filters.
@@ -74,8 +76,8 @@ public interface DataQueryService
      */
     DataQueryParams getFromUrl( Set<String> dimensionParams, Set<String> filterParams, AggregationType aggregationType, String measureCriteria,
         boolean skipMeta, boolean skipData, boolean skipRounding, boolean completedOnly, boolean hierarchyMeta, boolean ignoreLimit,
-        boolean hideEmptyRows, boolean showHierarchy, DisplayProperty displayProperty, IdentifiableProperty outputIdScheme, IdScheme inputIdScheme,
-        String approvalLevel, Date relativePeriodDate, String userOrgUnit, I18nFormat format );
+        boolean hideEmptyRows, boolean showHierarchy, boolean includeNumDen, DisplayProperty displayProperty, IdentifiableProperty outputIdScheme, IdScheme inputIdScheme,
+        String approvalLevel, Date relativePeriodDate, String userOrgUnit );
 
     /**
      * Creates a data query parameter object from the given BaseAnalyticalObject.
@@ -127,8 +129,9 @@ public interface DataQueryService
      * org unit parameter, second at the organisation units associated with the
      * current user. Returns an empty list if no organisation units are found.
      *
+     * @param params the data query parameters.
      * @param userOrgUnit the user org unit parameter string.
      * @return a list of organisation units.
      */
-    List<OrganisationUnit> getUserOrgUnits( String userOrgUnit );
+    List<OrganisationUnit> getUserOrgUnits( DataQueryParams params, String userOrgUnit );
 }

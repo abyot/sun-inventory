@@ -28,12 +28,19 @@ package org.hisp.dhis.dataset;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
  */
+@JacksonXmlRootElement( localName = "lockException", namespace = DxfNamespaces.DXF_2_0 )
 public class LockException
 {
     private int id;
@@ -47,7 +54,7 @@ public class LockException
     public LockException()
     {
     }
-    
+
     public LockException( Period period, OrganisationUnit organisationUnit, DataSet dataSet )
     {
         this.period = period;
@@ -55,6 +62,8 @@ public class LockException
         this.dataSet = dataSet;
     }
 
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getName()
     {
         if ( organisationUnit == null )
@@ -75,6 +84,8 @@ public class LockException
         this.id = id;
     }
 
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Period getPeriod()
     {
         return period;
@@ -85,6 +96,9 @@ public class LockException
         this.period = period;
     }
 
+    @JsonProperty
+    @JsonSerialize( as = BaseIdentifiableObject.class )
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public OrganisationUnit getOrganisationUnit()
     {
         return organisationUnit;
@@ -95,6 +109,9 @@ public class LockException
         this.organisationUnit = organisationUnit;
     }
 
+    @JsonProperty
+    @JsonSerialize( as = BaseIdentifiableObject.class )
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataSet getDataSet()
     {
         return dataSet;
@@ -103,5 +120,16 @@ public class LockException
     public void setDataSet( DataSet dataSet )
     {
         this.dataSet = dataSet;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "LockException{" +
+            "id=" + id +
+            ", period=" + period +
+            ", organisationUnit=" + organisationUnit +
+            ", dataSet=" + dataSet +
+            '}';
     }
 }

@@ -67,7 +67,7 @@ public class I18nController
         I18n i18n = i18nManager.getI18n( searchPackage );
         Map<String, String> output = new HashMap<>();
 
-        List<String> input = ((DefaultRenderService) renderService).getJsonMapper().readValue( inputStream, new TypeReference<List<String>>()
+        List<String> input = DefaultRenderService.getJsonMapper().readValue( inputStream, new TypeReference<List<String>>()
         {
         } );
 

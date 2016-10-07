@@ -29,7 +29,6 @@ package org.hisp.dhis.user;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -41,9 +40,6 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
 import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.dataset.DataSet;
@@ -104,19 +100,16 @@ public class UserCredentials
     /**
      * Set of user roles.
      */
-    @Scanned
     private Set<UserAuthorityGroup> userAuthorityGroups = new HashSet<>();
 
     /**
      * Category option group set dimensions to constrain data analytics aggregation.
      */
-    @Scanned
     private Set<CategoryOptionGroupSet> cogsDimensionConstraints = new HashSet<>();
 
     /**
      * Category dimensions to constrain data analytics aggregation.
      */
-    @Scanned
     private Set<DataElementCategory> catDimensionConstraints = new HashSet<>();
 
     /**
@@ -537,7 +530,6 @@ public class UserCredentials
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( DetailedView.class )
     @JsonSerialize( as = BaseIdentifiableObject.class )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public User getUserInfo()
@@ -565,7 +557,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isExternalAuth()
     {
@@ -578,7 +569,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getPasswordLastUpdated()
     {
@@ -592,7 +582,6 @@ public class UserCredentials
 
     @JsonProperty( "userRoles" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "userRoles", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "userRole", namespace = DxfNamespaces.DXF_2_0 )
     public Set<UserAuthorityGroup> getUserAuthorityGroups()
@@ -607,7 +596,6 @@ public class UserCredentials
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "catDimensionConstraints", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "catDimensionConstraint", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElementCategory> getCatDimensionConstraints()
@@ -622,7 +610,6 @@ public class UserCredentials
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "cogsDimensionConstraints", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "cogsDimensionConstraint", namespace = DxfNamespaces.DXF_2_0 )
     public Set<CategoryOptionGroupSet> getCogsDimensionConstraints()
@@ -636,7 +623,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getUsername()
     {
@@ -649,7 +635,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getOpenId()
     {
@@ -662,7 +647,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getLdapId()
     {
@@ -675,7 +659,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getLastLogin()
     {
@@ -718,7 +701,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isSelfRegistered()
     {
@@ -731,7 +713,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isInvitation()
     {
@@ -744,7 +725,6 @@ public class UserCredentials
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isDisabled()
     {

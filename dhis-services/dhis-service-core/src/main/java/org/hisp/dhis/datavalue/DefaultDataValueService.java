@@ -31,6 +31,7 @@ package org.hisp.dhis.datavalue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.common.AuditType;
+import org.hisp.dhis.common.ListMap;
 import org.hisp.dhis.common.MapMap;
 import org.hisp.dhis.dataelement.CategoryOptionGroup;
 import org.hisp.dhis.dataelement.DataElement;
@@ -45,16 +46,22 @@ import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.user.CurrentUserService;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hisp.dhis.system.util.ValidationUtils.dataValueIsValid;
 import static org.hisp.dhis.system.util.ValidationUtils.dataValueIsZeroAndInsignificant;
 
 /**
+ * Data value service implementation. Note that data values are softly deleted,
+ * which implies having the deleted property set to true and updated.
+ * 
  * @author Kristian Nordal
  * @author Halvdan Hoem Grelland
  */
@@ -137,7 +144,7 @@ public class DefaultDataValueService
         }
 
         // ---------------------------------------------------------------------
-        // Save
+        // Set default category option combo if null
         // ---------------------------------------------------------------------
 
         if ( dataValue.getCategoryOptionCombo() == null )
@@ -152,7 +159,23 @@ public class DefaultDataValueService
 
         dataValue.setCreated( new Date() );
 
-        dataValueStore.addDataValue( dataValue );
+        // ---------------------------------------------------------------------
+        // Check and restore soft deleted value
+        // ---------------------------------------------------------------------
+
+        DataValue softDelete = dataValueStore.getSoftDeletedDataValue( dataValue );
+        
+        if ( softDelete != null )
+        {
+            softDelete.mergeWith( dataValue );
+            softDelete.setDeleted( false );
+            
+            dataValueStore.updateDataValue( softDelete );
+        }
+        else
+        {
+            dataValueStore.addDataValue( dataValue );
+        }
 
         return true;
     }
@@ -187,7 +210,9 @@ public class DefaultDataValueService
             fileResourceService.deleteFileResource( dataValue.getValue() );
         }
 
-        dataValueStore.deleteDataValue( dataValue );
+        dataValue.setDeleted( true );
+        
+        dataValueStore.updateDataValue( dataValue );
     }
     
     @Override
@@ -212,14 +237,6 @@ public class DefaultDataValueService
         return dataValueStore.getDataValue( dataElement, period, source, categoryOptionCombo, attributeOptionCombo );
     }
 
-    @Override
-    public DataValue getDataValue( int dataElementId, int periodId, int sourceId, int categoryOptionComboId )
-    {
-        DataElementCategoryOptionCombo defaultOptionCombo = categoryService.getDefaultDataElementCategoryOptionCombo();
-
-        return dataValueStore.getDataValue( dataElementId, periodId, sourceId, categoryOptionComboId, defaultOptionCombo.getId() );
-    }
-
     // -------------------------------------------------------------------------
     // Collections of DataValues
     // -------------------------------------------------------------------------
@@ -229,31 +246,14 @@ public class DefaultDataValueService
     {
         return dataValueStore.getAllDataValues();
     }
-
+    
     @Override
-    public List<DataValue> getDataValues( OrganisationUnit source, Period period )
+    public List<DataValue> getDataValues( Collection<DataElement> dataElements, 
+        Collection<Period> periods, Collection<OrganisationUnit> organisationUnits )
     {
-        return dataValueStore.getDataValues( source, period );
+        return dataValueStore.getDataValues( dataElements, periods, organisationUnits );
     }
-
-    @Override
-    public List<DataValue> getDataValues( OrganisationUnit source, DataElement dataElement )
-    {
-        return dataValueStore.getDataValues( source, dataElement );
-    }
-
-    @Override
-    public List<DataValue> getDataValues( Collection<OrganisationUnit> sources, DataElement dataElement )
-    {
-        return dataValueStore.getDataValues( sources, dataElement );
-    }
-
-    @Override
-    public List<DataValue> getDataValues( OrganisationUnit source, Period period, Collection<DataElement> dataElements )
-    {
-        return dataValueStore.getDataValues( source, period, dataElements );
-    }
-
+    
     @Override
     public List<DataValue> getDataValues( OrganisationUnit source, Period period,
         Collection<DataElement> dataElements, DataElementCategoryOptionCombo attributeOptionCombo )
@@ -262,50 +262,112 @@ public class DefaultDataValueService
     }
 
     @Override
-    public List<DataValue> getDataValues( OrganisationUnit source, Period period, Collection<DataElement> dataElements,
-        Collection<DataElementCategoryOptionCombo> optionCombos )
-    {
-        return dataValueStore.getDataValues( source, period, dataElements, optionCombos );
-    }
-
-    @Override
-    public List<DataValue> getDataValues( DataElement dataElement, Period period,
-        Collection<OrganisationUnit> sources )
-    {
-        return dataValueStore.getDataValues( dataElement, period, sources );
-    }
-
-    @Override
-    public List<DataValue> getDataValues( DataElement dataElement, Collection<Period> periods,
-        Collection<OrganisationUnit> sources )
-    {
-        return dataValueStore.getDataValues( dataElement, periods, sources );
-    }
-
-    @Override
-    public List<DataValue> getDataValues( DataElement dataElement, DataElementCategoryOptionCombo optionCombo,
+    public List<DataValue> getDeflatedDataValues( DataElement dataElement, DataElementCategoryOptionCombo categoryOptionCombo,
         Collection<Period> periods, Collection<OrganisationUnit> sources )
     {
-        return dataValueStore.getDataValues( dataElement, optionCombo, periods, sources );
+        List<DeflatedDataValue> dataValues = dataValueStore.getDeflatedDataValues( dataElement, categoryOptionCombo, periods, sources );
+        List<DataValue> result = new ArrayList<DataValue>();
+
+        Map<Integer, Period> periodIds = new HashMap<Integer, Period>();
+        Map<Integer, OrganisationUnit> sourceIds = new HashMap<Integer, OrganisationUnit>();
+
+        for ( Period period : periods )
+        {
+            periodIds.put( period.getId(), period );
+        }
+
+        for ( OrganisationUnit source : sources )
+        {
+            sourceIds.put( source.getId(), source );
+        }
+
+        for ( DeflatedDataValue ddv : dataValues )
+        {
+            DataValue dv = new DataValue( dataElement, periodIds.get( ddv.getPeriodId() ),
+                sourceIds.get( ddv.getSourceId() ), getCategoryOptionCombo( ddv.getCategoryOptionComboId() ),
+                getCategoryOptionCombo( ddv.getAttributeOptionComboId() ) );
+
+            dv.setValue( ddv.getValue() );
+
+            result.add( dv );
+        }
+
+        return result;
     }
 
+    /**
+     * Gets deflated (non-persisted) dataValues for a dataElement, period, and sources and
+     * will get the values recursively for children of the sources if they don't exist for any
+     * periods or attribute option combos.
+     */
     @Override
-    public List<DataValue> getDataValues( Collection<DataElementCategoryOptionCombo> optionCombos )
+    public List<DataValue> getRecursiveDeflatedDataValues(
+        DataElement dataElement, DataElementCategoryOptionCombo categoryOptionCombo,
+        Collection<Period> periods, Collection<OrganisationUnit> sources )
     {
-        return dataValueStore.getDataValues( optionCombos );
+        List<DataValue> result = new ArrayList<DataValue>();
+        DataElementCategoryOptionCombo dcoc = categoryService.getDefaultDataElementCategoryOptionCombo();
+        DataElementCategoryOptionCombo coc = categoryOptionCombo == null || categoryOptionCombo == dcoc ? 
+            null : categoryOptionCombo;
+
+        Map<Integer, Period> periodIds = new HashMap<Integer, Period>();
+        Map<Integer, OrganisationUnit> sourceIds = new HashMap<Integer, OrganisationUnit>();
+
+        for ( Period period : periods )
+        {
+            periodIds.put( period.getId(), period );
+        }
+
+        for ( OrganisationUnit source : sources )
+        {
+            sourceIds.put( source.getId(), source );
+        }
+
+        for ( OrganisationUnit source: sources )
+        {
+            List<DeflatedDataValue> dataValues =
+                dataValueStore.sumRecursiveDeflatedDataValues( dataElement, coc, periods, source );
+            
+            ListMap<Integer, Integer> period2aoc = new ListMap<Integer, Integer>();
+
+            MapMap<Integer, Integer, DataValue> accumulatedValues = new MapMap<Integer, Integer, DataValue>();
+
+            for ( DeflatedDataValue ddv : dataValues )
+            {
+                Integer periodId = ddv.getPeriodId();
+                Integer aoc = ddv.getAttributeOptionComboId();
+                
+                if ( !( period2aoc.containsValue( periodId, aoc ) ) )
+                {
+                    DataValue dv = accumulatedValues.getValue( periodId, aoc );
+                    
+                    if ( dv == null )
+                    {
+                        dv = new DataValue( dataElement, periodIds.get( periodId ), 
+                            source, dcoc, getCategoryOptionCombo( aoc ) );
+
+                        dv.setValue( ddv.getValue() );
+                        accumulatedValues.putEntry( periodId, aoc, dv );
+
+                        result.add( dv );
+                    }
+                    else
+                    {
+                        Double value = Double.valueOf( ddv.getValue() );
+                        Double cv = Double.valueOf( dv.getValue() );
+                        Double nv = value + cv;
+                        dv.setValue( nv.toString() );
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
-    @Override
-    public List<DataValue> getDataValues( DataElement dataElement )
+    private DataElementCategoryOptionCombo getCategoryOptionCombo( Integer id )
     {
-        return dataValueStore.getDataValues( dataElement );
-    }
-
-    @Override
-    public DataValue getLatestDataValues( DataElement dataElement, PeriodType periodType,
-        OrganisationUnit organisationUnit )
-    {
-        return dataValueStore.getLatestDataValues( dataElement, periodType, organisationUnit );
+        return categoryService.getDataElementCategoryOptionCombo( id );
     }
 
     @Override
@@ -331,11 +393,5 @@ public class DefaultDataValueService
     {
         return dataValueStore.getDataValueMapByAttributeCombo( dataElements, date, source, periodTypes, attributeCombo,
             cogDimensionConstraints, coDimensionConstraints, lastUpdatedMap );
-    }
-
-    @Override
-    public Collection<DeflatedDataValue> getDeflatedDataValues( int dataElementId, int periodId, Collection<Integer> sourceIds )
-    {
-        return dataValueStore.getDeflatedDataValues( dataElementId, periodId, sourceIds );
     }
 }

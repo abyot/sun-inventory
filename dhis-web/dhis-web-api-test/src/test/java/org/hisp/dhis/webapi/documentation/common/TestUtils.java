@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.codehaus.jackson.JsonNode;
 import org.hisp.dhis.schema.Property;
 import org.hisp.dhis.schema.Schema;
-import org.hisp.dhis.security.AuthorityType;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.FieldDescriptor;
 
@@ -44,7 +43,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -133,19 +131,7 @@ public class TestUtils
     {
         org.codehaus.jackson.map.ObjectMapper mapper = new org.codehaus.jackson.map.ObjectMapper();
         JsonNode node = mapper.readTree( responseJson );
-        return node.get( "response" ).get( "lastImported" ).asText();
+        return node.get( "response" ).get( "uid" ).asText();
     }
 
-    public static String getAuthority( Schema schema, AuthorityType authType )
-    {
-        List<String> auth = schema.getAuthorityByType( authType );
-        if ( auth == null || auth.size() == 0 )
-        {
-            return "ALL";
-        }
-        else
-        {
-            return auth.get( 0 );
-        }
-    }
 }

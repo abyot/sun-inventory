@@ -28,6 +28,12 @@ package org.hisp.dhis.webapi.controller.organisationunit;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import org.apache.commons.lang3.StringUtils;
+import org.hisp.dhis.dxf2.metadata.Metadata;
+import org.hisp.dhis.dxf2.webmessage.WebMessageException;
+import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
+import org.hisp.dhis.organisationunit.OrganisationUnitService;
+import org.hisp.dhis.render.DefaultRenderService;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,19 +43,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang3.StringUtils;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
-import org.hisp.dhis.dxf2.metadata.Metadata;
-import org.hisp.dhis.dxf2.webmessage.WebMessageException;
-import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
-import org.hisp.dhis.organisationunit.OrganisationUnitService;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import java.util.List;
 
 /**
  * @author Lars Helge Overland
@@ -73,7 +71,7 @@ public class FilledOrganisationUnitLevelController
     public void setList( HttpServletRequest request, HttpServletResponse response )
         throws Exception
     {
-        Metadata metadata = JacksonUtils.fromJson( request.getInputStream(), Metadata.class );
+        Metadata metadata = DefaultRenderService.getJsonMapper().readValue( request.getInputStream(), Metadata.class );
 
         List<OrganisationUnitLevel> levels = metadata.getOrganisationUnitLevels();
 

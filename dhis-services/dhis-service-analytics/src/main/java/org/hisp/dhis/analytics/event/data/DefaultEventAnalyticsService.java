@@ -35,6 +35,15 @@ import static org.hisp.dhis.common.DimensionalObjectUtils.asTypedList;
 import static org.hisp.dhis.organisationunit.OrganisationUnit.getParentGraphMap;
 import static org.hisp.dhis.organisationunit.OrganisationUnit.getParentNameGraphMap;
 
+import static org.hisp.dhis.analytics.DataQueryParams.NUMERATOR_ID;
+import static org.hisp.dhis.analytics.DataQueryParams.DENOMINATOR_ID;
+import static org.hisp.dhis.analytics.DataQueryParams.FACTOR_ID;
+import static org.hisp.dhis.analytics.DataQueryParams.VALUE_ID;
+import static org.hisp.dhis.analytics.DataQueryParams.NUMERATOR_HEADER_NAME;
+import static org.hisp.dhis.analytics.DataQueryParams.DENOMINATOR_HEADER_NAME;
+import static org.hisp.dhis.analytics.DataQueryParams.FACTOR_HEADER_NAME;
+import static org.hisp.dhis.analytics.DataQueryParams.VALUE_HEADER_NAME;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,7 +78,6 @@ import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramStage;
 import org.hisp.dhis.system.database.DatabaseInfo;
 import org.hisp.dhis.system.grid.ListGrid;
-import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.util.Timer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,9 +100,6 @@ public class DefaultEventAnalyticsService
     @Autowired
     private EventQueryPlanner queryPlanner;
 
-    @Autowired
-    private CurrentUserService currentUserService;
-    
     @Autowired
     private DatabaseInfo databaseInfo;
     
@@ -148,7 +153,14 @@ public class DefaultEventAnalyticsService
                 grid.addHeader( new GridHeader( dimension.getDimension(), dimension.getDisplayName(), String.class.getName(), false, true ) );
             }
     
-            grid.addHeader( new GridHeader( "value", "Value", Double.class.getName(), false, false ) );
+            grid.addHeader( new GridHeader( VALUE_ID, VALUE_HEADER_NAME, Double.class.getName(), false, false ) );
+
+            if ( params.isIncludeNumDen() )
+            {
+                grid.addHeader( new GridHeader( NUMERATOR_ID, NUMERATOR_HEADER_NAME, Double.class.getName(), false, false ) );
+                grid.addHeader( new GridHeader( DENOMINATOR_ID, DENOMINATOR_HEADER_NAME, Double.class.getName(), false, false ) );
+                grid.addHeader( new GridHeader( FACTOR_ID, FACTOR_HEADER_NAME, Double.class.getName(), false, false ) );
+            }
 
             // -----------------------------------------------------------------
             // Data
@@ -193,7 +205,7 @@ public class DefaultEventAnalyticsService
         
         if ( !params.isSkipMeta() )
         {
-            Map<Object, Object> metaData = new HashMap<>();
+            Map<String, Object> metaData = new HashMap<>();
 
             Map<String, String> uidNameMap = getUidNameMap( params );
             
@@ -201,7 +213,7 @@ public class DefaultEventAnalyticsService
             metaData.put( PERIOD_DIM_ID, getDimensionalItemIds( params.getDimensionOrFilterItems( PERIOD_DIM_ID ) ) );
             metaData.put( ORGUNIT_DIM_ID, getDimensionalItemIds( params.getDimensionOrFilterItems( ORGUNIT_DIM_ID ) ) );
 
-            User user = currentUserService.getCurrentUser();
+            User user = securityManager.getCurrentUser( params );
 
             List<OrganisationUnit> organisationUnits = asTypedList( params.getDimensionOrFilterItems( ORGUNIT_DIM_ID ) );
             Collection<OrganisationUnit> roots = user != null ? user.getOrganisationUnits() : null;
@@ -291,13 +303,13 @@ public class DefaultEventAnalyticsService
         // Meta-data
         // ---------------------------------------------------------------------
 
-        Map<Object, Object> metaData = new HashMap<>();
+        Map<String, Object> metaData = new HashMap<>();
 
         Map<String, String> uidNameMap = getUidNameMap( params );
 
         metaData.put( AnalyticsMetaDataKey.NAMES.getKey(), uidNameMap );
 
-        User user = currentUserService.getCurrentUser();
+        User user = securityManager.getCurrentUser( params );
 
         Collection<OrganisationUnit> roots = user != null ? user.getOrganisationUnits() : null;
         

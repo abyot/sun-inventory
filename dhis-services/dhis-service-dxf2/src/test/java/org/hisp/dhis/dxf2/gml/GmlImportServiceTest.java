@@ -28,15 +28,10 @@ package org.hisp.dhis.dxf2.gml;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.commons.io.IOUtils;
 import org.hisp.dhis.DhisSpringTest;
 import org.hisp.dhis.dxf2.common.ImportOptions;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
 import org.hisp.dhis.importexport.ImportStrategy;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
@@ -48,6 +43,12 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Halvdan Hoem Grelland
@@ -74,7 +75,7 @@ public class GmlImportServiceTest
 
     @Autowired
     private OrganisationUnitService organisationUnitService;
-    
+
     @Autowired
     private UserService userService;
 
@@ -128,7 +129,7 @@ public class GmlImportServiceTest
         importOptions.setDryRun( false );
         importOptions.setPreheatCache( true );
     }
-    
+
     @After
     public void after()
     {
@@ -143,7 +144,11 @@ public class GmlImportServiceTest
     public void testImportGml()
         throws Exception
     {
-        gmlImportService.importGml( inputStream, user.getUid(), importOptions, taskId );
+        MetadataImportParams importParams = new MetadataImportParams();
+        importParams.setTaskId( taskId );
+        importParams.setUser( user );
+
+        gmlImportService.importGml( inputStream, importParams );
 
         assertNotNull( boOrgUnit.getCoordinates() );
         assertNotNull( boOrgUnit.getFeatureType() );

@@ -552,10 +552,14 @@ div.inputCriteria
   color: #222;
 }
 
-.setting input[type=text], 
-.setting input[type=password], 
-.inputForm input[type=text], 
+.setting input[type=text],
+.setting input[type=password],
+.setting input[type=number],
+.setting input[type=email],
+.inputForm input[type=text],
 .inputForm input[type=password],
+.inputForm input[type=number],
+.inputForm input[type=email],
 .setting textarea,
 .inputForm textarea
 {

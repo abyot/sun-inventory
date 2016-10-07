@@ -37,11 +37,13 @@ import org.hisp.dhis.node.types.CollectionNode;
 import org.hisp.dhis.node.types.ComplexNode;
 import org.hisp.dhis.node.types.RootNode;
 import org.hisp.dhis.node.types.SimpleNode;
+import org.hisp.dhis.system.util.DateUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -110,13 +112,20 @@ public class Jackson2JsonNodeSerializer extends AbstractNodeSerializer
     @Override
     protected void startWriteSimpleNode( SimpleNode simpleNode ) throws Exception
     {
+        Object value = simpleNode.getValue();
+
+        if ( Date.class.isAssignableFrom( simpleNode.getValue().getClass() ) )
+        {
+            value = DateUtils.getIso8601NoTz( (Date) simpleNode.getValue() );
+        }
+
         if ( simpleNode.getParent().isCollection() )
         {
-            generator.writeObject( simpleNode.getValue() );
+            generator.writeObject( value );
         }
         else
         {
-            generator.writeObjectField( simpleNode.getName(), simpleNode.getValue() );
+            generator.writeObjectField( simpleNode.getName(), value );
         }
     }
 

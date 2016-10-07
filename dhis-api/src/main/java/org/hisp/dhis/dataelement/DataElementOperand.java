@@ -29,7 +29,6 @@ package org.hisp.dhis.dataelement;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -43,8 +42,6 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.ValueType;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.expression.ExpressionService;
 
 import java.util.ArrayList;
@@ -435,7 +432,6 @@ public class DataElementOperand
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataElement getDataElement()
     {
@@ -449,7 +445,6 @@ public class DataElementOperand
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataElementCategoryOptionCombo getCategoryOptionCombo()
     {
@@ -462,7 +457,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDataElementId()
     {
@@ -475,7 +469,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getOptionComboId()
     {
@@ -488,7 +481,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getOperandId()
     {
@@ -501,7 +493,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getOperandName()
     {
@@ -514,7 +505,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "aggregationLevels", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "aggregationLevel", namespace = DxfNamespaces.DXF_2_0 )
     public List<Integer> getAggregationLevels()
@@ -528,7 +518,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ValueType getValueType()
     {
@@ -541,7 +530,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getFrequencyOrder()
     {
@@ -554,7 +542,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getOperandType()
     {
@@ -567,7 +554,6 @@ public class DataElementOperand
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isHasAggregationLevels()
     {
@@ -606,6 +592,11 @@ public class DataElementOperand
         final int prime = 31;
         int result = 1;
 
+        if ( dataElement != null && categoryOptionCombo != null )
+        {
+            updateProperties( dataElement, categoryOptionCombo );
+        }
+
         result = prime * result + ((dataElement == null) ? 0 : dataElement.hashCode());
         result = prime * result + ((categoryOptionCombo == null) ? 0 : categoryOptionCombo.hashCode());
         result = prime * result + ((dataElementId == null) ? 0 : dataElementId.hashCode());
@@ -632,7 +623,17 @@ public class DataElementOperand
             return false;
         }
 
+        if ( dataElement != null && categoryOptionCombo != null )
+        {
+            updateProperties( dataElement, categoryOptionCombo );
+        }
+
         DataElementOperand other = (DataElementOperand) object;
+
+        if ( other.getDataElement() != null && other.getCategoryOptionCombo() != null )
+        {
+            other.updateProperties( other.getDataElement(), other.getCategoryOptionCombo() );
+        }
 
         if ( dataElement == null )
         {

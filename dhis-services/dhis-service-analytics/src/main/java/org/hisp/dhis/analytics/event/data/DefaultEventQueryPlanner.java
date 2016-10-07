@@ -290,12 +290,16 @@ public class DefaultEventQueryPlanner
         {
             for ( QueryItem item : params.getItems() )
             {
-                EventQueryParams query = new EventQueryParams.Builder( params )
+                EventQueryParams.Builder query = new EventQueryParams.Builder( params )
                     .removeItems()
-                    .addItem( item )
-                    .withProgram( item.getProgram() ).build();
+                    .addItem( item );
                 
-                queries.add( query );
+                if ( item.hasProgram() )
+                {
+                    query.withProgram( item.getProgram() );
+                }
+                
+                queries.add( query.build() );
             }
         }
         else

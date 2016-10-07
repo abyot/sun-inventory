@@ -86,10 +86,12 @@ import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramStage;
 import org.hisp.dhis.system.util.MathUtils;
+import org.hisp.dhis.user.User;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Class representing query parameters for retrieving aggregated data from the
@@ -101,10 +103,18 @@ import com.google.common.collect.Lists;
  */
 public class DataQueryParams
 {
-    public static final String VALUE_ID = "value";    
+    public static final String VALUE_ID = "value";
+    public static final String NUMERATOR_ID = "numerator";
+    public static final String DENOMINATOR_ID = "denominator";
+    public static final String FACTOR_ID = "factor";
     public static final String LEVEL_PREFIX = "uidlevel";
     public static final String KEY_DE_GROUP = "DE_GROUP-";
     public static final String KEY_IN_GROUP = "IN_GROUP-";
+
+    public static final String VALUE_HEADER_NAME = "Value";
+    public static final String NUMERATOR_HEADER_NAME = "Numerator";
+    public static final String DENOMINATOR_HEADER_NAME = "Denominator";
+    public static final String FACTOR_HEADER_NAME = "Factor";
     
     public static final String DISPLAY_NAME_DATA_X = "Data";
     public static final String DISPLAY_NAME_CATEGORYOPTIONCOMBO = "Category option combo";
@@ -124,8 +134,6 @@ public class DataQueryParams
         DATA_X_DIM_ID, CATEGORYOPTIONCOMBO_DIM_ID );
     public static final List<DimensionType> COMPLETENESS_DIMENSION_TYPES = ImmutableList.of( 
         DATA_X, PERIOD, ORGANISATION_UNIT, ORGANISATION_UNIT_GROUP_SET, CATEGORY_OPTION_GROUP_SET, CATEGORY );
-    private static final List<DimensionType> COMPLETENESS_TARGET_DIMENSION_TYPES = ImmutableList.of( 
-        DATA_X, PERIOD, ORGANISATION_UNIT, ORGANISATION_UNIT_GROUP_SET, CATEGORY );
     
     private static final DimensionItem[] DIM_OPT_ARR = new DimensionItem[0];
     private static final DimensionItem[][] DIM_OPT_2D_ARR = new DimensionItem[0][];
@@ -184,6 +192,12 @@ public class DataQueryParams
     protected boolean hierarchyMeta;
     
     /**
+     * Indicates whether a identifier to dimension item object mapping should be
+     * part of the meta data reponse.
+     */
+    protected boolean dimensionItemMeta;
+    
+    /**
      * Indicates whether the maximum number of records to include the response
      * should be ignored.
      */
@@ -202,6 +216,12 @@ public class DataQueryParams
     protected boolean showHierarchy;
     
     /**
+     * Indicates whether to include the numerator, denominator and factor of 
+     * values where relevant in the response.
+     */
+    protected boolean includeNumDen;
+    
+    /**
      * Indicates which property to display for meta-data.
      */
     protected DisplayProperty displayProperty;
@@ -212,10 +232,15 @@ public class DataQueryParams
     protected IdentifiableProperty outputIdScheme;
 
     /**
+     * The output format, default is {@link OutputFormat.ANALYTICS}.
+     */
+    protected OutputFormat outputFormat;
+    
+    /**
      * The required approval level identifier for data to be included in query response.
      */
     protected String approvalLevel;
-
+    
     /**
      * The start date for the period dimension, can be null.
      */
@@ -243,6 +268,11 @@ public class DataQueryParams
     // -------------------------------------------------------------------------
     // Transient properties
     // -------------------------------------------------------------------------
+    
+    /**
+     * User to override the current user from the security context.
+     */
+    protected transient User currentUser;
     
     /**
      * The partitions containing data relevant to this query.
@@ -294,6 +324,11 @@ public class DataQueryParams
      */
     protected transient Map<OrganisationUnit, Integer> dataApprovalLevels = new HashMap<>();
 
+    /**
+     * Hints for the aggregation process.
+     */
+    protected transient Set<ProcessingHint> processingHints = new HashSet<>();
+    
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
@@ -347,11 +382,14 @@ public class DataQueryParams
         params.skipRounding = this.skipRounding;
         params.completedOnly = this.completedOnly;
         params.hierarchyMeta = this.hierarchyMeta;
+        params.dimensionItemMeta = this.dimensionItemMeta;
         params.ignoreLimit = this.ignoreLimit;
         params.hideEmptyRows = this.hideEmptyRows;
         params.showHierarchy = this.showHierarchy;
+        params.includeNumDen = this.includeNumDen;
         params.displayProperty = this.displayProperty;
         params.outputIdScheme = this.outputIdScheme;
+        params.outputFormat = this.outputFormat;
         params.approvalLevel = this.approvalLevel;
         params.startDate = this.startDate;
         params.endDate = this.endDate;
@@ -441,7 +479,7 @@ public class DataQueryParams
         
         for ( int i = 0; i < dimensions.size(); i++ )
         {
-            if ( COMPLETENESS_TARGET_DIMENSION_TYPES.contains( dimensions.get( i ).getDimensionType() ) )
+            if ( COMPLETENESS_DIMENSION_TYPES.contains( dimensions.get( i ).getDimensionType() ) )
             {
                 indexes.add( i );
             }
@@ -459,7 +497,7 @@ public class DataQueryParams
         
         for ( int i = 0; i < filters.size(); i++ )
         {
-            if ( COMPLETENESS_TARGET_DIMENSION_TYPES.contains( filters.get( i ).getDimensionType() ) )
+            if ( COMPLETENESS_DIMENSION_TYPES.contains( filters.get( i ).getDimensionType() ) )
             {
                 indexes.add( i );
             }
@@ -602,6 +640,14 @@ public class DataQueryParams
     public boolean hasAggregationType()
     {
         return this.aggregationType != null;
+    }
+    
+    /**
+     * Indicates whether the this parameters has the given output format specified.
+     */
+    public boolean isOutputFormat( OutputFormat format )
+    {
+        return this.outputFormat != null && this.outputFormat == format;
     }
 
     /**
@@ -805,7 +851,12 @@ public class DataQueryParams
             
             if ( !des.isEmpty() )
             {
-                Set<DataElementCategoryCombo> categoryCombos = des.stream().map( d -> ((DataElement) d).getCategoryCombo() ).collect( Collectors.toSet() );
+                Set<DataElementCategoryCombo> categoryCombos = Sets.newHashSet();
+                
+                for ( DimensionalItemObject de : des )
+                {
+                    categoryCombos.addAll( ((DataElement) de).getCategoryCombos() );
+                }
                 
                 for ( DataElementCategoryCombo cc : categoryCombos )
                 {
@@ -822,7 +873,8 @@ public class DataQueryParams
     }
     
     /**
-     * Indicates whether a dimension or filter with the given identifier exists.
+     * Indicates whether a dimension or filter with the given dimension / filter
+     * identifier exists.
      */
     public boolean hasDimensionOrFilter( String key )
     {
@@ -950,7 +1002,41 @@ public class DataQueryParams
     {
         return programStage != null;
     }
+    
+    /**
+     * Indicates whether the given processing hint exists.
+     */
+    public boolean hasProcessingHint( ProcessingHint hint )
+    {
+        return this.processingHints.contains( hint );
+    }
+    
+    /**
+     * Indicates whether this query has a single indicator specified as dimension
+     * option for the data dimension.
+     */
+    public boolean hasSingleIndicatorAsDataFilter()
+    {
+        return getFilterIndicators().size() == 1 && getFilterOptions( DATA_X_DIM_ID ).size() == 1;
+    }
 
+    /**
+     * Indicates whether this query has a single reporting rate specified as dimension
+     * option for the data dimension.
+     */
+    public boolean hasSingleReportingRateAsDataFilter()
+    {
+        return getFilterReportingRates().size() == 1 && getFilterOptions( DATA_X_DIM_ID ).size() == 1;
+    }
+    
+    /**
+     * Indicates whether this query has a current user specified.
+     */
+    public boolean hasCurrentUser()
+    {
+        return currentUser != null;
+    }
+    
     // -------------------------------------------------------------------------
     // Logic write methods TODO remove public write methods
     // -------------------------------------------------------------------------
@@ -1483,6 +1569,11 @@ public class DataQueryParams
         return hierarchyMeta;
     }
 
+    public boolean isDimensionItemMeta()
+    {
+        return dimensionItemMeta;
+    }
+
     public boolean isIgnoreLimit()
     {
         return ignoreLimit;
@@ -1497,6 +1588,11 @@ public class DataQueryParams
     {
         return showHierarchy;
     }
+    
+    public boolean isIncludeNumDen()
+    {
+        return includeNumDen;
+    }
 
     public DisplayProperty getDisplayProperty()
     {
@@ -1506,6 +1602,11 @@ public class DataQueryParams
     public IdentifiableProperty getOutputIdScheme()
     {
         return outputIdScheme;
+    }
+
+    public OutputFormat getOutputFormat()
+    {
+        return outputFormat;
     }
 
     public String getApprovalLevel()
@@ -1541,6 +1642,11 @@ public class DataQueryParams
     // -------------------------------------------------------------------------
     // Get and set methods for transient properties
     // -------------------------------------------------------------------------
+
+    public User getCurrentUser()
+    {
+        return currentUser;
+    }
 
     public Partitions getPartitions()
     {
@@ -1782,6 +1888,13 @@ public class DataQueryParams
             this.params.dimensions.remove( new BaseDimensionalObject( dimension ) );
             return this;
         }
+
+        public Builder removeDimensionOrFilter( String dimension )
+        {
+            this.params.dimensions.remove( new BaseDimensionalObject( dimension ) );
+            this.params.filters.remove( new BaseDimensionalObject( dimension ) );            
+            return this;
+        }
         
         public Builder addOrSetDimensionOptions( String dimension, DimensionType type, String dimensionName, List<DimensionalItemObject> options )
         {
@@ -1896,7 +2009,7 @@ public class DataQueryParams
             this.params.addFilters( filters );
             return this;
         }
-        
+
         public Builder withFilters( List<DimensionalObject> filters )
         {
             this.params.filters = filters;
@@ -1974,6 +2087,12 @@ public class DataQueryParams
             this.params.hierarchyMeta = hierarchyMeta;
             return this;
         }
+        
+        public Builder withDimensionItemMeta( boolean dimensionItemMeta )
+        {
+            this.params.dimensionItemMeta = dimensionItemMeta;
+            return this;
+        }
 
         public Builder withHideEmptyRows( boolean hideEmptyRows )
         {
@@ -1984,6 +2103,12 @@ public class DataQueryParams
         public Builder withShowHierarchy( boolean showHierarchy )
         {
             this.params.showHierarchy = showHierarchy;
+            return this;
+        }
+        
+        public Builder withIncludeNumDen( boolean includeNumDen )
+        {
+            this.params.includeNumDen = includeNumDen;
             return this;
         }
 
@@ -1999,9 +2124,21 @@ public class DataQueryParams
             return this;
         }
         
+        public Builder withOutputFormat( OutputFormat outputFormat )
+        {
+            this.params.outputFormat = outputFormat;
+            return this;
+        }
+        
         public Builder withApprovalLevel( String approvalLevel )
         {
             this.params.approvalLevel = approvalLevel;
+            return this;
+        }
+        
+        public Builder withDataApprovalLevels( Map<OrganisationUnit, Integer> dataApprovalLevels )
+        {
+            this.params.dataApprovalLevels = dataApprovalLevels;
             return this;
         }
         
@@ -2044,6 +2181,18 @@ public class DataQueryParams
         public Builder ignoreDataApproval()
         {
             this.params.dataApprovalLevels = new HashMap<>();
+            return this;
+        }
+        
+        public Builder addProcessingHint( ProcessingHint hint )
+        {
+            this.params.processingHints.add( hint );
+            return this;
+        }
+        
+        public Builder withCurrentUser( User currentUser )
+        {
+            this.params.currentUser = currentUser;
             return this;
         }
         

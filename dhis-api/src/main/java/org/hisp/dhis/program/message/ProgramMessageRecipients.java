@@ -28,22 +28,18 @@ package org.hisp.dhis.program.message;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.hisp.dhis.common.BaseIdentifiableObject;
-import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
-import org.hisp.dhis.organisationunit.OrganisationUnit;
-import org.hisp.dhis.trackedentity.TrackedEntityInstance;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.DxfNamespaces;
+import org.hisp.dhis.organisationunit.OrganisationUnit;
+import org.hisp.dhis.trackedentity.TrackedEntityInstance;
+
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Zubair <rajazubair.asghar@gmail.com>
@@ -54,9 +50,9 @@ public class ProgramMessageRecipients
     implements Serializable
 {
     private static final long serialVersionUID = 1141462154959329242L;
-    
+
     private TrackedEntityInstance trackedEntityInstance;
-    
+
     private OrganisationUnit organisationUnit;
 
     private Set<String> phoneNumbers = new HashSet<>();
@@ -103,10 +99,9 @@ public class ProgramMessageRecipients
     // -------------------------------------------------------------------------
     // Setters and getters
     // -------------------------------------------------------------------------
-    
+
     @JsonProperty( value = "trackedEntityInstance" )
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "trackedEntityInstance" )
     public TrackedEntityInstance getTrackedEntityInstance()
     {
@@ -117,10 +112,9 @@ public class ProgramMessageRecipients
     {
         this.trackedEntityInstance = trackedEntityInstance;
     }
-    
+
     @JsonProperty( value = "organisationUnit" )
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "organisationUnit" )
     public OrganisationUnit getOrganisationUnit()
     {
@@ -133,7 +127,6 @@ public class ProgramMessageRecipients
     }
 
     @JsonProperty( value = "phoneNumbers" )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "phoneNumbers" )
     public Set<String> getPhoneNumbers()
     {
@@ -146,7 +139,6 @@ public class ProgramMessageRecipients
     }
 
     @JsonProperty( value = "emailAddresses" )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "emailAddresses" )
     public Set<String> getEmailAddresses()
     {
@@ -161,7 +153,7 @@ public class ProgramMessageRecipients
     @Override
     public String toString()
     {
-        return "ProgramMessageRecipients[ " + ( phoneNumbers != null ? " " + phoneNumbers + " "
-            : " " + ( emailAddresses != null ? " " + emailAddresses + " " : "" ) ) + " ]";
+        return "ProgramMessageRecipients[ " + (phoneNumbers != null ? " " + phoneNumbers + " "
+            : " " + (emailAddresses != null ? " " + emailAddresses + " " : "")) + " ]";
     }
 }

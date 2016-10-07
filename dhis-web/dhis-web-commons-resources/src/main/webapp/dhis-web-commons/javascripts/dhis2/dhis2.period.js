@@ -278,18 +278,25 @@ dhis2.period.PeriodGenerator.prototype.generateReversedPeriods = function( gener
  * @param {int} n number of open periods in the future.
  * @returns {Array} Generated periods as array
  */
-dhis2.period.PeriodGenerator.prototype.filterOpenPeriods = function( generator, periods, n ) {
+dhis2.period.PeriodGenerator.prototype.filterOpenPeriods = function( generator, periods, n, checkStartDate, checkEndDate ) {
   var max = this.generators[generator].todayPlusPeriods(n);
-
   var array = [];
   var today = this.calendar.today();
+  var startDate =  checkStartDate  ?  this.calendar.parseDate('yyyy-mm-dd', checkStartDate.split(" ")[0]) : null ;
+  var endDate = checkEndDate ?  this.calendar.parseDate('yyyy-mm-dd', checkEndDate.split(" ")[0]) : null ;
 
   $.each(periods, function() {
-    if( this['_endDate'].compareTo(max) < 0 ) {
-      array.push(this);
+    if ( checkStartDate || checkEndDate ) {
+        if ( !( ( checkStartDate && this['_startDate'].compareTo(startDate) < 0  ) || ( checkEndDate && this['_endDate'].compareTo(endDate) > 0 ) ) ) {
+            if( this['_endDate'].compareTo(max) < 0 ) {
+                array.push(this);
+            }
+        }
+    }
+    else if( this['_endDate'].compareTo(max) < 0 ) {
+        array.push(this);
     }
   });
-
   return array;
 };
 

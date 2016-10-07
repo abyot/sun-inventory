@@ -31,6 +31,7 @@ package org.hisp.dhis.program;
 import java.util.List;
 
 import org.hisp.dhis.common.GenericIdentifiableObjectStore;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.trackedentity.TrackedEntity;
 
@@ -79,4 +80,10 @@ public interface ProgramStore
      */
     List<Program> getByTrackedEntity( TrackedEntity trackedEntity );
 
+    /**
+     * Get all Programs associated with the given DataEntryForm.
+     * @param dataEntryForm the DataEntryForm.
+     * @return a list of {@link Program}
+     */
+    List<Program> getByDataEntryForm( DataEntryForm dataEntryForm );
 }

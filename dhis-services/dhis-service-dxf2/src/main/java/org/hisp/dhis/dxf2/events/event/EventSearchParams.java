@@ -36,6 +36,7 @@ import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramStage;
 import org.hisp.dhis.program.ProgramStatus;
+import org.hisp.dhis.program.ProgramType;
 import org.hisp.dhis.query.Order;
 import org.hisp.dhis.trackedentity.TrackedEntityInstance;
 
@@ -59,6 +60,8 @@ public class EventSearchParams
 
     private ProgramStatus programStatus;
 
+    private ProgramType programType;
+
     private Boolean followUp;
 
     private OrganisationUnit orgUnit;
@@ -75,8 +78,6 @@ public class EventSearchParams
 
     private Date lastUpdated;
 
-    private DataElementCategoryOptionCombo attributeOptionCombo;
-    
     private DataElementCategoryOptionCombo categoryOptionCombo;
 
     private IdSchemes idSchemes;
@@ -169,6 +170,16 @@ public class EventSearchParams
     public void setProgramStatus( ProgramStatus programStatus )
     {
         this.programStatus = programStatus;
+    }
+
+    public ProgramType getProgramType()
+    {
+        return programType;
+    }
+
+    public void setProgramType( ProgramType programType )
+    {
+        this.programType = programType;
     }
 
     public Boolean getFollowUp()
@@ -321,16 +332,6 @@ public class EventSearchParams
         this.orders = orders;
     }
 
-    public DataElementCategoryOptionCombo getAttributeOptionCombo()
-    {
-        return attributeOptionCombo;
-    }
-
-    public void setAttributeOptionCombo( DataElementCategoryOptionCombo attributeOptionCombo )
-    {
-        this.attributeOptionCombo = attributeOptionCombo;
-    }
-    
     public DataElementCategoryOptionCombo getCategoryOptionCombo()
     {
         return categoryOptionCombo;

@@ -34,6 +34,7 @@ import org.hisp.dhis.analytics.AggregationType;
 import org.hisp.dhis.analytics.DataQueryGroups;
 import org.hisp.dhis.analytics.DataQueryParams;
 import org.hisp.dhis.analytics.DataType;
+import org.hisp.dhis.analytics.OutputFormat;
 import org.hisp.dhis.analytics.Partitions;
 import org.hisp.dhis.analytics.QueryPlanner;
 import org.hisp.dhis.analytics.QueryPlannerParams;
@@ -124,14 +125,14 @@ public class DefaultQueryPlanner
             violation = "At least one period must be specified as dimension or filter";
         }
 
-        if ( !params.getFilterIndicators().isEmpty() )
+        if ( !params.getFilterIndicators().isEmpty() && params.getFilterOptions( DATA_X_DIM_ID ).size() > 1 )
         {
-            violation = "Indicators cannot be specified as filter";
+            violation = "Only a single indicator can be specified as filter";
         }
 
-        if ( !params.getFilterReportingRates().isEmpty() )
+        if ( !params.getFilterReportingRates().isEmpty() && params.getFilterOptions( DATA_X_DIM_ID ).size() > 1 )
         {
-            violation = "Reporting rates cannot be specified as filter";
+            violation = "Only a single reporting rate can be specified as filter";
         }
 
         if ( params.getFilters().contains( new BaseDimensionalObject( CATEGORYOPTIONCOMBO_DIM_ID ) ) )
@@ -156,7 +157,25 @@ public class DefaultQueryPlanner
 
         if ( !nonAggDataElements.isEmpty() )
         {
-            violation = "Data elements must be of a type that allows aggregation: " + getUids( nonAggDataElements );
+            violation = "Data elements must be of a value and aggregation type that allow aggregation: " + getUids( nonAggDataElements );
+        }
+        
+        if ( params.isOutputFormat( OutputFormat.DATA_VALUE_SET ) )
+        {
+            if ( !params.hasDimension( DATA_X_DIM_ID ) )
+            {
+                violation = "A data dimension 'dx' must be specified when output format is DATA_VALUE_SET";
+            }
+            
+            if ( !params.hasDimension( PERIOD_DIM_ID ) )
+            {
+                violation = "A period dimension 'pe' must be specified when output format is DATA_VALUE_SET";
+            }
+                        
+            if ( !params.hasDimension( ORGUNIT_DIM_ID ) )
+            {
+                violation = "An organisation unit dimension 'ou' must be specified when output format is DATA_VALUE_SET";
+            }
         }
 
         if ( violation != null )

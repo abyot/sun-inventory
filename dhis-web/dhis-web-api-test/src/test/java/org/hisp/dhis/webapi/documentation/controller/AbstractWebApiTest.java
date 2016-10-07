@@ -33,6 +33,7 @@ import org.hisp.dhis.chart.ChartType;
 import org.hisp.dhis.color.Color;
 import org.hisp.dhis.color.ColorSet;
 import org.hisp.dhis.common.IdentifiableObject;
+import org.hisp.dhis.common.ValueType;
 import org.hisp.dhis.constant.Constant;
 import org.hisp.dhis.dataelement.CategoryOptionGroup;
 import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
@@ -52,6 +53,14 @@ import org.hisp.dhis.indicator.IndicatorGroupSet;
 import org.hisp.dhis.indicator.IndicatorType;
 import org.hisp.dhis.legend.Legend;
 import org.hisp.dhis.legend.LegendSet;
+import org.hisp.dhis.mapping.ImageFormat;
+import org.hisp.dhis.mapping.MapLayerPosition;
+import org.hisp.dhis.mapping.MapService;
+import org.hisp.dhis.option.Option;
+import org.hisp.dhis.option.OptionGroup;
+import org.hisp.dhis.option.OptionGroupSet;
+import org.hisp.dhis.option.OptionSet;
+import org.hisp.dhis.mapping.ExternalMapLayer;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupSet;
@@ -82,7 +91,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * @author Viet Nguyen <viet@dhis.org>
+ * @author Viet Nguyen <viet@dhis2.org>
  */
 public abstract class AbstractWebApiTest<T extends IdentifiableObject>
     extends DhisWebSpringTest
@@ -91,9 +100,11 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
 
     protected Schema schema;
 
-    protected int createdStatus = HttpStatus.SC_OK;
+    protected int createdStatus = HttpStatus.SC_CREATED;
+
     protected int updateStatus = HttpStatus.SC_OK;
-    protected int deleteStatus = HttpStatus.SC_NO_CONTENT;
+
+    protected int deleteStatus = HttpStatus.SC_OK;
 
     @Override
     @SuppressWarnings( "unchecked" )
@@ -104,7 +115,9 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
         setStatues();
     }
 
-    protected void setStatues() {}
+    protected void setStatues()
+    {
+    }
 
     @Test
     public void testGetAll() throws Exception
@@ -179,7 +192,7 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
 
         object.setHref( "updatedHref" );
 
-        mvc.perform( put( schema.getRelativeApiEndpoint()  + "/" + object.getUid() )
+        mvc.perform( put( schema.getRelativeApiEndpoint() + "/" + object.getUid() )
             .session( session )
             .contentType( TestUtils.APPLICATION_JSON_UTF8 )
             .content( TestUtils.convertObjectToJsonBytes( object ) ) )
@@ -196,8 +209,8 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
         T object = createTestObject( testClass, 'A' );
         manager.save( object );
 
-       mvc.perform( delete( schema.getRelativeApiEndpoint() + "/{id}", object.getUid() ).session( session ).accept( MediaType.APPLICATION_JSON ) )
-            .andExpect(status().is( deleteStatus ) )
+        mvc.perform( delete( schema.getRelativeApiEndpoint() + "/{id}", object.getUid() ).session( session ).accept( MediaType.APPLICATION_JSON ) )
+            .andExpect( status().is( deleteStatus ) )
             .andDo( documentPrettyPrint( schema.getPlural() + "/delete" ) );
 
     }
@@ -207,7 +220,7 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
     {
         MockHttpSession session = getSession( "ALL" );
 
-        mvc.perform( delete(  schema.getRelativeApiEndpoint() + "/{id}", "deabcdefghA" ).session( session ).accept( MediaType.APPLICATION_JSON ) )
+        mvc.perform( delete( schema.getRelativeApiEndpoint() + "/{id}", "deabcdefghA" ).session( session ).accept( MediaType.APPLICATION_JSON ) )
             .andExpect( status().isNotFound() );
     }
 
@@ -319,7 +332,7 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
             String expressionA = "( " + KEY_PROGRAM_VARIABLE + "{" + ProgramIndicator.VAR_ENROLLMENT_DATE + "} - " + KEY_PROGRAM_VARIABLE + "{"
                 + ProgramIndicator.VAR_INCIDENT_DATE + "} )  / " + ProgramIndicator.KEY_CONSTANT + "{" + constantA.getUid() + "}";
 
-             return (T) createProgramIndicator( uniqueName, program, expressionA, null );
+            return (T) createProgramIndicator( uniqueName, program, expressionA, null );
         }
         else if ( Indicator.class.isAssignableFrom( clazz ) )
         {
@@ -327,7 +340,7 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
             manager.save( indicatorType );
             return (T) createIndicator( uniqueName, indicatorType );
         }
-        else if ( IndicatorGroup.class.isAssignableFrom( clazz ))
+        else if ( IndicatorGroup.class.isAssignableFrom( clazz ) )
         {
             return (T) createIndicatorGroup( uniqueName );
         }
@@ -361,12 +374,12 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
         }
         else if ( OrganisationUnitLevel.class.isAssignableFrom( clazz ) )
         {
-            return (T) new OrganisationUnitLevel( uniqueName, "OrgLevel"+ uniqueName );
+            return (T) new OrganisationUnitLevel( uniqueName, "OrgLevel" + uniqueName );
         }
         else if ( Color.class.isAssignableFrom( clazz ) )
         {
             Color color = new Color( "#ff3200" );
-            color.setName( "Color"+uniqueName );
+            color.setName( "Color" + uniqueName );
             return (T) color;
         }
         else if ( ColorSet.class.isAssignableFrom( clazz ) )
@@ -378,11 +391,38 @@ public abstract class AbstractWebApiTest<T extends IdentifiableObject>
         else if ( org.hisp.dhis.mapping.Map.class.isAssignableFrom( clazz ) )
         {
             org.hisp.dhis.mapping.Map map = new org.hisp.dhis.mapping.Map();
-            map.setName( "Map"+uniqueName );
-            map.setDisplayName( "DisplayName"+uniqueName );
+            map.setName( "Map" + uniqueName );
+            map.setDisplayName( "DisplayName" + uniqueName );
             map.setLatitude( 952175.62553525 );
             map.setLongitude( -1378543.6774686 );
             return (T) map;
+        }
+        else if ( ExternalMapLayer.class.isAssignableFrom( clazz ) )
+        {
+            ExternalMapLayer externalMapLayer = new ExternalMapLayer( "ExternalMapLayer" + uniqueName );
+            externalMapLayer.setMapService( MapService.WMS );
+            externalMapLayer.setUrl( "testUrl" );
+            externalMapLayer.setImageFormat( ImageFormat.JPG );
+            externalMapLayer.setMapLayerPosition( MapLayerPosition.BASEMAP );
+            return (T) externalMapLayer;
+        }
+        else if ( OptionGroup.class.isAssignableFrom( clazz ) )
+        {
+            OptionGroup optionGroup = new OptionGroup( "OptionGroup" + uniqueName );
+            optionGroup.setShortName( "Group" + uniqueName );
+            return (T) optionGroup;
+        }
+        else if ( OptionGroupSet.class.isAssignableFrom( clazz ) )
+        {
+            return (T) new OptionGroupSet( "OptionGroupSet" + uniqueName );
+        }
+        else if ( Option.class.isAssignableFrom( clazz ) )
+        {
+            return (T) new Option( "Option" + uniqueName, "code" + uniqueName );
+        }
+        else if ( OptionSet.class.isAssignableFrom( clazz ))
+        {
+            return (T) new OptionSet( "OptionSet" +uniqueName, ValueType.TEXT );
         }
 
         return null;

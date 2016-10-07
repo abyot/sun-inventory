@@ -28,31 +28,26 @@ package org.hisp.dhis.common;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
-
-import org.hisp.dhis.dataset.DataSet;
-import org.hisp.dhis.legend.LegendSet;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import org.hisp.dhis.dataset.DataSet;
+import org.hisp.dhis.legend.LegendSet;
 
 import static org.hisp.dhis.common.DimensionalObjectUtils.COMPOSITE_DIM_OBJECT_PLAIN_SEP;
 
 /**
-* @author Lars Helge Overland
-*/
+ * @author Lars Helge Overland
+ */
 @JacksonXmlRootElement( localName = "reportingRate", namespace = DxfNamespaces.DXF_2_0 )
 public class ReportingRate
-    extends BaseDimensionalItemObject
+    extends BaseDataDimensionalItemObject
 {
     private DataSet dataSet;
-    
+
     private ReportingRateMetric metric;
-    
+
     public ReportingRate()
     {
     }
@@ -62,7 +57,7 @@ public class ReportingRate
         this.dataSet = dataSet;
         this.metric = ReportingRateMetric.REPORTING_RATE;
     }
-    
+
     public ReportingRate( DataSet dataSet, ReportingRateMetric metric )
     {
         this.dataSet = dataSet;
@@ -78,12 +73,12 @@ public class ReportingRate
     {
         return dataSet.getUid();
     }
-    
+
     @Override
     public String getName()
     {
         String metricName = metric != null ? metric.displayName() : ReportingRateMetric.REPORTING_RATE.displayName();
-        
+
         return dataSet.getName() + " " + metricName;
     }
 
@@ -91,13 +86,13 @@ public class ReportingRate
     public String getShortName()
     {
         String metricName = metric != null ? metric.displayName() : ReportingRateMetric.REPORTING_RATE.displayName();
-        
+
         return dataSet.getShortName() + " " + metricName;
     }
-    
+
     @Override
     public String getDimensionItem()
-    {        
+    {
         return dataSet.getUid() + COMPOSITE_DIM_OBJECT_PLAIN_SEP + metric.name();
     }
 
@@ -106,20 +101,31 @@ public class ReportingRate
     {
         return DimensionItemType.REPORTING_RATE;
     }
-    
+
     @Override
     public LegendSet getLegendSet()
     {
         return dataSet.getLegendSet();
     }
     
+    @Override
+    public String getAggregateExportCategoryOptionCombo()
+    {
+        return dataSet.getAggregateExportCategoryOptionCombo();
+    }
+
+    @Override
+    public boolean hasAggregateExportCategoryOptionCombo()
+    {
+        return dataSet.hasAggregateExportCategoryOptionCombo();
+    }    
+
     // -------------------------------------------------------------------------
     // Logic
     // -------------------------------------------------------------------------
 
     @JsonProperty
     @JsonSerialize( as = BaseNameableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataSet getDataSet()
     {
@@ -132,7 +138,6 @@ public class ReportingRate
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ReportingRateMetric getMetric()
     {
@@ -142,5 +147,5 @@ public class ReportingRate
     public void setMetric( ReportingRateMetric metric )
     {
         this.metric = metric;
-    }    
+    }
 }

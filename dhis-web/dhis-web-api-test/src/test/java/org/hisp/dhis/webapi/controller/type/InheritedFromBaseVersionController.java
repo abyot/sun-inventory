@@ -33,6 +33,9 @@ import org.hisp.dhis.webapi.mvc.annotation.ApiVersion.Version;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
  */
@@ -42,8 +45,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class InheritedFromBaseVersionController extends BaseWithVersionController
 {
     @RequestMapping
-    public void test()
+    public void test( HttpServletResponse response ) throws IOException
     {
-
+        response.getWriter().println();
     }
 }

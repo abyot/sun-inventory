@@ -45,6 +45,7 @@ import org.hisp.dhis.system.util.ReflectionUtils;
 import org.hisp.dhis.system.util.SchemaUtils;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -274,10 +275,12 @@ public class Jackson2PropertyIntrospectorService
     private List<Property> collectProperties( Class<?> klass )
     {
         Multimap<String, Method> multimap = ReflectionUtils.getMethodsMultimap( klass );
+        List<String> fieldNames = ReflectionUtils.getAllFields( klass ).stream().map( Field::getName ).collect( Collectors.toList() );
         List<Property> properties = new ArrayList<>();
 
         Map<String, Method> methodMap = multimap.keySet().stream()
-            .filter( key -> {
+            .filter( key ->
+            {
                 List<Method> methods = multimap.get( key ).stream()
                     .filter( method -> AnnotationUtils.isAnnotationPresent( method, JsonProperty.class ) && method.getParameterTypes().length == 0 )
                     .collect( Collectors.toList() );
@@ -292,7 +295,8 @@ public class Jackson2PropertyIntrospectorService
 
                 return methods.size() == 1;
             } )
-            .collect( Collectors.toMap( Function.<String>identity(), key -> {
+            .collect( Collectors.toMap( Function.identity(), key ->
+            {
                 List<Method> collect = multimap.get( key ).stream()
                     .filter( method -> AnnotationUtils.isAnnotationPresent( method, JsonProperty.class ) && method.getParameterTypes().length == 0 )
                     .collect( Collectors.toList() );
@@ -300,12 +304,17 @@ public class Jackson2PropertyIntrospectorService
                 return collect.get( 0 );
             } ) );
 
-        methodMap.keySet().forEach( key -> {
+        methodMap.keySet().forEach( key ->
+        {
             String fieldName = getFieldName( methodMap.get( key ) );
             String setterName = "set" + StringUtils.capitalize( fieldName );
 
             Property property = new Property( klass, methodMap.get( key ), null );
-            property.setFieldName( fieldName );
+
+            if ( fieldNames.contains( fieldName ) )
+            {
+                property.setFieldName( fieldName );
+            }
 
             Iterator<Method> methodIterator = multimap.get( setterName ).iterator();
 

@@ -34,7 +34,6 @@ import org.hisp.dhis.dashboard.Dashboard;
 import org.hisp.dhis.dashboard.DashboardItem;
 import org.hisp.dhis.dashboard.DashboardItemShape;
 import org.hisp.dhis.dashboard.DashboardService;
-import org.hisp.dhis.dxf2.common.TranslateParams;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.hibernate.exception.UpdateAccessDeniedException;
 import org.hisp.dhis.query.Order;
@@ -44,10 +43,12 @@ import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.hisp.dhis.webapi.webdomain.WebMetadata;
 import org.hisp.dhis.webapi.webdomain.WebOptions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,8 +66,8 @@ public class DashboardItemController
     private DashboardService dashboardService;
 
     @Override
-    protected List<DashboardItem> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters,
-        List<Order> orders, TranslateParams translateParams ) throws QueryParserException
+    protected List<DashboardItem> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters, List<Order> orders )
+        throws QueryParserException
     {
         List<DashboardItem> entityList;
 
@@ -88,6 +89,7 @@ public class DashboardItemController
     }
 
     @RequestMapping( value = "/{uid}/shape/{shape}", method = RequestMethod.PUT )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void putDashboardItemShape( @PathVariable String uid, @PathVariable DashboardItemShape shape,
         HttpServletRequest request, HttpServletResponse response ) throws Exception
     {

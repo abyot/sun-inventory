@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementService;
-import org.hisp.dhis.i18n.I18nService;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitQueryParams;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
@@ -46,8 +46,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
 
 /**
  * @author Abyot Asalefew
@@ -65,13 +63,6 @@ public class DefaultProgramService
     public void setProgramStore( ProgramStore programStore )
     {
         this.programStore = programStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     private CurrentUserService currentUserService;
@@ -127,49 +118,55 @@ public class DefaultProgramService
     @Override
     public List<Program> getAllPrograms()
     {
-        return i18n( i18nService, programStore.getAll() );
+        return programStore.getAll();
     }
 
     @Override
     public Program getProgram( int id )
     {
-        return i18n( i18nService, programStore.get( id ) );
+        return programStore.get( id );
     }
 
     @Override
     public Program getProgramByName( String name )
     {
-        return i18n( i18nService, programStore.getByName( name ) );
+        return programStore.getByName( name );
     }
 
     @Override
     public List<Program> getPrograms( OrganisationUnit organisationUnit )
     {
-        return i18n( i18nService, programStore.get( organisationUnit ) );
+        return programStore.get( organisationUnit );
     }
 
     @Override
     public List<Program> getPrograms( ProgramType type )
     {
-        return i18n( i18nService, programStore.getByType( type ) );
+        return programStore.getByType( type );
     }
 
     @Override
     public List<Program> getPrograms( ProgramType type, OrganisationUnit orgunit )
     {
-        return i18n( i18nService, programStore.get( type, orgunit ) );
+        return programStore.get( type, orgunit );
     }
 
     @Override
     public Program getProgram( String uid )
     {
-        return i18n( i18nService, programStore.getByUid( uid ) );
+        return programStore.getByUid( uid );
     }
 
     @Override
     public List<Program> getProgramsByTrackedEntity( TrackedEntity trackedEntity )
     {
-        return i18n( i18nService, programStore.getByTrackedEntity( trackedEntity ) );
+        return programStore.getByTrackedEntity( trackedEntity );
+    }
+
+    @Override
+    public List<Program> getProgramsByDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        return programStore.getByDataEntryForm( dataEntryForm );
     }
 
     @Override
@@ -181,7 +178,7 @@ public class DefaultProgramService
     @Override
     public List<Program> getProgramBetweenByName( String name, int min, int max )
     {
-        return i18n( i18nService, programStore.getAllLikeName( name, min, max ) );
+        return programStore.getAllLikeName( name, min, max );
     }
 
     @Override
@@ -193,7 +190,7 @@ public class DefaultProgramService
     @Override
     public List<Program> getProgramsBetween( int min, int max )
     {
-        return i18n( i18nService, programStore.getAllOrderedName( min, max ) );
+        return programStore.getAllOrderedName( min, max );
     }
 
     @Override

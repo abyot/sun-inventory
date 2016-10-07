@@ -32,11 +32,15 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
 import org.hisp.dhis.dxf2.importsummary.ImportSummary;
+import org.hisp.dhis.render.EmptyStringToNullStdDeserializer;
+import org.hisp.dhis.render.ParseDateStdDeserializer;
+import org.hisp.dhis.render.WriteDateStdSerializer;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
 
@@ -44,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -87,6 +92,11 @@ public class JacksonTrackedEntityInstanceService extends AbstractTrackedEntityIn
 
     static
     {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer( String.class, new EmptyStringToNullStdDeserializer() );
+        module.addDeserializer( Date.class, new ParseDateStdDeserializer() );
+        module.addSerializer( Date.class, new WriteDateStdSerializer() );
+
         XML_MAPPER.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true );
         XML_MAPPER.configure( DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true );
         XML_MAPPER.configure( DeserializationFeature.WRAP_EXCEPTIONS, true );
@@ -105,6 +115,9 @@ public class JacksonTrackedEntityInstanceService extends AbstractTrackedEntityIn
         JSON_MAPPER.disable( MapperFeature.AUTO_DETECT_GETTERS );
         JSON_MAPPER.disable( MapperFeature.AUTO_DETECT_SETTERS );
         JSON_MAPPER.disable( MapperFeature.AUTO_DETECT_IS_GETTERS );
+
+        JSON_MAPPER.registerModule( module );
+        XML_MAPPER.registerModule( module );
     }
 
     // -------------------------------------------------------------------------

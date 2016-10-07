@@ -54,7 +54,6 @@ public class PredictorSchemaDescriptor implements SchemaDescriptor
         schema.setOrder( 2001 );
 
         schema.getAuthorities().add( new Authority( AuthorityType.CREATE, Lists.newArrayList( "F_PREDICTOR_ADD" ) ) );
-        schema.getAuthorities().add( new Authority( AuthorityType.UPDATE, Lists.newArrayList( "F_PREDICTOR_UPDATE" ) ) );
         schema.getAuthorities().add( new Authority( AuthorityType.DELETE, Lists.newArrayList( "F_PREDICTOR_DELETE" ) ) );
 
         return schema;

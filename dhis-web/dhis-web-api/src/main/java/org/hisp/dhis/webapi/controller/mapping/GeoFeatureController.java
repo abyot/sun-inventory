@@ -36,15 +36,15 @@ import org.hisp.dhis.common.DimensionalObject;
 import org.hisp.dhis.common.DimensionalObjectUtils;
 import org.hisp.dhis.common.DisplayProperty;
 import org.hisp.dhis.commons.filter.FilterUtils;
-import org.hisp.dhis.i18n.I18nService;
-import org.hisp.dhis.render.RenderService;
 import org.hisp.dhis.organisationunit.FeatureType;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupService;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupSet;
+import org.hisp.dhis.render.RenderService;
 import org.hisp.dhis.system.filter.OrganisationUnitWithValidCoordinatesFilter;
 import org.hisp.dhis.user.CurrentUserService;
+import org.hisp.dhis.util.ObjectUtils;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.utils.ContextUtils;
 import org.hisp.dhis.webapi.webdomain.GeoFeature;
@@ -64,7 +64,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -91,9 +90,6 @@ public class GeoFeatureController
 
     @Autowired
     private RenderService renderService;
-
-    @Autowired
-    private I18nService i18nService;
 
     @Autowired
     private CurrentUserService currentUserService;
@@ -175,7 +171,7 @@ public class GeoFeatureController
         set.add( ou );
 
         DataQueryParams params = dataQueryService.getFromUrl( set, null, AggregationType.SUM, null,
-            false, false, false, false, false, false, false, false, displayProperty, null, null, null, relativePeriodDate, userOrgUnit, null );
+            false, false, false, false, false, false, false, false, false, displayProperty, null, null, null, relativePeriodDate, userOrgUnit );
 
         DimensionalObject dim = params.getDimension( DimensionalObject.ORGUNIT_DIM_ID );
 
@@ -196,13 +192,11 @@ public class GeoFeatureController
 
         Set<OrganisationUnit> roots = currentUserService.getCurrentUser().getDataViewOrganisationUnitsWithFallback();
 
-        Locale locale = i18nService.getCurrentLocale();
-        
-        i18nService.internationalise( organisationUnits, locale );
-        
         for ( OrganisationUnit unit : organisationUnits )
         {
             GeoFeature feature = new GeoFeature();
+            
+            Integer ty = unit.getFeatureType() != null ? FEATURE_TYPE_MAP.get( unit.getFeatureType() ) : null;
             
             feature.setId( unit.getUid() );
             feature.setCode( unit.getCode() );
@@ -212,7 +206,7 @@ public class GeoFeatureController
             feature.setPg( unit.getParentGraph( roots ) );
             feature.setPi( unit.getParent() != null ? unit.getParent().getUid() : null );
             feature.setPn( unit.getParent() != null ? unit.getParent().getDisplayName() : null );
-            feature.setTy( unit.getFeatureType() != null ? FEATURE_TYPE_MAP.get( unit.getFeatureType() ) : 0 );
+            feature.setTy( ObjectUtils.firstNonNull( ty, 0 ) );
             feature.setCo( unit.getCoordinates() );
             feature.setNa( unit.getDisplayProperty( params.getDisplayProperty() ) );
 

@@ -24,26 +24,25 @@
         <value>dhis-web-pivot</value>
         <value>dhis-web-visualizer</value>
         <value>dhis-web-mapping</value>
-        <value>dhis-web-dataentry</value>
-        <value>dhis-web-action-inventory</value>
         <value>dhis-web-sun-survey</value>
-        <value>dhis-web-maintenance</value>        
-        <value>dhis-web-maintenance-dataset</value>
-        <value>dhis-web-maintenance-organisationunit</value>
-        <value>dhis-web-maintenance-user</value>
-        <value>dhis-web-maintenance-dataadmin</value>
-        <value>dhis-web-validationrule</value>        
-        <value>dhis-web-reporting</value>
-        <value>dhis-web-importexport</value>
+        <value>dhis-web-action-inventory</value>        
+        <value>dhis-web-dataentry</value>
         <value>dhis-web-event-reports</value>
-        <value>dhis-web-event-visualizer</value>        
+        <value>dhis-web-event-visualizer</value>
         <value>dhis-web-event-capture</value>
         <value>dhis-web-tracker-capture</value>
-        <value>dhis-web-maintenance-mobile</value>        
+        <value>dhis-web-maintenance-dataadmin</value>
+        <value>dhis-web-maintenance-dataset</value>
+        <value>dhis-web-importexport</value>
+        <value>dhis-web-maintenance-mobile</value>
+        <value>dhis-web-maintenance-organisationunit</value>
         <value>dhis-web-maintenance-program</value>
-        <value>dhis-web-maintenance-settings</value>        
+        <value>dhis-web-maintenance-settings</value>
+        <value>dhis-web-maintenance-user</value>
+        <value>dhis-web-validationrule</value>
         <value>dhis-web-light</value>
         <value>dhis-web-mobile</value>
+        <value>dhis-web-reporting</value>
         <value>dhis-web-sms</value>
       </list>
     </property>
@@ -261,16 +260,16 @@
   <!-- i18n -->
 
   <bean id="org.hisp.dhis.i18n.action.I18nAction" class="org.hisp.dhis.i18n.action.I18nAction" scope="prototype">
-    <property name="i18nService" ref="org.hisp.dhis.i18n.I18nService" />
+    <property name="userSettingService" ref="org.hisp.dhis.user.UserSettingService" />
+    <property name="localeManager" ref="org.hisp.dhis.i18n.locale.LocaleManager" />
     <property name="identifiableObjectManager" ref="org.hisp.dhis.common.IdentifiableObjectManager" />
   </bean>
 
   <bean id="org.hisp.dhis.i18n.action.GetTranslationsAction" class="org.hisp.dhis.i18n.action.GetTranslationsAction">
-    <property name="i18nService" ref="org.hisp.dhis.i18n.I18nService" />
+    <property name="identifiableObjectManager" ref="org.hisp.dhis.common.IdentifiableObjectManager" />
   </bean>
 
   <bean id="org.hisp.dhis.i18n.action.TranslateAction" class="org.hisp.dhis.i18n.action.TranslateAction">
-    <property name="i18nService" ref="org.hisp.dhis.i18n.I18nService" />
     <property name="identifiableObjectManager" ref="org.hisp.dhis.common.IdentifiableObjectManager" />
   </bean>
 
@@ -322,10 +321,6 @@
   <bean id="org.hisp.dhis.commons.action.GetValidationRulesAction" class="org.hisp.dhis.commons.action.GetValidationRulesAction"
     scope="prototype">
     <property name="validationRuleService" ref="org.hisp.dhis.validation.ValidationRuleService" />
-  </bean>
-
-  <bean id="org.hisp.dhis.commons.action.GetAvailablePeriodsAction" class="org.hisp.dhis.commons.action.GetAvailablePeriodsAction"
-    scope="prototype">
   </bean>
 
   <bean id="org.hisp.dhis.commons.action.GetCategoryOptionsAction" class="org.hisp.dhis.commons.action.GetCategoryOptionsAction"
@@ -380,12 +375,6 @@
     <property name="categoryService" ref="org.hisp.dhis.dataelement.DataElementCategoryService" />
     <property name="dataSetService" ref="org.hisp.dhis.dataset.DataSetService" />
     <property name="periodService" ref="org.hisp.dhis.period.PeriodService" />
-  </bean>
-
-  <bean id="org.hisp.dhis.commons.action.GetSectionDataElementsAction" class="org.hisp.dhis.commons.action.GetSectionDataElementsAction"
-    scope="prototype">
-    <property name="dataSetService" ref="org.hisp.dhis.dataset.DataSetService" />
-    <property name="categoryService" ref="org.hisp.dhis.dataelement.DataElementCategoryService" />
   </bean>
   
   <bean id="org.hisp.dhis.commons.action.GetSectionIndicatorsAction" class="org.hisp.dhis.commons.action.GetSectionIndicatorsAction"
@@ -597,10 +586,10 @@
   <bean id="org.hisp.dhis.settings.user.action.GetGeneralSettingsAction"
     class="org.hisp.dhis.settings.user.action.GetGeneralSettingsAction"
     scope="prototype">
-    <property name="i18nService" ref="org.hisp.dhis.i18n.I18nService" />
     <property name="localeManager" ref="org.hisp.dhis.i18n.locale.LocaleManager" />
     <property name="userSettingService" ref="org.hisp.dhis.user.UserSettingService" />
     <property name="styleManager" ref="org.hisp.dhis.setting.StyleManager" />
+    <property name="i18nLocaleService" ref="org.hisp.dhis.i18n.118nLocaleService"/>
   </bean>
 
   <bean id="org.hisp.dhis.settings.user.action.SetGeneralSettingsAction"

@@ -36,6 +36,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 
 import org.joda.time.DateTime;
@@ -213,5 +216,33 @@ public class DateUtilsTest
         
         assertEquals( "Sun, 18 May 2014 15:10:05 GMT", DateUtils.getHttpDateString( date ) );
         assertNull( DateUtils.getLongDateString( null ) );        
+    }
+    
+    @Test
+    public void testGetDuration()
+    {
+        Duration s50 = DateUtils.getDuration( "50s" );
+        Duration m20 = DateUtils.getDuration( "20m" );
+        Duration h2 = DateUtils.getDuration( "2h" );
+        Duration d14 = DateUtils.getDuration( "14d" );
+        
+        assertEquals( 50, s50.getSeconds() );
+        assertEquals( 1200, m20.getSeconds() );
+        assertEquals( 7200, h2.getSeconds() );
+        assertEquals( 1209600, d14.getSeconds() );
+        
+        assertNull( DateUtils.getDuration( "123x" ) );
+        assertNull( DateUtils.getDuration( "1y" ) );
+        assertNull( DateUtils.getDuration( "10ddd" ) );
+    }
+    
+    @Test
+    public void getDate()
+    {
+        LocalDateTime time = LocalDateTime.of( 2012, 1, 10, 10, 5 );
+        
+        Date date = DateUtils.getDate( time );
+        
+        assertEquals( time.toInstant( ZoneOffset.UTC ).toEpochMilli(), date.getTime() );        
     }
 }

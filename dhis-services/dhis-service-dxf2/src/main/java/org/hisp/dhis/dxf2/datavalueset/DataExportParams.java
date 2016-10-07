@@ -29,7 +29,12 @@ package org.hisp.dhis.dxf2.datavalueset;
  */
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+
 import org.hisp.dhis.common.IdSchemes;
+import org.hisp.dhis.dataelement.DataElement;
+import org.hisp.dhis.dataelement.DataElementGroup;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
@@ -44,6 +49,8 @@ import java.util.Set;
 public class DataExportParams
 {
     private Set<DataSet> dataSets = new HashSet<>();
+    
+    private Set<DataElementGroup> dataElementGroups = new HashSet<>();
 
     private Set<Period> periods = new HashSet<>();
 
@@ -54,8 +61,12 @@ public class DataExportParams
     private Set<OrganisationUnit> organisationUnits = new HashSet<>();
 
     private boolean includeChildren;
+    
+    private boolean includeDeleted;
 
     private Date lastUpdated;
+    
+    private String lastUpdatedDuration;
 
     private Integer limit;
 
@@ -73,6 +84,16 @@ public class DataExportParams
     // Logic
     // -------------------------------------------------------------------------
 
+    public Set<DataElement> getAllDataElements()
+    {
+        final Set<DataElement> elements = Sets.newHashSet();
+        
+        dataSets.forEach( ds -> elements.addAll( ds.getDataElements() ) );
+        dataElementGroups.forEach( dg -> elements.addAll( dg.getMembers() ) );
+        
+        return ImmutableSet.copyOf( elements );
+    }
+    
     public DataSet getFirstDataSet()
     {
         return dataSets != null && !dataSets.isEmpty() ? dataSets.iterator().next() : null;
@@ -93,9 +114,19 @@ public class DataExportParams
         return organisationUnits != null && !organisationUnits.isEmpty() ? organisationUnits.iterator().next() : null;
     }
 
+    public boolean hasPeriods()
+    {
+        return periods != null && !periods.isEmpty();
+    }
+    
     public boolean hasLastUpdated()
     {
         return lastUpdated != null;
+    }
+    
+    public boolean hasLastUpdatedDuration()
+    {
+        return lastUpdatedDuration != null;
     }
 
     public boolean hasLimit()
@@ -109,7 +140,7 @@ public class DataExportParams
      */
     public boolean isSingleDataValueSet()
     {
-        return dataSets.size() == 1 && periods.size() == 1 && organisationUnits.size() == 1;
+        return dataSets.size() == 1 && periods.size() == 1 && organisationUnits.size() == 1 && dataElementGroups.isEmpty();
     }
 
     @Override
@@ -117,9 +148,11 @@ public class DataExportParams
     {
         return MoreObjects.toStringHelper( this ).
             add( "data sets", dataSets ).
+            add( "data element groups", dataElementGroups ).
             add( "periods", periods ).
             add( "org units", organisationUnits ).
             add( "children", includeChildren ).
+            add( "deleted", includeDeleted ).
             add( "id schemes", idSchemes ).toString();
     }
 
@@ -135,6 +168,16 @@ public class DataExportParams
     public void setDataSets( Set<DataSet> dataSets )
     {
         this.dataSets = dataSets;
+    }
+
+    public Set<DataElementGroup> getDataElementGroups()
+    {
+        return dataElementGroups;
+    }
+
+    public void setDataElementGroups( Set<DataElementGroup> dataElementGroups )
+    {
+        this.dataElementGroups = dataElementGroups;
     }
 
     public Set<Period> getPeriods()
@@ -187,6 +230,16 @@ public class DataExportParams
         this.includeChildren = includeChildren;
     }
 
+    public boolean isIncludeDeleted()
+    {
+        return includeDeleted;
+    }
+
+    public void setIncludeDeleted( boolean includeDeleted )
+    {
+        this.includeDeleted = includeDeleted;
+    }
+
     public Date getLastUpdated()
     {
         return lastUpdated;
@@ -195,6 +248,16 @@ public class DataExportParams
     public void setLastUpdated( Date lastUpdated )
     {
         this.lastUpdated = lastUpdated;
+    }
+
+    public String getLastUpdatedDuration()
+    {
+        return lastUpdatedDuration;
+    }
+
+    public void setLastUpdatedDuration( String lastUpdatedDuration )
+    {
+        this.lastUpdatedDuration = lastUpdatedDuration;
     }
 
     public Integer getLimit()

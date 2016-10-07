@@ -1,6 +1,15 @@
 package org.hisp.dhis.webapi.view;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.MediaType;
+import org.springframework.web.accept.PathExtensionContentNegotiationStrategy;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.util.UrlPathHelper;
+import org.springframework.web.util.WebUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
+import java.util.Map;
 
 /*
  * Copyright (c) 2004-2016, University of Oslo
@@ -29,16 +38,6 @@ import org.apache.commons.lang3.StringUtils;
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-import org.springframework.http.MediaType;
-import org.springframework.web.accept.PathExtensionContentNegotiationStrategy;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.util.UrlPathHelper;
-import org.springframework.web.util.WebUtils;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Locale;
-import java.util.Map;
 
 /**
  * Custom PathExtensionContentNegotiationStrategy that handles multiple dots in filename.
@@ -75,6 +74,7 @@ public class CustomPathExtensionContentNegotiationStrategy extends PathExtension
         String path = URL_PATH_HELPER.getLookupPathForRequest( servletRequest );
         String filename = WebUtils.extractFullFilenameFromUrlPath( path );
         String extension = getFilenameExtension( filename );
+
         return !StringUtils.isBlank( extension ) ? extension.toLowerCase( Locale.ENGLISH ) : null;
     }
 
@@ -82,22 +82,26 @@ public class CustomPathExtensionContentNegotiationStrategy extends PathExtension
 
     private static final String FOLDER_SEPARATOR = "/";
 
-    public static String getFilenameExtension( String path )
+    private static String getFilenameExtension( String path )
     {
         if ( path == null )
         {
             return null;
         }
         int extIndex = path.indexOf( EXTENSION_SEPARATOR );
+
         if ( extIndex == -1 )
         {
             return null;
         }
+
         int folderIndex = path.indexOf( FOLDER_SEPARATOR );
+
         if ( folderIndex > extIndex )
         {
             return null;
         }
+
         return path.substring( extIndex + 1 );
     }
 }

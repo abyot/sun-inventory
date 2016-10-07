@@ -1,6 +1,17 @@
 package org.hisp.dhis.dxf2.utils;
 
 import org.hisp.dhis.common.IdScheme;
+import org.hisp.dhis.common.IdentifiableObjectManager;
+import org.hisp.dhis.common.IllegalQueryException;
+import org.hisp.dhis.commons.util.TextUtils;
+import org.hisp.dhis.dataelement.DataElementCategoryCombo;
+import org.hisp.dhis.dataelement.DataElementCategoryOption;
+import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
+import org.hisp.dhis.dataelement.DataElementCategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /*
  * Copyright (c) 2004-2016, University of Oslo
@@ -30,18 +41,6 @@ import org.hisp.dhis.common.IdScheme;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.common.IdentifiableObjectManager;
-import org.hisp.dhis.common.IllegalQueryException;
-import org.hisp.dhis.commons.util.TextUtils;
-import org.hisp.dhis.dataelement.DataElementCategoryCombo;
-import org.hisp.dhis.dataelement.DataElementCategoryOption;
-import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
-import org.hisp.dhis.dataelement.DataElementCategoryService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * @author Lars Helge Overland
  */
@@ -58,10 +57,10 @@ public class InputUtils
      * code along with a textual message will be set on the response in case of
      * invalid input.
      *
-     * @param cc the category combo identifier.
-     * @param cp the category and option query string.
+     * @param cc           the category combo identifier.
+     * @param cp           the category and option query string.
      * @param skipFallback whether to skip fallback to default option combo if
-     *        attribute option combo is not found.
+     *                     attribute option combo is not found.
      * @return the attribute option combo identified from the given input, or null
      * if the input was invalid.
      */
@@ -73,38 +72,38 @@ public class InputUtils
         // Attribute category combo validation
         // ---------------------------------------------------------------------
 
-        if ( ( cc == null && opts != null || ( cc != null && opts == null ) ) )
-        {            
-            throw new IllegalQueryException( "Both or none of category combination and category options must be present" ) ;
+        if ( (cc == null && opts != null || (cc != null && opts == null)) )
+        {
+            throw new IllegalQueryException( "Both or none of category combination and category options must be present" );
         }
 
         DataElementCategoryCombo categoryCombo = null;
 
-        if ( cc != null && ( categoryCombo = idObjectManager.get( DataElementCategoryCombo.class, cc ) ) == null )
+        if ( cc != null && (categoryCombo = idObjectManager.get( DataElementCategoryCombo.class, cc )) == null )
         {
             throw new IllegalQueryException( "Illegal category combo identifier: " + cc );
         }
-        
+
         if ( categoryCombo == null && opts == null )
         {
             if ( skipFallback )
             {
                 return null;
             }
-            
+
             categoryCombo = categoryService.getDefaultDataElementCategoryCombo();
         }
 
         return getAttributeOptionCombo( categoryCombo, cp, IdScheme.UID );
     }
-    
+
     /**
      * Validates and retrieves the attribute option combo. 409 conflict as status
-     * code along with a textual message will be set on the response in case of
+     * code along with a textual messagewill be set on the response in case of
      * invalid input.
      *
      * @param categoryCombo the category combo.
-     * @param cp the category option query string.
+     * @param cp            the category option query string.
      * @return the attribute option combo identified from the given input, or null
      * if the input was invalid.
      */
@@ -112,9 +111,24 @@ public class InputUtils
     {
         Set<String> opts = TextUtils.splitToArray( cp, TextUtils.SEMICOLON );
 
+        return getAttributeOptionCombo( categoryCombo, opts, idScheme );
+    }
+
+    /**
+     * Validates and retrieves the attribute option combo. 409 conflict as status
+     * code along with a textual messagewill be set on the response in case of
+     * invalid input.
+     *
+     * @param categoryCombo the category combo.
+     * @param opts          list of category option uid.
+     * @return the attribute option combo identified from the given input, or null
+     * if the input was invalid.
+     */
+    public DataElementCategoryOptionCombo getAttributeOptionCombo( DataElementCategoryCombo categoryCombo, Set<String> opts, IdScheme idScheme )
+    {
         if ( categoryCombo == null )
-        {            
-            throw new IllegalQueryException( "Illegal category combo");
+        {
+            throw new IllegalQueryException( "Illegal category combo" );
         }
 
         // ---------------------------------------------------------------------
@@ -133,7 +147,7 @@ public class InputUtils
 
                 if ( categoryOption == null )
                 {
-                    throw new IllegalQueryException( "Illegal category option identifier: " + uid ) ;
+                    throw new IllegalQueryException( "Illegal category option identifier: " + uid );
                 }
 
                 categoryOptions.add( categoryOption );
@@ -158,5 +172,5 @@ public class InputUtils
         }
 
         return attributeOptionCombo;
-    }    
+    }
 }

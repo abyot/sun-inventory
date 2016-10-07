@@ -41,14 +41,14 @@ import org.hisp.dhis.common.IdentifiableObjectManager;
 import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.common.IdentifiableProperty;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.metadata.ImportService;
 import org.hisp.dhis.dxf2.metadata.Metadata;
-import org.hisp.dhis.render.RenderService;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
+import org.hisp.dhis.dxf2.metadata.MetadataImportService;
 import org.hisp.dhis.importexport.ImportStrategy;
 import org.hisp.dhis.organisationunit.FeatureType;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
-import org.hisp.dhis.scheduling.TaskId;
+import org.hisp.dhis.render.RenderService;
+import org.hisp.dhis.schema.SchemaService;
 import org.hisp.dhis.system.notification.NotificationLevel;
 import org.hisp.dhis.system.notification.Notifier;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,13 +105,16 @@ public class DefaultGmlImportService
     // -------------------------------------------------------------------------
 
     @Autowired
-    private ImportService importService;
-
-    @Autowired
     private RenderService renderService;
 
     @Autowired
     private IdentifiableObjectManager idObjectManager;
+
+    @Autowired
+    private SchemaService schemaService;
+
+    @Autowired
+    private MetadataImportService importService;
 
     @Autowired
     private Notifier notifier;
@@ -122,11 +125,11 @@ public class DefaultGmlImportService
 
     @Transactional
     @Override
-    public void importGml( InputStream inputStream, String userUid, ImportOptions importOptions, TaskId taskId )
+    public void importGml( InputStream inputStream, MetadataImportParams importParams )
     {
-        if ( !importOptions.getImportStrategy().isUpdate() )
+        if ( !importParams.getImportStrategy().isUpdate() )
         {
-            importOptions.setImportStrategy( ImportStrategy.UPDATE );
+            importParams.setImportStrategy( ImportStrategy.UPDATE );
             log.warn( "Changed GML import strategy to update. Only updates are supported." );
         }
 
@@ -135,13 +138,14 @@ public class DefaultGmlImportService
         if ( preProcessed.isSuccess && preProcessed.dxf2MetaData != null )
         {
             Metadata metadata = dxf2ToMetaData( preProcessed.dxf2MetaData );
-            importService.importMetaData( userUid, metadata, importOptions, taskId );
+            importParams.addMetadata( schemaService.getMetadataSchemas(), metadata );
+            importService.importMetadata( importParams );
         }
         else
         {
             Throwable throwable = preProcessed.throwable;
 
-            notifier.notify( taskId, NotificationLevel.ERROR, createNotifierErrorMessage( throwable ), false );
+            notifier.notify( importParams.getTaskId(), NotificationLevel.ERROR, createNotifierErrorMessage( throwable ), false );
             log.error( "GML import failed: ", throwable );
         }
     }

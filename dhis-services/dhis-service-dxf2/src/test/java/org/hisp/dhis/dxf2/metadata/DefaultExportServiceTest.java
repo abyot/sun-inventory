@@ -28,28 +28,30 @@ package org.hisp.dhis.dxf2.metadata;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.HashMap;
-
-import javax.xml.xpath.XPathExpressionException;
-
 import org.hisp.dhis.DhisConvenienceTest;
 import org.hisp.dhis.DhisSpringTest;
+import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementService;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.DataSetService;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
-import org.hisp.dhis.dxf2.common.Options;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.MonthlyPeriodType;
 import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.PeriodService;
+import org.hisp.dhis.query.Query;
+import org.hisp.dhis.render.DefaultRenderService;
+import org.hisp.dhis.schema.SchemaService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author bobj
@@ -57,9 +59,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DefaultExportServiceTest
     extends DhisSpringTest
 {
-    @Autowired
-    private ExportService exportService;
-
     @Autowired
     private DataElementService dataElementService;
 
@@ -71,6 +70,12 @@ public class DefaultExportServiceTest
 
     @Autowired
     private PeriodService periodService;
+
+    @Autowired
+    private MetadataExportService exportService;
+
+    @Autowired
+    private SchemaService schemaService;
 
     private DataElement deA;
 
@@ -125,12 +130,20 @@ public class DefaultExportServiceTest
     }
 
     @Test
+    @SuppressWarnings( "unchecked" )
     public void exportMetaDataTest() throws IOException, XPathExpressionException
     {
-        Options options = new Options( new HashMap<>() );
-        Metadata metadata = exportService.getMetaData( options );
+        MetadataExportParams params = new MetadataExportParams();
+        params.addQuery( Query.from( schemaService.getSchema( DataElement.class ) ) );
+        params.addQuery( Query.from( schemaService.getSchema( OrganisationUnit.class ) ) );
 
-        String metaDataXml = JacksonUtils.toXmlAsString( metadata );
+        Map<Class<? extends IdentifiableObject>, List<? extends IdentifiableObject>> metadataMap = exportService.getMetadata( params );
+
+        Metadata metadata = new Metadata();
+        metadata.setDataElements( (List<DataElement>) metadataMap.get( DataElement.class ) );
+        metadata.setOrganisationUnits( (List<OrganisationUnit>) metadataMap.get( OrganisationUnit.class ) );
+
+        String metaDataXml = DefaultRenderService.getXmlMapper().writeValueAsString( metadata );
 
         assertEquals( "1", xpathTest( "count(//d:organisationUnits)", metaDataXml ) );
         assertEquals( "2", xpathTest( "count(//d:organisationUnit)", metaDataXml ) );

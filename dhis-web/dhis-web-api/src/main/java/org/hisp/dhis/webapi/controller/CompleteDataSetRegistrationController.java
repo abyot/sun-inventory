@@ -57,12 +57,14 @@ import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.service.ContextService;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -266,7 +268,7 @@ public class CompleteDataSetRegistrationController
                 if ( unit.getDataSets().contains( dataSet ) )
                 {
                     CompleteDataSetRegistration completeDataSetRegistration = registerCompleteDataSet( dataSet, period,
-                        unit, attributeOptionCombo, storedBy, completionDate );
+                        organisationUnit, attributeOptionCombo, storedBy, completionDate );
 
                     if ( completeDataSetRegistration != null )
                     {
@@ -280,6 +282,7 @@ public class CompleteDataSetRegistrationController
     }
 
     @RequestMapping( method = RequestMethod.POST, consumes = "application/json", value = MULTIPLE_SAVE_RESOURCE_PATH )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void saveCompleteDataSetRegistration(
         @RequestBody CompleteDataSetRegistrationRequests completeDataSetRegistrationRequests,
         HttpServletResponse response ) throws WebMessageException
@@ -372,6 +375,7 @@ public class CompleteDataSetRegistrationController
     }
 
     @RequestMapping( method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void deleteCompleteDataSetRegistration(
         @RequestParam Set<String> ds,
         @RequestParam String pe,

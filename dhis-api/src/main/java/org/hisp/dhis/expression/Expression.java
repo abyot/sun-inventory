@@ -28,25 +28,20 @@ package org.hisp.dhis.expression;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.lang3.Validate;
-import org.hisp.dhis.common.BaseIdentifiableObject;
-import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
-import org.hisp.dhis.dataelement.DataElement;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import org.apache.commons.lang3.Validate;
+import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.DxfNamespaces;
+import org.hisp.dhis.dataelement.DataElement;
+
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * An Expression is the expression of e.g. a validation rule. It consist of a
@@ -65,7 +60,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
  * @author Margrethe Store
  * @version $Id: Expression.java 5011 2008-04-24 20:41:28Z larshelg $
  */
-@JacksonXmlRootElement(localName = "expression", namespace = DxfNamespaces.DXF_2_0)
+@JacksonXmlRootElement( localName = "expression", namespace = DxfNamespaces.DXF_2_0 )
 public class Expression
     implements Serializable
 {
@@ -104,13 +99,11 @@ public class Expression
     /**
      * A reference to the DataElements in the Expression.
      */
-    @Scanned
     private Set<DataElement> dataElementsInExpression = new HashSet<>();
 
     /**
      * A reference to the DataElements in the Expression.
      */
-    @Scanned
     private Set<DataElement> sampleElementsInExpression = new HashSet<>();
 
     // -------------------------------------------------------------------------
@@ -118,7 +111,7 @@ public class Expression
     // -------------------------------------------------------------------------
 
     private transient String explodedExpression;
-    
+
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
@@ -133,14 +126,14 @@ public class Expression
     /**
      * Constructor with all the parameters.
      *
-     * @param expression               The expression as a String
-     * @param description              A description of the Expression.
-     * @param dataElementsInExpression A reference to the DataElements in the Expression.
+     * @param expression                 The expression as a String
+     * @param description                A description of the Expression.
+     * @param dataElementsInExpression   A reference to the DataElements in the Expression.
      * @param sampleElementsInExpression Past sampled periods DataElements in the Expression.
      */
-    public Expression( String expression, String description, 
-		       Set<DataElement> dataElementsInExpression,
-		       Set<DataElement> sampleElementsInExpression )
+    public Expression( String expression, String description,
+        Set<DataElement> dataElementsInExpression,
+        Set<DataElement> sampleElementsInExpression )
     {
         this.expression = expression;
         this.description = description;
@@ -174,7 +167,7 @@ public class Expression
     {
         return explodedExpression != null ? explodedExpression : expression;
     }
-    
+
     // -------------------------------------------------------------------------
     // Equals and hashCode
     // -------------------------------------------------------------------------
@@ -231,8 +224,8 @@ public class Expression
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
-        result = prime * result + ( ( expression == null ) ? 0 : expression.hashCode() );
+        result = prime * result + ((description == null) ? 0 : description.hashCode());
+        result = prime * result + ((expression == null) ? 0 : expression.hashCode());
 
         return result;
     }
@@ -252,11 +245,11 @@ public class Expression
     public static int matchExpression( String s, int start )
     {
         int i = start, depth = 0, len = s.length();
-        
+
         while ( i < len )
         {
             char c = s.charAt( i );
-            
+
             if ( (c == ')') || (c == ']') )
             {
                 if ( depth == 0 )
@@ -282,10 +275,10 @@ public class Expression
             else
             {
             }
-            
+
             i++;
         }
-        
+
         return -1;
     }
 
@@ -304,8 +297,7 @@ public class Expression
     }
 
     @JsonProperty
-    @JsonView({ DetailedView.class, ExportView.class })
-    @JacksonXmlProperty(namespace = DxfNamespaces.DXF_2_0)
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getExpression()
     {
         return expression;
@@ -316,14 +308,13 @@ public class Expression
         this.expression = expression;
     }
 
-    @JsonProperty(value = "dataElements")
-    @JsonSerialize(contentAs = BaseIdentifiableObject.class)
-    @JsonView({ DetailedView.class, ExportView.class })
-    @JacksonXmlElementWrapper(localName = "dataElements", namespace = DxfNamespaces.DXF_2_0)
-    @JacksonXmlProperty(localName = "dataElement", namespace = DxfNamespaces.DXF_2_0)
+    @JsonProperty( value = "dataElements" )
+    @JsonSerialize( contentAs = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "dataElements", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "dataElement", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElement> getDataElementsInExpression()
     {
-    	return dataElementsInExpression;
+        return dataElementsInExpression;
     }
 
     public void setDataElementsInExpression( Set<DataElement> dataElementsInExpression )
@@ -331,14 +322,13 @@ public class Expression
         this.dataElementsInExpression = dataElementsInExpression;
     }
 
-    @JsonProperty(value = "sampleElements")
-    @JsonSerialize(contentAs = BaseIdentifiableObject.class)
-    @JsonView({ DetailedView.class, ExportView.class })
-    @JacksonXmlElementWrapper(localName = "sampleElements", namespace = DxfNamespaces.DXF_2_0)
-    @JacksonXmlProperty(localName = "sampleElement", namespace = DxfNamespaces.DXF_2_0)
+    @JsonProperty( value = "sampleElements" )
+    @JsonSerialize( contentAs = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "sampleElements", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "sampleElement", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElement> getSampleElementsInExpression()
     {
-    	return sampleElementsInExpression;
+        return sampleElementsInExpression;
     }
 
     public void setSampleElementsInExpression( Set<DataElement> sampleElementsInExpression )
@@ -347,7 +337,6 @@ public class Expression
     }
 
     @JsonProperty
-    @JsonView({ DetailedView.class, ExportView.class })
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDescription()
     {
@@ -360,8 +349,7 @@ public class Expression
     }
 
     @JsonProperty
-    @JsonView({ DetailedView.class, ExportView.class })
-    @JacksonXmlProperty(namespace = DxfNamespaces.DXF_2_0)
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public MissingValueStrategy getMissingValueStrategy()
     {
         return missingValueStrategy;
@@ -370,19 +358,19 @@ public class Expression
     public void setMissingValueStrategy( MissingValueStrategy missingValueStrategy )
     {
         this.missingValueStrategy = missingValueStrategy;
-    }    
+    }
 
     @JsonIgnore
     public String getExplodedExpression()
     {
         return explodedExpression;
     }
-    
+
     public void setExplodedExpression( String explodedExpression )
     {
         this.explodedExpression = explodedExpression;
     }
-    
+
     public void mergeWith( Expression other )
     {
         Validate.notNull( other );

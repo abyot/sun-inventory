@@ -29,7 +29,6 @@ package org.hisp.dhis.programrule;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -38,9 +37,6 @@ import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramStage;
 
@@ -72,7 +68,6 @@ public class ProgramRule
     /**
      * The collection of actions that will be triggered if the the rule is triggered.
      */
-    @Scanned
     private Set<ProgramRuleAction> programRuleActions = new HashSet<>();
 
     /**
@@ -91,7 +86,7 @@ public class ProgramRule
     {
         return false;
     }
-    
+
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
@@ -156,7 +151,6 @@ public class ProgramRule
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "programRuleActions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "programRuleAction", namespace = DxfNamespaces.DXF_2_0 )
     public Set<ProgramRuleAction> getProgramRuleActions()

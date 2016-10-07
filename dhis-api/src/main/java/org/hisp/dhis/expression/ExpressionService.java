@@ -35,6 +35,7 @@ import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementOperand;
 import org.hisp.dhis.indicator.Indicator;
+import org.hisp.dhis.indicator.IndicatorValue;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.period.Period;
 import org.hisp.dhis.validation.ValidationRule;
@@ -142,6 +143,21 @@ public interface ExpressionService
      */
     Double getIndicatorValue( Indicator indicator, Period period, Map<? extends DimensionalItemObject, Double> valueMap,
         Map<String, Double> constantMap, Map<String, Integer> orgUnitCountMap );
+
+    /**
+     * Generates the calculated value for the given parameters based on the values
+     * in the given maps.
+     *
+     * @param indicator       the indicator for which to calculate the value.
+     * @param period          the period for which to calculate the value.
+     * @param valueMap        the map of data values.
+     * @param constantMap     the map of constants.
+     * @param orgUnitCountMap the map of organisation unit counts.
+     * @return the calculated value as a double.
+     */
+    IndicatorValue getIndicatorValueObject( Indicator indicator, Period period,
+        Map<? extends DimensionalItemObject, Double> valueMap, Map<String, Double> constantMap,
+        Map<String, Integer> orgUnitCountMap );
 
     /**
      * Generates the calculated value for the given expression base on the values

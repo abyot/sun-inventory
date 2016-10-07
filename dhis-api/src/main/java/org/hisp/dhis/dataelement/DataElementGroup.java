@@ -29,7 +29,6 @@ package org.hisp.dhis.dataelement;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -42,9 +41,6 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.ValueType;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
@@ -59,7 +55,6 @@ import java.util.Set;
 public class DataElementGroup
     extends BaseDimensionalItemObject
 {
-    @Scanned
     private Set<DataElement> members = new HashSet<>();
 
     private DataElementGroupSet groupSet;
@@ -162,7 +157,6 @@ public class DataElementGroup
 
     @JsonProperty( "dataElements" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "dataElements", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "dataElement", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElement> getMembers()
@@ -177,9 +171,8 @@ public class DataElementGroup
 
     @JsonProperty( "dataElementGroupSet" )
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    @Property( value = PropertyType.REFERENCE, required = Property.Required.FALSE )
+    @Property( value = PropertyType.REFERENCE, required = Property.Value.FALSE )
     public DataElementGroupSet getGroupSet()
     {
         return groupSet;

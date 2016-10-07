@@ -66,7 +66,7 @@ public class ConfigurationPopulator
 
     private void checkSecurityConfiguration()
     {
-        EncryptionStatus status = dhisConfigurationProvider.isEncryptionConfigured();
+        EncryptionStatus status = dhisConfigurationProvider.getEncryptionStatus();
 
         if ( !status.isOk() )
         {

@@ -35,6 +35,7 @@ import org.hisp.dhis.translation.ObjectTranslation;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserGroupAccess;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
 
@@ -42,7 +43,7 @@ import java.util.Set;
  * @author Lars Helge Overland
  */
 public interface IdentifiableObject
-    extends LinkableObject, Comparable<IdentifiableObject>, Mergeable<IdentifiableObject>
+    extends LinkableObject, Comparable<IdentifiableObject>, Mergeable<IdentifiableObject>, Serializable
 {
     String[] I18N_PROPERTIES = { "name" };
 

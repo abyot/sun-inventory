@@ -4,7 +4,9 @@
       "id": "qMJcGogYY8M",
       "description": "Person",
       "attributeValues": [],
-      "name": "Person"
+      "name": "Person",
+      "created": "2016-03-09T09:56:10.596+0000",
+      "lastUpdated": "2016-03-09T09:56:10.597+0000"
     }
   ],
   "attributes": [

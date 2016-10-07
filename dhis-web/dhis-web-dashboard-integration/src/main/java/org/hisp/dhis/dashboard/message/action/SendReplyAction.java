@@ -97,7 +97,7 @@ public class SendReplyAction
         MessageConversation conversation = messageService.getMessageConversation( id );
 
         messageService.sendReply( conversation, text, metaData,
-            (internal && messageService.hasAccessToInternalNotes( currentUserService.getCurrentUser() )) );
+            (internal && messageService.hasAccessToManageFeedbackMessages( currentUserService.getCurrentUser() )) );
 
         return SUCCESS;
     }

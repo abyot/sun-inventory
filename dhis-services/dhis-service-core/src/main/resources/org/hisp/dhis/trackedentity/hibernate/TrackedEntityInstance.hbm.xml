@@ -25,7 +25,7 @@
     </set>
 
     <many-to-one name="representative" class="org.hisp.dhis.trackedentity.TrackedEntityInstance" column="representativeid"
-      foreign-key="fk_trackedentityinstance_representativeid" lazy="false" />
+      foreign-key="fk_trackedentityinstance_representativeid" />
 
     <many-to-one name="organisationUnit" class="org.hisp.dhis.organisationunit.OrganisationUnit" column="organisationunitid"
       foreign-key="fk_trackedentityinstance_organisationunitid" not-null="true" lazy="false" />
@@ -33,21 +33,6 @@
     <many-to-one name="trackedEntity" class="org.hisp.dhis.trackedentity.TrackedEntity"
       column="trackedentityid" foreign-key="fk_trackedentityinstance_trackedentityid" lazy="false" />
 
-    <!-- Object Translation -->
-    <set name="translations" table="trackedentityinstancetranslations" cascade="delete-orphan" lazy="false">
-      <cache usage="read-write" />
-      <key column="trackedentityinstanceid" foreign-key="fk_objecttranslation_trackedentityinstanceid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
-    </set>
-
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

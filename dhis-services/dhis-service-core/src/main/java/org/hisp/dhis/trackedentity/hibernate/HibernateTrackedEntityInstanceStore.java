@@ -388,12 +388,18 @@ public class HibernateTrackedEntityInstanceStore
         }
         else if ( params.isOrganisationUnitMode( OrganisationUnitSelectionMode.DESCENDANTS ) )
         {
-            for ( OrganisationUnit unit : params.getOrganisationUnits() )
+            String ouClause = " (";
+
+            SqlHelper orHlp = new SqlHelper( true );
+
+            for ( OrganisationUnit organisationUnit : params.getOrganisationUnits() )
             {
-                sql += hlp.whereAnd() + " ou.path like '" + unit.getPath() + "%' or ";
+                ouClause += orHlp.or() + "ou.path like '" + organisationUnit.getPath() + "%'";
             }
 
-            sql = removeLastOr( sql );
+            ouClause += ")";
+
+            sql += hlp.whereAnd() + ouClause;
         }
         else // SELECTED (default)        
         {

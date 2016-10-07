@@ -13,25 +13,43 @@
     <link type="text/css" rel="stylesheet" media="screen,print" href="../dhis-web-commons/css/$encoder.htmlEncode( ${keyStyle} )?_rev=$!{buildRevision}" />
     <link type="text/css" rel="stylesheet" media="screen,print" href="../dhis-web-commons/css/widgets.css?_rev=$!{buildRevision}" />
     <link type="text/css" rel="stylesheet" media="print" href="../dhis-web-commons/css/print.css?_rev=$!{buildRevision}" />
-    <link type="text/css" rel="stylesheet" media="screen" href="../dhis-web-commons/css/menu.css?_rev=$!{buildRevision}" />
     <link type="text/css" rel="stylesheet" media="screen" href="../dhis-web-commons/javascripts/jQuery/calendars/css/jquery.calendars.picker.css?_rev=$!{buildRevision}" />
-	<link type="text/css" rel="stylesheet" media="screen" href="../dhis-web-commons/select2/select2.css?_rev=$!{buildRevision}" />
+    <link type="text/css" rel="stylesheet" media="screen" href="../dhis-web-commons/select2/select2.css?_rev=$!{buildRevision}" />
     #foreach ( $style in $stylesheets )
     <link type="text/css" rel="stylesheet" media="screen" href="${style}?_rev=$!{buildRevision}" />
     #end
     <link type="text/css" rel="stylesheet" href="../api/files/style?_rev=$!{buildRevision}" />
     <link rel="shortcut icon" href="../favicon.ico" />
+    <!-- Material UI fonts -->
+    <link href="../dhis-web-commons/fonts/roboto.css" rel="stylesheet" type="text/css">
+    <link href="../dhis-web-commons/material-design-icons/material-icons.css" rel="stylesheet" type="text/css">
+    <style>
+        html {
+            font-size: 14px;
+        }
+
+        #header * {
+            font-family: 'Roboto';
+        }
+    </style>
 
     <script type="text/javascript">
       var dateFormat = 'yy-mm-dd';
     </script>
-
-    <script type="text/javascript" src="../dhis-web-commons/javascripts/es5-shim.min.js?_rev=$!{buildRevision}"></script>
-    <script type="text/javascript" src="../dhis-web-commons/javascripts/es5-sham.min.js?_rev=$!{buildRevision}"></script>
-
+    
     <script type="text/javascript" src="../dhis-web-commons/javascripts/ext/ext-all.js"></script>
 
     <script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/jquery.min.js?_rev=$!{buildRevision}"></script>
+    <!-- Menu script is up here due to perceived loading time increase -->
+    <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/babel-polyfill.js?_rev=$!{buildRevision}"></script>
+    <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/header-bar.js?_rev=$!{buildRevision}"></script>
+    <script>
+        // Needs to be wrapped in jQuery to be sure the DOM is parsed as the script is not at the bottom.
+        jQuery(function () {
+            Dhis2HeaderBar.initHeaderBar(document.querySelector('#header'), undefined, { noLoadingIndicator: true });
+        });
+    </script>
+    <!-- // End menu -->
     <!--[if lte IE 8]><script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/placeholders.jquery.min.js?_rev=$!{buildRevision}"></script><![endif]-->
     <script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/jquery.utils.js?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/jquery.ext.js?_rev=$!{buildRevision}"></script>
@@ -83,8 +101,6 @@
     <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.contextmenu.js?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.appcache.js?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.translate.js?_rev=$!{buildRevision}"></script>
-    <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.menu.js?_rev=$!{buildRevision}"></script>
-    <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.menu.ui.js?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../dhis-web-commons/i18nJavaScript.action?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../main.js?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../request.js?_rev=$!{buildRevision}"></script>
@@ -111,20 +127,15 @@
   <body>
     #parse( "macros.vm" )
     <div id="header">
-      <img id="headerBanner" src="${logoBanner}" onclick="window.location.href='../dhis-web-commons-about/redirect.action'"
-      	style="cursor:pointer" title="$i18n.getString( 'view_home_page' )">
-
-      <span id="headerText" onclick="window.location.href='../dhis-web-commons-about/redirect.action'" style="cursor:pointer" title="$i18n.getString( 'view_home_page' )">
-        $encoder.htmlEncode( $applicationTitle )
-      </span>
+      <img id="headerBanner" src="${logoBanner}" onclick="window.location.href='../dhis-web-commons-about/redirect.action'" style="cursor:pointer" title="$i18n.getString( 'view_home_page' )">
 
       <div id="dhisDropDownMenu"></div>
-
-      <span id="showLeftBar">
-        <a href="javascript:dhis2.leftBar.showAnimated()" title="$i18n.getString( 'show_menu' )">
-          <i class="fa fa-arrow-right leftBarIcon"></i></a>
-      </span>
     </div>
+    <span id="showLeftBar">
+      <a href="javascript:dhis2.leftBar.showAnimated()" title="$i18n.getString( 'show_menu' )">
+        <i class="fa fa-arrow-right leftBarIcon"></i>
+      </a>
+    </span>
 
     #if( $hideMenu && $hideMenu == "true" )
     <style type="text/css">

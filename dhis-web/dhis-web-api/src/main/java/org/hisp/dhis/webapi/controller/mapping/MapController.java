@@ -30,7 +30,7 @@ package org.hisp.dhis.webapi.controller.mapping;
 
 import org.hisp.dhis.common.DimensionService;
 import org.hisp.dhis.common.cache.CacheStrategy;
-import org.hisp.dhis.dxf2.common.ImportOptions;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.i18n.I18nManager;
@@ -51,22 +51,23 @@ import org.hisp.dhis.webapi.controller.AbstractCrudController;
 import org.hisp.dhis.webapi.utils.ContextUtils;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Date;
+import java.util.Set;
 
 import static org.hisp.dhis.common.DimensionalObjectUtils.getDimensions;
-
-import java.awt.image.BufferedImage;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -119,18 +120,11 @@ public class MapController
 
     @Override
     @RequestMapping( method = RequestMethod.POST, consumes = "application/json" )
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    @ResponseStatus( HttpStatus.CREATED )
+    public void postJsonObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
-        Map map = renderService.fromJson( request.getInputStream(), Map.class );
-
-        mergeMap( map );
-
-        for ( MapView view : map.getMapViews() )
-        {
-            mergeMapView( view );
-
-            mappingService.addMapView( view );
-        }
+        Map map = deserializeJsonEntity( request, response );
+        map.getTranslations().clear();
 
         mappingService.addMap( map );
 
@@ -140,7 +134,8 @@ public class MapController
 
     @Override
     @RequestMapping( value = "/{uid}", method = RequestMethod.PUT, consumes = "application/json" )
-    public void putJsonObjectLegacy( ImportOptions importOptions, @PathVariable String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    @ResponseStatus( HttpStatus.NO_CONTENT )
+    public void putJsonObject( @PathVariable String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         Map map = mappingService.getMap( uid );
 
@@ -149,48 +144,33 @@ public class MapController
             throw new WebMessageException( WebMessageUtils.notFound( "Map does not exist: " + uid ) );
         }
 
-        Iterator<MapView> views = map.getMapViews().iterator();
+        MetadataImportParams params = importService.getParamsFromMap( contextService.getParameterValuesMap() );
 
-        while ( views.hasNext() )
-        {
-            MapView view = views.next();
-            views.remove();
-            mappingService.deleteMapView( view );
-        }
+        Map newMap = deserializeJsonEntity( request, response );
 
-        Map newMap = renderService.fromJson( request.getInputStream(), Map.class );
-
-        mergeMap( newMap );
-
-        for ( MapView view : newMap.getMapViews() )
-        {
-            mergeMapView( view );
-
-            mappingService.addMapView( view );
-        }
-
-        map.mergeWith( newMap, importOptions.getMergeMode() );
-
-        if ( newMap.getUser() == null )
-        {
-            map.setUser( null );
-        }
+        map.mergeWith( newMap, params.getMergeMode() );
 
         mappingService.updateMap( map );
     }
 
     @Override
-    @RequestMapping( value = "/{uid}", method = RequestMethod.DELETE )
-    public void deleteObject( @PathVariable String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    protected void preUpdateEntity( Map map, Map newMap )
     {
-        Map map = mappingService.getMap( uid );
+        map.getMapViews().clear();
 
-        if ( map == null )
+        if ( newMap.getUser() == null )
         {
-            throw new WebMessageException( WebMessageUtils.notFound( "Map does not exist: " + uid ) );
+            map.setUser( null );
         }
+    }
 
-        mappingService.deleteMap( map );
+    @Override
+    protected Map deserializeJsonEntity( HttpServletRequest request, HttpServletResponse response ) throws IOException
+    {
+        Map map = super.deserializeJsonEntity( request, response );
+        mergeMap( map );
+
+        return map;
     }
 
     //--------------------------------------------------------------------------
@@ -272,13 +252,15 @@ public class MapController
         {
             map.setUser( currentUserService.getCurrentUser() );
         }
+
+        map.getMapViews().forEach( this::mergeMapView );
     }
 
     private void mergeMapView( MapView view )
     {
         dimensionService.mergeAnalyticalObject( view );
         dimensionService.mergeEventAnalyticalObject( view );
-        
+
         view.getColumnDimensions().clear();
         view.getColumnDimensions().addAll( getDimensions( view.getColumns() ) );
 
@@ -311,6 +293,8 @@ public class MapController
         if ( image != null )
         {
             contextUtils.configureResponse( response, ContextUtils.CONTENT_TYPE_PNG, CacheStrategy.RESPECT_SYSTEM_SETTING, "map.png", attachment );
+
+
 
             ImageIO.write( image, "PNG", response.getOutputStream() );
         }

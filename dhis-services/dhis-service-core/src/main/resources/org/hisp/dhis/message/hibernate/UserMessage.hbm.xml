@@ -7,8 +7,6 @@
 
   <class name="org.hisp.dhis.message.UserMessage" table="usermessage">
 
-    <cache usage="read-write" />
-
     <id name="id" column="usermessageid">
       <generator class="native" />
     </id>

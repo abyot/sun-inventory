@@ -61,11 +61,11 @@ public class SystemInfo
     private String dateFormat;
 
     private Date serverDate;
-    
+
     private Date lastAnalyticsTableSuccess;
-    
+
     private String intervalSinceLastAnalyticsTableSuccess;
-    
+
     private String lastAnalyticsTableRuntime;
 
     // -------------------------------------------------------------------------
@@ -77,20 +77,18 @@ public class SystemInfo
     private String revision;
 
     private Date buildTime;
-    
+
     private String jasperReportsVersion;
 
     private String environmentVariable;
 
     private String fileStoreProvider;
 
+    private String readOnlyMode;
+
     private String javaVersion;
 
     private String javaVendor;
-
-    private String javaHome;
-    
-    private String javaIoTmpDir;
 
     private String javaOpts;
 
@@ -104,16 +102,28 @@ public class SystemInfo
 
     private DatabaseInfo databaseInfo;
 
+    private Integer readReplicaCount;
+
     private String memoryInfo;
 
     private Integer cpuCores;
-    
+
+    private boolean encryption;
+
     private String systemId;
-    
+
+    private String systemMetadataVersion;
+
+    private Boolean isMetadataVersionEnabled;
+
+    private Date lastMetadataVersionSyncAttempt;
+
+    private boolean isMetadataSyncEnabled;
+
     public SystemInfo instance()
     {
         SystemInfo info = new SystemInfo();
-        BeanUtils.copyProperties( this, info );        
+        BeanUtils.copyProperties( this, info );
         return info;
     }
 
@@ -126,19 +136,22 @@ public class SystemInfo
         this.fileStoreProvider = null;
         this.javaVersion = null;
         this.javaVendor = null;
-        this.javaHome = null;
-        this.javaIoTmpDir = null;
         this.javaOpts = null;
         this.osName = null;
         this.osArchitecture = null;
         this.osVersion = null;
         this.externalDirectory = null;
-        this.databaseInfo = null;
         this.memoryInfo = null;
         this.cpuCores = null;
         this.systemId = null;
+        this.readReplicaCount = null;
+
+        if ( this.databaseInfo != null )
+        {
+            this.databaseInfo.clearSensitiveInfo();
+        }
     }
-    
+
     // -------------------------------------------------------------------------
     // Getters and setters
     // -------------------------------------------------------------------------
@@ -310,7 +323,19 @@ public class SystemInfo
     {
         this.fileStoreProvider = fileStoreProvider;
     }
-    
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public String getReadOnlyMode()
+    {
+        return readOnlyMode;
+    }
+
+    public void setReadOnlyMode( String readOnlyMode )
+    {
+        this.readOnlyMode = readOnlyMode;
+    }
+
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getJavaVersion()
@@ -333,30 +358,6 @@ public class SystemInfo
     public void setJavaVendor( String javaVendor )
     {
         this.javaVendor = javaVendor;
-    }
-
-    @JsonProperty
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public String getJavaHome()
-    {
-        return javaHome;
-    }
-
-    public void setJavaHome( String javaHome )
-    {
-        this.javaHome = javaHome;
-    }
-
-    @JsonProperty
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public String getJavaIoTmpDir()
-    {
-        return javaIoTmpDir;
-    }
-
-    public void setJavaIoTmpDir( String javaIoTmpDir )
-    {
-        this.javaIoTmpDir = javaIoTmpDir;
     }
 
     @JsonProperty
@@ -433,6 +434,18 @@ public class SystemInfo
 
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Integer getReadReplicaCount()
+    {
+        return readReplicaCount;
+    }
+
+    public void setReadReplicaCount( Integer readReplicaCount )
+    {
+        this.readReplicaCount = readReplicaCount;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getMemoryInfo()
     {
         return memoryInfo;
@@ -457,6 +470,18 @@ public class SystemInfo
 
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public boolean isEncryption()
+    {
+        return encryption;
+    }
+
+    public void setEncryption( boolean encryption )
+    {
+        this.encryption = encryption;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getSystemId()
     {
         return systemId;
@@ -466,4 +491,53 @@ public class SystemInfo
     {
         this.systemId = systemId;
     }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public String getSystemMetadataVersion()
+    {
+        return systemMetadataVersion;
+    }
+
+    public void setSystemMetadataVersion( String systemMetadataVersion )
+    {
+        this.systemMetadataVersion = systemMetadataVersion;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Boolean getIsMetadataVersionEnabled()
+    {
+        return isMetadataVersionEnabled;
+    }
+
+    public void setIsMetadataVersionEnabled( Boolean isMetadataVersionEnabled )
+    {
+        this.isMetadataVersionEnabled = isMetadataVersionEnabled;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Date getLastMetadataVersionSyncAttempt()
+    {
+        return lastMetadataVersionSyncAttempt;
+    }
+
+    public void setLastMetadataVersionSyncAttempt( Date lastMetadataVersionSyncAttempt )
+    {
+        this.lastMetadataVersionSyncAttempt = lastMetadataVersionSyncAttempt;
+    }
+
+    public void setIsMetadataSyncEnabled( boolean isMetadataSyncEnabled )
+    {
+        this.isMetadataSyncEnabled = isMetadataSyncEnabled;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public boolean getIsMetadataSyncEnabled()
+    {
+        return isMetadataSyncEnabled;
+    }
+
 }

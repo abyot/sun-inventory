@@ -29,12 +29,10 @@ package org.hisp.dhis.organisationunit;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-
 import org.hisp.dhis.common.BaseDimensionalItemObject;
 import org.hisp.dhis.common.BaseDimensionalObject;
 import org.hisp.dhis.common.DimensionType;
@@ -43,10 +41,6 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.adapter.JacksonOrganisationUnitGroupSymbolSerializer;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,7 +58,6 @@ public class OrganisationUnitGroupSet
 {
     private boolean compulsory;
 
-    @Scanned
     private Set<OrganisationUnitGroup> organisationUnitGroups = new HashSet<>();
 
     // -------------------------------------------------------------------------
@@ -186,7 +179,6 @@ public class OrganisationUnitGroupSet
     @Override
     @JsonProperty
     @JsonSerialize( contentAs = BaseDimensionalItemObject.class )
-    @JsonView( { DetailedView.class, DimensionalView.class } )
     @JacksonXmlElementWrapper( localName = "items", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "item", namespace = DxfNamespaces.DXF_2_0 )
     public List<DimensionalItemObject> getItems()
@@ -211,7 +203,6 @@ public class OrganisationUnitGroupSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isCompulsory()
     {
@@ -226,7 +217,6 @@ public class OrganisationUnitGroupSet
     @JsonProperty( "organisationUnitGroups" )
     // @JsonSerialize(contentAs = BaseIdentifiableObject.class)
     @JsonSerialize( contentUsing = JacksonOrganisationUnitGroupSymbolSerializer.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "organisationUnitGroups", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "organisationUnitGroup", namespace = DxfNamespaces.DXF_2_0 )
     public Set<OrganisationUnitGroup> getOrganisationUnitGroups()

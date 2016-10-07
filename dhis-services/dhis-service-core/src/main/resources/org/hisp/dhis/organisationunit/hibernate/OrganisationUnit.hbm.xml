@@ -32,8 +32,6 @@
     
     <property name="hierarchyLevel" column="hierarchylevel" access="property" index="in_organisationunit_hierarchylevel" />
 
-    <property name="uuid" unique="true" length="36" />
-
     <property name="description" type="text" />
 
     <property name="openingDate" column="openingdate" type="date" not-null="true" />
@@ -95,16 +93,11 @@
     <property name="phoneNumber" length="150" />
 
     <!-- Object Translation -->
-    <set name="translations" table="organisationunittranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="organisationunittranslations" cascade="delete-orphan">
       <cache usage="read-write" />
-      <key column="organisationunitid" foreign-key="fk_objecttranslation_organisationunitid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <key column="organisationunitid" foreign-key="fk_objecttranslation_organisationunitid"  />
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
-
 
     <!-- Access properties -->
     <many-to-one name="user" class="org.hisp.dhis.user.User" column="userid" foreign-key="fk_organisationunit_userid" />
@@ -118,9 +111,5 @@
     </set>
 
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

@@ -31,28 +31,32 @@ package org.hisp.dhis.render;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.common.IdentifiableObject;
+import org.hisp.dhis.metadata.version.MetadataVersion;
 import org.hisp.dhis.schema.Schema;
 import org.hisp.dhis.schema.SchemaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -68,12 +72,12 @@ public class DefaultRenderService
 {
     private static final Log log = LogFactory.getLog( RenderService.class );
 
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
+
+    private static final XmlMapper xmlMapper = new XmlMapper();
+
     @Autowired
     private SchemaService schemaService;
-
-    private final ObjectMapper jsonMapper = new ObjectMapper();
-
-    private final XmlMapper xmlMapper = new XmlMapper();
 
     //--------------------------------------------------------------------------
     // RenderService
@@ -226,46 +230,77 @@ public class DefaultRenderService
         return map;
     }
 
+    @Override
+    public List<MetadataVersion> fromMetadataVersion( InputStream versions, RenderFormat format ) throws IOException
+    {
+        List<MetadataVersion> metadataVersions = new ArrayList<>();
+
+        if ( RenderFormat.JSON == format )
+        {
+            JsonNode rootNode = jsonMapper.readTree( versions );
+
+            if ( rootNode != null )
+            {
+                JsonNode versionsNode = rootNode.get( "metadataversions" );
+
+                if ( versionsNode instanceof ArrayNode )
+                {
+                    ArrayNode arrayVersionsNode = (ArrayNode) versionsNode;
+                    metadataVersions = jsonMapper.readValue( arrayVersionsNode.toString().getBytes(), new TypeReference<List<MetadataVersion>>()
+                    {
+                    } );
+                }
+            }
+        }
+
+        return metadataVersions;
+    }
+
     //--------------------------------------------------------------------------
     // Helpers
     //--------------------------------------------------------------------------
 
-    public ObjectMapper getJsonMapper()
+    public static ObjectMapper getJsonMapper()
     {
         return jsonMapper;
     }
 
-    public XmlMapper getXmlMapper()
+    public static XmlMapper getXmlMapper()
     {
         return xmlMapper;
     }
 
-    @PostConstruct
-    private void configureObjectMappers()
+    static
     {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer( String.class, new EmptyStringToNullStdDeserializer() );
+        module.addDeserializer( Date.class, new ParseDateStdDeserializer() );
+        module.addSerializer( Date.class, new WriteDateStdSerializer() );
+
         ObjectMapper[] objectMappers = new ObjectMapper[]{ jsonMapper, xmlMapper };
 
         for ( ObjectMapper objectMapper : objectMappers )
         {
-            // objectMapper.setDateFormat( format );
             objectMapper.setSerializationInclusion( JsonInclude.Include.NON_NULL );
-            objectMapper.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
-            objectMapper.configure( SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false );
-            objectMapper.configure( SerializationFeature.FAIL_ON_EMPTY_BEANS, false );
-            objectMapper.configure( SerializationFeature.WRAP_EXCEPTIONS, true );
+            objectMapper.disable( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS );
+            objectMapper.disable( SerializationFeature.WRITE_EMPTY_JSON_ARRAYS );
+            objectMapper.disable( SerializationFeature.FAIL_ON_EMPTY_BEANS );
+            objectMapper.enable( SerializationFeature.WRAP_EXCEPTIONS );
 
-            objectMapper.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false );
-            objectMapper.configure( DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true );
-            objectMapper.configure( DeserializationFeature.WRAP_EXCEPTIONS, true );
+            objectMapper.disable( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES );
+            objectMapper.enable( DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES );
+            objectMapper.enable( DeserializationFeature.WRAP_EXCEPTIONS );
 
             objectMapper.disable( MapperFeature.AUTO_DETECT_FIELDS );
             objectMapper.disable( MapperFeature.AUTO_DETECT_CREATORS );
             objectMapper.disable( MapperFeature.AUTO_DETECT_GETTERS );
             objectMapper.disable( MapperFeature.AUTO_DETECT_SETTERS );
             objectMapper.disable( MapperFeature.AUTO_DETECT_IS_GETTERS );
+
+            objectMapper.registerModule( module );
         }
 
         jsonMapper.getFactory().enable( JsonGenerator.Feature.QUOTE_FIELD_NAMES );
-        xmlMapper.configure( ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true );
+        xmlMapper.enable( ToXmlGenerator.Feature.WRITE_XML_DECLARATION );
     }
 }

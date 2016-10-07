@@ -1855,3 +1855,104 @@ function selectSymbol( img )
 	$( "#symbolDiv" ).dialog( "close" );
 	$( "#symbolImg" ).attr( "src", "../images/orgunitgroup/" + img ).show();
 }
+
+var months =
+{
+  january: {
+      index: 1,
+      noOfDays: 28
+  },
+  february: {
+      index: 2,
+      noOfDays: 28
+  },
+  march: {
+      index: 3,
+      noOfDays: 28
+  },
+  april: {
+      index: 4,
+      noOfDays: 28
+  },
+  may: {
+      index: 5,
+      noOfDays: 28
+  },
+  june: {
+      index: 6,
+      noOfDays: 28
+  },
+  july: {
+      index: 7,
+      noOfDays: 28
+  },
+  august: {
+      index: 8,
+      noOfDays: 28
+  },
+  september: {
+      index: 9,
+      noOfDays: 28
+  },
+  october: {
+      index: 10,
+      noOfDays: 28
+  },
+  november: {
+      index: 11,
+      noOfDays: 28
+  },
+  december: {
+      index: 12,
+      noOfDays: 28
+  }
+};
+
+var generate =
+{
+    month: function (id)
+    {
+        var options = Object.keys(months).map(function (month)
+        {
+            return "<option value='" + months[month].index + "'>" + i18n_months[month] + "</option>";
+        }).join("");
+        $("#" + id).html(options);
+    },
+    days: function (id, monthIndex)
+    {
+        var month = Object.keys(months)[--monthIndex];
+        var noOfDays = months[month].noOfDays;
+        var options = "";
+        for (var count = 1; count <= noOfDays; count++)
+        {
+            options += "<option value='" + count + "'>" + count + "</option>"
+        }
+        $("#" + id).html(options);
+    },
+    time: function (id)
+    {
+        var hours = 24;
+        var times = [];
+        for (var hour = 0; hour < hours; hour++)
+        {
+            times.push(getHour(hour) + ":00");
+            times.push(getHour(hour) + ":30");
+        }
+
+        var timeOptions = times.map(function (time)
+        {
+            return "<option value='" + time + "'>" + time + "</option>"
+        }).join("");
+        $("#" + id).html(timeOptions);
+    }
+};
+
+var getHour = function (hour)
+{
+    return hour < 10 ? "0" + hour : hour;
+};
+
+var getMinutes = function (minutes)
+{
+    return minutes == 0 ? "00" : minutes;
+};

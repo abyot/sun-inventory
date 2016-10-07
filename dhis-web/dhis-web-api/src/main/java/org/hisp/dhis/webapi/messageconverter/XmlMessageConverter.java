@@ -29,8 +29,10 @@ package org.hisp.dhis.webapi.messageconverter;
  */
 
 import com.google.common.collect.ImmutableList;
+import org.hisp.dhis.common.Compression;
 import org.hisp.dhis.node.NodeService;
 import org.hisp.dhis.node.types.RootNode;
+import org.hisp.dhis.webapi.utils.ContextUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -41,6 +43,8 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -52,20 +56,36 @@ public class XmlMessageConverter extends AbstractHttpMessageConverter<RootNode>
         .add( new MediaType( "text", "xml" ) )
         .build();
 
-    public static final ImmutableList<MediaType> COMPRESSED_SUPPORTED_MEDIA_TYPES = ImmutableList.<MediaType>builder()
+    public static final ImmutableList<MediaType> GZIP_SUPPORTED_MEDIA_TYPES = ImmutableList.<MediaType>builder()
         .add( new MediaType( "application", "xml+gzip" ) )
         .add( new MediaType( "text", "xml+gzip" ) )
+        .build();
+
+    public static final ImmutableList<MediaType> ZIP_SUPPORTED_MEDIA_TYPES = ImmutableList.<MediaType>builder()
+        .add( new MediaType( "application", "xml+zip" ) )
+        .add( new MediaType( "text", "xml+zip" ) )
         .build();
 
     @Autowired
     private NodeService nodeService;
 
-    private boolean compressed;
+    private Compression compression;
 
-    public XmlMessageConverter( boolean compressed )
+    public XmlMessageConverter( Compression compression )
     {
-        setSupportedMediaTypes( compressed ? COMPRESSED_SUPPORTED_MEDIA_TYPES : SUPPORTED_MEDIA_TYPES );
-        this.compressed = compressed;
+        this.compression = compression;
+
+        switch ( this.compression )
+        {
+            case NONE:
+                setSupportedMediaTypes( SUPPORTED_MEDIA_TYPES );
+                break;
+            case GZIP:
+                setSupportedMediaTypes( GZIP_SUPPORTED_MEDIA_TYPES );
+                break;
+            case ZIP:
+                setSupportedMediaTypes( ZIP_SUPPORTED_MEDIA_TYPES );
+        }
     }
 
     @Override
@@ -89,15 +109,27 @@ public class XmlMessageConverter extends AbstractHttpMessageConverter<RootNode>
     @Override
     protected void writeInternal( RootNode rootNode, HttpOutputMessage outputMessage ) throws IOException, HttpMessageNotWritableException
     {
-        if ( compressed )
+        if ( Compression.GZIP == compression )
         {
+            outputMessage.getHeaders().set( ContextUtils.HEADER_CONTENT_DISPOSITION, "attachment; filename=metadata.xml.gz" );
+            outputMessage.getHeaders().set( ContextUtils.HEADER_CONTENT_TRANSFER_ENCODING, "binary" );
             GZIPOutputStream outputStream = new GZIPOutputStream( outputMessage.getBody() );
+            nodeService.serialize( rootNode, "application/xml", outputStream );
+            outputStream.close();
+        }
+        if ( Compression.ZIP == compression )
+        {
+            outputMessage.getHeaders().set( ContextUtils.HEADER_CONTENT_DISPOSITION, "attachment; filename=metadata.xml.zip" );
+            outputMessage.getHeaders().set( ContextUtils.HEADER_CONTENT_TRANSFER_ENCODING, "binary" );
+            ZipOutputStream outputStream = new ZipOutputStream( outputMessage.getBody() );
+            outputStream.putNextEntry( new ZipEntry( "metadata.xml" ) );
             nodeService.serialize( rootNode, "application/xml", outputStream );
             outputStream.close();
         }
         else
         {
             nodeService.serialize( rootNode, "application/xml", outputMessage.getBody() );
+            outputMessage.getBody().close();
         }
     }
 }

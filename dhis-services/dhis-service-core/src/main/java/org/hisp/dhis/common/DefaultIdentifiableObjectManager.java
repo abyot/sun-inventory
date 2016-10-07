@@ -1,7 +1,5 @@
 package org.hisp.dhis.common;
 
-import org.apache.commons.lang3.StringUtils;
-
 /*
  * Copyright (c) 2004-2016, University of Oslo
  * All rights reserved.
@@ -30,8 +28,10 @@ import org.apache.commons.lang3.StringUtils;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hisp.dhis.attribute.Attribute;
 import org.hisp.dhis.attribute.AttributeValue;
@@ -40,8 +40,7 @@ import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
-import org.hisp.dhis.organisationunit.OrganisationUnit;
-import org.hisp.dhis.organisationunit.OrganisationUnitService;
+import org.hisp.dhis.translation.ObjectTranslation;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserCredentials;
@@ -84,9 +83,6 @@ public class DefaultIdentifiableObjectManager
 
     @Autowired
     private SessionFactory sessionFactory;
-
-    @Autowired
-    private OrganisationUnitService organisationUnitService;
 
     @Autowired
     private CurrentUserService currentUserService;
@@ -165,6 +161,20 @@ public class DefaultIdentifiableObjectManager
         {
             update( object, user );
         }
+    }
+
+    @Override
+    public void updateTranslations( IdentifiableObject persistedObject, Set<ObjectTranslation> translations )
+    {
+        Session session = sessionFactory.getCurrentSession();
+        persistedObject.getTranslations().clear();
+        session.flush();
+
+        translations.forEach( translation ->
+        {
+            session.save( translation );
+            persistedObject.getTranslations().add( translation );
+        } );
     }
 
     @Override
@@ -879,13 +889,6 @@ public class DefaultIdentifiableObjectManager
             return null;
         }
 
-        Attribute attribute = null;
-
-        if ( idScheme.isAttribute() )
-        {
-            attribute = get( Attribute.class, idScheme.getAttribute() );
-        }
-
         if ( !StringUtils.isEmpty( value ) )
         {
             if ( idScheme.isNull() || idScheme.is( IdentifiableProperty.UID ) )
@@ -902,6 +905,7 @@ public class DefaultIdentifiableObjectManager
             }
             else if ( idScheme.is( IdentifiableProperty.ATTRIBUTE ) )
             {
+                Attribute attribute = get( Attribute.class, idScheme.getAttribute() );
                 return store.getByUniqueAttributeValue( attribute, value );
             }
             else if ( idScheme.is( IdentifiableProperty.ID ) )
@@ -910,10 +914,6 @@ public class DefaultIdentifiableObjectManager
                 {
                     return store.get( Integer.valueOf( value ) );
                 }
-            }
-            else if ( idScheme.is( IdentifiableProperty.UUID ) && OrganisationUnit.class.isAssignableFrom( clazz ) )
-            {
-                return (T) organisationUnitService.getOrganisationUnitByUuid( value );
             }
 
             throw new InvalidIdentifierReferenceException( "Invalid identifiable property / class combination: " + idScheme );

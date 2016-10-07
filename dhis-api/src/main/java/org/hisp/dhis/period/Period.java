@@ -28,27 +28,23 @@ package org.hisp.dhis.period;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.BaseDimensionalItemObject;
 import org.hisp.dhis.common.DimensionItemType;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeDeserializer;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeSerializer;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author Kristian Nordal
@@ -126,7 +122,7 @@ public class Period
     {
         return getIsoDate();
     }
-    
+
     @Override
     public String getUid()
     {
@@ -274,19 +270,19 @@ public class Period
 
     /**
      * Determines whether this is a future period relative to the current time.
-     * 
+     *
      * @return true if this period ends in the future, false otherwise.
      */
     public boolean isFuture()
     {
         return getEndDate().after( new Date() );
     }
-    
+
     /**
-     * Indicates whether this period is after the given period. Bases the 
+     * Indicates whether this period is after the given period. Bases the
      * comparison on the end dates of the periods. If the given period is null,
      * false is returned.
-     * 
+     *
      * @param period the period to compare.
      * @return true if this period is after the given period.
      */
@@ -296,7 +292,7 @@ public class Period
         {
             return false;
         }
-        
+
         return getEndDate().after( period.getEndDate() );
     }
 
@@ -309,7 +305,7 @@ public class Period
     {
         return DimensionItemType.PERIOD;
     }
-    
+
     // -------------------------------------------------------------------------
     // hashCode, equals and toString
     // -------------------------------------------------------------------------
@@ -363,7 +359,6 @@ public class Period
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getStartDate()
     {
@@ -376,7 +371,6 @@ public class Period
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getEndDate()
     {

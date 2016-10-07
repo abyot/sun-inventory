@@ -29,6 +29,8 @@ package org.hisp.dhis.predictor;
  */
 
 import org.hisp.dhis.datavalue.DataValue;
+import org.hisp.dhis.organisationunit.OrganisationUnit;
+import org.hisp.dhis.period.Period;
 
 import java.util.Collection;
 import java.util.Date;
@@ -41,11 +43,11 @@ public interface PredictorService
 {
     String ID = PredictorService.class.getName();
 
-    int addPredictor( Predictor p );
+    int addPredictor( Predictor prediector );
 
-    void updatePredictor( Predictor p );
+    void updatePredictor( Predictor prediector );
 
-    void deletePredictor( Predictor p );
+    void deletePredictor( Predictor prediector );
 
     Predictor getPredictor( int id );
 
@@ -59,7 +61,13 @@ public interface PredictorService
 
     int getPredictorCount();
 
-    Iterable<DataValue> getPredictions( Predictor p, Date start, Date end );
+    Collection<DataValue> getPredictions( Predictor predictor, Collection<OrganisationUnit> sources, Collection<Period> periods );
 
-    int predict( Predictor p, Date Start, Date end );
+    Collection<DataValue> getPredictions( Predictor predictor, Collection<OrganisationUnit> sources, Date start, Date end );
+
+    Collection<DataValue> getPredictions( Predictor predictor, Date start, Date end );
+
+    int predict( Predictor prediector, Collection<OrganisationUnit> sources, Collection<Period> periods );
+
+    int predict( Predictor prediector, Date Start, Date end );
 }

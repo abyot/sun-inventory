@@ -31,6 +31,8 @@ package org.hisp.dhis.trackedentitydatavalue;
 import org.hisp.dhis.common.AuditType;
 import org.hisp.dhis.common.IllegalQueryException;
 import org.hisp.dhis.dataelement.DataElement;
+import org.hisp.dhis.fileresource.FileResource;
+import org.hisp.dhis.fileresource.FileResourceService;
 import org.hisp.dhis.program.ProgramStageInstance;
 import org.hisp.dhis.trackedentity.TrackedEntityInstance;
 import org.hisp.dhis.user.CurrentUserService;
@@ -62,6 +64,9 @@ public class DefaultTrackedEntityDataValueService
     private TrackedEntityDataValueAuditService dataValueAuditService;
 
     @Autowired
+    private FileResourceService fileResourceService;
+
+    @Autowired
     private CurrentUserService currentUserService;
 
     // -------------------------------------------------------------------------
@@ -79,17 +84,22 @@ public class DefaultTrackedEntityDataValueService
             {
                 trackedEntityDataValue.setStoredBy( currentUserService.getCurrentUsername() );
             }
-            
+
             if ( trackedEntityDataValue.getDataElement() == null || trackedEntityDataValue.getDataElement().getValueType() == null )
             {
                 throw new IllegalQueryException( "Data element or type is null or empty" );
             }
-            
+
             String result = dataValueIsValid( trackedEntityDataValue.getValue(), trackedEntityDataValue.getDataElement().getValueType() );
 
             if ( result != null )
             {
                 throw new IllegalQueryException( "Value is not valid:  " + result );
+            }
+
+            if ( trackedEntityDataValue.getDataElement().isFileType() )
+            {
+                handleFileDataValueSave( trackedEntityDataValue );
             }
 
             dataValueStore.saveVoid( trackedEntityDataValue );
@@ -116,18 +126,17 @@ public class DefaultTrackedEntityDataValueService
             {
                 throw new IllegalQueryException( "Data element or type is null or empty" );
             }
-            
+
             String result = dataValueIsValid( trackedEntityDataValue.getValue(), trackedEntityDataValue.getDataElement().getValueType() );
 
             if ( result != null )
             {
                 throw new IllegalQueryException( "Value is not valid:  " + result );
             }
-            
-            TrackedEntityDataValueAudit dataValueAudit = new TrackedEntityDataValueAudit( trackedEntityDataValue, trackedEntityDataValue.getAuditValue(),
-                trackedEntityDataValue.getStoredBy(), AuditType.UPDATE );
 
-            dataValueAuditService.addTrackedEntityDataValueAudit( dataValueAudit );
+            createAndAddAudit( trackedEntityDataValue, trackedEntityDataValue.getStoredBy(), AuditType.UPDATE );
+            handleFileDataValueUpdate( trackedEntityDataValue );
+
             dataValueStore.update( trackedEntityDataValue );
         }
     }
@@ -135,10 +144,10 @@ public class DefaultTrackedEntityDataValueService
     @Override
     public void deleteTrackedEntityDataValue( TrackedEntityDataValue dataValue )
     {
-        TrackedEntityDataValueAudit dataValueAudit = new TrackedEntityDataValueAudit( dataValue, dataValue.getAuditValue(),
-            currentUserService.getCurrentUsername(), AuditType.DELETE );
+        createAndAddAudit( dataValue, currentUserService.getCurrentUsername(), AuditType.DELETE );
 
-        dataValueAuditService.addTrackedEntityDataValueAudit( dataValueAudit );
+        handleFileDataValueDelete( dataValue );
+
         dataValueStore.delete( dataValue );
     }
 
@@ -150,8 +159,8 @@ public class DefaultTrackedEntityDataValueService
 
         for ( TrackedEntityDataValue dataValue : dataValues )
         {
-            TrackedEntityDataValueAudit dataValueAudit = new TrackedEntityDataValueAudit( dataValue, dataValue.getAuditValue(), username, AuditType.DELETE );
-            dataValueAuditService.addTrackedEntityDataValueAudit( dataValueAudit );
+            createAndAddAudit( dataValue, username, AuditType.DELETE );
+            handleFileDataValueDelete( dataValue );
         }
 
         dataValueStore.delete( programStageInstance );
@@ -194,5 +203,82 @@ public class DefaultTrackedEntityDataValueService
         DataElement dataElement )
     {
         return dataValueStore.get( programStageInstance, dataElement );
+    }
+
+    // -------------------------------------------------------------------------
+    // Supportive methods
+    // -------------------------------------------------------------------------
+
+    private void createAndAddAudit( TrackedEntityDataValue dataValue, String username, AuditType auditType )
+    {
+        TrackedEntityDataValueAudit dataValueAudit = new TrackedEntityDataValueAudit( dataValue, dataValue.getAuditValue(), username, auditType );
+        dataValueAuditService.addTrackedEntityDataValueAudit( dataValueAudit );
+    }
+
+    private void handleFileDataValueUpdate( TrackedEntityDataValue dataValue )
+    {
+        String previousFileResourceUid = dataValue.getAuditValue();
+
+        if ( previousFileResourceUid == null || previousFileResourceUid.equals( dataValue.getValue() ) )
+        {
+            return;
+        }
+
+        FileResource fileResource = fetchFileResource( dataValue );
+
+        if ( fileResource == null )
+        {
+            return;
+        }
+
+        fileResourceService.deleteFileResource( previousFileResourceUid );
+
+        setAssigned( fileResource );
+    }
+
+    /**
+     * Update FileResource with 'assigned' status.
+     */
+    private void handleFileDataValueSave( TrackedEntityDataValue dataValue )
+    {
+        FileResource fileResource = fetchFileResource( dataValue );
+
+        if ( fileResource == null )
+        {
+            return;
+        }
+
+        setAssigned( fileResource );
+    }
+
+    /**
+     * Delete associated FileResource if it exists.
+     */
+    private void handleFileDataValueDelete( TrackedEntityDataValue dataValue )
+    {
+        FileResource fileResource = fetchFileResource( dataValue );
+
+        if ( fileResource == null )
+        {
+            return;
+        }
+
+        fileResourceService.deleteFileResource( fileResource.getUid() );
+    }
+
+    private FileResource fetchFileResource( TrackedEntityDataValue dataValue )
+    {
+        if ( !dataValue.getDataElement().isFileType() )
+        {
+            return null;
+        }
+
+        return fileResourceService.getFileResource( dataValue.getValue() );
+    }
+
+    private void setAssigned( FileResource fileResource )
+    {
+        fileResource.setAssigned( true );
+        fileResourceService.updateFileResource( fileResource );
     }
 }

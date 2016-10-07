@@ -44,7 +44,7 @@ function displaySummaryLink()
 function displaySummary()
 {	
 	$( '#notificationDiv' ).hide();
-	$( '#importSummaryDiv' ).show( 'fast' ).load( 'getMetaDataImportSummary.action' );
+	$( '#importSummaryDiv' ).show( 'fast' ).load( 'getMetadataImportReport.action' );
 }
 
 function toggleOptions()

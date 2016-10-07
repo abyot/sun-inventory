@@ -30,12 +30,8 @@ package org.hisp.dhis.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.translation.TranslationProperty;
 
@@ -182,7 +178,6 @@ public class BaseNameableObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( isAttribute = true )
     @PropertyRange( min = 1 )
     public String getShortName()
@@ -196,7 +191,6 @@ public class BaseNameableObject
     }
 
     @Override
-    @JsonView( { DetailedView.class, DimensionalView.class } )
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDisplayShortName()
@@ -212,7 +206,6 @@ public class BaseNameableObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 1 )
     public String getDescription()
@@ -226,7 +219,6 @@ public class BaseNameableObject
     }
 
     @Override
-    @JsonView( { DetailedView.class, DimensionalView.class } )
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDisplayDescription()

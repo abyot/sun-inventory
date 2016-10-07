@@ -30,7 +30,9 @@ package org.hisp.dhis.dxf2.synch;
 
 import java.util.Date;
 
+import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
 import org.hisp.dhis.dxf2.importsummary.ImportSummary;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
 
 /**
  * @author Lars Helge Overland
@@ -38,10 +40,12 @@ import org.hisp.dhis.dxf2.importsummary.ImportSummary;
 public interface SynchronizationManager
 {
     ImportSummary executeDataPush();
+
+    ImportSummaries executeAnonymousEventPush();
     
     Date getLastSynchSuccess();
     
-    org.hisp.dhis.dxf2.metadata.ImportSummary executeMetadataPull( String url );
+    ImportReport executeMetadataPull( String url );
     
     AvailabilityStatus isRemoteServerAvailable();    
 }

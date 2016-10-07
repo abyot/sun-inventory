@@ -29,14 +29,11 @@ package org.hisp.dhis.dxf2.datavalueset;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.IdentifiableProperty;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
+import org.hisp.dhis.common.IdScheme;
 import org.hisp.dhis.dxf2.datavalue.DataValue;
 
 import java.util.ArrayList;
@@ -95,6 +92,8 @@ public class DataValueSet
 
     protected List<DataValue> dataValues = new ArrayList<>();
 
+    protected List<String> attributeCategoryOptions;
+
     //--------------------------------------------------------------------------
     // Constructors
     //--------------------------------------------------------------------------
@@ -108,8 +107,7 @@ public class DataValueSet
     //--------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getIdScheme()
     {
         return idScheme;
@@ -121,8 +119,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getDataElementIdScheme()
     {
         return dataElementIdScheme;
@@ -134,8 +131,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getOrgUnitIdScheme()
     {
         return orgUnitIdScheme;
@@ -147,8 +143,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public Boolean getDryRun()
     {
         return dryRun;
@@ -160,8 +155,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getStrategy()
     {
         return strategy;
@@ -173,8 +167,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getDataSet()
     {
         return dataSet;
@@ -186,8 +179,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getCompleteDate()
     {
         return completeDate;
@@ -199,8 +191,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getPeriod()
     {
         return period;
@@ -212,8 +203,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getOrgUnit()
     {
         return orgUnit;
@@ -225,8 +215,7 @@ public class DataValueSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( isAttribute = true )
     public String getAttributeOptionCombo()
     {
         return attributeOptionCombo;
@@ -238,8 +227,7 @@ public class DataValueSet
     }
 
     @JsonProperty( value = "dataValues" )
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlElementWrapper( localName = "dataValues", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlElementWrapper( localName = "dataValues", useWrapping = false, namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "dataValue", namespace = DxfNamespaces.DXF_2_0 )
     public List<DataValue> getDataValues()
     {
@@ -249,6 +237,18 @@ public class DataValueSet
     public void setDataValues( List<DataValue> dataValues )
     {
         this.dataValues = dataValues;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public List<String> getAttributeCategoryOptions()
+    {
+        return attributeCategoryOptions;
+    }
+
+    public void setAttributeCategoryOptions( List<String> attributeCategoryOptions )
+    {
+        this.attributeCategoryOptions = attributeCategoryOptions;
     }
 
     //--------------------------------------------------------------------------
@@ -291,28 +291,42 @@ public class DataValueSet
     {
     }
 
-    public IdentifiableProperty getIdSchemeProperty()
+    /**
+     * Returns the general identifier scheme. IdScheme.NULL is returned if
+     * scheme has not been set.
+     */
+    public IdScheme getIdSchemeProperty()
     {
         String scheme = getIdScheme();
-        return scheme != null ? IdentifiableProperty.valueOf( scheme.toUpperCase() ) : null;
+        return IdScheme.from( scheme );
     }
 
-    public IdentifiableProperty getDataElementIdSchemeProperty()
+    /**
+     * Returns the data element identifier scheme. Falls back to the general
+     * identifier scheme if not set. IdScheme.NULL is returned if no scheme has
+     * been set.
+     */
+    public IdScheme getDataElementIdSchemeProperty()
     {
         String dataElementScheme = getDataElementIdScheme();
         String scheme = getIdScheme();
 
         scheme = defaultIfEmpty( dataElementScheme, scheme );
-        return scheme != null ? IdentifiableProperty.valueOf( scheme.toUpperCase() ) : null;
+        return IdScheme.from( scheme );
     }
 
-    public IdentifiableProperty getOrgUnitIdSchemeProperty()
+    /**
+     * Returns the organisation unit identifier scheme. Falls back to the general
+     * identifier scheme if not set. IdScheme.NULL is returned if no scheme has
+     * been set.
+     */
+    public IdScheme getOrgUnitIdSchemeProperty()
     {
         String orgUnitScheme = getOrgUnitIdScheme();
         String scheme = getIdScheme();
 
         scheme = defaultIfEmpty( orgUnitScheme, scheme );
-        return scheme != null ? IdentifiableProperty.valueOf( scheme.toUpperCase() ) : null;
+        return IdScheme.from( scheme );
     }
 
     //--------------------------------------------------------------------------

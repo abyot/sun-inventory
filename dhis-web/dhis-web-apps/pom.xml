@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.hisp.dhis</groupId>
     <artifactId>dhis-web</artifactId>
-    <version>2.24-SNAPSHOT</version>
+    <version>2.25-SNAPSHOT</version>
   </parent>
 
   <artifactId>dhis-web-apps</artifactId>
@@ -30,6 +30,15 @@
             </goals>
             <configuration>
               <artifactItems>
+                <!-- Core Resource -->
+                <artifactItem>
+                  <groupId>org.hisp.dhis</groupId>
+                  <artifactId>dhis-app-core-resource</artifactId>
+                  <version>${apps.version}</version>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-core-resource</outputDirectory>
+                  <includes>**/*.*</includes>
+                </artifactItem>
                 <!-- Settings -->
                 <artifactItem>
                   <groupId>org.hisp.dhis</groupId>
@@ -64,6 +73,15 @@
                   <version>${apps.version}</version>
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-pivot</outputDirectory>
+                  <includes>**/*.*</includes>
+                </artifactItem>
+                <!-- Visualizer -->
+                <artifactItem>
+                  <groupId>org.hisp.dhis</groupId>
+                  <artifactId>dhis-app-visualizer</artifactId>
+                  <version>${apps.version}</version>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-visualizer</outputDirectory>
                   <includes>**/*.*</includes>
                 </artifactItem>
                 <!-- Mapping -->
@@ -110,7 +128,25 @@
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-cache-cleaner</outputDirectory>
                   <includes>**/*.*</includes>
-                </artifactItem>                
+                </artifactItem>
+                <!--  Menu management -->
+                <artifactItem>
+                  <groupId>org.hisp.dhis</groupId>
+                  <artifactId>dhis-app-menu-management</artifactId>
+                  <version>${apps.version}</version>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-menu-management</outputDirectory>
+                  <includes>**/*.*</includes>
+                </artifactItem>
+                <!--  User profile -->
+                <artifactItem>
+                  <groupId>org.hisp.dhis</groupId>
+                  <artifactId>dhis-app-user-profile</artifactId>
+                  <version>${apps.version}</version>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/${project.artifactId}/dhis-web-user-profile</outputDirectory>
+                  <includes>**/*.*</includes>
+                </artifactItem>
               </artifactItems>
             </configuration>
           </execution>
@@ -164,6 +200,6 @@
 
   <properties>
     <rootDir>../../</rootDir>
-    <apps.version>2.24-SNAPSHOT</apps.version>
+    <apps.version>2.25-SNAPSHOT</apps.version>
   </properties>
 </project>

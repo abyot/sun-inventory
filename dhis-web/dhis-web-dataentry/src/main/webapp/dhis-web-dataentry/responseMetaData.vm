@@ -19,8 +19,8 @@
 "optionSets": {
 #set( $size = $dataElementsWithOptionSet.size() )
 #foreach( $dataElement in $dataElementsWithOptionSet )
-#set( $size2 = $dataElement.categoryCombo.getSortedOptionCombos().size() )
-#foreach( $option in $dataElement.categoryCombo.getSortedOptionCombos() )"${dataElement.uid}-${option.uid}":{"uid":"$encoder.jsonEncode( ${dataElement.optionSet.uid} )","v":${dataElement.optionSet.version}}#if( $velocityCount < $size2 ),#end#end #if( $velocityCount < $size ),#end
+#set( $size2 = $dataElement.getSortedCategoryOptionCombos().size() )
+#foreach( $option in $dataElement.getSortedCategoryOptionCombos() )"${dataElement.uid}-${option.uid}":{"uid":"$encoder.jsonEncode( ${dataElement.optionSet.uid} )","v":${dataElement.optionSet.version}}#if( $velocityCount < $size2 ),#end#end #if( $velocityCount < $size ),#end
 #end },
 
 "indicatorFormulas": {
@@ -34,7 +34,14 @@
 #set( $size = $dataSets.size() )
 #foreach( $dataSet in $dataSets )
 "${dataSet.uid}":{"name":"$encoder.jsonEncode( ${dataSet.displayName} )","periodType":"$encoder.jsonEncode( ${dataSet.periodType.name} )","categoryCombo":"${dataSet.categoryCombo.uid}","version":"${dataSet.version}",
-"type":"${dataSet.getFormType()}","expiryDays":"${dataSet.expiryDays}","openFuturePeriods":${dataSet.openFuturePeriods},"fieldCombinationRequired":${dataSet.fieldCombinationRequired},
+"type":"${dataSet.getFormType()}","expiryDays":"${dataSet.expiryDays}",
+#if( ${dataSet.startDate} )
+"startDate":"${dataSet.startDate}",
+#end
+#if( ${dataSet.endDate} )
+"endDate":"${dataSet.endDate}",
+#end
+"openFuturePeriods":${dataSet.openFuturePeriods},"fieldCombinationRequired":${dataSet.fieldCombinationRequired},
 "validCompleteOnly":${dataSet.validCompleteOnly},"skipOffline":${dataSet.skipOffline}, "renderAsTabs":${dataSet.renderAsTabs}, "renderHorizontally":${dataSet.renderHorizontally}}#if( $velocityCount < $size ),#end
 #end },
 

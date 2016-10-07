@@ -34,7 +34,6 @@ import org.hisp.dhis.external.conf.DhisConfigurationProvider;
 import org.hisp.dhis.trackedentity.TrackedEntityAttribute;
 import org.hisp.dhis.trackedentity.TrackedEntityInstance;
 import org.hisp.dhis.user.CurrentUserService;
-import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -126,9 +125,9 @@ public class DefaultTrackedEntityAttributeValueService
             throw new IllegalQueryException( "Attribute or type is null or empty" );
         }
 
-        if ( attributeValue.getAttribute().isConfidentialBool() && !dhisConfigurationProvider.isEncryptionConfigured().isOk() )
+        if ( attributeValue.getAttribute().isConfidentialBool() && !dhisConfigurationProvider.getEncryptionStatus().isOk() )
         {
-            throw new EncryptionOperationNotPossibleException( "Unable to encrypt data, encryption is not correctly configured" );
+            throw new IllegalStateException( "Unable to encrypt data, encryption is not correctly configured" );
         }
         
         String result = dataValueIsValid( attributeValue.getValue(), attributeValue.getAttribute().getValueType() );

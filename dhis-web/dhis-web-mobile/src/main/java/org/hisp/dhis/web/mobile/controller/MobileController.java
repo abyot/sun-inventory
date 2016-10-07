@@ -54,13 +54,13 @@ public class MobileController
         return "redirect:/mobile/index";
     }
 
-    @RequestMapping(value = "/")
+    @RequestMapping( value = "/" )
     public String baseWithSlash()
     {
         return "redirect:/mobile/index";
     }
 
-    @RequestMapping(value = "/index")
+    @RequestMapping( value = "/index" )
     public String index( Model model, HttpServletRequest request )
     {
         populateContextPath( model, request );
@@ -69,7 +69,7 @@ public class MobileController
         return "layout";
     }
 
-    @RequestMapping(value = "/messages")
+    @RequestMapping( value = "/messages" )
     public String messages( Model model, HttpServletRequest request )
     {
         populateContextPath( model, request );
@@ -78,7 +78,7 @@ public class MobileController
         return "layout";
     }
 
-    @RequestMapping(value = "/messages/new-message")
+    @RequestMapping( value = "/messages/new-message" )
     public String newMessage( Model model, HttpServletRequest request )
     {
         populateContextPath( model, request );
@@ -87,8 +87,8 @@ public class MobileController
         return "layout";
     }
 
-    @RequestMapping(value = "/messages/{uid}")
-    public String message( @PathVariable("uid") String uid, Model model, HttpServletRequest request )
+    @RequestMapping( value = "/messages/{uid}" )
+    public String message( @PathVariable( "uid" ) String uid, Model model, HttpServletRequest request )
     {
         populateContextPath( model, request );
         model.addAttribute( "page", "message.vm" );
@@ -97,7 +97,7 @@ public class MobileController
         return "layout";
     }
 
-    @RequestMapping(value = "/interpretations")
+    @RequestMapping( value = "/interpretations" )
     public String interpretations( Model model, HttpServletRequest request )
     {
         populateContextPath( model, request );
@@ -106,7 +106,7 @@ public class MobileController
         return "layout";
     }
 
-    @RequestMapping(value = "/user-account")
+    @RequestMapping( value = "/user-account" )
     public String settings( Model model, HttpServletRequest request )
     {
         populateContextPath( model, request );
@@ -115,7 +115,7 @@ public class MobileController
         return "layout";
     }
 
-    @RequestMapping(value = "/data-entry")
+    @RequestMapping( value = "/data-entry" )
     public String dataEntry( Model model, HttpServletRequest request )
     {
         populateContextPath( model, request );
@@ -124,7 +124,7 @@ public class MobileController
         return "layout";
     }
 
-    @RequestMapping(value = "/app-cache")
+    @RequestMapping( value = "/app-cache" )
     public void appCache( HttpServletResponse response ) throws IOException
     {
         response.setContentType( "text/cache-manifest" );

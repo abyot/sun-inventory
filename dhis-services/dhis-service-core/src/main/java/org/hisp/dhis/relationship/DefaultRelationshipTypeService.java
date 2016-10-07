@@ -28,12 +28,9 @@ package org.hisp.dhis.relationship;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import org.hisp.dhis.i18n.I18nService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Abyot Asalefew
@@ -53,13 +50,6 @@ public class DefaultRelationshipTypeService
         this.relationshipTypeStore = relationshipTypeStore;
     }
 
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
-    }
-
     // -------------------------------------------------------------------------
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -73,19 +63,19 @@ public class DefaultRelationshipTypeService
     @Override
     public List<RelationshipType> getAllRelationshipTypes()
     {
-        return i18n( i18nService, relationshipTypeStore.getAll() );
+        return relationshipTypeStore.getAll();
     }
 
     @Override
     public RelationshipType getRelationshipType( int id )
     {
-        return i18n( i18nService, relationshipTypeStore.get( id ) );
+        return relationshipTypeStore.get( id );
     }
 
     @Override
     public RelationshipType getRelationshipType( String uid )
     {
-        return i18n( i18nService, relationshipTypeStore.getByUid( uid ) );
+        return relationshipTypeStore.getByUid( uid );
     }
 
     @Override
@@ -103,7 +93,7 @@ public class DefaultRelationshipTypeService
     @Override
     public RelationshipType getRelationshipType( String aIsToB, String bIsToA )
     {
-        return i18n( i18nService, relationshipTypeStore.getRelationshipType( aIsToB, bIsToA ) );
+        return relationshipTypeStore.getRelationshipType( aIsToB, bIsToA );
     }
 
     @Override

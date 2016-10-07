@@ -32,8 +32,6 @@
     <property name="dataElementAttribute" not-null="true" />
 
     <property name="dataElementGroupAttribute" not-null="false" />
-    
-    <property name="categoryAttribute" not-null="false" />
 
     <property name="indicatorAttribute" not-null="true" />
 
@@ -77,35 +75,20 @@
 
     <property name="sqlViewAttribute" not-null="false" />
 
-    <property name="sortOrder" />
+    <property name="sectionAttribute" not-null="false" />
 
-    <!-- commented out for now, not sure if we really need this mapping.
-      It also causes issues with recursion Attribute <=> AttributeValues <=> Attribute
-    <set name="attributeValues" inverse="true" lazy="true">
-      <cache usage="read-write" />
-      <key column="attributeid" />
-      <one-to-many class="AttributeValue" />
-    </set>
-    -->
+    <property name="sortOrder" />
 
     <many-to-one name="optionSet" class="org.hisp.dhis.option.OptionSet" column="optionsetid"
       foreign-key="fk_attribute_optionsetid" />
 
     <!-- Object Translation -->
-    <set name="translations" table="attributetranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="attributetranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="attributeid" foreign-key="fk_objecttranslation_attributeid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

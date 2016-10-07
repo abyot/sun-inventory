@@ -33,7 +33,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.dxf2.common.Status;
-import org.hisp.dhis.dxf2.metadata2.feedback.ImportReport;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
 import org.hisp.dhis.dxf2.webmessage.AbstractWebMessageResponse;
 import org.hisp.dhis.feedback.Stats;
 import org.hisp.dhis.feedback.TypeReport;
@@ -71,7 +71,8 @@ public class ImportReportWebMessageResponse
 
     @JsonProperty
     @JacksonXmlElementWrapper( localName = "typeReports", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "typeReport", namespace = DxfNamespaces.DXF_2_0 ) public List<TypeReport> getTypeReports()
+    @JacksonXmlProperty( localName = "typeReport", namespace = DxfNamespaces.DXF_2_0 )
+    public List<TypeReport> getTypeReports()
     {
         return importReport.getTypeReports();
     }

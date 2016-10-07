@@ -29,7 +29,6 @@ package org.hisp.dhis.organisationunit;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -43,8 +42,6 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.adapter.JacksonOrganisationUnitChildrenSerializer;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataset.DataSet;
@@ -52,7 +49,6 @@ import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
-import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.user.User;
 
 import java.util.ArrayList;
@@ -64,7 +60,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,8 +83,6 @@ public class OrganisationUnit
     private static final Pattern COORDINATE_PATTERN = Pattern.compile( "([\\-0-9.]+,[\\-0-9.]+)" );
 
     private static final String NAME_SEPARATOR = " / ";
-
-    private String uuid;
 
     private OrganisationUnit parent;
 
@@ -124,7 +117,7 @@ public class OrganisationUnit
     private Set<Program> programs = new HashSet<>();
 
     private Set<User> users = new HashSet<>();
-    
+
     private Set<DataElementCategoryOption> categoryOptions = new HashSet<>();
 
     // -------------------------------------------------------------------------
@@ -197,11 +190,6 @@ public class OrganisationUnit
     @Override
     public void setAutoFields()
     {
-        if ( uuid == null )
-        {
-            uuid = UUID.randomUUID().toString();
-        }
-
         super.setAutoFields();
     }
 
@@ -276,13 +264,13 @@ public class OrganisationUnit
         users.remove( user );
         user.getOrganisationUnits().remove( this );
     }
-    
+
     public void addCategoryOption( DataElementCategoryOption categoryOption )
     {
         categoryOptions.add( categoryOption );
         categoryOption.getOrganisationUnits().add( this );
     }
-    
+
     public void removeCategoryOption( DataElementCategoryOption categoryOption )
     {
         categoryOptions.remove( categoryOption );
@@ -587,18 +575,17 @@ public class OrganisationUnit
     /**
      * Returns the list of ancestor organisation units for this organisation unit.
      * Does not include itself. The list is ordered by root first.
-     * 
+     *
      * @throws IllegalStateException if circular parent relationships is detected.
      */
     @JsonProperty( "ancestors" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "ancestors", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "organisationUnit", namespace = DxfNamespaces.DXF_2_0 )
     public List<OrganisationUnit> getAncestors()
     {
         List<OrganisationUnit> units = new ArrayList<>();
-        
+
         Set<OrganisationUnit> visitedUnits = new HashSet<>();
 
         OrganisationUnit unit = parent;
@@ -609,7 +596,7 @@ public class OrganisationUnit
             {
                 throw new IllegalStateException( "Organisation unit '" + this.toString() + "' has circular parent relationships: '" + unit + "'" );
             }
-            
+
             units.add( unit );
             unit = unit.getParent();
         }
@@ -815,10 +802,10 @@ public class OrganisationUnit
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Indicates whether this organisation unit has at least one associated
      * category option.
@@ -827,7 +814,7 @@ public class OrganisationUnit
     {
         return categoryOptions != null && !categoryOptions.isEmpty();
     }
-    
+
     @Override
     public boolean haveUniqueNames()
     {
@@ -844,22 +831,7 @@ public class OrganisationUnit
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( isAttribute = true )
-    @PropertyRange( min = 36, max = 36 )
-    public String getUuid()
-    {
-        return uuid;
-    }
-
-    public void setUuid( String uuid )
-    {
-        this.uuid = uuid;
-    }
-
-    @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public OrganisationUnit getParent()
     {
@@ -872,7 +844,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getPath()
     {
@@ -946,7 +917,6 @@ public class OrganisationUnit
 
     @JsonProperty
     @JsonSerialize( contentUsing = JacksonOrganisationUnitChildrenSerializer.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "children", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "child", namespace = DxfNamespaces.DXF_2_0 )
     public Set<OrganisationUnit> getChildren()
@@ -960,7 +930,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getOpeningDate()
     {
@@ -973,7 +942,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getClosedDate()
     {
@@ -986,9 +954,7 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    @PropertyRange( min = 2 )
     public String getComment()
     {
         return comment;
@@ -1000,7 +966,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public FeatureType getFeatureType()
     {
@@ -1013,7 +978,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.GEOLOCATION )
     public String getCoordinates()
@@ -1027,7 +991,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.URL )
     public String getUrl()
@@ -1041,7 +1004,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getContactPerson()
     {
@@ -1054,7 +1016,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getAddress()
     {
@@ -1067,7 +1028,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.EMAIL )
     public String getEmail()
@@ -1081,7 +1041,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.PHONENUMBER )
     public String getPhoneNumber()
@@ -1095,7 +1054,6 @@ public class OrganisationUnit
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getType()
     {
@@ -1109,7 +1067,6 @@ public class OrganisationUnit
 
     @JsonProperty( "organisationUnitGroups" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "organisationUnitGroups", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "organisationUnitGroup", namespace = DxfNamespaces.DXF_2_0 )
     public Set<OrganisationUnitGroup> getGroups()
@@ -1124,7 +1081,6 @@ public class OrganisationUnit
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "dataSets", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "dataSet", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataSet> getDataSets()
@@ -1139,7 +1095,6 @@ public class OrganisationUnit
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "programs", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "program", namespace = DxfNamespaces.DXF_2_0 )
     public Set<Program> getPrograms()
@@ -1154,7 +1109,6 @@ public class OrganisationUnit
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "users", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "userItem", namespace = DxfNamespaces.DXF_2_0 )
     public Set<User> getUsers()
@@ -1186,7 +1140,7 @@ public class OrganisationUnit
     {
         return DimensionItemType.ORGANISATION_UNIT;
     }
-    
+
     // -------------------------------------------------------------------------
     // Getters and setters for transient fields
     // -------------------------------------------------------------------------

@@ -42,8 +42,9 @@ public enum GatewayResponse
     ENCODING_FAILURE( "encoding failed", "" ), 
     PROCESSING( "processing", "" ), 
     QUEUED( "queued" ,"" ), 
-    NO_GATWAY_CONFIGURATION( "no gateway configuration found", "" ), 
-    AUTENTICATION_FAILED( "authentication failed", "" ),
+    NO_GATEWAY_CONFIGURATION( "no gateway configuration found", "" ),
+    NO_DEFAULT_GATEWAY( "no gateway is set to default", "" ),
+    AUTHENTICATION_FAILED( "authentication failed", "" ),
     
     // -------------------------------------------------------------------------
     // BulkSms response codes
@@ -80,8 +81,10 @@ public enum GatewayResponse
     private final String responseMessage;
 
     private final String responseMessageDetail;
+    
+    private String batchId;
 
-    private GatewayResponse( String responseMessage, String responseMessageDetail )
+    GatewayResponse( String responseMessage, String responseMessageDetail )
     {
         this.responseMessage = responseMessage;
         this.responseMessageDetail = responseMessageDetail;
@@ -95,6 +98,16 @@ public enum GatewayResponse
     public String getResponseMessageDetail()
     {
         return responseMessageDetail;
+    }
+    
+    public String getBatchId()
+    {
+        return batchId;
+    }
+
+    public void setBatchId( String batchId )
+    {
+        this.batchId = batchId;
     }
 }
 

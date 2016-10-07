@@ -28,24 +28,21 @@ package org.hisp.dhis.dataapproval;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.Serializable;
-import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
 import org.hisp.dhis.user.User;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
  * Records the approval of DataSet values for a given OrganisationUnit and
  * Period.
- * 
+ *
  * @author Jim Grace
  */
 public class DataApproval
@@ -82,7 +79,7 @@ public class DataApproval
      * The OrganisationUnit of the approval (required).
      */
     private OrganisationUnit organisationUnit;
-    
+
     /**
      * The attribute category option combo being approved (optional).
      */
@@ -165,7 +162,6 @@ public class DataApproval
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataApprovalLevel getDataApprovalLevel()
     {
@@ -271,16 +267,16 @@ public class DataApproval
     public String toString()
     {
         return "DataApproval{" +
-                "id=" + id +
-                ", dataApprovalLevel=" + ( dataApprovalLevel == null ? "(null)" : dataApprovalLevel.getLevel() ) +
-                ", workflow='" + ( workflow == null ? "(null)" : workflow.getName() ) + "'" +
-                ", period=" + ( period == null ? "(null)" : period.getName() ) +
-                ", organisationUnit='" + ( organisationUnit == null ? "(null)" : organisationUnit.getName() ) + "'" +
-                ", attributeOptionCombo='" + ( attributeOptionCombo == null ? "(null)" : attributeOptionCombo.getName() ) + "'" +
-                ", accepted=" + accepted +
-                ", created=" + created +
-                ", creator=" + ( creator == null ? "(null)" : creator.getName() ) +
-                '}';
+            "id=" + id +
+            ", dataApprovalLevel=" + (dataApprovalLevel == null ? "(null)" : dataApprovalLevel.getLevel()) +
+            ", workflow='" + (workflow == null ? "(null)" : workflow.getName()) + "'" +
+            ", period=" + (period == null ? "(null)" : period.getName()) +
+            ", organisationUnit='" + (organisationUnit == null ? "(null)" : organisationUnit.getName()) + "'" +
+            ", attributeOptionCombo='" + (attributeOptionCombo == null ? "(null)" : attributeOptionCombo.getName()) + "'" +
+            ", accepted=" + accepted +
+            ", created=" + created +
+            ", creator=" + (creator == null ? "(null)" : creator.getName()) +
+            '}';
     }
 
     @Override
@@ -291,7 +287,7 @@ public class DataApproval
             return true;
         }
 
-        if ( object == null || !( object instanceof DataApproval ) )
+        if ( object == null || !(object instanceof DataApproval) )
         {
             return false;
         }

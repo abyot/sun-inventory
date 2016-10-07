@@ -48,6 +48,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ public class ValidationController
     private DataElementCategoryService categoryService;
 
     @RequestMapping( value = "/dataSet/{ds}", method = RequestMethod.GET )
-    public String validate( @PathVariable String ds, @RequestParam String pe,
+    public @ResponseBody ValidationSummary validate( @PathVariable String ds, @RequestParam String pe,
         @RequestParam String ou, @RequestParam( required = false ) String aoc,
         HttpServletResponse response, Model model ) throws WebMessageException
     {
@@ -110,8 +111,6 @@ public class ValidationController
         summary.setValidationRuleViolations( new ArrayList<>( validationRuleService.validate( dataSet, period, orgUnit, attributeOptionCombo ) ) );
         summary.setCommentRequiredViolations( validationRuleService.validateRequiredComments( dataSet, period, orgUnit, attributeOptionCombo ) );
 
-        model.addAttribute( "model", summary );
-
-        return "summary";
+        return summary;
     }
 }

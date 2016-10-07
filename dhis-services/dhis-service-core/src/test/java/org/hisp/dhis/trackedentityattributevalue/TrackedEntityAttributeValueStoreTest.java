@@ -100,7 +100,7 @@ public class TrackedEntityAttributeValueStoreTest
         entityInstanceService.addTrackedEntityInstance( entityInstanceC );
         entityInstanceService.addTrackedEntityInstance( entityInstanceD );
 
-        attributeA = createTrackedEntityAttribute(  'A' );
+        attributeA = createTrackedEntityAttribute( 'A' );
         attributeB = createTrackedEntityAttribute( 'B' );
         attributeC = createTrackedEntityAttribute( 'C' );
 
@@ -109,8 +109,11 @@ public class TrackedEntityAttributeValueStoreTest
         attributeService.addTrackedEntityAttribute( attributeC );
 
         attributeValueA = new TrackedEntityAttributeValue( attributeA, entityInstanceA, "A" );
+        attributeValueA.setAutoFields();
         attributeValueB = new TrackedEntityAttributeValue( attributeB, entityInstanceA, "B" );
+        attributeValueB.setAutoFields();
         attributeValueC = new TrackedEntityAttributeValue( attributeA, entityInstanceB, "C" );
+        attributeValueC.setAutoFields();
     }
 
     @Test

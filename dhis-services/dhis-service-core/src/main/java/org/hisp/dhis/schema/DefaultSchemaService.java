@@ -31,10 +31,12 @@ package org.hisp.dhis.schema;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.hibernate.SessionFactory;
 import org.hisp.dhis.schema.descriptors.*;
+import org.hisp.dhis.security.oauth2.OAuth2Client;
 import org.hisp.dhis.system.util.AnnotationUtils;
 import org.hisp.dhis.system.util.ReflectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +57,12 @@ import java.util.Map;
 public class DefaultSchemaService
     implements SchemaService
 {
+    private static final ImmutableMap<Class<?>, String> BEAUTIFY_OVERRIDE = ImmutableMap.<Class<?>, String>builder()
+        .put( OAuth2Client.class, "OAuth2 Client" )
+        .build();
+
     private ImmutableList<SchemaDescriptor> descriptors = new ImmutableList.Builder<SchemaDescriptor>().
+        add( new MetadataVersionSchemaDescriptor() ).
         add( new AttributeSchemaDescriptor() ).
         add( new CategoryComboSchemaDescriptor() ).
         add( new CategoryOptionComboSchemaDescriptor() ).
@@ -77,6 +84,7 @@ public class DefaultSchemaService
         add( new DataElementSchemaDescriptor() ).
         add( new DataEntryFormSchemaDescriptor() ).
         add( new DataSetSchemaDescriptor() ).
+        add( new DataSetElementSchemaDescriptor() ).
         add( new DocumentSchemaDescriptor() ).
         add( new EventChartSchemaDescriptor() ).
         add( new EventReportSchemaDescriptor() ).
@@ -89,11 +97,10 @@ public class DefaultSchemaService
         add( new InterpretationSchemaDescriptor() ).
         add( new LegendSchemaDescriptor() ).
         add( new LegendSetSchemaDescriptor() ).
-        add( new MapLayerSchemaDescriptor() ).
+        add( new ExternalMapLayerSchemaDescriptor() ).
         add( new MapSchemaDescriptor() ).
         add( new MapViewSchemaDescriptor() ).
         add( new MessageConversationSchemaDescriptor() ).
-        add( new MetaDataFilterSchemaDescriptor() ).
         add( new OAuth2ClientSchemaDescriptor() ).
         add( new OptionSchemaDescriptor() ).
         add( new OptionSetSchemaDescriptor() ).
@@ -112,6 +119,7 @@ public class DefaultSchemaService
         add( new ProgramStageSchemaDescriptor() ).
         add( new ProgramStageSectionSchemaDescriptor() ).
         add( new ProgramTrackedEntityAttributeSchemaDescriptor() ).
+        add( new ProgramNotificationTemplateSchemaDescriptor() ).
         add( new ProgramValidationSchemaDescriptor() ).
         add( new RelationshipTypeSchemaDescriptor() ).
         add( new ReportSchemaDescriptor() ).
@@ -122,7 +130,8 @@ public class DefaultSchemaService
         add( new TrackedEntityAttributeSchemaDescriptor() ).
         add( new TrackedEntityInstanceSchemaDescriptor() ).
         add( new TrackedEntitySchemaDescriptor() ).
-        add( new TranslationSchemaDescriptor() ).
+        add( new TrackedEntityDataElementDimensionSchemaDescriptor() ).
+        add( new TrackedEntityProgramIndicatorDimensionSchemaDescriptor() ).
         add( new UserCredentialsSchemaDescriptor() ).
         add( new UserGroupSchemaDescriptor() ).
         add( new UserRoleSchemaDescriptor() ).
@@ -130,8 +139,13 @@ public class DefaultSchemaService
         add( new ValidationCriteriaSchemaDescriptor() ).
         add( new ValidationRuleGroupSchemaDescriptor() ).
         add( new ValidationRuleSchemaDescriptor() ).
+        add( new PushAnalysisSchemaDescriptor() ).
+        add( new ProgramIndicatorGroupSchemaDescriptor() ).
+        add( new ExternalFileResourceSchemaDescriptor() ).
+        add( new OptionGroupSchemaDescriptor() ).
+        add( new OptionGroupSetSchemaDescriptor()).
         build();
-    
+
     private Map<Class<?>, Schema> classSchemaMap = new HashMap<>();
 
     private Map<String, Schema> singularSchemaMap = new HashMap<>();
@@ -158,7 +172,7 @@ public class DefaultSchemaService
                 schema.setPersisted( true );
             }
 
-            schema.setDisplayName( beautify( schema.getName() ) );
+            schema.setDisplayName( beautify( schema ) );
 
             if ( schema.getProperties().isEmpty() )
             {
@@ -216,7 +230,7 @@ public class DefaultSchemaService
         String name = getName( klass );
 
         schema = new Schema( klass, name, name + "s" );
-        schema.setDisplayName( beautify( schema.getName() ) );
+        schema.setDisplayName( beautify( schema ) );
         schema.setPropertyMap( new HashMap<>( propertyIntrospectorService.getPropertiesMap( schema.getKlass() ) ) );
         schema.setMetadata( false );
 
@@ -304,9 +318,14 @@ public class DefaultSchemaService
         }
     }
 
-    private String beautify( String name )
+    private String beautify( Schema schema )
     {
-        String[] camelCaseWords = org.apache.commons.lang3.StringUtils.capitalize( name ).split( "(?=[A-Z])" );
+        if ( BEAUTIFY_OVERRIDE.containsKey( schema.getKlass() ) )
+        {
+            return BEAUTIFY_OVERRIDE.get( schema.getKlass() );
+        }
+
+        String[] camelCaseWords = org.apache.commons.lang3.StringUtils.capitalize( schema.getPlural() ).split( "(?=[A-Z])" );
         return org.apache.commons.lang3.StringUtils.join( camelCaseWords, " " ).trim();
     }
 }

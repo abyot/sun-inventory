@@ -46,9 +46,10 @@ import org.hisp.dhis.common.GridHeader;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+
 /**
  * @author Lars Helge Overland
- * @version $Id$
  */
 public class GridTest
 {
@@ -290,6 +291,51 @@ public class GridTest
         assertTrue( row2.contains( 22 ) );
         assertTrue( row2.contains( 23 ) );
         assertTrue( row2.contains( 24 ) );
+    }
+    
+    @Test
+    public void testAddAndPopulateColumn()
+    {
+        assertEquals( 3, gridA.getWidth() );
+        
+        gridA.addAndPopulateColumn( 81 );
+        
+        assertEquals( 4, gridA.getWidth() );
+        
+        List<Object> col = gridA.getColumn( 3 );
+        
+        assertEquals( 4, col.size() );
+        
+        for ( Object val : col )
+        {
+            assertEquals( 81, val );
+        }        
+    }
+
+    @Test
+    public void testAddAndPopulateColumns()
+    {
+        assertEquals( 3, gridA.getWidth() );
+        
+        gridA.addAndPopulateColumns( 2, 91 );
+        
+        assertEquals( 5, gridA.getWidth() );
+        
+        List<Object> col3 = gridA.getColumn( 3 );
+        List<Object> col4 = gridA.getColumn( 4 );
+        
+        assertEquals( 4, col3.size() );
+        assertEquals( 4, col4.size() );
+        
+        for ( Object val : col3 )
+        {
+            assertEquals( 91, val );
+        }
+
+        for ( Object val : col4 )
+        {
+            assertEquals( 91, val );
+        }
     }
     
     @Test
@@ -657,7 +703,25 @@ public class GridTest
         
         assertFalse( gridA.next() );
     }
+
+    @Test
+    public void testAddValuesAsList()
+    {
+        Grid grid = new ListGrid();
+        
+        grid.addRow().addValuesAsList( Lists.newArrayList( "colA1", "colB1", "colC1" ) );
+        grid.addRow().addValuesAsList( Lists.newArrayList( "colA2", "colB2", "colC2" ) );
+        
+        assertEquals( 2, grid.getHeight() );
+        assertEquals( 3, grid.getWidth() );
+        assertEquals( "colB1", grid.getRow( 0 ).get( 1 ) );
+        assertEquals( "colC2", grid.getRow( 1 ).get( 2 ) );
+    }
     
+    // -------------------------------------------------------------------------
+    // Supportive methods
+    // -------------------------------------------------------------------------
+
     private static List<Object> getList( Object... items )
     {
         List<Object> list = new ArrayList<>();

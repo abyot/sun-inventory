@@ -28,25 +28,24 @@ package org.hisp.dhis.node.serializers;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.OutputStream;
-import java.util.Date;
-import java.util.List;
-
+import com.google.common.collect.Lists;
+import com.lowagie.text.Document;
+import com.lowagie.text.pdf.PdfPTable;
 import org.hisp.dhis.node.AbstractNodeSerializer;
 import org.hisp.dhis.node.Node;
 import org.hisp.dhis.node.types.CollectionNode;
 import org.hisp.dhis.node.types.ComplexNode;
 import org.hisp.dhis.node.types.RootNode;
 import org.hisp.dhis.node.types.SimpleNode;
+import org.hisp.dhis.system.util.DateUtils;
 import org.hisp.dhis.system.util.PDFUtils;
-import org.joda.time.DateTime;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
-import com.lowagie.text.Document;
-import com.lowagie.text.pdf.PdfPTable;
+import java.io.OutputStream;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -131,8 +130,7 @@ public class PdfNodeSerializer extends AbstractNodeSerializer
 
         if ( Date.class.isAssignableFrom( simpleNode.getValue().getClass() ) )
         {
-            DateTime dateTime = new DateTime( simpleNode.getValue() );
-            value = DT_FORMATTER.print( dateTime );
+            value = DateUtils.getIso8601NoTz( (Date) simpleNode.getValue() );
         }
 
         return value;

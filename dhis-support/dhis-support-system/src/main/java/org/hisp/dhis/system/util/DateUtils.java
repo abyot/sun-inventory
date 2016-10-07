@@ -28,6 +28,7 @@ package org.hisp.dhis.system.util;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.google.common.collect.ImmutableMap;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.indicator.Indicator;
 import org.hisp.dhis.period.Period;
@@ -42,17 +43,29 @@ import org.joda.time.format.DateTimeParser;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Lars Helge Overland
  */
 public class DateUtils
 {
+    private static DateTimeFormatter ISO8601 = DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" );
+
+    private static DateTimeFormatter ISO8601_NO_TZ = DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ss.SSS" );
+
     private static final DateTimeParser[] SUPPORTED_DATE_FORMAT_PARSERS = {
         DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" ).getParser(),
         DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ss.SSS" ).getParser(),
@@ -70,7 +83,7 @@ public class DateUtils
 
     private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
         .append( null, SUPPORTED_DATE_FORMAT_PARSERS ).toFormatter();
-    
+
     private static final DateTimeParser[] SUPPORTED_DATE_TIME_FORMAT_PARSERS = {
         DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" ).getParser(),
         DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ssZ" ).getParser(),
@@ -79,7 +92,7 @@ public class DateUtils
         DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm" ).getParser()
     };
 
-    private static final DateTimeFormatter DATE_TIME_FORMAT = ( new DateTimeFormatterBuilder() )
+    private static final DateTimeFormatter DATE_TIME_FORMAT = (new DateTimeFormatterBuilder())
         .append( null, SUPPORTED_DATE_TIME_FORMAT_PARSERS ).toFormatter();
 
     public static final PeriodFormatter DAY_SECOND_FORMAT = new PeriodFormatterBuilder()
@@ -90,12 +103,33 @@ public class DateUtils
 
     private static final DateTimeFormatter MEDIUM_DATE_FORMAT = DateTimeFormat.forPattern( "yyyy-MM-dd" );
     private static final DateTimeFormatter LONG_DATE_FORMAT = DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ss" );
-    private static final DateTimeFormatter HTTP_DATE_FORMAT = DateTimeFormat.forPattern( "EEE, dd MMM yyyy HH:mm:ss 'GMT'" ).withLocale( Locale.ENGLISH );    
+    private static final DateTimeFormatter HTTP_DATE_FORMAT = DateTimeFormat.forPattern( "EEE, dd MMM yyyy HH:mm:ss 'GMT'" ).withLocale( Locale.ENGLISH );
     private static final DateTimeFormatter TIMESTAMP_UTC_TZ_FORMAT = DateTimeFormat.forPattern( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" ).withZoneUTC();
-    
+
     private static final double DAYS_IN_YEAR = 365.0;
     private static final long MS_PER_DAY = 86400000;
     private static final long MS_PER_S = 1000;
+
+    private static final Pattern DURATION_PATTERN = Pattern.compile( "^(\\d+)(d|h|m|s)$" );
+
+    private static final Map<String, ChronoUnit> TEMPORAL_MAP = ImmutableMap.of(
+        "d", ChronoUnit.DAYS, "h", ChronoUnit.HOURS, "m", ChronoUnit.MINUTES, "s", ChronoUnit.SECONDS );
+
+    /**
+     * Returns date formatted as ISO 8601
+     */
+    public static String getIso8601( Date date )
+    {
+        return date != null ? ISO8601.print( new DateTime( date ) ) : null;
+    }
+
+    /**
+     * Returns date formatted as ISO 8601, without any TZ info
+     */
+    public static String getIso8601NoTz( Date date )
+    {
+        return date != null ? ISO8601_NO_TZ.print( new DateTime( date ) ) : null;
+    }
 
     /**
      * Converts a Date to the GMT timezone and formats it to the format yyyy-MM-dd HH:mm:ssZ.
@@ -158,7 +192,7 @@ public class DateUtils
      */
     public static String getHttpDateString( Date date )
     {
-        return date != null ? ( HTTP_DATE_FORMAT.print( new DateTime( date ) ) ) : null;
+        return date != null ? (HTTP_DATE_FORMAT.print( new DateTime( date ) )) : null;
     }
 
     /**
@@ -175,7 +209,7 @@ public class DateUtils
             return date2;
         }
 
-        return date2 != null ? ( date1.after( date2 ) ? date1 : date2 ) : date1;
+        return date2 != null ? (date1.after( date2 ) ? date1 : date2) : date1;
     }
 
     /**
@@ -209,8 +243,8 @@ public class DateUtils
         {
             return date2;
         }
-        
-        return date2 != null ? ( date1.before( date2 ) ? date1 : date2 ) : date1;
+
+        return date2 != null ? (date1.before( date2 ) ? date1 : date2) : date1;
     }
 
     /**
@@ -222,15 +256,15 @@ public class DateUtils
     public static Date min( Collection<Date> dates )
     {
         Date earliest = null;
-        
+
         for ( Date d : dates )
         {
             earliest = min( d, earliest );
         }
-        
+
         return earliest;
-    }    
-    
+    }
+
     /**
      * Parses a date from a String on the format YYYY-MM-DD. Returns null if the
      * given string is null.
@@ -442,14 +476,14 @@ public class DateUtils
      * @param dateTimeString the string to be checked.
      * @return true/false depending on whether the string is a valid datetime according to the format "yyyy-MM-dd".
      */
-    public static boolean dateTimeIsValid(final String dateTimeString)
+    public static boolean dateTimeIsValid( final String dateTimeString )
     {
         try
         {
-            DATE_TIME_FORMAT.parseDateTime(dateTimeString);
+            DATE_TIME_FORMAT.parseDateTime( dateTimeString );
             return true;
         }
-        catch( IllegalArgumentException ex )
+        catch ( IllegalArgumentException ex )
         {
             return false;
         }
@@ -577,5 +611,70 @@ public class DateUtils
         }
 
         return DATE_FORMATTER.parseDateTime( dateString ).toDate();
+    }
+
+    /**
+     * Creates a {@link java.util.Date} from the given {@link java.time.LocalDateTime}
+     * based on the UTC time zone.
+     *
+     * @param time the LocalDateTime.
+     * @return a Date.
+     */
+    public static Date getDate( LocalDateTime time )
+    {
+        Instant instant = time.toInstant( ZoneOffset.UTC );
+
+        return Date.from( instant );
+    }
+
+    /**
+     * Return the current date minus the duration specified by the given string.
+     *
+     * @param duration the duration string, see {@link DateUtils.getDuration}.
+     * @return a Date.
+     */
+    public static Date nowMinusDuration( String duration )
+    {
+        Duration dr = DateUtils.getDuration( duration );
+
+        LocalDateTime time = LocalDateTime.now().minus( dr );
+
+        return DateUtils.getDate( time );
+    }
+
+    /**
+     * Parses the given string into a {@link java.time.Duration} object. The
+     * string syntax is [amount][unit]. The supported units are:
+     * <p>
+     * <ul>
+     * <li>"d": Days</li>
+     * <li>"h": Hours</li>
+     * <li>"m": Minutes</li>
+     * <li>"s": Seconds</li>
+     * </ul>
+     *
+     * @param duration the duration string, an example describing 12 days is "12d".
+     * @return a Duration object, or null if the duration string is invalid.
+     */
+    public static Duration getDuration( String duration )
+    {
+        Matcher matcher = DURATION_PATTERN.matcher( duration );
+
+        if ( !matcher.find() )
+        {
+            return null;
+        }
+
+        long amount = Long.valueOf( matcher.group( 1 ) );
+        String unit = matcher.group( 2 );
+
+        ChronoUnit chronoUnit = TEMPORAL_MAP.get( unit );
+
+        if ( chronoUnit == null )
+        {
+            return null;
+        }
+
+        return Duration.of( amount, chronoUnit );
     }
 }

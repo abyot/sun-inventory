@@ -134,8 +134,8 @@ public class AppController
     }
 
     @RequestMapping( method = RequestMethod.POST )
-    @ResponseStatus( HttpStatus.NO_CONTENT )
     @PreAuthorize( "hasRole('ALL') or hasRole('M_dhis-web-maintenance-appmanager')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void installApp( @RequestParam( "file" ) MultipartFile file )
         throws IOException, WebMessageException
     {
@@ -153,8 +153,8 @@ public class AppController
     }
 
     @RequestMapping( method = RequestMethod.PUT )
-    @ResponseStatus( HttpStatus.NO_CONTENT )
     @PreAuthorize( "hasRole('ALL') or hasRole('M_dhis-web-maintenance-appmanager')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void reloadApps()
     {
         appManager.reloadApps();
@@ -178,7 +178,7 @@ public class AppController
             return;
         }
 
-        ObjectMapper jsonMapper = ((DefaultRenderService) renderService).getJsonMapper();
+        ObjectMapper jsonMapper = DefaultRenderService.getJsonMapper();
         App application = jsonMapper.readValue( manifest.getInputStream(), App.class );
 
         if ( application.getName() == null || !appManager.isAccessible( application ) )
@@ -229,6 +229,7 @@ public class AppController
 
     @RequestMapping( value = "/{app}", method = RequestMethod.DELETE )
     @PreAuthorize( "hasRole('ALL') or hasRole('M_dhis-web-maintenance-appmanager')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void deleteApp( @PathVariable( "app" ) String app, @RequestParam( required = false ) boolean deleteAppData )
         throws WebMessageException
     {
@@ -246,6 +247,7 @@ public class AppController
     @SuppressWarnings( "unchecked" )
     @RequestMapping( value = "/config", method = RequestMethod.POST, consumes = ContextUtils.CONTENT_TYPE_JSON )
     @PreAuthorize( "hasRole('ALL') or hasRole('M_dhis-web-maintenance-appmanager')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void setConfig( HttpServletRequest request )
         throws IOException, WebMessageException
     {

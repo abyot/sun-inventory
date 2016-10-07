@@ -138,8 +138,6 @@ public class DefaultProgramService
     {
         org.hisp.dhis.program.Program program = programService.getProgram( programId );
 
-        // program = i18n( i18nService, locale, program );
-
         Program pr = new Program();
 
         pr.setId( program.getId() );
@@ -150,8 +148,6 @@ public class DefaultProgramService
 
         for ( org.hisp.dhis.program.ProgramStage programStage : program.getProgramStages() )
         {
-            // programStage = i18n( i18nService, locale, programStage );
-
             ProgramStage prStg = new ProgramStage();
 
             prStg.setId( programStage.getId() );
@@ -189,8 +185,6 @@ public class DefaultProgramService
     {
         org.hisp.dhis.program.Program program = programService.getProgram( programId );
 
-        // program = i18n( i18nService, locale, program );
-
         org.hisp.dhis.api.mobile.model.LWUITmodel.Program pr = new org.hisp.dhis.api.mobile.model.LWUITmodel.Program();
 
         pr.setId( program.getId() );
@@ -208,8 +202,6 @@ public class DefaultProgramService
 
         for ( org.hisp.dhis.program.ProgramStage programStage : program.getProgramStages() )
         {
-            // programStage = i18n( i18nService, locale, programStage );
-
             org.hisp.dhis.api.mobile.model.LWUITmodel.ProgramStage prStg = new org.hisp.dhis.api.mobile.model.LWUITmodel.ProgramStage();
 
             // add report date

@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 
 import org.hisp.dhis.analytics.AnalyticsTable;
 import org.hisp.dhis.analytics.AnalyticsTableColumn;
+import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
 import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupSet;
 import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
@@ -149,6 +150,7 @@ public class JdbcCompletenessTargetTableManager
                 "inner join organisationunit ou on doc.organisationunitid=ou.organisationunitid " +
                 "left join _orgunitstructure ous on doc.organisationunitid=ous.organisationunitid " +
                 "left join _organisationunitgroupsetstructure ougs on doc.organisationunitid=ougs.organisationunitid " +
+                "left join categoryoptioncombo ao on doc.attributeoptioncomboid=ao.categoryoptioncomboid " +
                 "left join _categorystructure acs on doc.attributeoptioncomboid=acs.categoryoptioncomboid ";
 
             populateAndLog( sql, tableName );
@@ -167,7 +169,10 @@ public class JdbcCompletenessTargetTableManager
         
         List<OrganisationUnitLevel> levels =
             organisationUnitService.getFilledOrganisationUnitLevels();
-        
+
+        List<CategoryOptionGroupSet> attributeCategoryOptionGroupSets =
+            categoryService.getAttributeCategoryOptionGroupSetsNoAcl();
+
         List<DataElementCategory> attributeCategories =
             categoryService.getAttributeDataDimensionCategoriesNoAcl();
         
@@ -181,7 +186,12 @@ public class JdbcCompletenessTargetTableManager
             String column = quote( PREFIX_ORGUNITLEVEL + level.getLevel() );
             columns.add( new AnalyticsTableColumn( column, "character(11)", "ous." + column ) );
         }
-        
+
+        for ( CategoryOptionGroupSet groupSet : attributeCategoryOptionGroupSets )
+        {
+            columns.add( new AnalyticsTableColumn( quote( groupSet.getUid() ), "character(11)", "acs." + quote( groupSet.getUid() ) ) );
+        }
+
         for ( DataElementCategory category : attributeCategories )
         {
             columns.add( new AnalyticsTableColumn( quote( category.getUid() ), "character(11)", "acs." + quote( category.getUid() ) ) );
@@ -192,8 +202,9 @@ public class JdbcCompletenessTargetTableManager
         AnalyticsTableColumn coStart = new AnalyticsTableColumn( quote( "costartdate" ), "date", "doc.costartdate" );
         AnalyticsTableColumn coEnd = new AnalyticsTableColumn( quote( "coenddate" ), "date", "doc.coenddate" );
         AnalyticsTableColumn ds = new AnalyticsTableColumn( quote( "dx" ), "character(11) not null", "ds.uid" );
+        AnalyticsTableColumn ao = new AnalyticsTableColumn( quote( "ao" ), "character(11) not null", "ao.uid" );
         
-        columns.addAll( Lists.newArrayList( ouOpening, ouClosed, coStart, coEnd, ds ) );
+        columns.addAll( Lists.newArrayList( ouOpening, ouClosed, coStart, coEnd, ds, ao ) );
         
         return columns;
     }

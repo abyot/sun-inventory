@@ -40,6 +40,7 @@ import org.hisp.dhis.oust.manager.SelectionTreeManager;
 import org.hisp.dhis.scheduling.TaskCategory;
 import org.hisp.dhis.scheduling.TaskId;
 import org.hisp.dhis.sms.config.GatewayAdministrationService;
+import org.hisp.dhis.sms.config.SmsGatewayConfig;
 import org.hisp.dhis.sms.task.SendSmsTask;
 import org.hisp.dhis.system.notification.Notifier;
 import org.hisp.dhis.system.scheduling.Scheduler;
@@ -89,13 +90,6 @@ public class ProcessingSendSMSAction
     // -------------------------------------------------------------------------
     // Input & Output
     // -------------------------------------------------------------------------
-
-    private String gatewayId;
-
-    public void setGatewayId( String gatewayId )
-    {
-        this.gatewayId = gatewayId;
-    }
 
     private String smsSubject;
 
@@ -159,9 +153,9 @@ public class ProcessingSendSMSAction
     public String execute()
         throws Exception
     {
-        gatewayId = gatewayAdminService.getDefaultGateway().getName();
+        SmsGatewayConfig defaultgateway = gatewayAdminService.getDefaultGateway();
 
-        if ( gatewayId == null || gatewayId.trim().length() == 0 )
+        if ( defaultgateway == null )
         {
             message = i18n.getString( "please_select_a_gateway_type_to_send_sms" );
 
@@ -215,7 +209,7 @@ public class ProcessingSendSMSAction
                 return ERROR;
             }
 
-            recipientsList = new ArrayList<>( group.getMembers());
+            recipientsList = new ArrayList<>( group.getMembers() );
         }
         else if ( "user".equals( sendTarget ) )
         {
@@ -261,7 +255,7 @@ public class ProcessingSendSMSAction
         
         TaskId taskId = new TaskId( TaskCategory.SENDING_SMS, currentUser );
         notifier.clear( taskId );
-
+        
         sendSmsTask.setTaskId( taskId );
         sendSmsTask.setCurrentUser( currentUser );
         sendSmsTask.setRecipientsList( recipientsList );

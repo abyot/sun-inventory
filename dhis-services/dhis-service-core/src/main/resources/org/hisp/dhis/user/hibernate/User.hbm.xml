@@ -16,9 +16,9 @@
 
     <property name="code" column="code" not-null="false" unique="true" length="50" />
 
-    <property name="lastUpdated" type="timestamp" />
+    <property name="lastUpdated" type="timestamp" not-null="true" />
 
-    <property name="created" type="timestamp" />
+    <property name="created" type="timestamp"  not-null="true" />
 
     <property name="surname" not-null="true" length="160" />
 
@@ -69,14 +69,14 @@
       <many-to-many class="org.hisp.dhis.organisationunit.OrganisationUnit" column="organisationunitid"
         foreign-key="fk_userdatavieworgunits_organisationunitid" />
     </set>
-	
-	<set name="teiSearchOrganisationUnits" table="userteisearchorgunits">
+
+    <set name="teiSearchOrganisationUnits" table="userteisearchorgunits">
       <cache usage="read-write" />
       <key column="userinfoid" foreign-key="fk_userteisearchorgunits_userinfoid" />
       <many-to-many class="org.hisp.dhis.organisationunit.OrganisationUnit" column="organisationunitid"
         foreign-key="fk_userteisearchorgunits_organisationunitid" />
     </set>
-    
+
     <!-- Dynamic attribute values -->
 
     <set name="attributeValues" table="userattributevalues" cascade="delete-orphan">
@@ -84,7 +84,7 @@
       <key column="userinfoid" />
       <many-to-many class="org.hisp.dhis.attribute.AttributeValue" column="attributevalueid" unique="true" />
     </set>
-    
+
     <list name="apps" table="userapps">
       <cache usage="read-write" />
       <key column="userinfoid" foreign-key="fk_userapps_userinfoid" />
@@ -92,21 +92,6 @@
       <element type="string" column="app" />
     </list>
 
-    <!-- Object Translation -->
-    <set name="translations" table="userinfotranslations" cascade="delete-orphan" lazy="false">
-      <cache usage="read-write" />
-      <key column="userinfoid" foreign-key="fk_objecttranslation_userinfoid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
-    </set>
-
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

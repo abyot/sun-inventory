@@ -30,6 +30,7 @@ package org.hisp.dhis.common;
 
 import org.hisp.dhis.attribute.Attribute;
 import org.hisp.dhis.attribute.AttributeValue;
+import org.hisp.dhis.translation.ObjectTranslation;
 import org.hisp.dhis.user.User;
 
 import java.util.Collection;
@@ -198,4 +199,6 @@ public interface IdentifiableObjectManager
     <T extends IdentifiableObject> List<T> getAllNoAcl( Class<T> clazz );
 
     <T extends IdentifiableObject> List<T> getBetweenNoAcl( Class<T> clazz, int first, int max );
+
+    void updateTranslations( IdentifiableObject persistedObject, Set<ObjectTranslation> translations );
 }

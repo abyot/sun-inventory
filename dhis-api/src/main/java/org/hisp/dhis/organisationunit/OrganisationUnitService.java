@@ -108,14 +108,6 @@ public interface OrganisationUnitService
     OrganisationUnit getOrganisationUnit( String uid );
 
     /**
-     * Returns the OrganisationUnit with the given UID.
-     *
-     * @param uuid the UID of the OrganisationUnit to return.
-     * @return the OrganisationUnit with the given UID, or null if no match.
-     */
-    OrganisationUnit getOrganisationUnitByUuid( String uuid );
-
-    /**
      * Returns the OrganisationUnit with the given code.
      *
      * @param code the code of the OrganisationUnit to return.
@@ -336,13 +328,7 @@ public interface OrganisationUnitService
 
     OrganisationUnitDataSetAssociationSet getOrganisationUnitDataSetAssociationSet( Integer maxlevels );
 
-    List<OrganisationUnit> getOrganisationUnitsBetween( int first, int max );
-
     List<OrganisationUnit> getOrganisationUnitsBetweenByName( String name, int first, int max );
-
-    List<OrganisationUnit> getOrganisationUnitsBetweenByLastUpdated( Date lastUpdated, int first, int max );
-
-    Map<String, OrganisationUnit> getUuidOrganisationUnitMap();
 
     /**
      * Retrieves all the org units within the distance from center location.

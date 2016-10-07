@@ -30,15 +30,15 @@ package org.hisp.dhis.attribute;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.google.api.client.util.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.attribute.exception.MissingMandatoryAttributeValueException;
 import org.hisp.dhis.attribute.exception.NonUniqueAttributeValueException;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.IdentifiableObjectManager;
+import org.hisp.dhis.common.ValueType;
 import org.hisp.dhis.feedback.ErrorCode;
 import org.hisp.dhis.feedback.ErrorReport;
-import org.hisp.dhis.i18n.I18nService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,9 +49,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -60,6 +59,10 @@ import static org.hisp.dhis.i18n.I18nUtils.i18n;
 public class DefaultAttributeService
     implements AttributeService
 {
+    private static final Predicate<AttributeValue> SHOULD_DELETE_ON_UPDATE =
+        ( attributeValue ) ->
+            attributeValue.getValue() == null && attributeValue.getAttribute().getValueType() == ValueType.TRUE_ONLY;
+
     // -------------------------------------------------------------------------
     // Dependencies
     // -------------------------------------------------------------------------
@@ -76,13 +79,6 @@ public class DefaultAttributeService
     public void setAttributeValueStore( AttributeValueStore attributeValueStore )
     {
         this.attributeValueStore = attributeValueStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     @Autowired
@@ -113,49 +109,49 @@ public class DefaultAttributeService
     @Override
     public Attribute getAttribute( int id )
     {
-        return i18n( i18nService, attributeStore.get( id ) );
+        return attributeStore.get( id );
     }
 
     @Override
     public Attribute getAttribute( String uid )
     {
-        return i18n( i18nService, attributeStore.getByUid( uid ) );
+        return attributeStore.getByUid( uid );
     }
 
     @Override
     public Attribute getAttributeByName( String name )
     {
-        return i18n( i18nService, attributeStore.getByName( name ) );
+        return attributeStore.getByName( name );
     }
 
     @Override
     public Attribute getAttributeByCode( String code )
     {
-        return i18n( i18nService, attributeStore.getByCode( code ) );
+        return attributeStore.getByCode( code );
     }
 
     @Override
     public List<Attribute> getAllAttributes()
     {
-        return new ArrayList<>( i18n( i18nService, attributeStore.getAll() ) );
+        return new ArrayList<>( attributeStore.getAll() );
     }
 
     @Override
     public List<Attribute> getAttributes( Class<?> klass )
     {
-        return new ArrayList<>( i18n( i18nService, attributeStore.getAttributes( klass ) ) );
+        return new ArrayList<>( attributeStore.getAttributes( klass ) );
     }
 
     @Override
     public List<Attribute> getMandatoryAttributes( Class<?> klass )
     {
-        return new ArrayList<>( i18n( i18nService, attributeStore.getMandatoryAttributes( klass ) ) );
+        return new ArrayList<>( attributeStore.getMandatoryAttributes( klass ) );
     }
 
     @Override
     public List<Attribute> getUniqueAttributes( Class<?> klass )
     {
-        return new ArrayList<>( i18n( i18nService, attributeStore.getUniqueAttributes( klass ) ) );
+        return new ArrayList<>( attributeStore.getUniqueAttributes( klass ) );
     }
 
     // -------------------------------------------------------------------------
@@ -269,6 +265,7 @@ public class DefaultAttributeService
         }
 
         Map<String, AttributeValue> attributeValueMap = attributeValues.stream()
+            .filter( av -> av.getAttribute() != null )
             .collect( Collectors.toMap( av -> av.getAttribute().getUid(), av -> av ) );
 
         Iterator<AttributeValue> iterator = object.getAttributeValues().iterator();
@@ -278,7 +275,7 @@ public class DefaultAttributeService
         {
             AttributeValue attributeValue = iterator.next();
 
-            if ( attributeValueMap.containsKey( attributeValue.getAttribute().getUid() ) )
+            if ( attributeValue.getAttribute() != null && attributeValueMap.containsKey( attributeValue.getAttribute().getUid() ) )
             {
                 AttributeValue av = attributeValueMap.get( attributeValue.getAttribute().getUid() );
 
@@ -299,7 +296,7 @@ public class DefaultAttributeService
         {
             AttributeValue attributeValue = attributeValueMap.get( uid );
 
-            if ( !attributeValue.getAttribute().getSupportedClasses().contains( object.getClass() ) )
+            if ( attributeValue.getAttribute() != null && !attributeValue.getAttribute().getSupportedClasses().contains( object.getClass() ) )
             {
                 errorReports.add( new ErrorReport( Attribute.class, ErrorCode.E4010, attributeValue.getAttribute().getUid(), object.getClass().getSimpleName() ) );
             }
@@ -309,7 +306,7 @@ public class DefaultAttributeService
             }
         }
 
-        mandatoryAttributes.stream().forEach( att -> errorReports.add( new ErrorReport( Attribute.class, ErrorCode.E4011, att.getUid() ) ) );
+        mandatoryAttributes.forEach( att -> errorReports.add( new ErrorReport( Attribute.class, ErrorCode.E4011, att.getUid() ) ) );
 
         return errorReports;
     }
@@ -328,7 +325,12 @@ public class DefaultAttributeService
             return;
         }
 
+        Set<AttributeValue> toBeDeleted = attributeValues.stream()
+            .filter( SHOULD_DELETE_ON_UPDATE )
+            .collect( Collectors.toSet() );
+
         Map<String, AttributeValue> attributeValueMap = attributeValues.stream()
+            .filter( SHOULD_DELETE_ON_UPDATE.negate() )
             .collect( Collectors.toMap( av -> av.getAttribute().getUid(), av -> av ) );
 
         Iterator<AttributeValue> iterator = object.getAttributeValues().iterator();
@@ -375,6 +377,12 @@ public class DefaultAttributeService
             mandatoryAttributes.remove( attributeValue.getAttribute() );
         }
 
+        for ( AttributeValue attributeValue : toBeDeleted )
+        {
+            mandatoryAttributes.remove( attributeValue.getAttribute() );
+            deleteAttributeValue( attributeValue );
+        }
+
         if ( !mandatoryAttributes.isEmpty() )
         {
             throw new MissingMandatoryAttributeValueException( mandatoryAttributes );
@@ -385,37 +393,86 @@ public class DefaultAttributeService
     // Helpers
     //--------------------------------------------------------------------------------------------------
 
-    private Set<AttributeValue> getJsonAttributeValues( List<String> jsonAttributeValues ) throws IOException
+    private Set<AttributeValue> getJsonAttributeValues( List<String> jsonAttributeValues )
+        throws IOException
     {
         Set<AttributeValue> attributeValues = new HashSet<>();
 
-        ObjectMapper mapper = new ObjectMapper();
+        Map<Integer, String> attributeValueMap = jsonToMap( jsonAttributeValues );
 
-        for ( String jsonValue : jsonAttributeValues )
+        for ( Map.Entry<Integer, String> entry : attributeValueMap.entrySet() )
         {
-            JsonNode node = mapper.readValue( jsonValue, JsonNode.class );
+            int id = entry.getKey();
+            String value = entry.getValue();
 
-            JsonNode nId = node.get( "id" );
-            JsonNode nValue = node.get( "value" );
-
-            if ( nId == null || nValue == null  || StringUtils.isEmpty( nValue.asText() ) )
-            {
-                continue;
-            }
-
-            Attribute attribute = getAttribute( nId.asInt() );
+            Attribute attribute = getAttribute( id );
 
             if ( attribute == null )
             {
                 continue;
             }
 
-            AttributeValue attributeValue = new AttributeValue( nValue.asText(), attribute );
-            attributeValue.setId( nId.asInt());
+            AttributeValue attributeValue = parseAttributeValue( attribute, value );
+
+            if ( attributeValue == null )
+            {
+                continue;
+            }
 
             attributeValues.add( attributeValue );
         }
 
         return attributeValues;
+    }
+
+    /**
+     * Parse and create AttributeValue from attribute, id and string value.
+     * Sets null for all non-"true" TRUE_ONLY AttributeValues.
+     */
+    private AttributeValue parseAttributeValue( Attribute attribute, String value )
+    {
+        AttributeValue attributeValue = null;
+
+        if ( attribute.getValueType() == ValueType.TRUE_ONLY )
+        {
+            value = !StringUtils.isEmpty( value ) && "true".equalsIgnoreCase( value ) ? "true" : null;
+
+            attributeValue = new AttributeValue( value, attribute );
+        }
+        else if ( !StringUtils.isEmpty( value ) )
+        {
+            attributeValue = new AttributeValue( value, attribute );
+        }
+
+        return attributeValue;
+    }
+
+    /**
+     * Parses raw JSON into a map of ID -> Value.
+     * Allows null and empty values (must be handled later).
+     */
+    private Map<Integer, String> jsonToMap( List<String> jsonAttributeValues )
+        throws IOException
+    {
+        Map<Integer, String> parsed = Maps.newHashMap();
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        for ( String jsonString : jsonAttributeValues )
+        {
+            JsonNode node = mapper.readValue( jsonString, JsonNode.class );
+
+            JsonNode nId = node.get( "id" );
+            JsonNode nValue = node.get( "value" );
+
+            if ( nId == null || nId.isNull() )
+            {
+                continue;
+            }
+
+            parsed.put( nId.asInt(), nValue.asText() );
+        }
+
+        return parsed;
     }
 }

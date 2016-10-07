@@ -80,21 +80,21 @@ public interface Grid
      * Returns all header values.
      */
     List<GridHeader> getHeaders();
-    
+        
     /**
      * Returns map of meta-data.
      */
-    Map<Object, Object> getMetaData();
+    Map<String, Object> getMetaData();
     
     /**
      * Sets map of meta-data.
      */
-    void setMetaData( Map<Object, Object> metaData );
+    void setMetaData( Map<String, Object> metaData );
     
     /**
      * Adds a key-value pair to meta-data.
      */
-    void addMetaData( Object key, Object value );
+    void addMetaData( String key, Object value );
     
     /**
      * Returns all visible headers, ie. headers which are not hidden.
@@ -161,13 +161,33 @@ public interface Grid
      * @param values the values to add.
      */
     Grid addValues( Object[] values );
+
+    /**
+     * Adds values in the given array to the end of the current row in the 
+     * specified order.
+     * 
+     * @param values the values to add.
+     */
+    Grid addValuesAsList( List<Object> values );
+    
+    /**
+     * Adds an empty value to the Grid at the current row.
+     */
+    Grid addEmptyValue();
     
     /**
      * Adds a number of empty values to the Grid at the current row.
      * 
-     * @param number the number of values to add.
+     * @param number the number of empty values to add.
      */
     Grid addEmptyValues( int number );
+
+    /**
+     * Adds a number of null values to the Grid at the current row.
+     * 
+     * @param number the number of null values to add.
+     */
+    Grid addNullValues( int number );
 
     /**
      * Returns the row with the given index.
@@ -214,13 +234,33 @@ public interface Grid
     Grid addColumn( List<Object> columnValues );
     
     /**
+     * Adds a new column at the end of the grid and populates it with the given
+     * value.
+     * 
+     * @param columnValue the value to populate the grid column with.
+     */
+    Grid addAndPopulateColumn( Object columnValue );
+
+    /**
+     * Adds the given number of columns at the end of the grid and populates 
+     * them with the given value.
+     * 
+     * @param columnValue the value to populate the grid column with.
+     */
+    Grid addAndPopulateColumns( int columns, Object columnValue );
+    
+    /**
      * Removes the header and column at the given index.
+     * 
+     * @param columnIndex the column index.
      */
     Grid removeColumn( int columnIndex );
     
     /**
      * Removes the header and the column at the index of the given header if it
      * exists.
+     * 
+     * @param header the grid header.
      */
     Grid removeColumn( GridHeader header );
     

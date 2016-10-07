@@ -80,18 +80,6 @@ public class UpdateBulkGateWayConfigAction
         this.username = username;
     }
 
-    private String region;
-
-    public String getRegion()
-    {
-        return region;
-    }
-
-    public void setRegion( String region )
-    {
-        this.region = region;
-    }
-
     private String gatewayType;
 
     public void setGatewayType( String gatewayType )
@@ -130,7 +118,6 @@ public class UpdateBulkGateWayConfigAction
                 bulkGatewayConfig.setName( name );
                 bulkGatewayConfig.setPassword( password );
                 bulkGatewayConfig.setUsername( username );
-                bulkGatewayConfig.setRegion( region );
                 bulkGatewayConfig.setUid( CodeGenerator.generateCode( 10 ) );
 
                 if ( smsConfig.getGateways() == null || smsConfig.getGateways().isEmpty() )

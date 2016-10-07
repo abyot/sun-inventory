@@ -29,6 +29,7 @@ package org.hisp.dhis.webapi.controller;
  */
 
 import org.hisp.dhis.dxf2.importsummary.ImportSummary;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
 import org.hisp.dhis.dxf2.synch.AvailabilityStatus;
 import org.hisp.dhis.dxf2.synch.SynchronizationManager;
 import org.hisp.dhis.render.RenderService;
@@ -83,10 +84,10 @@ public class SynchronizationController
     public void importMetaData( @RequestBody String url, HttpServletResponse response )
         throws IOException
     {
-        org.hisp.dhis.dxf2.metadata.ImportSummary summary = synchronizationManager.executeMetadataPull( url );
+        ImportReport importReport = synchronizationManager.executeMetadataPull( url );
 
         response.setContentType( CONTENT_TYPE_JSON );
-        renderService.toJson( response.getOutputStream(), summary );
+        renderService.toJson( response.getOutputStream(), importReport );
     }
 
     @RequestMapping( value = "/availability", method = RequestMethod.GET, produces = "application/json" )

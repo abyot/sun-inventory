@@ -29,9 +29,7 @@ package org.hisp.dhis.common;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import org.hisp.dhis.common.view.DetailedView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,13 +37,12 @@ import java.util.List;
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
  */
-@JacksonXmlRootElement( localName = "row", namespace = DxfNamespaces.DXF_2_0)
+@JacksonXmlRootElement( localName = "row", namespace = DxfNamespaces.DXF_2_0 )
 public class GridRow
 {
     private List<String> rowData = new ArrayList<>();
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public List<String> getRowData()
     {
         return rowData;

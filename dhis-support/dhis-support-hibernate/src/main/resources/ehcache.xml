@@ -4,9 +4,9 @@
   <defaultCache maxElementsInMemory="800000" eternal="false" timeToIdleSeconds="360" timeToLiveSeconds="720"
     overflowToDisk="false" diskPersistent="false" />
 
-  <!-- Hibernate Query Cache -->
+  <!-- Hibernate query cache -->
 
   <cache name="org.hibernate.cache.internal.StandardQueryCache" maxElementsInMemory="250000" />
 
-  <cache name="org.hibernate.cache.spi.UpdateTimestampsCache" maxElementsInMemory="3000" />
+  <cache name="org.hibernate.cache.spi.UpdateTimestampsCache" maxElementsInMemory="2000" />
 </ehcache>

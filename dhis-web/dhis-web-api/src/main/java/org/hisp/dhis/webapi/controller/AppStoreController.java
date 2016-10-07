@@ -64,9 +64,9 @@ public class AppStoreController
         return appStoreManager.getAppStore();
     }
 
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/{versionId}", method = RequestMethod.POST )
     @PreAuthorize( "hasRole('ALL') or hasRole('M_dhis-web-maintenance-appmanager')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void installAppFromAppStore( @PathVariable String versionId )
     {
         appStoreManager.installAppFromAppStore( versionId );

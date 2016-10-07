@@ -33,6 +33,7 @@ import org.hisp.dhis.analytics.AggregationType;
 import org.hisp.dhis.analytics.DataQueryGroups;
 import org.hisp.dhis.analytics.DataQueryParams;
 import org.hisp.dhis.analytics.DimensionItem;
+import org.hisp.dhis.analytics.OutputFormat;
 import org.hisp.dhis.analytics.QueryPlanner;
 import org.hisp.dhis.analytics.QueryPlannerParams;
 import org.hisp.dhis.common.BaseDimensionalItemObject;
@@ -113,6 +114,7 @@ public class QueryPlannerTest
 
     private IndicatorType itA;
     private Indicator inA;
+    private Indicator inB;
     
     private Program prA;
     
@@ -156,8 +158,10 @@ public class QueryPlannerTest
         idObjectManager.save( itA );
 
         inA = createIndicator( 'A', itA );
+        inB = createIndicator( 'B', itA );
 
         idObjectManager.save( inA );
+        idObjectManager.save( inB );
         
         prA = createProgram( 'A' );
         
@@ -1012,6 +1016,17 @@ public class QueryPlannerTest
         
         queryPlanner.validate( params );
     }
+
+    @Test
+    public void validateSuccesSingleIndicatorFilter()
+    {
+        DataQueryParams params = DataQueryParams.newBuilder()
+            .addDimension( new BaseDimensionalObject( ORGUNIT_DIM_ID, DimensionType.ORGANISATION_UNIT, getList( ouA, ouB ) ) )
+            .addDimension( new BaseDimensionalObject( PERIOD_DIM_ID, DimensionType.PERIOD, getList( peA, peB ) ) )
+            .addFilter( new BaseDimensionalObject( DATA_X_DIM_ID, DimensionType.DATA_X, getList( inA ) ) ).build();
+        
+        queryPlanner.validate( params );
+    }
     
     @Test( expected = IllegalQueryException.class )
     public void validateFailureA()
@@ -1022,6 +1037,54 @@ public class QueryPlannerTest
         
         queryPlanner.validate( params );
     }
+
+    @Test( expected = IllegalQueryException.class )
+    public void validateFailureMultipleIndicatorsFilter()
+    {
+        DataQueryParams params = DataQueryParams.newBuilder()
+            .addDimension( new BaseDimensionalObject( ORGUNIT_DIM_ID, DimensionType.ORGANISATION_UNIT, getList( ouA, ouB ) ) )
+            .addDimension( new BaseDimensionalObject( PERIOD_DIM_ID, DimensionType.PERIOD, getList( peA, peB ) ) )
+            .addFilter( new BaseDimensionalObject( DATA_X_DIM_ID, DimensionType.DATA_X, getList( inA, inB ) ) ).build();
+        
+        queryPlanner.validate( params );
+    }
+
+    @Test( expected = IllegalQueryException.class )
+    public void validateFailureValueType()
+    {
+        deB.setValueType( ValueType.FILE_RESOURCE );
+        
+        DataQueryParams params = DataQueryParams.newBuilder()
+            .addDimension( new BaseDimensionalObject( DATA_X_DIM_ID, DimensionType.DATA_X, getList( deA, deB ) ) )
+            .addDimension( new BaseDimensionalObject( ORGUNIT_DIM_ID, DimensionType.ORGANISATION_UNIT, getList( ouA, ouB ) ) )
+            .addDimension( new BaseDimensionalObject( PERIOD_DIM_ID, DimensionType.PERIOD, getList( peA, peB ) ) ).build();
+        
+        queryPlanner.validate( params );
+    }
+
+    @Test( expected = IllegalQueryException.class )
+    public void validateFailureAggregationType()
+    {
+        deB.setAggregationType( AggregationType.CUSTOM );
+        
+        DataQueryParams params = DataQueryParams.newBuilder()
+            .addDimension( new BaseDimensionalObject( DATA_X_DIM_ID, DimensionType.DATA_X, getList( deA, deB ) ) )
+            .addDimension( new BaseDimensionalObject( ORGUNIT_DIM_ID, DimensionType.ORGANISATION_UNIT, getList( ouA, ouB ) ) )
+            .addDimension( new BaseDimensionalObject( PERIOD_DIM_ID, DimensionType.PERIOD, getList( peA, peB ) ) ).build();
+        
+        queryPlanner.validate( params );
+    }
+
+    @Test( expected = IllegalQueryException.class )
+    public void validateMissingOrgUnitDimensionOutputFormatDataValueSet()
+    {
+        DataQueryParams params = DataQueryParams.newBuilder()
+            .addDimension( new BaseDimensionalObject( DATA_X_DIM_ID, DimensionType.DATA_X, getList( deA, deB ) ) )
+            .addDimension( new BaseDimensionalObject( PERIOD_DIM_ID, DimensionType.PERIOD, getList( peA, peB ) ) )
+            .withOutputFormat( OutputFormat.DATA_VALUE_SET ).build();
+        
+        queryPlanner.validate( params );
+    }    
     
     // -------------------------------------------------------------------------
     // Supportive methods

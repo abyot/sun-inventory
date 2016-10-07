@@ -28,11 +28,6 @@ package org.hisp.dhis.validation;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementOperand;
@@ -40,6 +35,11 @@ import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Margrethe Store
@@ -59,13 +59,13 @@ public interface ValidationRuleService
     /**
      * Validate DataValues.
      *
-     * @param startDate the start date.
-     * @param endDate the end date.
-     * @param sources a collection of Sources.
+     * @param startDate      the start date.
+     * @param endDate        the end date.
+     * @param sources        a collection of Sources.
      * @param attributeCombo attribute category option combo (null for all).
-     * @param group validation rule group (null for all validationRules).
-     * @param sendAlerts whether to send alerts for surveillance.
-     * @param format the i18n format.
+     * @param group          validation rule group (null for all validationRules).
+     * @param sendAlerts     whether to send alerts for surveillance.
+     * @param format         the i18n format.
      * @return a LiCollectionst of ValidationResults for each validation violation.
      */
     Collection<ValidationResult> validate( Date startDate, Date endDate, Collection<OrganisationUnit> sources, DataElementCategoryOptionCombo attributeCombo, ValidationRuleGroup group, boolean sendAlerts, I18nFormat format );
@@ -73,9 +73,9 @@ public interface ValidationRuleService
     /**
      * Validate DataValues.
      *
-     * @param dataSet the DataSet.
-     * @param period the Period.
-     * @param source the Organisation unit.
+     * @param dataSet        the DataSet.
+     * @param period         the Period.
+     * @param source         the Organisation unit.
      * @param attributeCombo attribute category option combo (null for all).
      * @return a Collection of ValidationResults for each validation violation.
      */
@@ -96,29 +96,29 @@ public interface ValidationRuleService
      * and sends results (if any) to users who should be notified.
      */
     void scheduledRun();
-    
+
     /**
      * Validate that missing data values have a corresponding comment, assuming
      * that the given data set has the noValueRequiresComment property set to true.
-     * 
-     * @param dataSet the data set.
-     * @param period the period.
-     * @param organisationUnit the organisation unit.
+     *
+     * @param dataSet              the data set.
+     * @param period               the period.
+     * @param organisationUnit     the organisation unit.
      * @param attributeOptionCombo the attribute option combo.
      * @return a list of operands representing missing comments.
      */
     List<DataElementOperand> validateRequiredComments( DataSet dataSet, Period period, OrganisationUnit organisationUnit, DataElementCategoryOptionCombo attributeOptionCombo );
-    
+
 
     /**
      * Returns all validation-type rules which have specified data elements
      * assigned to them.
-     * 
+     *
      * @param dataElements the data elements to look for.
      * @return all validation rules which have the data elements assigned.
      */
     Collection<ValidationRule> getValidationTypeRulesForDataElements( Set<DataElement> dataElements );
-    
+
     // -------------------------------------------------------------------------
     // ValidationRule
     // -------------------------------------------------------------------------
@@ -177,14 +177,6 @@ public interface ValidationRuleService
     ValidationRule getValidationRuleByName( String name );
 
     /**
-     * Get the validation rules which are associated with the given name key.
-     *
-     * @param name the name key.
-     * @return a List of validation rules.
-     */
-    List<ValidationRule> getValidationRulesByName( String name );
-
-    /**
      * Get the validation rules which are associated with the given data elements.
      *
      * @param dataElements the collection of data elements.
@@ -225,15 +217,6 @@ public interface ValidationRuleService
      * @return the ValidationRuleGroup or null if it doesn't exist.
      */
     ValidationRuleGroup getValidationRuleGroup( int id );
-
-    /**
-     * Get ValidationRuleGroup with the given identifier.
-     *
-     * @param id the unique identifier of the ValidationRuleGroup.
-     * @param i18nValidationRules whether to i18n the rules of this group.
-     * @return the ValidationRuleGroup or null if it doesn't exist.
-     */
-    ValidationRuleGroup getValidationRuleGroup( int id, boolean i18nValidationRules );
 
     /**
      * Get ValidationRuleGroup with the given uid.

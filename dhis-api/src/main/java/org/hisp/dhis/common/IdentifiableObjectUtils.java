@@ -323,7 +323,7 @@ public class IdentifiableObjectUtils
 
         return map;
     }
-
+    
     /**
      * @param object Object to get display name for
      * @return A usable display name

@@ -1,7 +1,5 @@
 package org.hisp.dhis.webapi.utils;
 
-import org.apache.commons.lang3.StringUtils;
-
 /*
  * Copyright (c) 2004-2016, University of Oslo
  * All rights reserved.
@@ -33,28 +31,37 @@ import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.common.NameableObjectUtils;
 import org.hisp.dhis.common.ValueType;
 import org.hisp.dhis.dataelement.DataElement;
+import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
+import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementOperand;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.Section;
 import org.hisp.dhis.dataset.comparator.SectionOrderComparator;
 import org.hisp.dhis.datavalue.DataValue;
+import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramStage;
 import org.hisp.dhis.program.ProgramStageDataElement;
 import org.hisp.dhis.program.ProgramStageSection;
+import org.hisp.dhis.webapi.webdomain.form.Category;
+import org.hisp.dhis.webapi.webdomain.form.CategoryCombo;
 import org.hisp.dhis.webapi.webdomain.form.Field;
 import org.hisp.dhis.webapi.webdomain.form.Form;
 import org.hisp.dhis.webapi.webdomain.form.Group;
+import org.hisp.dhis.webapi.webdomain.form.Option;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -73,7 +80,7 @@ public class FormUtils
 
     private static final String SEP = "-";
 
-    public static Form fromDataSet( DataSet dataSet, boolean metaData )
+    public static Form fromDataSet( DataSet dataSet, boolean metaData, Set<OrganisationUnit> userOrganisationUnits )
     {
         Form form = new Form();
         form.setLabel( dataSet.getDisplayName() );
@@ -82,6 +89,7 @@ public class FormUtils
         form.getOptions().put( KEY_PERIOD_TYPE, dataSet.getPeriodType().getName() );
         form.getOptions().put( KEY_OPEN_FUTURE_PERIODS, dataSet.getOpenFuturePeriods() );
         form.getOptions().put( KEY_EXPIRY_DAYS, dataSet.getExpiryDays() );
+        form.setCategoryCombo( getCategoryCombo( dataSet, userOrganisationUnits ) );
 
         if ( dataSet.hasSections() )
         {
@@ -130,6 +138,66 @@ public class FormUtils
         }
 
         return form;
+    }
+
+    private static CategoryCombo getCategoryCombo( DataSet dataset, Set<OrganisationUnit> userOrganisationUnits )
+    {
+        if ( dataset.hasCategoryCombo() )
+        {
+            DataElementCategoryCombo categoryCombo = dataset.getCategoryCombo();
+            CategoryCombo catCombo = new CategoryCombo();
+            catCombo.setId( categoryCombo.getUid() );
+
+            List<DataElementCategory> cats = categoryCombo.getCategories();
+
+            if ( cats != null && cats.size() > 0 )
+            {
+                for ( DataElementCategory cat : cats )
+                {
+                    Category c = new Category();
+                    c.setId( cat.getUid() );
+                    c.setLabel( cat.getName() );
+
+                    List<DataElementCategoryOption> options = cat.getCategoryOptions();
+
+                    if ( options != null && options.size() > 0 )
+                    {
+                        for ( DataElementCategoryOption option : options )
+                        {
+                            Option o = new Option();
+                            o.setId( option.getUid() );
+                            o.setLabel( option.getName() );
+                            o.setStartDate( option.getStartDate() );
+                            o.setEndDate( option.getEndDate() );
+
+                            Set<OrganisationUnit> catOptionOUs = option.getOrganisationUnits();
+
+                            if ( userOrganisationUnits == null || userOrganisationUnits.isEmpty() || catOptionOUs == null || catOptionOUs.isEmpty() )
+                            {
+                                c.getOptions().add( o );
+                            }
+                            else if ( userOrganisationUnits != null && catOptionOUs != null && !Collections.disjoint( userOrganisationUnits, catOptionOUs ) )
+                            {
+                                HashSet<OrganisationUnit> organisationUnits = new HashSet<>();
+
+                                catOptionOUs.stream().filter( ou -> userOrganisationUnits.contains( ou ) ).forEach( ou -> {
+                                    organisationUnits.add( ou );
+                                    organisationUnits.addAll( getChildren( ou , new HashSet<>() ) ) ;
+                                });
+
+                                o.setOrganisationUnits( organisationUnits );
+
+                                c.getOptions().add( o );
+                            }
+                        }
+                    }
+
+                    catCombo.getCategories().add( c );
+                }
+            }
+            return catCombo;
+        }
+        return null;
     }
 
     public static Form fromProgram( Program program )
@@ -222,7 +290,7 @@ public class FormUtils
 
         for ( DataElement dataElement : dataElements )
         {
-            for ( DataElementCategoryOptionCombo categoryOptionCombo : dataElement.getCategoryCombo().getSortedOptionCombos() )
+            for ( DataElementCategoryOptionCombo categoryOptionCombo : dataElement.getSortedCategoryOptionCombos() )
             {
                 if ( !isDisabled( dataElement, categoryOptionCombo, greyedFields ) )
                 {
@@ -285,8 +353,11 @@ public class FormUtils
 
             Field field = operandFieldMap.get( dataElement.getUid() + SEP + categoryOptionCombo.getUid() );
 
-            field.setValue( dataValue.getValue() );
-            field.setComment( dataValue.getComment() );
+            if ( field != null )
+            {
+                field.setValue( dataValue.getValue() );
+                field.setComment( dataValue.getComment() );
+            }
         }
     }
 
@@ -303,5 +374,20 @@ public class FormUtils
         }
 
         return cacheMap;
+    }
+
+    private static Set<OrganisationUnit> getChildren( OrganisationUnit ou, Set<OrganisationUnit> children )
+    {
+
+        if ( ou != null && ou.getChildren() != null )
+        {
+            for ( OrganisationUnit organisationUnit : ou.getChildren() )
+            {
+                children.add( organisationUnit );
+                children.addAll( getChildren( organisationUnit, children ) );
+            }
+        }
+
+        return children;
     }
 }

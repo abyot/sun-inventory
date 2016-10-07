@@ -29,7 +29,6 @@ package org.hisp.dhis.chart;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.AnalyticsType;
@@ -38,8 +37,6 @@ import org.hisp.dhis.common.DimensionalObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
@@ -66,7 +63,6 @@ public class Chart
 
     public Chart()
     {
-
     }
 
     public Chart( String name )
@@ -84,7 +80,7 @@ public class Chart
         List<OrganisationUnit> organisationUnitsAtLevel, List<OrganisationUnit> organisationUnitsInGroups,
         I18nFormat format )
     {
-        this.user = user;
+        this.relativeUser = user;
         this.relativePeriodDate = date;
         this.relativeOrganisationUnit = organisationUnit;
         this.organisationUnitsAtLevel = organisationUnitsAtLevel;
@@ -99,7 +95,7 @@ public class Chart
     @Override
     public List<DimensionalItemObject> series()
     {
-        DimensionalObject object = getDimensionalObject( series, relativePeriodDate, user, true,
+        DimensionalObject object = getDimensionalObject( series, relativePeriodDate, relativeUser, true,
             organisationUnitsAtLevel, organisationUnitsInGroups, format );
 
         return object != null ? object.getItems() : null;
@@ -108,7 +104,7 @@ public class Chart
     @Override
     public List<DimensionalItemObject> category()
     {
-        DimensionalObject object = getDimensionalObject( category, relativePeriodDate, user, true,
+        DimensionalObject object = getDimensionalObject( category, relativePeriodDate, relativeUser, true,
             organisationUnitsAtLevel, organisationUnitsInGroups, format );
 
         return object != null ? object.getItems() : null;
@@ -124,6 +120,11 @@ public class Chart
         {
             filters.add( getDimensionalObject( filter ) );
         }
+    }
+
+    @Override
+    protected void clearTransientChartStateProperties()
+    {
     }
 
     public List<OrganisationUnit> getAllOrganisationUnits()
@@ -197,7 +198,6 @@ public class Chart
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getSeries()
     {
@@ -210,7 +210,6 @@ public class Chart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getCategory()
     {

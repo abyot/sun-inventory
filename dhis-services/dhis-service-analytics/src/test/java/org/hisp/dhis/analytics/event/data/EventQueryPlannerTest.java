@@ -283,7 +283,7 @@ public class EventQueryPlannerTest
             .withProgramAttributes( getList( patA, patB ) )
             .withOrganisationUnits( getList( ouA, ouB, ouC ) )
             .withPeriods( getList( createPeriod( "200101" ), createPeriod( "200103" ), createPeriod( "200105" ), createPeriod( "200107" ) ) ).build();
-
+        
         EventQueryParams params = EventQueryParams.fromDataQueryParams( dataQueryParams );
         
         List<EventQueryParams> queries = queryPlanner.planAggregateQuery( params );
@@ -293,6 +293,30 @@ public class EventQueryPlannerTest
         for ( EventQueryParams query : queries )
         {
             assertTrue( query.hasValueDimension() );
+        }
+    }
+
+    @Test
+    public void testPlanAggregateDataQueryCollapseDataItems()
+    {
+        DataQueryParams dataQueryParams = DataQueryParams.newBuilder()
+            .withProgramDataElements( getList( pdeA, pdeB, pdeC, pdeD ) )
+            .withProgramAttributes( getList( patA, patB ) )
+            .withOrganisationUnits( getList( ouA, ouB, ouC ) )
+            .withPeriods( getList( createPeriod( "200101" ), createPeriod( "200103" ), createPeriod( "200105" ), createPeriod( "200107" ) ) ).build();
+        
+        EventQueryParams params = new EventQueryParams.Builder( dataQueryParams )
+            .withCollapseDataDimensions( true )
+            .build();
+        
+        List<EventQueryParams> queries = queryPlanner.planAggregateQuery( params );
+        
+        assertEquals( 12, queries.size() );
+        
+        for ( EventQueryParams query : queries )
+        {
+            assertTrue( query.hasValueDimension() );
+            assertTrue( query.isCollapseDataDimensions() );
         }
     }
 }

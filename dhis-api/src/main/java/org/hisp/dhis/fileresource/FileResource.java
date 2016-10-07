@@ -29,12 +29,9 @@ package org.hisp.dhis.fileresource;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.UUID;
 
@@ -65,8 +62,8 @@ public class FileResource
     private String storageKey;
 
     /**
-     * Flag indicating whether the resource is assigned (e.g. to a DataValue) or 
-     * not. Unassigned FileResources are generally safe to delete when reaching 
+     * Flag indicating whether the resource is assigned (e.g. to a DataValue) or
+     * not. Unassigned FileResources are generally safe to delete when reaching
      * a certain age (unassigned objects might be in staging).
      */
     private boolean assigned = false;
@@ -114,7 +111,6 @@ public class FileResource
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getName()
     {
@@ -127,7 +123,6 @@ public class FileResource
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getContentType()
     {
@@ -140,7 +135,6 @@ public class FileResource
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public long getContentLength()
     {
@@ -153,7 +147,6 @@ public class FileResource
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getContentMd5()
     {
@@ -186,7 +179,6 @@ public class FileResource
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public FileResourceStorageStatus getStorageStatus()
     {
@@ -199,7 +191,6 @@ public class FileResource
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public FileResourceDomain getDomain()
     {

@@ -6,17 +6,15 @@
 <hibernate-mapping>
   <class name="org.hisp.dhis.message.Message" table="message">
 
-    <cache usage="read-write" />
-
     <id name="id" column="messageid">
       <generator class="native" />
     </id>
 
     <property name="uid" column="uid" length="11" />
 
-    <property name="created" type="timestamp" />
+    <property name="created" type="timestamp"  not-null="true"/>
 
-    <property name="lastUpdated" type="timestamp" />
+    <property name="lastUpdated" type="timestamp"  not-null="true"/>
 
     <property name="text" column="messagetext" type="text" />
 
@@ -27,21 +25,6 @@
     <many-to-one name="sender" class="org.hisp.dhis.user.User" column="userid"
       foreign-key="fk_message_userid" />
 
-    <!-- Object Translation -->
-    <set name="translations" table="messagetranslations" cascade="delete-orphan" lazy="false">
-      <cache usage="read-write" />
-      <key column="messageid" foreign-key="fk_objecttranslation_messageid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
-    </set>
-
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

@@ -134,8 +134,22 @@ public class HibernateLockExceptionStore
         query.executeUpdate();
     }
 
+
     @Override
-    @SuppressWarnings("unchecked")
+    public void deleteCombination( DataSet dataSet, Period period, OrganisationUnit organisationUnit )
+    {
+        final String hql = "delete from LockException where dataSet=:dataSet and period=:period and organisationUnit=:organisationUnit";
+
+        Query query = getQuery( hql );
+        query.setParameter( "dataSet", dataSet );
+        query.setParameter( "period", period );
+        query.setParameter( "organisationUnit", organisationUnit );
+
+        query.executeUpdate();
+    }
+
+    @Override
+    @SuppressWarnings( "unchecked" )
     public List<LockException> getAllOrderedName( int first, int max )
     {
         Criteria criteria = getCriteria();

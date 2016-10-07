@@ -28,16 +28,24 @@ package org.hisp.dhis.message;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Set;
-
 import org.hisp.dhis.program.message.DeliveryChannel;
+import org.hisp.dhis.sms.MessageResponseStatus;
+import org.hisp.dhis.sms.MessageResponseSummary;
+import org.hisp.dhis.sms.outbound.MessageBatch;
 import org.hisp.dhis.user.User;
 
+import java.util.Set;
+
+/**
+ * Mock implementation of MessageSender.
+ *
+ * TODO Implement methods.
+ */
 public class MockMessageSender
     implements MessageSender
 {
     @Override
-    public String sendMessage( String subject, String text, String footer, User sender, Set<User> users,
+    public MessageResponseStatus sendMessage( String subject, String text, String footer, User sender, Set<User> users,
         boolean forceSend )
     {
         // Do nothing
@@ -47,35 +55,36 @@ public class MockMessageSender
     @Override
     public boolean accept( Set<DeliveryChannel> channels )
     {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean isServiceReady()
     {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public String sendMessage( String subject, String text, Set<String> recipient )
+    public  MessageResponseStatus  sendMessage( String subject, String text, Set<String> recipient )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String sendMessage( String subject, String text, String recipient )
+    public  MessageResponseStatus  sendMessage( String subject, String text, String recipient )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public DeliveryChannel getDeliveryChannel()
     {
-        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MessageResponseSummary sendMessageBatch( MessageBatch batch )
+    {
         return null;
     }
 }

@@ -53,6 +53,13 @@
     <property name="mappingDirectoryLocations" ref="hibernateMappingDirectoryLocations" />
   </bean>
 
+  <!-- Data source -->
+
+  <bean id="dataSourceManager" class="org.hisp.dhis.datasource.DefaultDataSourceManager">
+    <property name="config" ref="dhisConfigurationProvider" />
+    <property name="mainDataSource" ref="dataSource" />
+  </bean>
+
   <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
     <property name="driverClass" ref="driverClass" />
     <property name="jdbcUrl" ref="url" />
@@ -62,9 +69,18 @@
     <property name="acquireIncrement" value="6" />
     <property name="maxIdleTime" value="21600" />
   </bean>
+  
+  <bean id="readOnlyDataSource" class="org.hisp.dhis.datasource.ReadOnlyDataSourceFactoryBean">
+    <property name="dataSourceManager" ref="dataSourceManager" />
+  </bean>
 
-  <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+  <bean id="jdbcTemplate" primary="true" class="org.springframework.jdbc.core.JdbcTemplate">
     <property name="dataSource" ref="dataSource" />
+    <property name="fetchSize" value="1000" />
+  </bean>
+
+  <bean id="readOnlyJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+    <property name="dataSource" ref="readOnlyDataSource" />
     <property name="fetchSize" value="1000" />
   </bean>
 
@@ -113,12 +129,7 @@
     </property>
   </bean>
 
-  <!-- Deprecated encryption, still needed for legacy systems -->
-
-  <bean id="hibernateStringEncryptor" class="org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor">
-    <property name="registeredName" value="strongHibernateStringEncryptor" />
-    <property name="encryptor" ref="stringEncryptor" />
-  </bean>
+  <!-- Used only for SystemSettings (due to bug with JCE policy restrictions in Jasypt) -->
 
   <bean id="stringEncryptor" class="org.jasypt.encryption.pbe.PooledPBEStringEncryptor">
     <property name="algorithm" value="PBEWithSHA1AndDESede" />
@@ -131,7 +142,7 @@
     <constructor-arg type="java.lang.String" value="H7g0oLkEw3wf52fs52g3hbG" />
   </bean>
 
-  <!-- New stronger string encryption, requires BouncyCastle API -->
+  <!-- AES string encryptor, requires BouncyCastle and JCE extended policy (due to issue mentioned above) -->
 
   <bean id="hibernateStrongStringEncryptor" class="org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor">
     <property name="registeredName" value="strongStringEncryptor" />

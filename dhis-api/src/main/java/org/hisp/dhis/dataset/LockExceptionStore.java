@@ -28,12 +28,12 @@ package org.hisp.dhis.dataset;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.List;
-
 import org.hisp.dhis.common.GenericStore;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
+
+import java.util.List;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -48,6 +48,8 @@ public interface LockExceptionStore
     List<LockException> getCombinations();
 
     void deleteCombination( DataSet dataSet, Period period );
+
+    void deleteCombination( DataSet dataSet, Period period, OrganisationUnit organisationUnit );
 
     long getCount( DataElement dataElement, Period period, OrganisationUnit organisationUnit );
 

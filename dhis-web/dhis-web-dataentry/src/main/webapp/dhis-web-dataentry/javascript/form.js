@@ -1133,25 +1133,21 @@ function getSortedDataSetListForOrgUnits( orgUnits )
 
     $.safeEach( dataSetList, function( idx, item ) 
     {
-        if( item && item.id )
+        var formType = dhis2.de.dataSets[item.id].type;
+        var found = false;
+
+        $.safeEach( filteredDataSetList, function( i, el ) 
         {
-            var formType = dhis2.de.dataSets[item.id].type;
-            var found = false;
-
-            $.safeEach( filteredDataSetList, function( i, el ) 
+            if( item.name == el.name )
             {
-                if( item.name == el.name )
-                {
-                    found = true;
-                }
-            } );
-
-            if ( !found && ( formType == dhis2.de.cst.formTypeSection || formType == dhis2.de.cst.formTypeDefault ) )
-            {
-                filteredDataSetList.push(item);
+                found = true;
             }
+        } );
+
+        if ( !found && ( formType == dhis2.de.cst.formTypeSection || formType == dhis2.de.cst.formTypeDefault ) )
+        {
+            filteredDataSetList.push(item);
         }
-        
     } );
 
     return filteredDataSetList;
@@ -1284,9 +1280,11 @@ function displayPeriods()
     var dataSetId = $( '#selectedDataSetId' ).val();
     var periodType = dhis2.de.dataSets[dataSetId].periodType;
     var openFuturePeriods = dhis2.de.dataSets[dataSetId].openFuturePeriods;
+    var dsStartDate = dhis2.de.dataSets[dataSetId].startDate;
+    var dsEndDate = dhis2.de.dataSets[dataSetId].endDate;
     var periods = dhis2.period.generator.generateReversedPeriods( periodType, dhis2.de.currentPeriodOffset );
 
-    periods = dhis2.period.generator.filterOpenPeriods( periodType, periods, openFuturePeriods );
+    periods = dhis2.period.generator.filterOpenPeriods( periodType, periods, openFuturePeriods, dsStartDate, dsEndDate );
     
     clearListById( 'selectedPeriodId' );
 
@@ -1709,7 +1707,10 @@ function insertDataValues( json )
         $( '#contentDiv textarea' ).removeAttr( 'readonly' );
 		$( '#completenessDiv' ).show();
 	}
-	
+
+    // Set the data-disabled attribute on any file upload fields
+    $( '#contentDiv .entryfileresource' ).data( 'disabled', json.locked );
+
     // Set data values, works for selects too as data value=select value
 
     $.safeEach( json.dataValues, function( i, value )
@@ -2974,7 +2975,7 @@ dhis2.de.setOptionNameInField = function( fieldId, value )
 				if ( option && option.code == value.val ) {
           option.id = option.code;
           option.text = option.name;
-          $( fieldId ).val( option.id ).change();
+          $( fieldId ).select2("val", option.text );
 					return false;
 				}
 			} );

@@ -28,14 +28,12 @@ package org.hisp.dhis.datavalue;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.dataelement.DataElementCategoryOptionCombo.DEFAULT_TOSTRING;
+import org.hisp.dhis.period.Period;
+import org.hisp.dhis.period.PeriodType;
 
 import java.util.Date;
 
-import org.hisp.dhis.common.IdentifiableObjectUtils;
-import org.hisp.dhis.period.Period;
-import org.hisp.dhis.period.PeriodType;
-import org.joda.time.DateTime;
+import static org.hisp.dhis.dataelement.DataElementCategoryOptionCombo.DEFAULT_TOSTRING;
 
 /**
  * The purpose of this class is to avoid the overhead of creating objects
@@ -53,6 +51,8 @@ public class DeflatedDataValue
     private int sourceId;
 
     private int categoryOptionComboId;
+
+    private int attributeOptionComboId;
 
     private String value;
     
@@ -96,6 +96,7 @@ public class DeflatedDataValue
         this.periodId = dataValue.getPeriod().getId();
         this.sourceId = dataValue.getSource().getId();
         this.categoryOptionComboId = dataValue.getCategoryOptionCombo().getId();
+        this.attributeOptionComboId = dataValue.getAttributeOptionCombo().getId();
         this.value = dataValue.getValue();
         this.storedBy = dataValue.getStoredBy();
         this.created = dataValue.getCreated();
@@ -103,7 +104,36 @@ public class DeflatedDataValue
         this.comment = dataValue.getComment();
         this.followup = dataValue.isFollowup();
     }
-    
+
+    public DeflatedDataValue ( Integer dataElementId, Integer periodId, Integer sourceId,
+        Integer categoryOptionComboId, Integer attributeOptionComboId, String value,
+        String storedBy, Date created, Date lastUpdated,
+        String comment, boolean followup )
+    {
+        this.dataElementId = dataElementId;
+        this.periodId = periodId;
+        this.sourceId = sourceId;
+        this.categoryOptionComboId = categoryOptionComboId;
+        this.attributeOptionComboId = attributeOptionComboId;
+        this.value = value;
+        this.storedBy = storedBy;
+        this.created = created;
+        this.lastUpdated = lastUpdated;
+        this.comment = comment;
+        this.followup = followup;
+    }
+
+    public DeflatedDataValue( Integer dataElementId, Integer periodId, Integer sourceId,
+        Integer categoryOptionComboId, Integer attributeOptionComboId, String value )
+    {
+        this.dataElementId = dataElementId;
+        this.periodId = periodId;
+        this.sourceId = sourceId;
+        this.categoryOptionComboId = categoryOptionComboId;
+        this.attributeOptionComboId = attributeOptionComboId;
+        this.value = value;
+    }
+
     // -------------------------------------------------------------------------
     // Getters and setters
     // -------------------------------------------------------------------------
@@ -146,6 +176,16 @@ public class DeflatedDataValue
     public void setCategoryOptionComboId( int categoryOptionComboId )
     {
         this.categoryOptionComboId = categoryOptionComboId;
+    }
+
+    public int getAttributeOptionComboId()
+    {
+        return attributeOptionComboId;
+    }
+
+    public void setAttributeOptionComboId( int attributeOptionComboId )
+    {
+        this.attributeOptionComboId = attributeOptionComboId;
     }
 
     public String getValue()
@@ -272,18 +312,11 @@ public class DeflatedDataValue
     // Logic
     // -------------------------------------------------------------------------
     
-    public void setPeriod( String periodTypeName, String startDate, String endDate )
+    public void setPeriod( String periodTypeName, Date startDate, Date endDate )
     {
-        try
-        {
-            period.setPeriodType( PeriodType.getPeriodTypeByName( periodTypeName ) );
-            period.setStartDate( new DateTime( IdentifiableObjectUtils.MEDIUM_DATE_FORMAT.parseDateTime( startDate ) ).toDate() );
-            period.setEndDate( new DateTime( IdentifiableObjectUtils.MEDIUM_DATE_FORMAT.parseDateTime( endDate ) ).toDate() );
-        }
-        catch ( Exception ex )
-        {
-            throw new RuntimeException( ex );
-        }
+        period.setPeriodType( PeriodType.getPeriodTypeByName( periodTypeName ) );
+        period.setStartDate( startDate );
+        period.setEndDate( endDate );
     }
     
     public String getCategoryOptionComboNameParsed()

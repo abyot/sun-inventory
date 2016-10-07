@@ -31,9 +31,11 @@ package org.hisp.dhis.dataset.hibernate;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.hibernate.criterion.Restrictions;
 import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.common.hibernate.HibernateIdentifiableObjectStore;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.DataSetStore;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
@@ -107,6 +109,20 @@ public class HibernateDataSetStore
         String hql = "from DataSet d where :source in elements(d.sources) and d.mobile = true";
         
         return getQuery( hql ).setEntity( "source", source ).list();
+    }
+
+    @Override
+    @SuppressWarnings( "unchecked" )
+    public List<DataSet> getDataSetsByDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        if ( dataEntryForm == null )
+        {
+            return Lists.newArrayList();
+        }
+
+        final String hql = "from DataSet d where d.dataEntryForm = :dataEntryForm";
+
+        return getQuery( hql ).setEntity( "dataEntryForm", dataEntryForm ).list();
     }
 
     @Override

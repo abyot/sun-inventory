@@ -302,12 +302,12 @@
       </result>
       <param name="onExceptionReturn">plainTextError</param>
     </action>
-    
+
     <action name="getModules" class="org.hisp.dhis.webportal.menu.action.GetModulesAction">
       <result name="success" type="velocity-json">/dhis-web-commons/ajax/jsonModules.vm</result>
       <param name="onExceptionReturn">plainTextError</param>
     </action>
-    
+
     <action name="getHelpPageLinkModule" class="org.hisp.dhis.commons.action.NoAction">
       <result name="success" type="velocity-json">/dhis-web-commons/ajax/jsonHelpPageLinkModule.vm</result>
       <param name="onExceptionReturn">plainTextError</param>
@@ -630,13 +630,6 @@
       <param name="onExceptionReturn">plainTextError</param>
     </action>
 
-    <action name="getSectionDataElements" class="org.hisp.dhis.commons.action.GetSectionDataElementsAction">
-      <result name="success" type="velocity-json">
-        /dhis-web-commons/ajax/jsonDataElements.vm
-      </result>
-      <param name="onExceptionReturn">plainTextError</param>
-    </action>
-
     <action name="getSectionIndicators" class="org.hisp.dhis.commons.action.GetSectionIndicatorsAction">
       <result name="success" type="velocity-json">
         /dhis-web-commons/ajax/jsonIndicators.vm
@@ -657,7 +650,7 @@
       </result>
       <param name="onExceptionReturn">plainTextError</param>
     </action>
-    
+
     <action name="getCategoryOptionGroups" class="org.hisp.dhis.commons.action.GetCategoryOptionGroupsAction">
       <result name="success" type="velocity-json">
         /dhis-web-commons/ajax/jsonCategoryOptionGroups.vm
@@ -678,14 +671,14 @@
       </result>
       <param name="onExceptionReturn">plainTextError</param>
     </action>
-    
+
   	<action name="getPrograms" class="org.hisp.dhis.commons.action.GetProgramsAction">
       <result name="success" type="velocity-json">
         /dhis-web-commons/ajax/jsonPrograms.vm
       </result>
       <param name="onExceptionReturn">plainTextError</param>
     </action>
-    
+
     <action name="getDataSetsMinified" class="org.hisp.dhis.commons.action.GetDataSetsAction">
       <result name="success" type="velocity-json">
         /dhis-web-commons/ajax/jsonminDataSets.vm
@@ -846,13 +839,6 @@
       <param name="onExceptionReturn">plainTextError</param>
     </action>
 
-    <action name="getAvailablePeriods" class="org.hisp.dhis.commons.action.GetAvailablePeriodsAction">
-      <result name="success" type="velocity-json">
-        /dhis-web-commons/ajax/jsonPeriods.vm
-      </result>
-      <param name="onExceptionReturn">plainTextError</param>
-    </action>
-
     <action name="getConstants" class="org.hisp.dhis.commons.action.GetConstantsAction">
       <result name="success" type="velocity-json">
         /dhis-web-commons/ajax/jsonConstants.vm
@@ -930,10 +916,7 @@
     </action>
 
     <action name="modules" class="org.hisp.dhis.commons.action.NoAction">
-      <result name="success" type="velocity">/main.vm</result>
-      <param name="page">/dhis-web-commons/about/modules.vm</param>
-      <param name="menu">/dhis-web-commons/about/menu.vm</param>
-      <param name="hideMenu">true</param>
+      <result name="success" type="redirect">/dhis-web-menu-management/</result>
     </action>
 
     <action name="functions" class="org.hisp.dhis.commons.action.NoAction">

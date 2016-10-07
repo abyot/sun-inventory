@@ -31,7 +31,6 @@ package org.hisp.dhis.webapi.controller.validation;
 import com.google.common.collect.Lists;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.DataSetService;
-import org.hisp.dhis.dxf2.common.TranslateParams;
 import org.hisp.dhis.query.Order;
 import org.hisp.dhis.query.QueryParserException;
 import org.hisp.dhis.schema.descriptors.ValidationRuleSchemaDescriptor;
@@ -61,8 +60,8 @@ public class ValidationRuleController
     private ValidationRuleService validationRuleService;
 
     @Override
-    protected List<ValidationRule> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters,
-        List<Order> orders, TranslateParams translateParams ) throws QueryParserException
+    protected List<ValidationRule> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters, List<Order> orders )
+        throws QueryParserException
     {
         if ( options.contains( "dataSet" ) )
         {
@@ -76,6 +75,6 @@ public class ValidationRuleController
             return Lists.newArrayList( validationRuleService.getValidationRulesByDataElements( ds.getDataElements() ) );
         }
 
-        return super.getEntityList( metadata, options, filters, orders, translateParams );
+        return super.getEntityList( metadata, options, filters, orders );
     }
 }

@@ -28,11 +28,8 @@ package org.hisp.dhis.message;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
-
-import java.util.HashMap;
-import java.util.Set;
-
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,17 +37,27 @@ import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.hisp.dhis.commons.util.DebugUtils;
+import org.hisp.dhis.email.EmailResponse;
 import org.hisp.dhis.program.message.DeliveryChannel;
 import org.hisp.dhis.setting.SettingKey;
 import org.hisp.dhis.setting.SystemSettingManager;
+import org.hisp.dhis.sms.MessageBatchStatus;
+import org.hisp.dhis.sms.MessageResponseStatus;
+import org.hisp.dhis.sms.MessageResponseSummary;
+import org.hisp.dhis.sms.OutBoundMessage;
+import org.hisp.dhis.sms.outbound.MessageBatch;
 import org.hisp.dhis.system.velocity.VelocityManager;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserSettingKey;
 import org.hisp.dhis.user.UserSettingService;
 import org.springframework.scheduling.annotation.Async;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
 /**
  * @author Lars Helge Overland
@@ -99,7 +106,7 @@ public class EmailMessageSender
      */
     @Async
     @Override
-    public String sendMessage( String subject, String text, String footer, User sender, Set<User> users,
+    public MessageResponseStatus sendMessage( String subject, String text, String footer, User sender, Set<User> users,
         boolean forceSend )
     {
         String hostName = (String) systemSettingManager.getSystemSetting( SettingKey.EMAIL_HOST_NAME );
@@ -108,6 +115,8 @@ public class EmailMessageSender
         String password = (String) systemSettingManager.getSystemSetting( SettingKey.EMAIL_PASSWORD );
         boolean tls = (boolean) systemSettingManager.getSystemSetting( SettingKey.EMAIL_TLS );
         String from = (String) systemSettingManager.getSystemSetting( SettingKey.EMAIL_SENDER );
+        
+        MessageResponseStatus status = new MessageResponseStatus();
 
         if ( hostName == null )
         {
@@ -145,23 +154,34 @@ public class EmailMessageSender
             if ( hasRecipients )
             {
                 email.send();
+                
                 log.info( "Email sent using host: " + hostName + ":" + port + " with TLS: " + tls );
+                
+                status = new MessageResponseStatus( "Sent", EmailResponse.SENT, true );
+            }
+            else
+            {
+                status = new MessageResponseStatus( "No recipients found", EmailResponse.ABORTED, false );
             }
         }
         catch ( EmailException ex )
         {
             log.warn( "Could not send email: " + ex.getMessage() + ", " + DebugUtils.getStackTrace( ex ) );
+            
+            status = new MessageResponseStatus( "Failed", EmailResponse.FAILED, false );
         }
         catch ( RuntimeException ex )
         {
             log.warn( "Error while sending email: " + ex.getMessage() + ", " + DebugUtils.getStackTrace( ex ) );
+            
+            status = new MessageResponseStatus( "Failed", EmailResponse.FAILED, false );
         }
 
-        return null;
+        return status;
     }
 
     @Override
-    public String sendMessage( String subject, String text, Set<String> recipients )
+    public MessageResponseStatus sendMessage( String subject, String text, Set<String> recipients )
     {
         String hostName = (String) systemSettingManager.getSystemSetting( SettingKey.EMAIL_HOST_NAME );
         int port = (int) systemSettingManager.getSystemSetting( SettingKey.EMAIL_PORT );
@@ -169,6 +189,8 @@ public class EmailMessageSender
         String password = (String) systemSettingManager.getSystemSetting( SettingKey.EMAIL_PASSWORD );
         boolean tls = (boolean) systemSettingManager.getSystemSetting( SettingKey.EMAIL_TLS );
         String from = (String) systemSettingManager.getSystemSetting( SettingKey.EMAIL_SENDER );
+
+        MessageResponseStatus status = new MessageResponseStatus();
 
         if ( hostName == null )
         {
@@ -195,39 +217,52 @@ public class EmailMessageSender
             if ( hasRecipients )
             {
                 email.send();
-                
+
                 log.info( "Email sent using host: " + hostName + ":" + port + " with TLS: " + tls );
 
-                return "success";
+                return new MessageResponseStatus( "sent", EmailResponse.SENT, true );
             }
         }
         catch ( EmailException ex )
         {
-            log.warn( "Could not send email: " + ex.getMessage() + ", " + DebugUtils.getStackTrace( ex ) );
+            log.warn( "Error while sending email: " + ex.getMessage() + ", " + DebugUtils.getStackTrace( ex ) );
+
+            status = new MessageResponseStatus( "failed", EmailResponse.FAILED, false );
         }
         catch ( RuntimeException ex )
         {
             log.warn( "Error while sending email: " + ex.getMessage() + ", " + DebugUtils.getStackTrace( ex ) );
+
+            status = new MessageResponseStatus( "failed", EmailResponse.FAILED, false );
         }
 
-        return null;
+        return status;
     }
 
     @Override
-    public String sendMessage( String subject, String text, String recipient )
+    public MessageResponseStatus sendMessage( String subject, String text, String recipient )
     {
         return sendMessage( subject, text, Sets.newHashSet( recipient ) );
     }
 
     @Override
-    public boolean accept( Set<DeliveryChannel> channels )
+    public MessageResponseSummary sendMessageBatch( MessageBatch batch )
     {
-        if ( channels.contains( DeliveryChannel.EMAIL ) )
+        List<MessageResponseStatus> statuses = new ArrayList<>();
+
+        for ( OutBoundMessage email : batch.getBatch() )
         {
-            return true;
+            statuses.add( sendMessage( email.getSubject(), email.getText(), email.getRecipients() ) );
         }
 
-        return false;
+        return generateSummary( statuses );
+    }
+
+    @Override
+    public boolean accept( Set<DeliveryChannel> channels )
+    {
+        return channels.contains( DeliveryChannel.EMAIL );
+
     }
 
     @Override
@@ -248,7 +283,7 @@ public class EmailMessageSender
 
     private HtmlEmail getHtmlEmail( String hostName, int port, String username, String password, boolean tls,
         String sender )
-            throws EmailException
+        throws EmailException
     {
         HtmlEmail email = new HtmlEmail();
         email.setHostName( hostName );
@@ -321,5 +356,54 @@ public class EmailMessageSender
         }
 
         return title;
+    }
+
+    private MessageResponseSummary generateSummary( List<MessageResponseStatus> statuses )
+    {
+        MessageResponseSummary summary = new MessageResponseSummary();
+
+        int total, sent = 0;
+
+        boolean ok = true;
+
+        String errorMessage = StringUtils.EMPTY;
+
+        total = statuses.size();
+
+        for ( MessageResponseStatus status : statuses )
+        {
+            if ( EmailResponse.SENT.equals( status.getResponseObject() ) )
+            {
+                sent++;
+            }
+            else
+            {
+                ok = false;
+
+                errorMessage = status.getDescription();
+            }
+        }
+
+        summary.setTotal( total );
+        summary.setChannel( DeliveryChannel.EMAIL );
+        summary.setSent( sent );
+        summary.setFailed( total - sent );
+
+        if ( !ok )
+        {
+            summary.setBatchStatus( MessageBatchStatus.FAILED );
+            summary.setErrorMessage( errorMessage );
+
+            log.error( errorMessage );
+        }
+        else
+        {
+            summary.setBatchStatus( MessageBatchStatus.COMPLETED );
+            summary.setResposneMessage( "SENT" );
+
+            log.info( "EMAIL batch processed successfully" );
+        }
+
+        return summary;
     }
 }

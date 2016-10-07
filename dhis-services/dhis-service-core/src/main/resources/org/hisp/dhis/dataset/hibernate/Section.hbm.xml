@@ -48,21 +48,22 @@
 
     <property name="sortOrder" column="sortorder" not-null="true" />
 
+    <!-- Dynamic attribute values -->
+
+    <set name="attributeValues" table="sectionattributevalues" cascade="delete-orphan">
+      <cache usage="read-write" />
+      <key column="sectionid" />
+      <many-to-many class="org.hisp.dhis.attribute.AttributeValue" column="attributevalueid" unique="true" />
+    </set>
+
     <!-- Object Translation -->
-    <set name="translations" table="datasetsectiontranslations" cascade="delete-orphan" lazy="false">
+
+    <set name="translations" table="datasetsectiontranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="sectionid" foreign-key="fk_objecttranslation_sectionid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

@@ -28,11 +28,8 @@ package org.hisp.dhis.webapi.controller.sms;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.hisp.dhis.render.RenderService;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
+import org.hisp.dhis.render.RenderService;
 import org.hisp.dhis.sms.config.BulkSmsGatewayConfig;
 import org.hisp.dhis.sms.config.ClickatellGatewayConfig;
 import org.hisp.dhis.sms.config.GatewayAdministrationService;
@@ -41,15 +38,16 @@ import org.hisp.dhis.sms.config.SmsGatewayConfig;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.service.WebMessageService;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
-
-import java.io.IOException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Zubair <rajazubair.asghar@gmail.com>
@@ -104,7 +102,7 @@ public class SmsGatewayController
     @RequestMapping( value = "/{uid}", method = RequestMethod.GET, produces = "application/json" )
     public void getGatewayConfiguration( @PathVariable String uid, HttpServletRequest request,
         HttpServletResponse response )
-            throws WebMessageException, IOException
+        throws WebMessageException, IOException
     {
         SmsGatewayConfig gateway = gatewayAdminService.getGatewayConfigurationByUid( uid );
 
@@ -188,7 +186,7 @@ public class SmsGatewayController
         }
 
         gatewayAdminService.setDefaultGateway( uid );
-        
+
         webMessageService.send( WebMessageUtils.ok( gateway.getName() + " is set to default" ), response, request );
     }
 
@@ -211,6 +209,5 @@ public class SmsGatewayController
         gatewayAdminService.removeGatewayByUid( uid );
 
         webMessageService.send( WebMessageUtils.ok( "Gateway removed successfully" ), response, request );
-
     }
 }

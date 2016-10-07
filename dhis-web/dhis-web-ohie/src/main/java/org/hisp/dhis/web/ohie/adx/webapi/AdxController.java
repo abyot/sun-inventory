@@ -30,7 +30,10 @@ package org.hisp.dhis.web.ohie.adx.webapi;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hisp.dhis.dxf2.adx.AdxDataService;
 import org.hisp.dhis.dxf2.common.ImportOptions;
+import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
+import org.hisp.dhis.render.DefaultRenderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -41,17 +44,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import org.hisp.dhis.dxf2.adx.AdxDataService;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
-import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
 
-import static org.hisp.dhis.webapi.utils.ContextUtils.*;
+import static org.hisp.dhis.webapi.utils.ContextUtils.CONTENT_TYPE_XML;
 
 /**
- *
  * @author bobj
  */
-
 @Controller
 @RequestMapping( value = AdxController.RESOURCE_PATH )
 public class AdxController
@@ -69,11 +67,10 @@ public class AdxController
         HttpServletResponse response, InputStream in, Model model ) throws IOException
     {
         ImportSummaries importSummaries = adxService.saveDataValueSet( in, importOptions, null );
-        
+
         log.debug( "Data values set saved" );
 
         response.setContentType( CONTENT_TYPE_XML );
-        JacksonUtils.toXml( response.getOutputStream(), importSummaries );
+        DefaultRenderService.getXmlMapper().writeValue( response.getOutputStream(), importSummaries );
     }
-
 }

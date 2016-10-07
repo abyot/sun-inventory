@@ -29,22 +29,28 @@ package org.hisp.dhis.webapi.controller;
  */
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.common.DisplayDensity;
-import org.hisp.dhis.common.view.ExportView;
+import org.hisp.dhis.common.IdScheme;
+import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
+import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.dataentryform.DataEntryFormService;
 import org.hisp.dhis.dataset.DataSet;
+import org.hisp.dhis.dataset.DataSetElement;
 import org.hisp.dhis.dataset.DataSetService;
 import org.hisp.dhis.datavalue.DataValue;
 import org.hisp.dhis.datavalue.DataValueService;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
 import org.hisp.dhis.dxf2.common.TranslateParams;
 import org.hisp.dhis.dxf2.datavalueset.DataValueSetService;
-import org.hisp.dhis.dxf2.metadata.ExportService;
 import org.hisp.dhis.dxf2.metadata.Metadata;
-import org.hisp.dhis.dxf2.metadata2.MetadataExportService;
+import org.hisp.dhis.dxf2.metadata.MetadataExportParams;
+import org.hisp.dhis.dxf2.metadata.MetadataExportService;
+import org.hisp.dhis.dxf2.utils.InputUtils;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.node.NodeUtils;
 import org.hisp.dhis.node.types.RootNode;
@@ -52,18 +58,18 @@ import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.PeriodService;
 import org.hisp.dhis.period.PeriodType;
+import org.hisp.dhis.query.Query;
+import org.hisp.dhis.render.DefaultRenderService;
 import org.hisp.dhis.schema.descriptors.DataSetSchemaDescriptor;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.utils.FormUtils;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.hisp.dhis.webapi.view.ClassPathUriResolver;
-import org.hisp.dhis.webapi.webdomain.WebOptions;
 import org.hisp.dhis.webapi.webdomain.form.Form;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -85,8 +91,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -110,10 +118,7 @@ public class DataSetController
     private DataEntryFormService dataEntryFormService;
 
     @Autowired
-    private ExportService exportService;
-
-    @Autowired
-    private MetadataExportService metadataExportService;
+    private MetadataExportService exportService;
 
     @Autowired
     private DataValueService dataValueService;
@@ -124,19 +129,28 @@ public class DataSetController
     @Autowired
     private PeriodService periodService;
 
+    @Autowired
+    private InputUtils inputUtils;
+
     // -------------------------------------------------------------------------
     // Controller
     // -------------------------------------------------------------------------
 
+    @SuppressWarnings( "unchecked" )
     @RequestMapping( produces = "application/dsd+xml" )
     public void getStructureDefinition( @RequestParam Map<String, String> parameters, HttpServletResponse response )
         throws IOException, TransformerException
     {
-        WebOptions options = filterMetadataOptions();
+        MetadataExportParams exportParams = filterMetadataOptions();
 
-        Metadata metadata = exportService.getMetaData( options );
+        Map<Class<? extends IdentifiableObject>, List<? extends IdentifiableObject>> metadataMap = exportService.getMetadata( exportParams );
 
-        InputStream input = new ByteArrayInputStream( JacksonUtils.toXmlWithViewAsString( metadata, ExportView.class ).getBytes( "UTF-8" ) );
+        Metadata metadata = new Metadata();
+        metadata.setDataElements( (List<DataElement>) metadataMap.get( DataElement.class ) );
+        metadata.setDataSets( (List<DataSet>) metadataMap.get( DataSet.class ) );
+        metadata.setCategoryOptionCombos( (List<DataElementCategoryOptionCombo>) metadataMap.get( DataElementCategoryOptionCombo.class ) );
+
+        InputStream input = new ByteArrayInputStream( DefaultRenderService.getXmlMapper().writeValueAsString( metadata ).getBytes( "UTF-8" ) );
 
         TransformerFactory tf = TransformerFactory.newInstance();
         tf.setURIResolver( new ClassPathUriResolver() );
@@ -163,8 +177,8 @@ public class DataSetController
         renderService.toJson( response.getOutputStream(), versionMap );
     }
 
-    @ResponseStatus( HttpStatus.NO_CONTENT )
     @RequestMapping( value = "/{uid}/version", method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void bumpVersion( @PathVariable( "uid" ) String uid )
         throws Exception
     {
@@ -193,8 +207,8 @@ public class DataSetController
             throw new WebMessageException( WebMessageUtils.conflict( "Data set does not exist: " + uid ) );
         }
 
-        List<DataElementCategoryCombo> categoryCombos = dataSet.getDataElements().stream().
-            map( DataElement::getCategoryCombo ).distinct().collect( Collectors.toList() );
+         List<DataElementCategoryCombo> categoryCombos = dataSet.getDataSetElements().stream().
+            map( DataSetElement::getResolvedCategoryCombo ).distinct().collect( Collectors.toList() );
 
         Collections.sort( categoryCombos );
 
@@ -202,6 +216,7 @@ public class DataSetController
 
         RootNode rootNode = NodeUtils.createMetadata();
         rootNode.addChild( fieldFilterService.filter( DataElementCategoryCombo.class, categoryCombos, fields ) );
+
         return rootNode;
     }
 
@@ -223,6 +238,7 @@ public class DataSetController
         }
 
         Period pe = periodService.getPeriod( period );
+
         return dataValueSetService.getDataValueSetTemplate( dataSets.get( 0 ), pe, orgUnits, comment, orgUnitIdScheme, dataElementIdScheme );
     }
 
@@ -231,6 +247,7 @@ public class DataSetController
         @PathVariable( "uid" ) String uid,
         @RequestParam( value = "ou", required = false ) String orgUnit,
         @RequestParam( value = "pe", required = false ) String period,
+        @RequestParam( value = "categoryOptions", required = false ) String categoryOptions,
         @RequestParam( required = false ) boolean metaData,
         TranslateParams translateParams, HttpServletResponse response ) throws IOException, WebMessageException
     {
@@ -251,7 +268,7 @@ public class DataSetController
 
         Period pe = PeriodType.getPeriodFromIsoString( period );
 
-        Form form = getForm( dataSets, ou, pe, metaData );
+        Form form = getForm( dataSets, ou, pe, categoryOptions, metaData );
 
         renderService.toJson( response.getOutputStream(), form );
     }
@@ -261,6 +278,7 @@ public class DataSetController
         @PathVariable( "uid" ) String uid,
         @RequestParam( value = "ou", required = false ) String orgUnit,
         @RequestParam( value = "pe", required = false ) String period,
+        @RequestParam( value = "catOpts", required = false ) String categoryOptions,
         @RequestParam( required = false ) boolean metaData,
         TranslateParams translateParams, HttpServletResponse response ) throws IOException, WebMessageException
     {
@@ -281,26 +299,40 @@ public class DataSetController
 
         Period pe = PeriodType.getPeriodFromIsoString( period );
 
-        Form form = getForm( dataSets, ou, pe, metaData );
+        Form form = getForm( dataSets, ou, pe, categoryOptions, metaData );
 
         renderService.toXml( response.getOutputStream(), form );
     }
 
-    private Form getForm( List<DataSet> dataSets, OrganisationUnit ou, Period pe, boolean metaData )
+    private Form getForm( List<DataSet> dataSets, OrganisationUnit ou, Period pe, String categoryOptions, boolean metaData ) throws IOException
     {
         DataSet dataSet = dataSets.get( 0 );
 
-        i18nService.internationalise( dataSet );
-        i18nService.internationalise( dataSet.getDataElements() );
-        i18nService.internationalise( dataSet.getSections() );
+        Form form = FormUtils.fromDataSet( dataSets.get( 0 ), metaData, null );
 
-        Form form = FormUtils.fromDataSet( dataSets.get( 0 ), metaData );
+
+        Set<String> options = null;
+
+        if ( StringUtils.isNotEmpty( categoryOptions ) && categoryOptions.startsWith( "[" ) && categoryOptions.endsWith( "]" ) )
+        {
+            String[] split = categoryOptions.substring( 1, categoryOptions.length() - 1 ).split( "," );
+
+            options = new HashSet<>( Lists.newArrayList( split ) );
+        }
 
         if ( ou != null && pe != null )
         {
-            i18nService.internationalise( ou );
+            List<DataValue> dataValues;
 
-            List<DataValue> dataValues = dataValueService.getDataValues( ou, pe, dataSets.get( 0 ).getDataElements() );
+            if ( options != null && !options.isEmpty() )
+            {
+                DataElementCategoryOptionCombo attrOptionCombo = inputUtils.getAttributeOptionCombo( dataSet.getCategoryCombo(), options, IdScheme.UID );
+                dataValues = dataValueService.getDataValues( ou, pe, dataSets.get( 0 ).getDataElements(), attrOptionCombo );
+            }
+            else
+            {
+                dataValues = dataValueService.getDataValues( dataSets.get( 0 ).getDataElements(), Sets.newHashSet( pe ), Sets.newHashSet( ou ) );
+            }
 
             FormUtils.fillWithDataValues( form, dataValues );
         }
@@ -309,7 +341,7 @@ public class DataSetController
     }
 
     @RequestMapping( value = { "/{uid}/customDataEntryForm", "/{uid}/form" }, method = { RequestMethod.PUT, RequestMethod.POST }, consumes = "text/html" )
-    @PreAuthorize( "hasRole('ALL')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void updateCustomDataEntryFormHtml( @PathVariable( "uid" ) String uid,
         @RequestBody String formContent,
         HttpServletResponse response ) throws Exception
@@ -340,8 +372,8 @@ public class DataSetController
     }
 
     @RequestMapping( value = "/{uid}/form", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE )
-    @PreAuthorize( "hasRole('ALL')" )
     @ApiVersion( value = ApiVersion.Version.ALL, exclude = ApiVersion.Version.V23 )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void updateCustomDataEntryFormJson( @PathVariable( "uid" ) String uid, HttpServletRequest request ) throws WebMessageException
     {
         DataSet dataSet = dataSetService.getDataSet( uid );
@@ -376,7 +408,7 @@ public class DataSetController
         }
         else
         {
-            if ( newForm.hasForm() )
+            if ( newForm.getHtmlCode() != null )
             {
                 form.setHtmlCode( dataEntryFormService.prepareDataEntryFormForSave( newForm.getHtmlCode() ) );
             }
@@ -404,7 +436,7 @@ public class DataSetController
             throw new WebMessageException( WebMessageUtils.notFound( "DataSet not found for uid: " + pvUid ) );
         }
 
-        return metadataExportService.getMetadataWithDependenciesAsNode( dataSet );
+        return exportService.getMetadataWithDependenciesAsNode( dataSet );
     }
 
     /**
@@ -412,13 +444,13 @@ public class DataSetController
      *
      * @return the filtered options.
      */
-    private WebOptions filterMetadataOptions()
+    private MetadataExportParams filterMetadataOptions()
     {
-        WebOptions options = new WebOptions( new HashMap<>() );
-        options.setAssumeTrue( false );
-        options.addOption( "categoryOptionCombos", "true" );
-        options.addOption( "dataElements", "true" );
-        options.addOption( "dataSets", "true" );
-        return options;
+        MetadataExportParams params = new MetadataExportParams();
+        params.addQuery( Query.from( schemaService.getSchema( DataElement.class ) ) );
+        params.addQuery( Query.from( schemaService.getSchema( DataSet.class ) ) );
+        params.addQuery( Query.from( schemaService.getSchema( DataElementCategoryOptionCombo.class ) ) );
+
+        return params;
     }
 }

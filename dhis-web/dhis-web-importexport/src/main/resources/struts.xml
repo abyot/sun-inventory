@@ -92,11 +92,19 @@
       <param name="requiredAuthorities">F_METADATA_IMPORT</param>
     </action>
 
-    <action name="dxf2MetaDataExport" class="org.hisp.dhis.importexport.action.dxf2.MetaDataExportFormAction">
+    <action name="dxf2MetaDataExport" class="org.hisp.dhis.importexport.action.NoAction">
       <result name="success" type="velocity">/main.vm</result>
       <param name="menu">/dhis-web-importexport/mainMenu.vm</param>
       <param name="page">/dhis-web-importexport/dxf2MetaDataExport.vm</param>
       <param name="javascripts">javascript/dxf2MetaDataExport.js</param>
+      <param name="requiredAuthorities">F_METADATA_EXPORT</param>
+    </action>
+
+    <action name="metadataDependencyExport" class="org.hisp.dhis.importexport.action.NoAction">
+      <result name="success" type="velocity">/main.vm</result>
+      <param name="menu">/dhis-web-importexport/mainMenu.vm</param>
+      <param name="page">/dhis-web-importexport/metadataDependencyExport.vm</param>
+      <param name="javascripts">javascript/metadataDependencyExport.js</param>
       <param name="requiredAuthorities">F_METADATA_EXPORT</param>
     </action>
 
@@ -107,6 +115,11 @@
 
     <action name="getMetaDataImportSummary" class="org.hisp.dhis.importexport.action.dxf2.GetImportSummaryAction">
       <result name="success" type="velocity">/dhis-web-importexport/importMetaDataSummary.vm</result>
+      <param name="onExceptionReturn">plainTextError</param>
+    </action>
+
+    <action name="getMetadataImportReport" class="org.hisp.dhis.importexport.action.dxf2.GetImportReportAction">
+      <result name="success" type="velocity">/dhis-web-importexport/importMetadataReport.vm</result>
       <param name="onExceptionReturn">plainTextError</param>
     </action>
 
@@ -126,44 +139,6 @@
       <param name="page">/dhis-web-importexport/gmlImport.vm</param>
       <param name="javascripts">javascript/importMetaData.js</param>
       <param name="requiredAuthorities">F_IMPORT_GML</param>
-    </action>
-
-    <!-- Detailed meta-data export -->
-
-    <action name="dxf2FilteredMetaDataExport" class="org.hisp.dhis.importexport.action.dxf2.FilterListAction">
-      <result name="success" type="velocity">/main.vm</result>
-      <param name="menu">/dhis-web-importexport/mainMenu.vm</param>
-      <param name="page">/dhis-web-importexport/dxf2FilteredMetaDataExport.vm</param>
-      <param name="javascripts">javascript/filter.js</param>
-      <param name="requiredAuthorities">F_METADATA_EXPORT</param>
-    </action>
-
-    <action name="showSortFilterForm" class="org.hisp.dhis.importexport.action.dxf2.GetFilterListSortOrderAction">
-      <result name="success" type="velocity">/main.vm</result>
-      <param name="menu">/dhis-web-importexport/mainMenu.vm</param>
-      <param name="page">/dhis-web-importexport/sortFilterForm.vm</param>
-      <param name="requiredAuthorities">F_METADATA_EXPORT</param>
-    </action>
-
-    <action name="filterExportForm" class="org.hisp.dhis.importexport.action.dxf2.FilterExportFormAction">
-      <result name="success" type="velocity">/main.vm</result>
-      <param name="menu">/dhis-web-importexport/mainMenu.vm</param>
-      <param name="page">/dhis-web-importexport/filterExportForm.vm</param>
-      <param name="javascripts">javascript/filteredMetaDataExport.js,javascript/utils.js</param>
-      <param name="requiredAuthorities">F_METADATA_EXPORT</param>
-    </action>
-
-    <action name="saveFilterListSortOrder" class="org.hisp.dhis.importexport.action.dxf2.SaveFilterListSortOrderAction">
-      <result name="success" type="redirect">dxf2FilteredMetaDataExport.action</result>
-      <param name="requiredAuthorities">F_METADATA_EXPORT</param>
-    </action>
-
-    <action name="updateFilterExportForm" class="org.hisp.dhis.importexport.action.dxf2.ShowUpdateFilterExportFormAction">
-      <result name="success" type="velocity">/main.vm</result>
-      <param name="menu">/dhis-web-importexport/mainMenu.vm</param>
-      <param name="page">/dhis-web-importexport/filterExportForm.vm</param>
-      <param name="javascripts">javascript/filteredMetaDataExport.js,javascript/utils.js</param>
-      <param name="requiredAuthorities">F_METADATA_EXPORT</param>
     </action>
 
   </package>

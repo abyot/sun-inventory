@@ -28,8 +28,8 @@ package org.hisp.dhis.trackedentity.startup;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.amplecode.quick.StatementHolder;
-import org.amplecode.quick.StatementManager;
+import org.hisp.quick.StatementHolder;
+import org.hisp.quick.StatementManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.jdbc.StatementBuilder;
@@ -92,6 +92,12 @@ public class TableAlteror
         executeSql( "ALTER TABLE program DROP COLUMN singleevent" );
         executeSql( "ALTER TABLE program DROP COLUMN anonymous" );
         executeSql( "UPDATE program SET type=1 where type is null" );
+        executeSql( "UPDATE program SET expirydays=0 where expirydays is null" );
+        executeSql( "UPDATE program SET completeeventsexpirydays=0 where completeeventsexpirydays is null" );
+        executeSql( "ALTER TABLE programinstance DROP COLUMN trackedentitycommentid" );
+        executeSql( "ALTER TABLE programstageinstance DROP COLUMN trackedentitycommentid" );
+        executeSql( "ALTER TABLE trackedentitycomment DROP COLUMN programinstanceid" );
+        executeSql( "ALTER TABLE trackedentitycomment DROP COLUMN programstageinstanceid" );
 
         executeSql( "DROP TABLE programattributevalue" );
         executeSql( "DROP TABLE programinstance_attributes" );
@@ -142,6 +148,7 @@ public class TableAlteror
         executeSql( "UPDATE program SET skipoffline=false where skipoffline is null" );
         executeSql( "UPDATE program SET displayfrontpagelist=false where displayfrontpagelist is null" );
         executeSql( "UPDATE program SET usefirststageduringregistration=false where usefirststageduringregistration is null" );
+        executeSql( "UPDATE program SET capturecoordinates=false where capturecoordinates is null" );
 
         executeSql( "UPDATE programinstance SET followup=false where followup is null" );
 
@@ -227,7 +234,6 @@ public class TableAlteror
         executeSql( "update userroleauthorities set authority='F_TRACKED_ENTITY_INSTANCE_MANAGEMENT' where authority='F_PATIENT_MANAGEMENT'" );
         executeSql( "update userroleauthorities set authority='F_NAME_BASED_DATA_ENTRY' where authority='F_NAME_BASED_DATA_ENTRY'" );
         executeSql( "update userroleauthorities set authority='F_TRACKED_ENTITY_ATTRIBUTEVALUE_DELETE' where authority='F_PATIENTATTRIBUTEVALUE_DELETE'" );
-        executeSql( "update userroleauthorities set authority='F_TRACKED_ENTITY_INSTANCE_REMINDER_MANAGEMENT' where authority='F_PATIENT_REMINDER_MANAGEMENT'" );
 
         executeSql( "ALTER TABLE program_attributes RENAME COLUMN programattributeid TO programtrackedentityattributeid" );
         createPersonTrackedEntity();

@@ -35,6 +35,8 @@ import org.hisp.dhis.dataelement.DataElementCategoryService;
 import org.hisp.dhis.dataelement.DataElementService;
 import org.hisp.dhis.expression.Expression;
 import org.hisp.dhis.expression.ExpressionService;
+import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
+import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.PeriodType;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,9 @@ public class PredictorStoreTest
 
     @Autowired
     private DataElementService dataElementService;
+    
+    @Autowired
+    private OrganisationUnitService organisationUnitService;
 
     @Autowired
     private DataElementCategoryService categoryService;
@@ -63,6 +68,8 @@ public class PredictorStoreTest
     @Autowired
     private ExpressionService expressionService;
 
+    private OrganisationUnitLevel orgUnitLevel1;
+    
     private DataElement dataElementA;
 
     private DataElement dataElementB;
@@ -82,7 +89,7 @@ public class PredictorStoreTest
     private Expression expressionB;
 
     private PeriodType periodType;
-
+    
     // -------------------------------------------------------------------------
     // Fixture
     // -------------------------------------------------------------------------
@@ -90,7 +97,11 @@ public class PredictorStoreTest
     @Override
     public void setUpTest()
         throws Exception
-    {      
+    {
+        orgUnitLevel1 = new OrganisationUnitLevel( 1, "Level1" );
+        
+        organisationUnitService.addOrganisationUnitLevel( orgUnitLevel1 );
+        
         dataElementA = createDataElement( 'A' );
         dataElementB = createDataElement( 'B' );
         dataElementC = createDataElement( 'C' );
@@ -131,18 +142,17 @@ public class PredictorStoreTest
     @Test
     public void testSavepredictor()
     {
-        Predictor predictor = createPredictor( dataElementX, "A", expressionA, expressionB, 
-            periodType, 1,6,1,0);
+        Predictor predictor = createPredictor( dataElementX, "A", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
 
         int id = predictorStore.save( predictor );
 
-        Set<Integer> levels=predictor.getOrganisationUnitLevels();
-        Set<Integer> expected_levels=new HashSet<Integer>();
-        expected_levels.add(1);
+        Set<OrganisationUnitLevel> levels = predictor.getOrganisationUnitLevels();
+        Set<OrganisationUnitLevel> expectedLevels = new HashSet<OrganisationUnitLevel>();
+        expectedLevels.add( orgUnitLevel1 );
 
         predictor = predictorStore.get( id );
 
-        levels=predictor.getOrganisationUnitLevels();
+        levels = predictor.getOrganisationUnitLevels();
 
         assertEquals( predictor.getName(), "PredictorA" );
         assertEquals( predictor.getDescription(), "DescriptionA" );
@@ -150,18 +160,18 @@ public class PredictorStoreTest
         // TODO Need a good skipTest test
         assertEquals( predictor.getPeriodType(), periodType );
         assertEquals( predictor.getOutput(), dataElementX );
-        assertEquals( predictor.getAnnualSampleCount(), new Integer(0) );
-        assertEquals( predictor.getSequentialSampleCount(), new Integer(6) );
-        assertEquals( predictor.getSequentialSkipCount(), new Integer(1) );
+        assertEquals( predictor.getAnnualSampleCount(), new Integer( 0 ) );
+        assertEquals( predictor.getSequentialSampleCount(), new Integer( 6 ) );
+        assertEquals( predictor.getSequentialSkipCount(), new Integer( 1 ) );
         assertEquals( levels.size(), 1 );
-        assertEquals( levels, expected_levels );
+        assertEquals( levels, expectedLevels );
     }
 
     @Test
     public void testUpdatePredictor()
     {
-        Predictor predictor = createPredictor( dataElementX, "A", expressionA, expressionB, periodType,
-            1,6,1,0);
+        Predictor predictor = createPredictor( dataElementX, "A", expressionA, expressionB, periodType, orgUnitLevel1,
+            6, 1, 0 );
 
         int id = predictorStore.save( predictor );
 
@@ -182,17 +192,14 @@ public class PredictorStoreTest
 
         assertEquals( predictor.getName(), "PredictorB" );
         assertEquals( predictor.getDescription(), "DescriptionB" );
-        assertEquals( predictor.getSequentialSkipCount(), new Integer(2) );
-
+        assertEquals( predictor.getSequentialSkipCount(), new Integer( 2 ) );
     }
 
     @Test
     public void testDeletePredictor()
     {
-        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, 
-            periodType, 1,6,1,0);
-        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, 
-            periodType, 1,6,1,0);
+        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
+        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
 
         int idA = predictorStore.save( predictorA );
         int idB = predictorStore.save( predictorB );
@@ -218,10 +225,8 @@ public class PredictorStoreTest
     @Test
     public void testGetAllPredictors()
     {
-        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, 
-            periodType, 1,6,1,0);
-        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, 
-            periodType, 1,6,1,0);
+        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
+        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
 
         predictorStore.save( predictorA );
         predictorStore.save( predictorB );
@@ -236,10 +241,8 @@ public class PredictorStoreTest
     @Test
     public void testGetPredictorByName()
     {
-        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, 
-            periodType, 1,6,1,0);
-        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, 
-            periodType, 1,6,1,0);
+        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
+        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
 
         int id = predictorStore.save( predictorA );
         predictorStore.save( predictorB );
@@ -275,12 +278,9 @@ public class PredictorStoreTest
         expressionService.addExpression( expression2 );
         expressionService.addExpression( expression3 );
 
-        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, 
-            periodType, 1,6,1,0);
-        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, 
-            periodType, 1,6,1,0);
-        Predictor predictorC = createPredictor( dataElementX, "C", expressionA, expressionB, 
-            periodType, 1,6,1,0);
+        Predictor predictorA = createPredictor( dataElementX, "A", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
+        Predictor predictorB = createPredictor( dataElementX, "B", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
+        Predictor predictorC = createPredictor( dataElementX, "C", expressionA, expressionB, periodType, orgUnitLevel1, 6, 1, 0 );
 
         predictorStore.save( predictorA );
         predictorStore.save( predictorB );

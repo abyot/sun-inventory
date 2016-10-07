@@ -29,6 +29,10 @@ package org.hisp.dhis.program;
  */
 
 
+import org.hisp.dhis.dataentryform.DataEntryForm;
+
+import java.util.List;
+
 /**
  * @author Abyot Asalefew
  * @version $Id$
@@ -90,4 +94,10 @@ public interface ProgramStageService
      */
     ProgramStage getProgramStageByName( String name, Program program );
 
+    /**
+     * Retrieve all ProgramStages associated with the given DataEntryForm.
+     * @param dataEntryForm the DataEntryForm.
+     * @return a list og ProgramStages.
+     */
+    List<ProgramStage> getProgramStagesByDataEntryForm( DataEntryForm dataEntryForm );
 }

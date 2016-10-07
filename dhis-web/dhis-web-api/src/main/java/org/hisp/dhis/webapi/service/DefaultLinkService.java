@@ -104,7 +104,7 @@ public class DefaultLinkService implements LinkService
     @Override
     public <T> void generateLinks( T object, boolean deepScan )
     {
-        generateLinks( object, contextService.getServletPath(), deepScan );
+        generateLinks( object, contextService.getApiPath(), deepScan );
     }
 
     @Override
@@ -128,10 +128,7 @@ public class DefaultLinkService implements LinkService
     @Override
     public void generateSchemaLinks( List<Schema> schemas )
     {
-        for ( Schema schema : schemas )
-        {
-            generateSchemaLinks( schema );
-        }
+        schemas.forEach( this::generateSchemaLinks );
     }
 
     @Override

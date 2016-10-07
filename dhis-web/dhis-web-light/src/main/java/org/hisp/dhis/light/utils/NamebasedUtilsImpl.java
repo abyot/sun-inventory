@@ -184,8 +184,6 @@ public class NamebasedUtilsImpl
 
         for ( ProgramStageDataElement programStagedataElement : programStageDataElements )
         {
-            //programStagedataElement = i18n( i18nService, locale, programStagedataElement );
-
             DataElement dataElement = programStagedataElement.getDataElement();
 
             org.hisp.dhis.api.mobile.model.DataElement de = ModelMapping.getDataElement( dataElement );

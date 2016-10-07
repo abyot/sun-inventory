@@ -16,6 +16,8 @@
     &identifiableProperties;
 
     <property name="name" column="name" not-null="true" unique="false" length="230" />
+    
+    <property name="description" type="text" />
 
     <list name="organisationUnits" table="eventreport_organisationunits">
       <cache usage="read-write" />
@@ -111,6 +113,13 @@
     </property>
 
     <property name="completedOnly" column="completedonly" />
+
+    <property name="title" />
+    
+    <set name="interpretations" inverse="true">
+      <key column="eventreportid" />
+      <one-to-many class="org.hisp.dhis.interpretation.Interpretation" />
+    </set>
 
     <property name="dataType" length="40">
       <type name="org.hibernate.type.EnumType">
@@ -209,20 +218,12 @@
     </set>
 
     <!-- Object Translation -->
-    <set name="translations" table="eventreporttranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="eventreporttranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="eventreportid" foreign-key="fk_objecttranslation_eventreportid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

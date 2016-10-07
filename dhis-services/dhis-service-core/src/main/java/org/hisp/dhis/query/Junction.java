@@ -35,7 +35,7 @@ import org.hisp.dhis.schema.Schema;
  */
 public abstract class Junction extends Criteria implements Criterion
 {
-    protected enum Type
+    public enum Type
     {
         AND, OR
     }

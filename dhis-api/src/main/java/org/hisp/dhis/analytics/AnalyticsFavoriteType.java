@@ -37,5 +37,10 @@ import org.hisp.dhis.common.DxfNamespaces;
 @JacksonXmlRootElement( localName = "analyticsFavoriteType", namespace = DxfNamespaces.DXF_2_0 )
 public enum AnalyticsFavoriteType
 {
-    CHART, EVENT_CHART, REPORT_TABLE, EVENT_REPORT, MAP, DATASET_REPORT
+    REPORT_TABLE, 
+    CHART, 
+    MAP, 
+    EVENT_REPORT, 
+    EVENT_CHART, 
+    DATASET_REPORT
 }

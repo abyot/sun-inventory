@@ -114,8 +114,7 @@ public class ReadMessageAction
 
         User user = currentUserService.getCurrentUser();
         conversation = messageService.getMessageConversation( id );
-        showTicketTools =
-            messageService.hasAccessToInternalNotes( user ) && conversation.getStatus() !=
+        showTicketTools =messageService.hasAccessToManageFeedbackMessages( user ) && conversation.getStatus() !=
                 MessageConversationStatus.NONE;
 
         if ( showTicketTools )

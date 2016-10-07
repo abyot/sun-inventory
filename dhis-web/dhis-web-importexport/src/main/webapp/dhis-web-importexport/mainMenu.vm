@@ -22,8 +22,8 @@
   #if( $auth.hasAccess( "dhis-web-importexport", "dxf2MetaDataExport" ) )
   <li><a href="dxf2MetaDataExport.action">$i18n.getString( "metadata_export" )&nbsp;</a></li>
   #end
-  #if( $auth.hasAccess( "dhis-web-importexport", "dxf2FilteredMetaDataExport" ) )
-  <li><a href="dxf2FilteredMetaDataExport.action">$i18n.getString( "filtered_metadata_export" )&nbsp;</a></li>
+  #if( $auth.hasAccess( "dhis-web-importexport", "dxf2MetaDataExport" ) )
+  <li><a href="metadataDependencyExport.action">$i18n.getString( "metadata_dependency_export" )&nbsp;</a></li>
   #end
   #if( $auth.hasAccess( "dhis-web-importexport", "displayDataValueExportForm" ) )
   <li><a href="displayDataValueExportForm.action">$i18n.getString( "data_export" )&nbsp;</a></li>

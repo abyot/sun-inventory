@@ -1007,7 +1007,7 @@ Ext.onReady( function() {
 				return number;
 			};
 
-			support.prototype.number.prettyPrint = function(number, separator) {
+			support.prototype.number.prettyPrint = function(number, separator) {                
 				separator = separator || conf.finals.style.space;
 
 				if (separator === conf.finals.style.none) {

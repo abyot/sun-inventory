@@ -76,6 +76,13 @@ public class DefaultDataApprovalService
         this.dataApprovalStore = dataApprovalStore;
     }
 
+    private DataApprovalWorkflowStore workflowStore;
+
+    public void setWorkflowStore( DataApprovalWorkflowStore workflowStore )
+    {
+        this.workflowStore = workflowStore;
+    }
+    
     private DataApprovalLevelService dataApprovalLevelService;
 
     public void setDataApprovalLevelService( DataApprovalLevelService dataApprovalLevelService )
@@ -112,7 +119,47 @@ public class DefaultDataApprovalService
     }
 
     // -------------------------------------------------------------------------
-    // DataApproval
+    // Data approval workflow
+    // -------------------------------------------------------------------------
+
+    @Override
+    public int addWorkflow( DataApprovalWorkflow workflow )
+    {
+        return workflowStore.save( workflow );
+    }
+
+    @Override
+    public void updateWorkflow( DataApprovalWorkflow dataApprovalWorkflow )
+    {
+        workflowStore.update( dataApprovalWorkflow );
+    }
+
+    @Override
+    public void deleteWorkflow( DataApprovalWorkflow workflow )
+    {
+        workflowStore.delete( workflow );
+    }
+
+    @Override
+    public DataApprovalWorkflow getWorkflow( int id )
+    {
+        return workflowStore.get( id );
+    }
+
+    @Override
+    public DataApprovalWorkflow getWorkflow( String uid )
+    {
+        return workflowStore.getByUid( uid );
+    }
+
+    @Override
+    public List<DataApprovalWorkflow> getAllWorkflows()
+    {
+        return workflowStore.getAll();
+    }
+    
+    // -------------------------------------------------------------------------
+    // Data approval logic
     // -------------------------------------------------------------------------
 
     @Override

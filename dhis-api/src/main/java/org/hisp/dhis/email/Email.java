@@ -28,20 +28,16 @@ package org.hisp.dhis.email;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Set;
-
-import org.hisp.dhis.common.BaseIdentifiableObject;
-import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
-import org.hisp.dhis.user.User;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.DxfNamespaces;
+import org.hisp.dhis.user.User;
+
+import java.util.Set;
 
 /**
  * @author Lars Helge Overland
@@ -50,11 +46,11 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 public class Email
 {
     private String subject;
-    
+
     private String text;
-    
+
     private User sender;
-    
+
     private Set<User> recipients;
 
     // -------------------------------------------------------------------------
@@ -70,7 +66,7 @@ public class Email
         this.subject = subject;
         this.text = text;
     }
-    
+
     public Email( String subject, String text, User sender, Set<User> recipients )
     {
         this.subject = subject;
@@ -84,7 +80,6 @@ public class Email
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getSubject()
     {
@@ -97,7 +92,6 @@ public class Email
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getText()
     {
@@ -111,7 +105,6 @@ public class Email
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public User getSender()
     {
@@ -125,7 +118,6 @@ public class Email
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "recipients", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "recipient", namespace = DxfNamespaces.DXF_2_0 )
     public Set<User> getRecipients()
@@ -136,5 +128,5 @@ public class Email
     public void setRecipients( Set<User> recipients )
     {
         this.recipients = recipients;
-    }    
+    }
 }

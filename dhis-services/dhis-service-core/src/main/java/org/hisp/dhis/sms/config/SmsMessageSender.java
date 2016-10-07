@@ -34,11 +34,16 @@ import java.util.Map;
 import java.util.Set;
 import java.io.Serializable;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.message.MessageSender;
 import org.hisp.dhis.program.message.DeliveryChannel;
+import org.hisp.dhis.sms.MessageBatchStatus;
+import org.hisp.dhis.sms.MessageResponseStatus;
+import org.hisp.dhis.sms.MessageResponseSummary;
 import org.hisp.dhis.sms.outbound.GatewayResponse;
+import org.hisp.dhis.sms.outbound.MessageBatch;
 import org.hisp.dhis.system.util.SmsUtils;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
@@ -56,6 +61,8 @@ public class SmsMessageSender
 {
     private static final Log log = LogFactory.getLog( SmsMessageSender.class );
 
+    private static final String NO_CONFIG = "No default gateway configured";
+
     // -------------------------------------------------------------------------
     // Dependencies
     // -------------------------------------------------------------------------
@@ -71,13 +78,13 @@ public class SmsMessageSender
 
     @Autowired
     private UserSettingService userSettingService;
-    
+
     // -------------------------------------------------------------------------
     // Implementation methods
     // -------------------------------------------------------------------------
 
     @Override
-    public String sendMessage( String subject, String text, String footer, User sender, Set<User> users,
+    public MessageResponseStatus sendMessage( String subject, String text, String footer, User sender, Set<User> users,
         boolean forceSend )
     {
         Set<User> toSendList = new HashSet<>();
@@ -108,7 +115,7 @@ public class SmsMessageSender
     }
 
     @Override
-    public String sendMessage( String subject, String text, String recipient )
+    public MessageResponseStatus sendMessage( String subject, String text, String recipient )
     {
         Set<String> recipients = new HashSet<>();
         recipients.add( recipient );
@@ -117,10 +124,39 @@ public class SmsMessageSender
     }
 
     @Override
-    public String sendMessage( String subject, String text, Set<String> recipients )
+    public MessageResponseStatus sendMessage( String subject, String text, Set<String> recipients )
     {
-        return sendMessage( subject, text, normalizePhoneNumber( recipients ), gatewayAdminService.getDefaultGateway() )
-            .getResponseMessage();
+        SmsGatewayConfig defaultGateway = gatewayAdminService.getDefaultGateway();
+
+        if ( defaultGateway == null )
+        {
+            return new MessageResponseStatus( NO_CONFIG, GatewayResponse.NO_GATEWAY_CONFIGURATION, false );
+        }
+
+        return sendMessage( subject, text, normalizePhoneNumber( recipients ), defaultGateway );
+    }
+
+    @Override
+    public MessageResponseSummary sendMessageBatch( MessageBatch batch )
+    {
+        SmsGatewayConfig defaultGateway = gatewayAdminService.getDefaultGateway();
+
+        if ( defaultGateway == null )
+        {
+            return createMessageResponseSummary( NO_CONFIG, DeliveryChannel.SMS, MessageBatchStatus.FAILED, batch );
+        }
+
+        for ( SmsGateway smsGateway : smsGateways )
+        {
+            if ( smsGateway.accept( defaultGateway ) )
+            {
+                List<MessageResponseStatus> responses = smsGateway.sendBatch( batch, defaultGateway );
+
+                return generateSummary( responses, batch, smsGateway );
+            }
+        }
+
+        return createMessageResponseSummary( NO_CONFIG, DeliveryChannel.SMS, MessageBatchStatus.FAILED, batch );
     }
 
     @Override
@@ -149,7 +185,7 @@ public class SmsMessageSender
 
     private boolean isQualifiedReceiver( User user )
     {
-        if ( user.getFirstName() == null ) 
+        if ( user.getFirstName() == null )
         {
             return true;
         }
@@ -162,20 +198,20 @@ public class SmsMessageSender
         }
     }
 
-    private GatewayResponse sendMessage( String subject, String text, Set<String> recipients,
+    private MessageResponseStatus sendMessage( String subject, String text, Set<String> recipients,
         SmsGatewayConfig gatewayConfig )
     {
         for ( SmsGateway smsGateway : smsGateways )
         {
             if ( smsGateway.accept( gatewayConfig ) )
             {
-                GatewayResponse gatewayResponse = smsGateway.send( subject, text, recipients, gatewayConfig );
+                MessageResponseStatus status = smsGateway.send( subject, text, recipients, gatewayConfig );
 
-                return ResponseHandler( gatewayResponse );
+                return handleResponse( status );
             }
         }
 
-        return GatewayResponse.NO_GATWAY_CONFIGURATION;
+        return new MessageResponseStatus( NO_CONFIG, GatewayResponse.NO_GATEWAY_CONFIGURATION, false );
     }
 
     private Set<String> normalizePhoneNumber( Set<String> to )
@@ -200,23 +236,88 @@ public class SmsMessageSender
         return sendTo;
     }
 
-    private GatewayResponse ResponseHandler( GatewayResponse gatewayResponse )
+    private MessageResponseStatus handleResponse( MessageResponseStatus status )
     {
         Set<GatewayResponse> okCodes = Sets.newHashSet( GatewayResponse.RESULT_CODE_0, GatewayResponse.RESULT_CODE_200,
             GatewayResponse.RESULT_CODE_202 );
 
+        GatewayResponse gatewayResponse = (GatewayResponse) status.getResponseObject();
+
         if ( okCodes.contains( gatewayResponse ) )
         {
-            log.info( "Message sent: " );
+            log.info( "SMS sent" );
 
-            return GatewayResponse.SENT;
+            return new MessageResponseStatus( gatewayResponse.getResponseMessage(), gatewayResponse, true );
         }
         else
         {
-            log.info( "Message failed: " );
-            log.info( "Failure cause: " + gatewayResponse.getResponseMessage() );
+            log.error( "SMS failed, failure cause: " + gatewayResponse.getResponseMessage() );
 
-            return gatewayResponse;
+            return new MessageResponseStatus( gatewayResponse.getResponseMessage(), gatewayResponse, false );
         }
+    }
+
+    private MessageResponseSummary generateSummary( List<MessageResponseStatus> statuses, MessageBatch batch,
+        SmsGateway smsGateway )
+    {
+        Set<GatewayResponse> okCodes = Sets.newHashSet( GatewayResponse.RESULT_CODE_0, GatewayResponse.RESULT_CODE_200,
+            GatewayResponse.RESULT_CODE_202 );
+
+        MessageResponseSummary summary = new MessageResponseSummary();
+
+        int total, sent = 0;
+
+        boolean ok = true;
+
+        String errorMessage = StringUtils.EMPTY;
+
+        total = batch.getBatch().size();
+
+        for ( MessageResponseStatus status : statuses )
+        {
+            if ( okCodes.contains( status.getResponseObject() ) )
+            {
+                sent = (smsGateway instanceof BulkSmsGateway) ? total : sent + 1;
+            }
+            else
+            {
+                ok = false;
+
+                errorMessage = status.getDescription();
+            }
+        }
+
+        summary.setTotal( total );
+        summary.setChannel( DeliveryChannel.SMS );
+        summary.setSent( sent );
+        summary.setFailed( total - sent );
+
+        if ( !ok )
+        {
+            summary.setBatchStatus( MessageBatchStatus.FAILED );
+            summary.setErrorMessage( errorMessage );
+
+            log.error( errorMessage );
+        }
+        else
+        {
+            summary.setBatchStatus( MessageBatchStatus.COMPLETED );
+            summary.setResposneMessage( "SENT" );
+
+            log.info( "SMS batch processed successfully" );
+        }
+
+        return summary;
+    }
+
+    private MessageResponseSummary createMessageResponseSummary( String responseMessage, DeliveryChannel channel,
+        MessageBatchStatus batchStatus, MessageBatch batch )
+    {
+        MessageResponseSummary summary = new MessageResponseSummary( responseMessage, channel, batchStatus );
+        summary.setTotal( batch.getBatch().size() );
+
+        log.warn( responseMessage );
+
+        return summary;
     }
 }

@@ -263,7 +263,7 @@ function resendInvitation( context ) {
 //------------------------------------------------------------------------------
 
 var userJsonObject;
-function showAssignOrgUnitsToUser( context ){	
+function showAssignOrgUnitsToUser( context ) {	
 	$.ajax({		
 		url: "../api/users/" + context.uid + ".json",
 		type: "get",
@@ -275,8 +275,7 @@ function showAssignOrgUnitsToUser( context ){
 	});
 }
 
-function assignOrgUnitsToUser(){
-	
+function assignOrgUnitsToUser() {	
 	userJsonObject.teiSearchOrganisationUnits = [];
 	var ous = selection.getSelected();
 	for( var i=0; i<ous.length; i++){
@@ -289,12 +288,12 @@ function assignOrgUnitsToUser(){
 		data: JSON.stringify( userJsonObject ),
 		contentType: "application/json; charset=utf-8",
 		success: function(json){
-			window.alert( i18n_success );
+			$("#searchOrgUnitForm").dialog('destroy');
 		}
 	});
 }
 
-function searchOuTreePopup(){
+function searchOuTreePopup() {
 	$("#searchOrgUnitForm").load('../dhis-web-maintenance-user/searchOUTree.vm', initializeTree).dialog({
 		height: 450,
 		width: 500,
@@ -316,7 +315,7 @@ function searchOuTreePopup(){
 	});
 }
 
-function initializeTree( ){
+function initializeTree( ) {
 	var selectedOus = [];
 	for(var i=0; i<userJsonObject.teiSearchOrganisationUnits.length; i++){
 		selectedOus.push(userJsonObject.teiSearchOrganisationUnits[i].id);

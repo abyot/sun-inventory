@@ -32,6 +32,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -83,5 +85,61 @@ public class OperandTest
 
         assertTrue( operand.aggregationLevelIsValid( 6, 6 ) );
         assertTrue( operand.aggregationLevelIsValid( 6, 7 ) );
+    }
+
+    @Test
+    public void testHashCode()
+    {
+        DataElement dataElementA = new DataElement();
+        dataElementA.setUid( "DE_UID_AAA" );
+
+        DataElement dataElementB = new DataElement();
+        dataElementB.setUid( "DE_UID_BBB" );
+
+        DataElementCategoryOptionCombo categoryOptionComboA = new DataElementCategoryOptionCombo();
+        categoryOptionComboA.setUid( "COC_UID_AAA" );
+
+        DataElementCategoryOptionCombo categoryOptionComboB = new DataElementCategoryOptionCombo();
+        categoryOptionComboB.setUid( "COC_UID_BBB" );
+
+        DataElementOperand dataElementOperandA = new DataElementOperand( dataElementA, categoryOptionComboA );
+        DataElementOperand dataElementOperandB = new DataElementOperand( dataElementB, categoryOptionComboB );
+        DataElementOperand dataElementOperandC = new DataElementOperand( dataElementA, categoryOptionComboB );
+        DataElementOperand dataElementOperandD = new DataElementOperand( dataElementB, categoryOptionComboA );
+
+        Set<DataElementOperand> dataElementOperands = new HashSet<>();
+        dataElementOperands.add( dataElementOperandA );
+        dataElementOperands.add( dataElementOperandB );
+        dataElementOperands.add( dataElementOperandC );
+        dataElementOperands.add( dataElementOperandD );
+
+        assertEquals( 4, dataElementOperands.size() );
+    }
+    
+    @Test
+    public void testEquals()
+    {
+        DataElement dataElementA = new DataElement();
+        dataElementA.setUid( "DE_UID_AAA" );
+
+        DataElement dataElementB = new DataElement();
+        dataElementB.setUid( "DE_UID_BBB" );
+
+        DataElementCategoryOptionCombo categoryOptionComboA = new DataElementCategoryOptionCombo();
+        categoryOptionComboA.setUid( "COC_UID_AAA" );
+
+        DataElementCategoryOptionCombo categoryOptionComboB = new DataElementCategoryOptionCombo();
+        categoryOptionComboB.setUid( "COC_UID_BBB" );
+
+        DataElementOperand dataElementOperandA = new DataElementOperand( dataElementA, categoryOptionComboA );
+        DataElementOperand dataElementOperandB = new DataElementOperand( dataElementB, categoryOptionComboB );
+        DataElementOperand dataElementOperandC = new DataElementOperand( dataElementA, categoryOptionComboA );
+        DataElementOperand dataElementOperandD = new DataElementOperand( dataElementB, categoryOptionComboB );
+        
+        assertEquals( dataElementOperandA, dataElementOperandC );
+        assertEquals( dataElementOperandB, dataElementOperandD );
+        assertNotEquals( dataElementOperandA, dataElementOperandB );
+        assertNotEquals( dataElementOperandC, dataElementOperandD );
+
     }
 }

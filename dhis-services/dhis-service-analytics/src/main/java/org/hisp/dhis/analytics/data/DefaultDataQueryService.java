@@ -62,8 +62,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hisp.dhis.analytics.AggregationType;
+import org.hisp.dhis.analytics.AnalyticsSecurityManager;
 import org.hisp.dhis.analytics.DataQueryParams;
 import org.hisp.dhis.analytics.DataQueryService;
+import org.hisp.dhis.analytics.OutputFormat;
 import org.hisp.dhis.calendar.Calendar;
 import org.hisp.dhis.common.*;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
@@ -79,7 +81,6 @@ import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.period.RelativePeriodEnum;
 import org.hisp.dhis.period.RelativePeriods;
 import org.hisp.dhis.system.util.ReflectionUtils;
-import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.util.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,14 +101,14 @@ public class DefaultDataQueryService
     private DimensionService dimensionService;
 
     @Autowired
-    private CurrentUserService currentUserService;
-    
+    private AnalyticsSecurityManager securityManager;
+
     @Autowired
     private I18nManager i18nManager;
 
-    public void setCurrentUserService( CurrentUserService currentUserService )
+    public void setSecurityManager( AnalyticsSecurityManager securityManager )
     {
-        this.currentUserService = currentUserService; // Testing purposes
+        this.securityManager = securityManager;
     }
 
     // -------------------------------------------------------------------------
@@ -117,9 +118,12 @@ public class DefaultDataQueryService
     @Override
     public DataQueryParams getFromUrl( Set<String> dimensionParams, Set<String> filterParams, AggregationType aggregationType,
         String measureCriteria, boolean skipMeta, boolean skipData, boolean skipRounding, boolean completedOnly, boolean hierarchyMeta, boolean ignoreLimit,
-        boolean hideEmptyRows, boolean showHierarchy, DisplayProperty displayProperty, IdentifiableProperty outputIdScheme, IdScheme inputIdScheme,
-        String approvalLevel, Date relativePeriodDate, String userOrgUnit, I18nFormat format )
+        boolean hideEmptyRows, boolean showHierarchy, boolean includeNumDen, DisplayProperty displayProperty, 
+        IdentifiableProperty outputIdScheme, IdScheme inputIdScheme,
+        String approvalLevel, Date relativePeriodDate, String userOrgUnit )
     {
+        I18nFormat format = i18nManager.getI18nFormat();
+        
         DataQueryParams.Builder params = DataQueryParams.newBuilder();
 
         inputIdScheme = ObjectUtils.firstNonNull( inputIdScheme, IdScheme.UID );
@@ -149,8 +153,10 @@ public class DefaultDataQueryService
             .withHierarchyMeta( hierarchyMeta )
             .withHideEmptyRows( hideEmptyRows )
             .withShowHierarchy( showHierarchy )
+            .withIncludeNumDen( includeNumDen )
             .withDisplayProperty( displayProperty )
             .withOutputIdScheme( outputIdScheme )
+            .withOutputFormat( OutputFormat.ANALYTICS )
             .withApprovalLevel( approvalLevel ).build();
     }
 
@@ -165,7 +171,10 @@ public class DefaultDataQueryService
 
         if ( object != null )
         {
-            List<OrganisationUnit> userOrgUnits = getUserOrgUnits( null );
+            String userOrgUnit = object.getRelativeOrganisationUnit() != null ? 
+                object.getRelativeOrganisationUnit().getUid() : null;
+
+            List<OrganisationUnit> userOrgUnits = getUserOrgUnits( null, userOrgUnit );
 
             Date date = object.getRelativePeriodDate();
 
@@ -195,7 +204,7 @@ public class DefaultDataQueryService
     {
         List<DimensionalObject> list = new ArrayList<>();
 
-        List<OrganisationUnit> userOrgUnits = getUserOrgUnits( userOrgUnit );
+        List<OrganisationUnit> userOrgUnits = getUserOrgUnits( null, userOrgUnit );
 
         if ( dimensionParams != null )
         {
@@ -487,11 +496,11 @@ public class DefaultDataQueryService
     }
 
     @Override
-    public List<OrganisationUnit> getUserOrgUnits( String userOrgUnit )
+    public List<OrganisationUnit> getUserOrgUnits( DataQueryParams params, String userOrgUnit )
     {
         List<OrganisationUnit> units = new ArrayList<>();
 
-        User currentUser = currentUserService.getCurrentUser();
+        User currentUser = securityManager.getCurrentUser( params );
 
         if ( userOrgUnit != null )
         {

@@ -53,7 +53,7 @@ public class IdScheme
         put( IdentifiableProperty.CODE, IdScheme.CODE ).
         put( IdentifiableProperty.NAME, IdScheme.NAME ).build();
     
-    private static final String ATTR_ID_SCHEME_PREFIX = "ATTRIBUTE:";
+    public static final String ATTR_ID_SCHEME_PREFIX = "ATTRIBUTE:";
     
     private IdentifiableProperty identifiableProperty;
 

@@ -28,12 +28,16 @@ package org.hisp.dhis.program;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.List;
 
 import org.hisp.dhis.DhisSpringTest;
+import org.hisp.dhis.dataentryform.DataEntryForm;
+import org.hisp.dhis.dataentryform.DataEntryFormService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.junit.Test;
@@ -50,6 +54,9 @@ public class ProgramStoreTest
 
     @Autowired
     private OrganisationUnitService organisationUnitService;
+
+    @Autowired
+    private DataEntryFormService dataEntryFormService;
 
     private OrganisationUnit organisationUnitA;
 
@@ -106,5 +113,32 @@ public class ProgramStoreTest
         List<Program> programs = programStore.get( ProgramType.WITH_REGISTRATION, organisationUnitA );
         
         assertTrue( equals( programs, programA, programB ) );
+    }
+
+    @Test
+    public void testGetProgramsByDataEntryForm()
+    {
+        DataEntryForm formX = createDataEntryForm( 'X' );
+        DataEntryForm formY = createDataEntryForm( 'Y' );
+
+        dataEntryFormService.addDataEntryForm( formX );
+        dataEntryFormService.addDataEntryForm( formY );
+
+        programA.setDataEntryForm( formX );
+        programB.setDataEntryForm( formX );
+
+        programStore.save( programA );
+        programStore.save( programB );
+        programStore.save( programC );
+
+        List<Program> withFormX = programStore.getByDataEntryForm( formX );
+        assertEquals( 2, withFormX.size() );
+        assertFalse( withFormX.contains( programC ) );
+
+        programC.setDataEntryForm( formY );
+
+        List<Program> withFormY = programStore.getByDataEntryForm( formY );
+        assertEquals( 1, withFormY.size() );
+        assertEquals( programC, withFormY.get( 0 ) );
     }
 }

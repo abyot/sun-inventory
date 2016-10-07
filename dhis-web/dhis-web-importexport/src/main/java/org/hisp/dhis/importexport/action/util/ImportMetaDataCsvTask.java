@@ -31,12 +31,12 @@ package org.hisp.dhis.importexport.action.util;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.common.IdentifiableObject;
-import org.hisp.dhis.security.SecurityContextRunnable;
-import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.dxf2.csv.CsvImportService;
-import org.hisp.dhis.dxf2.metadata.ImportService;
 import org.hisp.dhis.dxf2.metadata.Metadata;
-import org.hisp.dhis.scheduling.TaskId;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
+import org.hisp.dhis.dxf2.metadata.MetadataImportService;
+import org.hisp.dhis.schema.SchemaService;
+import org.hisp.dhis.security.SecurityContextRunnable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,32 +49,27 @@ public class ImportMetaDataCsvTask
 {
     private static final Log log = LogFactory.getLog( ImportMetaDataTask.class );
 
-    private ImportService importService;
+    private final MetadataImportService importService;
 
-    private CsvImportService csvImportService;
+    private final CsvImportService csvImportService;
 
-    private ImportOptions importOptions;
+    private final SchemaService schemaService;
 
-    private InputStream inputStream;
+    private final MetadataImportParams importParams;
 
-    private TaskId taskId;
+    private final InputStream inputStream;
 
-    private String userUid;
+    private final Class<? extends IdentifiableObject> clazz;
 
-    private Class<? extends IdentifiableObject> clazz;
-
-    public ImportMetaDataCsvTask( String userUid, ImportService importService,
-        CsvImportService csvImportService,
-        ImportOptions importOptions, InputStream inputStream,
-        TaskId taskId, Class<? extends IdentifiableObject> clazz )
+    public ImportMetaDataCsvTask( MetadataImportService importService, CsvImportService csvImportService, SchemaService schemaService,
+        MetadataImportParams importParams, InputStream inputStream, Class<? extends IdentifiableObject> clazz )
     {
         super();
-        this.userUid = userUid;
         this.importService = importService;
         this.csvImportService = csvImportService;
-        this.importOptions = importOptions;
+        this.schemaService = schemaService;
+        this.importParams = importParams;
         this.inputStream = inputStream;
-        this.taskId = taskId;
         this.clazz = clazz;
     }
 
@@ -90,7 +85,8 @@ public class ImportMetaDataCsvTask
         try
         {
             metadata = csvImportService.fromCsv( inputStream, clazz );
-            
+            importParams.addMetadata( schemaService.getMetadataSchemas(), metadata );
+
             log.info( "Read CSV file. Importing metadata." );
         }
         catch ( IOException ex )
@@ -99,6 +95,6 @@ public class ImportMetaDataCsvTask
             return;
         }
 
-        importService.importMetaData( userUid, metadata, importOptions, taskId );
+        importService.importMetadata( importParams );
     }
 }

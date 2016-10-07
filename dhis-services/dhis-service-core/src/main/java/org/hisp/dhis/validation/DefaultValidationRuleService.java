@@ -42,7 +42,6 @@ import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.datavalue.DataValue;
 import org.hisp.dhis.datavalue.DataValueService;
 import org.hisp.dhis.i18n.I18nFormat;
-import org.hisp.dhis.i18n.I18nService;
 import org.hisp.dhis.message.MessageService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
@@ -71,7 +70,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import static org.hisp.dhis.commons.util.TextUtils.LN;
-import static org.hisp.dhis.i18n.I18nUtils.*;
 
 /**
  * @author Margrethe Store
@@ -130,13 +128,6 @@ public class DefaultValidationRuleService
         this.constantService = constantService;
     }
 
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
-    }
-
     private MessageService messageService;
 
     public void setMessageService( MessageService messageService )
@@ -187,7 +178,8 @@ public class DefaultValidationRuleService
             sources, periods, rules, attributeCombo, 
             null, ValidationRunType.SCHEDULED, constantService.getConstantMap(), 
             categoryService.getCogDimensionConstraints( user.getUserCredentials() ),
-            categoryService.getCoDimensionConstraints( user.getUserCredentials() ) ), applicationContext );
+            categoryService.getCoDimensionConstraints( user.getUserCredentials() ),
+            false ), applicationContext );
 
         formatPeriods( results, format );
 
@@ -298,7 +290,7 @@ public class DefaultValidationRuleService
         {
             for ( DataElement de : dataSet.getDataElements() )
             {
-                for ( DataElementCategoryOptionCombo co : de.getCategoryCombo().getOptionCombos() )
+                for ( DataElementCategoryOptionCombo co : de.getCategoryOptionCombos() )
                 {
                     DataValue dv = dataValueService.getDataValue( de, period, organisationUnit, co, attributeOptionCombo );
 
@@ -323,9 +315,7 @@ public class DefaultValidationRuleService
 
         for ( ValidationRule validationRule : getAllValidationRules() )
         {
-            if ( validationRule.getRuleType() == RuleType.VALIDATION )
-            {
-                Set<DataElement> validationRuleElements = new HashSet<>();
+            Set<DataElement> validationRuleElements = new HashSet<>();
                 validationRuleElements.addAll( validationRule.getLeftSide().getDataElementsInExpression() );
                 validationRuleElements.addAll( validationRule.getRightSide().getDataElementsInExpression() );
 
@@ -333,7 +323,6 @@ public class DefaultValidationRuleService
                 {
                     rulesForDataElements.add( validationRule );
                 }
-            }
         }
 
         return rulesForDataElements;
@@ -648,37 +637,31 @@ public class DefaultValidationRuleService
     @Override
     public ValidationRule getValidationRule( int id )
     {
-        return i18n( i18nService, validationRuleStore.get( id ) );
+        return validationRuleStore.get( id );
     }
 
     @Override
     public ValidationRule getValidationRule( String uid )
     {
-        return i18n( i18nService, validationRuleStore.getByUid( uid ) );
+        return validationRuleStore.getByUid( uid );
     }
 
     @Override
     public ValidationRule getValidationRuleByName( String name )
     {
-        return i18n( i18nService, validationRuleStore.getByName( name ) );
+        return validationRuleStore.getByName( name );
     }
 
     @Override
     public List<ValidationRule> getAllValidationRules()
     {
-        return i18n( i18nService, validationRuleStore.getAll() );
-    }
-
-    @Override
-    public List<ValidationRule> getValidationRulesByName( String name )
-    {
-        return getObjectsByName( i18nService, validationRuleStore, name );
+        return validationRuleStore.getAll();
     }
 
     @Override
     public List<ValidationRule> getValidationRulesByDataElements( Collection<DataElement> dataElements )
     {
-        return i18n( i18nService, validationRuleStore.getValidationRulesByDataElements( dataElements ) );
+        return validationRuleStore.getValidationRulesByDataElements( dataElements );
     }
 
     @Override
@@ -690,19 +673,19 @@ public class DefaultValidationRuleService
     @Override
     public int getValidationRuleCountByName( String name )
     {
-        return getCountByName( i18nService, validationRuleStore, name );
+        return validationRuleStore.getCountLikeName( name );
     }
 
     @Override
     public List<ValidationRule> getValidationRulesBetween( int first, int max )
     {
-        return getObjectsBetween( i18nService, validationRuleStore, first, max );
+        return validationRuleStore.getAllOrderedName( first, max ) ;
     }
 
     @Override
     public List<ValidationRule> getValidationRulesBetweenByName( String name, int first, int max )
     {
-        return getObjectsBetweenByName( i18nService, validationRuleStore, name, first, max );
+        return validationRuleStore.getAllLikeName( name, first, max ) ;
     }
 
     // -------------------------------------------------------------------------
@@ -730,38 +713,25 @@ public class DefaultValidationRuleService
     @Override
     public ValidationRuleGroup getValidationRuleGroup( int id )
     {
-        return i18n( i18nService, validationRuleGroupStore.get( id ) );
-    }
-
-    @Override
-    public ValidationRuleGroup getValidationRuleGroup( int id, boolean i18nValidationRules )
-    {
-        ValidationRuleGroup group = getValidationRuleGroup( id );
-
-        if ( i18nValidationRules )
-        {
-            i18n( i18nService, group.getMembers() );
-        }
-
-        return group;
+        return validationRuleGroupStore.get( id );
     }
 
     @Override
     public ValidationRuleGroup getValidationRuleGroup( String uid )
     {
-        return i18n( i18nService, validationRuleGroupStore.getByUid( uid ) );
+        return validationRuleGroupStore.getByUid( uid );
     }
 
     @Override
     public List<ValidationRuleGroup> getAllValidationRuleGroups()
     {
-        return i18n( i18nService, validationRuleGroupStore.getAll() );
+        return validationRuleGroupStore.getAll();
     }
 
     @Override
     public ValidationRuleGroup getValidationRuleGroupByName( String name )
     {
-        return i18n( i18nService, validationRuleGroupStore.getByName( name ) );
+        return validationRuleGroupStore.getByName( name );
     }
 
     @Override
@@ -773,18 +743,18 @@ public class DefaultValidationRuleService
     @Override
     public int getValidationRuleGroupCountByName( String name )
     {
-        return getCountByName( i18nService, validationRuleGroupStore, name );
+        return validationRuleGroupStore.getCountLikeName( name ) ;
     }
 
     @Override
     public List<ValidationRuleGroup> getValidationRuleGroupsBetween( int first, int max )
     {
-        return getObjectsBetween( i18nService, validationRuleGroupStore, first, max );
+        return validationRuleGroupStore.getAllOrderedName( first, max );
     }
 
     @Override
     public List<ValidationRuleGroup> getValidationRuleGroupsBetweenByName( String name, int first, int max )
     {
-        return getObjectsBetweenByName( i18nService, validationRuleGroupStore, name, first, max );
+        return validationRuleGroupStore.getAllLikeName( name, first, max ) ;
     }
 }

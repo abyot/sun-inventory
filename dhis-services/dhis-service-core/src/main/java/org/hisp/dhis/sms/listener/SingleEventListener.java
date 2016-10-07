@@ -33,13 +33,14 @@ import javax.annotation.Resource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hisp.dhis.common.ValueType;
+import org.hisp.dhis.dataelement.DataElementCategoryService;
 import org.hisp.dhis.message.MessageSender;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.program.ProgramInstance;
 import org.hisp.dhis.program.ProgramInstanceService;
 import org.hisp.dhis.program.ProgramStageInstance;
 import org.hisp.dhis.program.ProgramStageInstanceService;
+import org.hisp.dhis.program.ProgramStatus;
 import org.hisp.dhis.sms.command.SMSCommand;
 import org.hisp.dhis.sms.command.SMSCommandService;
 import org.hisp.dhis.sms.command.code.SMSCode;
@@ -55,8 +56,11 @@ import org.hisp.dhis.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -70,9 +74,13 @@ public class SingleEventListener
 {
     private static final Log log = LogFactory.getLog( SingleEventListener.class );
 
-    private static final String DEFAULT_PATTERN = "(\\w+)\\s*((\\w+)=(\\w+),)+((\\w+)=(\\w+))";
-
+    private static final String DEFAULT_PATTERN = "(\\w+)\\s*((\\w+\\s*)=(\\s*\\w+\\s*),\\s*)*((\\w+\\s*)=(\\s*\\w+))";
+    
     private static final String EVENT_REGISTERED = "Event registered successfully";
+
+    private static final int INFO = 1;
+
+    private static final int ERROR = 3;
 
     // -------------------------------------------------------------------------
     // Dependencies
@@ -86,6 +94,9 @@ public class SingleEventListener
 
     @Autowired
     private IncomingSmsService incomingSmsService;
+    
+    @Autowired
+    private DataElementCategoryService dataElementCategoryService;
 
     @Autowired
     private UserService userService;
@@ -120,8 +131,9 @@ public class SingleEventListener
 
         if ( !hasCorrectFormat( sms.getText(), smsCommand ) )
         {
-            sendFeedback( smsCommand.getWrongFormatMessage() != null && !smsCommand.getWrongFormatMessage().isEmpty()
-                ? smsCommand.getWrongFormatMessage() : SMSCommand.WRONG_FORMAT_MESSAGE, sms.getOriginator(), 3 );
+            sendFeedback(
+                StringUtils.defaultIfEmpty( smsCommand.getWrongFormatMessage(), SMSCommand.WRONG_FORMAT_MESSAGE ),
+                sms.getOriginator(), ERROR );
 
             return;
         }
@@ -134,12 +146,6 @@ public class SingleEventListener
         }
 
         registerEvent( commandValuePairs, smsCommand, sms );
-
-        update( sms, SmsMessageStatus.PROCESSED, true );
-
-        sendFeedback( smsCommand.getSuccessMessage() != null && !smsCommand.getSuccessMessage().isEmpty()
-            ? smsCommand.getSuccessMessage() : EVENT_REGISTERED, sms.getOriginator(), 1 );
-
     }
 
     // -------------------------------------------------------------------------
@@ -150,10 +156,34 @@ public class SingleEventListener
     {
         OrganisationUnit orgUnit = getOrganisationUnits( sms ).iterator().next();
 
-        ProgramInstance programInstance = new ProgramInstance( sms.getSentDate(), sms.getSentDate(), null,
-            smsCommand.getProgram() );
+        List<ProgramInstance> programInstances = new ArrayList<>(
+            programInstanceService.getProgramInstances( smsCommand.getProgram(), ProgramStatus.ACTIVE ) );
 
-        programInstanceService.addProgramInstance( programInstance );
+        if ( programInstances.isEmpty() )
+        {
+            ProgramInstance pi = new ProgramInstance();
+            pi.setEnrollmentDate( new Date() );
+            pi.setIncidentDate( new Date() );
+            pi.setProgram( smsCommand.getProgram() );
+            pi.setStatus( ProgramStatus.ACTIVE );
+
+            programInstanceService.addProgramInstance( pi );
+
+            programInstances.add( pi );
+        }
+        else if ( programInstances.size() > 1 )
+        {
+            update( sms, SmsMessageStatus.FAILED, false );
+
+            sendFeedback( "Multiple active program instances exists for program: " + smsCommand.getProgram().getUid(),
+                sms.getOriginator(), ERROR );
+
+            return;
+        }
+
+        ProgramInstance programInstance = null;
+
+        programInstance = programInstances.get( 0 );
 
         ProgramStageInstance programStageInstance = new ProgramStageInstance();
         programStageInstance.setOrganisationUnit( orgUnit );
@@ -161,6 +191,9 @@ public class SingleEventListener
         programStageInstance.setProgramInstance( programInstance );
         programStageInstance.setExecutionDate( sms.getSentDate() );
         programStageInstance.setDueDate( sms.getSentDate() );
+        programStageInstance
+            .setAttributeOptionCombo( dataElementCategoryService.getDefaultDataElementCategoryOptionCombo() );
+        programStageInstance.setCompletedBy( "DHIS 2" );
 
         programStageInstanceService.addProgramStageInstance( programStageInstance );
 
@@ -168,15 +201,17 @@ public class SingleEventListener
         {
             TrackedEntityDataValue dataValue = new TrackedEntityDataValue();
             dataValue.setAutoFields();
-
             dataValue.setDataElement( smsCode.getDataElement() );
-            dataValue.getDataElement().setValueType( ValueType.TEXT );
-
             dataValue.setProgramStageInstance( programStageInstance );
             dataValue.setValue( commandValuePairs.get( smsCode.getCode() ) );
 
             trackedEntityDataValueService.saveTrackedEntityDataValue( dataValue );
         }
+
+        update( sms, SmsMessageStatus.PROCESSED, true );
+
+        sendFeedback( StringUtils.defaultIfEmpty( smsCommand.getSuccessMessage(), EVENT_REGISTERED ),
+            sms.getOriginator(), INFO );
     }
 
     private Map<String, String> parseMessageInput( IncomingSms sms, SMSCommand smsCommand )
@@ -189,11 +224,13 @@ public class SingleEventListener
 
         for ( String string : messageParts )
         {
-            output.put(
-                StringUtils.split( string,
-                    smsCommand.getCodeSeparator() != null ? smsCommand.getCodeSeparator() : "=" )[0],
-                StringUtils.split( string,
-                    smsCommand.getCodeSeparator() != null ? smsCommand.getCodeSeparator() : "=" )[1] );
+            String key = StringUtils.split( string,
+                smsCommand.getCodeSeparator() != null ? smsCommand.getCodeSeparator() : "=" )[0].trim();
+            
+            String value = StringUtils.split( string,
+                smsCommand.getCodeSeparator() != null ? smsCommand.getCodeSeparator() : "=" )[1].trim();
+            
+            output.put( key, value );
         }
 
         return output;
@@ -203,26 +240,24 @@ public class SingleEventListener
     {
         if ( !hasMandatoryParameters( commandValuePairs.keySet(), smsCommand.getCodes() ) )
         {
-            sendFeedback( smsCommand.getDefaultMessage() != null && !smsCommand.getDefaultMessage().isEmpty()
-                ? smsCommand.getDefaultMessage() : SMSCommand.PARAMETER_MISSING, sms.getOriginator(), 3 );
+            sendFeedback( StringUtils.defaultIfEmpty( smsCommand.getDefaultMessage(), SMSCommand.PARAMETER_MISSING ),
+                sms.getOriginator(), ERROR );
 
             return false;
         }
 
         if ( !hasOrganisationUnit( sms, smsCommand ) )
         {
-            sendFeedback( smsCommand.getNoUserMessage() != null && !smsCommand.getNoUserMessage().isEmpty()
-                ? smsCommand.getNoUserMessage() : SMSCommand.NO_USER_MESSAGE, sms.getOriginator(), 3 );
+            sendFeedback( StringUtils.defaultIfEmpty( smsCommand.getNoUserMessage(), SMSCommand.NO_USER_MESSAGE ),
+                sms.getOriginator(), 3 );
 
             return false;
         }
 
         if ( hasMultipleOrganisationUnits( sms, smsCommand ) )
         {
-            sendFeedback( smsCommand.getMoreThanOneOrgUnitMessage() != null
-                && !smsCommand.getMoreThanOneOrgUnitMessage().isEmpty() ? smsCommand.getMoreThanOneOrgUnitMessage()
-                    : SMSCommand.MORE_THAN_ONE_ORGUNIT_MESSAGE,
-                sms.getOriginator(), 3 );
+            sendFeedback( StringUtils.defaultIfEmpty( smsCommand.getMoreThanOneOrgUnitMessage(),
+                SMSCommand.MORE_THAN_ONE_ORGUNIT_MESSAGE ), sms.getOriginator(), ERROR );
 
             return false;
         }
@@ -247,7 +282,7 @@ public class SingleEventListener
     {
         Collection<OrganisationUnit> orgUnits = getOrganisationUnits( sms );
 
-        if ( orgUnits == null || orgUnits.size() == 0 )
+        if ( orgUnits == null || orgUnits.isEmpty() )
         {
             return false;
         }

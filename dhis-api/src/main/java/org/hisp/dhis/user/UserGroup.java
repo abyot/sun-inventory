@@ -30,7 +30,6 @@ package org.hisp.dhis.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -39,9 +38,6 @@ import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -62,14 +58,12 @@ public class UserGroup
     /**
      * Set of related users
      */
-    @Scanned
     private Set<User> members = new HashSet<>();
 
     /**
      * User groups (if any) that members of this user group can manage
      * the members within.
      */
-    @Scanned
     private Set<UserGroup> managedGroups = new HashSet<>();
 
     /**
@@ -170,7 +164,6 @@ public class UserGroup
 
     @JsonProperty( "users" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "users", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "user", namespace = DxfNamespaces.DXF_2_0 )
     public Set<User> getMembers()
@@ -185,7 +178,6 @@ public class UserGroup
 
     @JsonProperty( "managedGroups" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "managedGroups", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "managedGroup", namespace = DxfNamespaces.DXF_2_0 )
     public Set<UserGroup> getManagedGroups()
@@ -200,7 +192,6 @@ public class UserGroup
 
     @JsonProperty( "managedByGroups" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "managedByGroups", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "managedByGroup", namespace = DxfNamespaces.DXF_2_0 )
     public Set<UserGroup> getManagedByGroups()

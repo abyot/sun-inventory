@@ -29,7 +29,6 @@ package org.hisp.dhis.dataelement;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -40,9 +39,6 @@ import org.hisp.dhis.common.DataDimensionType;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -61,7 +57,6 @@ public class DataElementCategoryCombo
     /**
      * A set with categories.
      */
-    @Scanned
     private List<DataElementCategory> categories = new ArrayList<>();
 
     /**
@@ -107,7 +102,6 @@ public class DataElementCategoryCombo
     // -------------------------------------------------------------------------
 
     @JsonProperty( "isDefault" )
-    @JsonView( { DetailedView.class } )
     public boolean isDefault()
     {
         return DEFAULT_CATEGORY_COMBO_NAME.equals( name );
@@ -277,7 +271,6 @@ public class DataElementCategoryCombo
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "categories", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "category", namespace = DxfNamespaces.DXF_2_0 )
     public List<DataElementCategory> getCategories()
@@ -292,7 +285,6 @@ public class DataElementCategoryCombo
 
     @JsonProperty( "categoryOptionCombos" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "categoryOptionCombos", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "categoryOptionCombo", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElementCategoryOptionCombo> getOptionCombos()
@@ -306,7 +298,6 @@ public class DataElementCategoryCombo
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataDimensionType getDataDimensionType()
     {
@@ -319,7 +310,6 @@ public class DataElementCategoryCombo
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isSkipTotal()
     {

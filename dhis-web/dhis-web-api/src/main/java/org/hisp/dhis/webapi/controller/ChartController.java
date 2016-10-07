@@ -36,8 +36,6 @@ import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementCategoryService;
 import org.hisp.dhis.dataelement.DataElementService;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.i18n.I18nManager;
@@ -105,52 +103,12 @@ public class ChartController
     //--------------------------------------------------------------------------
 
     @Override
-    @RequestMapping( method = RequestMethod.POST, consumes = "application/json" )
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    protected Chart deserializeJsonEntity( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
-        Chart chart = renderService.fromJson( request.getInputStream(), Chart.class );
-
+        Chart chart = super.deserializeJsonEntity( request, response );
         mergeChart( chart );
 
-        chartService.addChart( chart );
-
-        response.addHeader( "Location", ChartSchemaDescriptor.API_ENDPOINT + "/" + chart.getUid() );
-
-        webMessageService.send( WebMessageUtils.created( "Chart created" ), response, request );
-    }
-
-    @Override
-    @RequestMapping( value = "/{uid}", method = RequestMethod.PUT, consumes = "application/json" )
-    public void putJsonObjectLegacy( ImportOptions importOptions, @PathVariable( "uid" ) String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
-    {
-        Chart chart = chartService.getChart( uid );
-
-        if ( chart == null )
-        {
-            throw new WebMessageException( WebMessageUtils.notFound( "Chart does not exist: " + uid ) );
-        }
-
-        Chart newChart = JacksonUtils.fromJson( request.getInputStream(), Chart.class );
-
-        mergeChart( newChart );
-
-        chart.mergeWith( newChart, importOptions.getMergeMode() );
-
-        chartService.updateChart( chart );
-    }
-
-    @Override
-    @RequestMapping( value = "/{uid}", method = RequestMethod.DELETE )
-    public void deleteObject( @PathVariable( "uid" ) String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
-    {
-        Chart chart = chartService.getChart( uid );
-
-        if ( chart == null )
-        {
-            throw new WebMessageException( WebMessageUtils.notFound( "Chart does not exist: " + uid ) );
-        }
-
-        chartService.deleteChart( chart );
+        return chart;
     }
 
     //--------------------------------------------------------------------------

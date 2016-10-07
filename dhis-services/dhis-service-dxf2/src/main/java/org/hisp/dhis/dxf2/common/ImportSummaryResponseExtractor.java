@@ -28,22 +28,22 @@ package org.hisp.dhis.dxf2.common;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.IOException;
-
 import org.hisp.dhis.dxf2.importsummary.ImportSummary;
+import org.hisp.dhis.render.DefaultRenderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResponseExtractor;
 
+import java.io.IOException;
+
 /**
  * Converts a response into an ImportSummary instance.
- * 
- * @throws HttpServerErrorException if the response status code is different
- *         from 200 OK or 201 Created.
- * @throws IOException if converting the response into an ImportSummary failed.
- * 
+ *
  * @author Lars Helge Overland
+ * @throws HttpServerErrorException if the response status code is different
+ * from 200 OK or 201 Created.
+ * @throws IOException if converting the response into an ImportSummary failed.
  */
 public class ImportSummaryResponseExtractor
     implements ResponseExtractor<ImportSummary>
@@ -51,15 +51,15 @@ public class ImportSummaryResponseExtractor
     @Override
     public ImportSummary extractData( ClientHttpResponse response ) throws IOException
     {
-        ImportSummary summary = JacksonUtils.fromJson( response.getBody(), ImportSummary.class );
-        
+        ImportSummary summary = DefaultRenderService.getJsonMapper().readValue( response.getBody(), ImportSummary.class );
+
         HttpStatus status = response.getStatusCode();
-        
-        if ( !( HttpStatus.CREATED.equals( status ) || HttpStatus.OK.equals( status ) ) )
+
+        if ( !(HttpStatus.CREATED.equals( status ) || HttpStatus.OK.equals( status )) )
         {
             throw new HttpServerErrorException( status, "Data synch failed on remote server" );
         }
-        
+
         return summary;
     }
 }

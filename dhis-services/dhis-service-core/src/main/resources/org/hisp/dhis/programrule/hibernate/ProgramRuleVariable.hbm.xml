@@ -34,26 +34,11 @@
     <many-to-one name="dataElement" class="org.hisp.dhis.dataelement.DataElement"
       column="dataelementid" foreign-key="fk_programrulevariable_dataelement" />
 
-	<property name="useCodeForOptionSet" column="usecodeforoptionset" />
+    <property name="useCodeForOptionSet" column="usecodeforoptionset" />
 
     <many-to-one name="programStage" class="org.hisp.dhis.program.ProgramStage"
       column="programstageid" foreign-key="fk_programrulevariable_programstage" />
 
-    <!-- Object Translation -->
-    <set name="translations" table="programrulevariabletranslations" cascade="delete-orphan" lazy="false">
-      <cache usage="read-write" />
-      <key column="programrulevariableid" foreign-key="fk_objecttranslation_pprogramrulevariableid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
-    </set>
-
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

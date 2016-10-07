@@ -33,7 +33,6 @@ import org.hisp.dhis.message.MessageConversationStatus;
 import org.hisp.dhis.message.MessageService;
 import org.hisp.dhis.paging.ActionPagingSupport;
 import org.hisp.dhis.user.CurrentUserService;
-import org.hisp.dhis.user.User;
 
 import java.util.List;
 
@@ -111,7 +110,7 @@ public class GetMessagesAction
     @Override
     public String execute()
     {
-        showTicketTools = showTicketTools();
+        showTicketTools = messageService.hasAccessToManageFeedbackMessages( currentUserService.getCurrentUser() );
 
         this.paging = createPaging( messageService.getMessageConversationCount( followUp, unread ) );
 
@@ -119,11 +118,5 @@ public class GetMessagesAction
             .getMessageConversations( ticketStatus, followUp, unread, paging.getStartPos(), paging.getPageSize() );
 
         return SUCCESS;
-    }
-
-    private boolean showTicketTools()
-    {
-        User user = currentUserService.getCurrentUser();
-        return user.isAuthorized( "F_MANAGE_TICKETS" ) || user.isAuthorized( "ALL" );
     }
 }

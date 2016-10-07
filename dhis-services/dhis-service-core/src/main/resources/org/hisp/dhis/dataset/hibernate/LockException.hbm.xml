@@ -6,8 +6,6 @@
 <hibernate-mapping>
   <class name="org.hisp.dhis.dataset.LockException" table="lockexception">
 
-    <cache usage="read-write" />
-
     <id name="id" column="lockexceptionid">
       <generator class="native" />
     </id>

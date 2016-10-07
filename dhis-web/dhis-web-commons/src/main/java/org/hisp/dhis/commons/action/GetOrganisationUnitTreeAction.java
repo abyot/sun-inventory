@@ -29,8 +29,6 @@ package org.hisp.dhis.commons.action;
  */
 
 import com.opensymphony.xwork2.Action;
-import org.hisp.dhis.common.comparator.IdentifiableObjectNameComparator;
-import org.hisp.dhis.i18n.I18nService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
@@ -38,7 +36,6 @@ import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.version.Version;
 import org.hisp.dhis.version.VersionService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -76,9 +73,6 @@ public class GetOrganisationUnitTreeAction
     {
         this.versionService = versionService;
     }
-
-    @Autowired
-    private I18nService i18nService;
 
     // -------------------------------------------------------------------------
     // Input & Output
@@ -202,9 +196,6 @@ public class GetOrganisationUnitTreeAction
                     while ( (parent = parent.getParent()) != null );
                 }
 
-                i18nService.internationalise( rootOrganisationUnits );
-                i18nService.internationalise( organisationUnits );
-
                 return "partial";
             }
         }
@@ -225,9 +216,6 @@ public class GetOrganisationUnitTreeAction
                 }
             }
 
-            i18nService.internationalise( rootOrganisationUnits );
-            i18nService.internationalise( organisationUnits );
-
             return "partial";
         }
 
@@ -239,9 +227,6 @@ public class GetOrganisationUnitTreeAction
             {
                 organisationUnits.addAll( parent.getChildren() );
             }
-
-            i18nService.internationalise( rootOrganisationUnits );
-            i18nService.internationalise( organisationUnits );
 
             return "partial";
         }
@@ -264,10 +249,7 @@ public class GetOrganisationUnitTreeAction
             realRoot = true;
         }
 
-        i18nService.internationalise( rootOrganisationUnits );
-        i18nService.internationalise( organisationUnits );
-
-        Collections.sort( rootOrganisationUnits, IdentifiableObjectNameComparator.INSTANCE );
+        Collections.sort( rootOrganisationUnits );
 
         return SUCCESS;
     }

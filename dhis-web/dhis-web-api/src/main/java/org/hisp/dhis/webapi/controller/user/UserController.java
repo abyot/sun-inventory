@@ -34,11 +34,10 @@ import org.hisp.dhis.common.CodeGenerator;
 import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.Pager;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.common.TranslateParams;
-import org.hisp.dhis.dxf2.importsummary.ImportStatus;
-import org.hisp.dhis.dxf2.importsummary.ImportSummary;
-import org.hisp.dhis.dxf2.metadata.ImportTypeSummary;
+import org.hisp.dhis.dxf2.common.Status;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReportMode;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.hibernate.exception.CreateAccessDeniedException;
 import org.hisp.dhis.hibernate.exception.UpdateAccessDeniedException;
@@ -67,11 +66,13 @@ import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.hisp.dhis.webapi.webdomain.WebMetadata;
 import org.hisp.dhis.webapi.webdomain.WebOptions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -117,7 +118,7 @@ public class UserController
     @Override
     @SuppressWarnings( "unchecked" )
     protected List<User> getEntityList( WebMetadata metadata, WebOptions options, List<String> filters,
-        List<Order> orders, TranslateParams translateParams ) throws QueryParserException
+        List<Order> orders ) throws QueryParserException
     {
         UserQueryParams params = new UserQueryParams();
         params.setQuery( options.get( "query" ) );
@@ -155,7 +156,7 @@ public class UserController
 
         List<User> users = userService.getUsers( params );
 
-        Query query = queryService.getQueryFromUrl( getEntityClass(), filters, orders );
+        Query query = queryService.getQueryFromUrl( getEntityClass(), filters, orders, options.getRootJunction() );
         query.setDefaultOrder();
         query.setObjects( users );
 
@@ -182,7 +183,7 @@ public class UserController
 
     @Override
     @RequestMapping( method = RequestMethod.POST, consumes = { "application/xml", "text/xml" } )
-    public void postXmlObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void postXmlObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         User user = renderService.fromXml( request.getInputStream(), getEntityClass() );
 
@@ -196,7 +197,7 @@ public class UserController
 
     @Override
     @RequestMapping( method = RequestMethod.POST, consumes = "application/json" )
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void postJsonObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         User user = renderService.fromJson( request.getInputStream(), getEntityClass() );
 
@@ -235,6 +236,7 @@ public class UserController
     }
 
     @RequestMapping( value = BULK_INVITE_PATH, method = RequestMethod.POST, consumes = { "application/xml", "text/xml" } )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void postXmlInvites( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         Users users = renderService.fromXml( request.getInputStream(), Users.class );
@@ -254,6 +256,7 @@ public class UserController
     }
 
     @RequestMapping( value = "/{id}" + INVITE_PATH, method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void resendInvite( @PathVariable String id, HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         User user = userService.getUser( id );
@@ -283,6 +286,7 @@ public class UserController
     }
 
     @RequestMapping( value = BULK_INVITE_PATH, method = RequestMethod.POST, consumes = "application/json" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void postJsonInvites( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         Users users = renderService.fromJson( request.getInputStream(), Users.class );
@@ -349,7 +353,7 @@ public class UserController
         userReplica.setUid( CodeGenerator.generateCode() );
         userReplica.setCode( null );
         userReplica.setCreated( new Date() );
-        
+
         UserCredentials credentialsReplica = new UserCredentials();
         credentialsReplica.mergeWith( existingUser.getUserCredentials(), MergeMode.MERGE );
         credentialsReplica.setUid( CodeGenerator.generateCode() );
@@ -394,7 +398,7 @@ public class UserController
 
     @Override
     @RequestMapping( value = "/{uid}", method = RequestMethod.PUT, consumes = { "application/xml", "text/xml" } )
-    public void putXmlObjectLegacy( ImportOptions importOptions, @PathVariable( "uid" ) String pvUid, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void putXmlObject( @PathVariable( "uid" ) String pvUid, HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         List<User> users = getEntity( pvUid, NO_WEB_OPTIONS );
 
@@ -416,22 +420,26 @@ public class UserController
             throw new WebMessageException( WebMessageUtils.conflict( "You must have permissions to create user, or ability to manage at least one user group for the user." ) );
         }
 
-        importOptions.setStrategy( ImportStrategy.UPDATE );
-        ImportTypeSummary importTypeSummary = importService.importObject( currentUserService.getCurrentUser().getUid(), parsed, importOptions );
+        MetadataImportParams params = importService.getParamsFromMap( contextService.getParameterValuesMap() );
+        params.setImportReportMode( ImportReportMode.FULL );
+        params.setImportStrategy( ImportStrategy.UPDATE );
+        params.addObject( parsed );
 
-        if ( importTypeSummary.isStatus( ImportStatus.SUCCESS ) && importTypeSummary.getImportCount().getUpdated() == 1 )
+        ImportReport importReport = importService.importMetadata( params );
+
+        if ( importReport.getStatus() == Status.OK && importReport.getStats().getUpdated() == 1 )
         {
             User user = userService.getUser( pvUid );
 
             userGroupService.updateUserGroups( user, IdentifiableObjectUtils.getUids( parsed.getGroups() ) );
         }
 
-        renderService.toXml( response.getOutputStream(), importTypeSummary );
+        renderService.toXml( response.getOutputStream(), importReport );
     }
 
     @Override
     @RequestMapping( value = "/{uid}", method = RequestMethod.PUT, consumes = "application/json" )
-    public void putJsonObjectLegacy( ImportOptions importOptions, @PathVariable( "uid" ) String pvUid, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void putJsonObject( @PathVariable( "uid" ) String pvUid, HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         List<User> users = getEntity( pvUid, NO_WEB_OPTIONS );
 
@@ -453,17 +461,21 @@ public class UserController
             throw new WebMessageException( WebMessageUtils.conflict( "You must have permissions to create user, or ability to manage at least one user group for the user." ) );
         }
 
-        importOptions.setStrategy( ImportStrategy.UPDATE );
-        ImportTypeSummary importTypeSummary = importService.importObject( currentUserService.getCurrentUser().getUid(), parsed, importOptions );
+        MetadataImportParams params = importService.getParamsFromMap( contextService.getParameterValuesMap() );
+        params.setImportReportMode( ImportReportMode.FULL );
+        params.setImportStrategy( ImportStrategy.UPDATE );
+        params.addObject( parsed );
 
-        if ( importTypeSummary.isStatus( ImportStatus.SUCCESS ) && importTypeSummary.getImportCount().getUpdated() == 1 )
+        ImportReport importReport = importService.importMetadata( params );
+
+        if ( importReport.getStatus() == Status.OK && importReport.getStats().getUpdated() == 1 )
         {
             User user = userService.getUser( pvUid );
 
             userGroupService.updateUserGroups( user, IdentifiableObjectUtils.getUids( parsed.getGroups() ) );
         }
 
-        renderService.toJson( response.getOutputStream(), importTypeSummary );
+        renderService.toJson( response.getOutputStream(), importReport );
     }
 
     // -------------------------------------------------------------------------
@@ -507,7 +519,7 @@ public class UserController
      * @param user     user object parsed from the POST request.
      * @param response the response.
      */
-    private ImportSummary createUser( User user, HttpServletResponse response ) throws Exception
+    private ImportReport createUser( User user, HttpServletResponse response ) throws Exception
     {
         user.getUserCredentials().getCogsDimensionConstraints().addAll(
             currentUserService.getCurrentUser().getUserCredentials().getCogsDimensionConstraints() );
@@ -515,17 +527,18 @@ public class UserController
         user.getUserCredentials().getCatDimensionConstraints().addAll(
             currentUserService.getCurrentUser().getUserCredentials().getCatDimensionConstraints() );
 
-        ImportOptions importOptions = new ImportOptions();
-        importOptions.setStrategy( ImportStrategy.CREATE );
-        importOptions.setMergeMode( MergeMode.MERGE );
-        ImportTypeSummary importTypeSummary = importService.importObject( currentUserService.getCurrentUser().getUid(), user, importOptions );
+        MetadataImportParams importParams = new MetadataImportParams();
+        importParams.setImportStrategy( ImportStrategy.CREATE );
+        importParams.addObject( user );
 
-        if ( importTypeSummary.isStatus( ImportStatus.SUCCESS ) && importTypeSummary.getImportCount().getImported() == 1 )
+        ImportReport importReport = importService.importMetadata( importParams );
+
+        if ( importReport.getStatus() == Status.OK && importReport.getStats().getCreated() == 1 )
         {
             userGroupService.addUserToGroups( user, IdentifiableObjectUtils.getUids( user.getGroups() ) );
         }
 
-        return importTypeSummary;
+        return importReport;
     }
 
     /**
@@ -566,20 +579,20 @@ public class UserController
      * @param user     user object parsed from the POST request.
      * @param response the response.
      */
-    private ImportSummary inviteUser( User user, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    private ImportReport inviteUser( User user, HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         RestoreOptions restoreOptions = user.getUsername() == null || user.getUsername().isEmpty() ?
             RestoreOptions.INVITE_WITH_USERNAME_CHOICE : RestoreOptions.INVITE_WITH_DEFINED_USERNAME;
 
         securityService.prepareUserForInvite( user );
 
-        ImportSummary summary = createUser( user, response );
+        ImportReport importReport = createUser( user, response );
 
-        if ( summary.isStatus( ImportStatus.SUCCESS ) && summary.getImportCount().getImported() == 1 )
+        if ( importReport.getStatus() == Status.OK && importReport.getStats().getCreated() == 1 )
         {
             securityService.sendRestoreMessage( user.getUserCredentials(), ContextUtils.getContextPath( request ), restoreOptions );
         }
 
-        return summary;
+        return importReport;
     }
 }

@@ -29,21 +29,16 @@ package org.hisp.dhis.dataelement;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-
 import org.hisp.dhis.common.BaseDimensionalItemObject;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DimensionItemType;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
 
@@ -64,7 +59,6 @@ public class DataElementCategoryOption
 
     private Date endDate;
 
-    @Scanned
     private Set<OrganisationUnit> organisationUnits = new HashSet<>();
 
     private Set<DataElementCategory> categories = new HashSet<>();
@@ -129,13 +123,13 @@ public class DataElementCategoryOption
         categoryOptionCombos.remove( dataElementCategoryOptionCombo );
         dataElementCategoryOptionCombo.getCategoryOptions().remove( this );
     }
-    
+
     public void addOrganisationUnit( OrganisationUnit organisationUnit )
     {
         organisationUnits.add( organisationUnit );
         organisationUnit.getCategoryOptions().add( this );
     }
-    
+
     public void removeOrganisationUnit( OrganisationUnit organisationUnit )
     {
         organisationUnits.remove( organisationUnit );
@@ -175,7 +169,7 @@ public class DataElementCategoryOption
     {
         return DimensionItemType.CATEGORY_OPTION;
     }
-    
+
     // -------------------------------------------------------------------------
     // Getters and setters
     // -------------------------------------------------------------------------
@@ -187,7 +181,6 @@ public class DataElementCategoryOption
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getStartDate()
     {
@@ -200,7 +193,6 @@ public class DataElementCategoryOption
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getEndDate()
     {
@@ -214,7 +206,6 @@ public class DataElementCategoryOption
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "organisationUnits", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "organisationUnit", namespace = DxfNamespaces.DXF_2_0 )
     public Set<OrganisationUnit> getOrganisationUnits()
@@ -229,7 +220,6 @@ public class DataElementCategoryOption
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "categories", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "category", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElementCategory> getCategories()
@@ -244,7 +234,6 @@ public class DataElementCategoryOption
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "categoryOptionCombos", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "categoryOptionCombo", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElementCategoryOptionCombo> getCategoryOptionCombos()
@@ -259,7 +248,6 @@ public class DataElementCategoryOption
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlElementWrapper( localName = "categoryOptionGroups", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "categoryOptionGroup", namespace = DxfNamespaces.DXF_2_0 )
     public Set<CategoryOptionGroup> getGroups()

@@ -13,6 +13,7 @@
   	checkValueIsExist( "name", "validateAttribute.action");
   	checkValueIsExist( "shortName", "validateAttribute.action");
   	checkValueIsExist( "code", "validateAttribute.action");
+        checkValueIsExist( "pattern", "validateAttribute.action");
   });
 </script>
 <h3>$i18n.getString( "create_new_tracked_entity_attribute" ) #openHelp( "tracked_entity_attribute_information" )</h3>
@@ -51,62 +52,8 @@
         <td></td>
     </tr>
 	
-    <tr>
-		<td><label for="unique">$i18n.getString( "unique" )</label></td>
-		<td>
-			<input type='checkbox' id="unique" name="unique" value='true' onchange='uniqueOnChange()'>
-			<span id='uniqueTR' name='uniqueTR' style='display:none;'> 
-				$i18n.getString('in')
-				<select id='scope' name='scope' style='width:275px;'>
-					<option value="">$i18n.getString("whole_system")</option>
-					<option value="1">$i18n.getString("orgunit")</option>
-					<option value="2">$i18n.getString("program")</option>
-					<option value="3">$i18n.getString("program_within_orgunit")</option>
-				</select>				
-			</span>
-		</td>			
-	</tr>
-	
-	<tr id="generatedTR" name="generatedTR" style="display:none;">
-		<td><label for="generated">$i18n.getString( "generated" )</label></td>
-		<td>
-			<input type="checkbox" id="generated" name="generated" value="true" onchange="generatedOnChange()">
-		</td>	
-	</tr>
-	
-	<tr id="generatedPatternTR" name="generatedPatternTR" style="display:none;">
-		<td>
-			<label for="generated">$i18n.getString( "generated_pattern" )</label><br>
-			<span class="tipText">($i18n.getString( "generated_pattern_tips" ))</span>
-		</td>
-		<td>
-			<input type="text" id="pattern" name="pattern"/>
-		</td>
-	</tr>
-			
+	<!--
 	<tr>
-		<td><label for="inherit">$i18n.getString( "inherit" )</label></td>
-		<td>
-			<input type='checkbox' id="inherit" name="inherit" value='true'>
-		</td>		
-		<td></td>				
-	</tr>
-	
-	<tr>
-		<td><label for="confidential">$i18n.getString( "confidential" ) <br /><span class="tipText">($i18n.getString( "not_available_for_search_and_analytics" ))</span></label></td>
-		<td>
-            #if( $encryptionAvailable )
-			    <input type='checkbox' id="confidential" name="confidential" value='true' onchange='applyConfidentialEffect();'>
-            #else
-                <p style="max-width: 312px">
-                    <b>$i18n.getString( "encryption_not_available" )</b>
-                </p>
-            #end
-		</td>
-		<td></td>
-	</tr>
-
-	<!--<tr>
 		<td><label for="searchScope">$i18n.getString( "search_scope" ) <br /></label></td>
 		<td>
             <select id="searchScope" name="searchScope" >
@@ -117,7 +64,8 @@
 			</select>
 		</td>
 		<td></td>
-	</tr>-->
+	</tr>
+	-->
 	
 	<tr>
 		<td><label for="optionSetId">$i18n.getString( "option_set" )</label></td>
@@ -151,6 +99,7 @@
           <option value="USERNAME">$i18n.getString( "users" )</option>
           <option value="OPTION_SET">$i18n.getString( "option_set" )</option>
 		  <option value="COORDINATE">$i18n.getString( "coordinate" )</option>
+		  <option value="ORGANISATION_UNIT">$i18n.getString( "organisation_unit" )</option>
         </select>
       </td>
       <td></td>
@@ -182,6 +131,63 @@
 	</tr>
 
     <tr>
+		<td><label for="unique">$i18n.getString( "unique" )</label></td>
+		<td>
+			<input type='checkbox' id="unique" name="unique" value='true' onchange='uniqueOnChange()'>
+			<span id='uniqueTR' name='uniqueTR' style='display:none;'> 
+				$i18n.getString('in')
+				<select id='scope' name='scope' style='width:275px;' onchange='uniqueOnChange()'>
+					<option value="">$i18n.getString("entire_system")</option>
+					<option value="1">$i18n.getString("orgunit")</option>
+					<!-- temporaily hidden, as the program scope is not supported properly yet: https://bugs.launchpad.net/dhis2/+bug/1569793
+					<option value="2">$i18n.getString("program")</option>
+					<option value="3">$i18n.getString("program_within_orgunit")</option> 
+					-->
+				</select>				
+			</span>
+		</td>			
+	</tr>
+	
+	<tr id="generatedTR" name="generatedTR" style="display:none;">
+		<td><label for="generated">$i18n.getString( "generated" )</label></td>
+		<td>
+			<input type="checkbox" id="generated" name="generated" value="true" onchange="generatedOnChange()">
+		</td>	
+	</tr>
+	
+	<tr id="generatedPatternTR" name="generatedPatternTR" style="display:none;">
+		<td>
+			<label for="generated">$i18n.getString( "generated_pattern" )</label><br>
+			<span class="tipText">($i18n.getString( "generated_pattern_tips" ))</span>
+		</td>
+		<td>
+			<input type="text" id="pattern" name="pattern"/>
+		</td>
+	</tr>
+			
+	<tr>
+		<td><label for="inherit">$i18n.getString( "inherit" )</label></td>
+		<td>
+			<input type='checkbox' id="inherit" name="inherit" value='true'>
+		</td>		
+		<td></td>				
+	</tr>
+	
+	<tr>
+		<td><label for="confidential">$i18n.getString( "confidential" ) <span class="tipText">($i18n.getString( "search_and_analytics_unavailable" ))</span></label></td>
+		<td>
+            #if( $encryptionAvailable )
+			    <input type='checkbox' id="confidential" name="confidential" value='true' onchange='applyConfidentialEffect();'>
+            #else
+                <p style="max-width: 312px">
+                    <b>$i18n.getString( "encryption_not_available" )</b>
+                </p>
+            #end
+		</td>
+		<td></td>
+	</tr>
+    
+    <tr>
         <td><label for="legendSetId">$i18n.getString( 'legend_set' )</label></td>            
         <td>
             <select id="legendSetId" name="legendSetId">
@@ -191,7 +197,8 @@
                 #end
             </select>
         </td>
-    </tr>
+    </tr>    
+    
     </tbody>
 </table>
 
@@ -199,8 +206,7 @@
 
 <table>
 	<tr>
-		<td></td>
-		<td>
+		<td colspan="2" style="padding-top:15px">
 			<input type="submit" value="$i18n.getString( 'add' )" style="width:10em" />
 			<input type="button" value="$i18n.getString( 'cancel' )" onclick="window.location.href='attribute.action'" style="width:10em" />
 		</td>

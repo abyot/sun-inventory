@@ -68,6 +68,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
@@ -127,9 +128,9 @@ public class DataValueController
     // POST
     // ---------------------------------------------------------------------
 
-    @ResponseStatus( HttpStatus.CREATED )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_DATAVALUE_ADD')" )
     @RequestMapping( method = RequestMethod.POST )
+    @ResponseStatus( HttpStatus.CREATED )
     public void saveDataValue(
         @RequestParam String de,
         @RequestParam( required = false ) String co,
@@ -189,7 +190,7 @@ public class DataValueController
                 "Period type of period: " + period.getIsoDate() + " not valid for data element: " + dataElement.getUid() ) );
         }
 
-        if ( strictCategoryOptionCombos && !dataElement.getCategoryCombo().getOptionCombos().contains( categoryOptionCombo ) )
+        if ( strictCategoryOptionCombos && !dataElement.getCategoryOptionCombos().contains( categoryOptionCombo ) )
         {
             throw new WebMessageException( WebMessageUtils.conflict(
                 "Category option combo: " + categoryOptionCombo.getUid() + " must be part of category combo of data element: " + dataElement.getUid() ) );
@@ -310,9 +311,9 @@ public class DataValueController
     // DELETE
     // ---------------------------------------------------------------------
 
-    @ResponseStatus( HttpStatus.NO_CONTENT )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_DATAVALUE_DELETE')" )
     @RequestMapping( method = RequestMethod.DELETE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void deleteDataValue(
         @RequestParam String de,
         @RequestParam( required = false ) String co,
@@ -361,7 +362,7 @@ public class DataValueController
     // ---------------------------------------------------------------------
 
     @RequestMapping( method = RequestMethod.GET )
-    public String getDataValue(
+    public @ResponseBody List<String> getDataValue(
         @RequestParam String de,
         @RequestParam( required = false ) String co,
         @RequestParam( required = false ) String cc,
@@ -386,12 +387,6 @@ public class DataValueController
         OrganisationUnit organisationUnit = getAndValidateOrganisationUnit( ou );
 
         // ---------------------------------------------------------------------
-        // Locking validation
-        // ---------------------------------------------------------------------
-
-        validateDataSetNotLocked( dataElement, period, organisationUnit, attributeOptionCombo );
-
-        // ---------------------------------------------------------------------
         // Get data value
         // ---------------------------------------------------------------------
 
@@ -405,9 +400,7 @@ public class DataValueController
         List<String> value = new ArrayList<>();
         value.add( dataValue.getValue() );
 
-        model.addAttribute( "model", value );
-
-        return "value";
+        return value;
     }
 
     // ---------------------------------------------------------------------
@@ -442,12 +435,6 @@ public class DataValueController
         Period period = getAndValidatePeriod( pe );
 
         OrganisationUnit organisationUnit = getAndValidateOrganisationUnit( ou );
-
-        // ---------------------------------------------------------------------
-        // Locking validation
-        // ---------------------------------------------------------------------
-
-        validateDataSetNotLocked( dataElement, period, organisationUnit, attributeOptionCombo );
 
         // ---------------------------------------------------------------------
         // Get data value
@@ -666,7 +653,7 @@ public class DataValueController
 
                 for ( OrganisationUnit optionOrgUnit : option.getOrganisationUnits() )
                 {
-                    if ( optionOrgUnit.getPath().contains( organisationUnit.getUid() ) )
+                    if ( organisationUnit.getPath().contains( optionOrgUnit.getUid() ) )
                     {
                         validOrgUnit = true;
                         break;

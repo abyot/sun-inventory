@@ -30,8 +30,6 @@ package org.hisp.dhis.webapi.controller;
 
 import com.google.common.collect.Lists;
 import org.hisp.dhis.common.Pager;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.common.TranslateParams;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.hibernate.exception.DeleteAccessDeniedException;
 import org.hisp.dhis.hibernate.exception.UpdateAccessDeniedException;
@@ -44,6 +42,7 @@ import org.hisp.dhis.node.types.SimpleNode;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.query.Order;
+import org.hisp.dhis.query.Query;
 import org.hisp.dhis.query.QueryParserException;
 import org.hisp.dhis.schema.descriptors.MessageConversationSchemaDescriptor;
 import org.hisp.dhis.user.User;
@@ -95,8 +94,7 @@ public class MessageConversationController
     private UserGroupService userGroupService;
 
     @Override
-    protected void postProcessEntity( org.hisp.dhis.message.MessageConversation entity, WebOptions options,
-        Map<String, String> parameters, TranslateParams translateParams )
+    protected void postProcessEntity( org.hisp.dhis.message.MessageConversation entity, WebOptions options, Map<String, String> parameters )
         throws Exception
     {
         Boolean markRead = Boolean.parseBoolean( parameters.get( "markRead" ) );
@@ -109,8 +107,7 @@ public class MessageConversationController
     }
 
     @Override
-    public RootNode getObject( @PathVariable String uid, Map<String, String> rpParameters,
-        TranslateParams translateParams, HttpServletRequest request, HttpServletResponse response )
+    public RootNode getObject( @PathVariable String uid, Map<String, String> rpParameters, HttpServletRequest request, HttpServletResponse response )
         throws Exception
     {
         org.hisp.dhis.message.MessageConversation messageConversation = messageService.getMessageConversation( uid );
@@ -128,19 +125,19 @@ public class MessageConversationController
             throw new AccessDeniedException( "Not authorized to access this conversation." );
         }
 
-        return super.getObject( uid, rpParameters, translateParams, request, response );
+        return super.getObject( uid, rpParameters, request, response );
     }
 
     @Override
+    @SuppressWarnings( "unchecked" )
     protected List<org.hisp.dhis.message.MessageConversation> getEntityList( WebMetadata metadata, WebOptions options,
-        List<String> filters, List<Order> orders, TranslateParams translateParams )
-        throws QueryParserException
+        List<String> filters, List<Order> orders ) throws QueryParserException
     {
-        List<org.hisp.dhis.message.MessageConversation> entityList;
+        List<org.hisp.dhis.message.MessageConversation> messageConversations;
 
         if ( options.getOptions().containsKey( "query" ) )
         {
-            entityList = Lists.newArrayList( manager.filter( getEntityClass(), options.getOptions().get( "query" ) ) );
+            messageConversations = Lists.newArrayList( manager.filter( getEntityClass(), options.getOptions().get( "query" ) ) );
         }
         else if ( options.hasPaging() )
         {
@@ -149,15 +146,18 @@ public class MessageConversationController
             Pager pager = new Pager( options.getPage(), count, options.getPageSize() );
             metadata.setPager( pager );
 
-            entityList = new ArrayList<>(
-                messageService.getMessageConversations( pager.getOffset(), pager.getPageSize() ) );
+            messageConversations = new ArrayList<>( messageService.getMessageConversations( pager.getOffset(), pager.getPageSize() ) );
         }
         else
         {
-            entityList = new ArrayList<>( messageService.getMessageConversations() );
+            messageConversations = new ArrayList<>( messageService.getMessageConversations() );
         }
 
-        return entityList;
+        Query query = queryService.getQueryFromUrl( getEntityClass(), filters, orders, options.getRootJunction() );
+        query.setDefaultOrder();
+        query.setObjects( messageConversations );
+
+        return (List<org.hisp.dhis.message.MessageConversation>) queryService.query( query );
     }
 
     //--------------------------------------------------------------------------
@@ -165,7 +165,7 @@ public class MessageConversationController
     //--------------------------------------------------------------------------
 
     @Override
-    public void postXmlObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response )
+    public void postXmlObject( HttpServletRequest request, HttpServletResponse response )
         throws Exception
     {
         MessageConversation messageConversation = renderService
@@ -174,7 +174,7 @@ public class MessageConversationController
     }
 
     @Override
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response )
+    public void postJsonObject( HttpServletRequest request, HttpServletResponse response )
         throws Exception
     {
         MessageConversation messageConversation = renderService
@@ -265,6 +265,11 @@ public class MessageConversationController
             throw new WebMessageException( WebMessageUtils.notFound( "Message conversation does not exist: " + uid ) );
         }
 
+        if ( internal && !messageService.hasAccessToManageFeedbackMessages( currentUserService.getCurrentUser() ) )
+        {
+            throw new AccessDeniedException( "Not authorized to send internal messages" );
+        }
+
         messageService.sendReply( conversation, body, metaData, internal );
 
         response
@@ -303,7 +308,7 @@ public class MessageConversationController
         User user = currentUserService.getCurrentUser();
 
         if ( !canModifyUserConversation( user, user ) &&
-            (user.isAuthorized( "F_MANAGE_TICKETS" ) || user.isAuthorized( "ALL" )) )
+            (messageService.hasAccessToManageFeedbackMessages( user )) )
         {
             throw new UpdateAccessDeniedException( "Not authorized to modify this object." );
         }
@@ -346,7 +351,7 @@ public class MessageConversationController
         User user = currentUserService.getCurrentUser();
 
         if ( !canModifyUserConversation( user, user ) &&
-            (user.isAuthorized( "F_MANAGE_TICKETS" ) || user.isAuthorized( "ALL" )) )
+            (messageService.hasAccessToManageFeedbackMessages( user )) )
         {
             throw new UpdateAccessDeniedException( "Not authorized to modify this object." );
         }

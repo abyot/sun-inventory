@@ -29,41 +29,45 @@ package org.hisp.dhis.mapping;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.BaseNameableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
+import org.hisp.dhis.common.InterpretableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
+import org.hisp.dhis.interpretation.Interpretation;
 import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.user.User;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Lars Helge Overland
  */
 @JacksonXmlRootElement( localName = "map", namespace = DxfNamespaces.DXF_2_0 )
 public class Map
-    extends BaseIdentifiableObject
+    extends BaseNameableObject implements InterpretableObject
 {
     private Double longitude;
 
     private Double latitude;
 
     private Integer zoom;
-    
-    private String basemap;
 
-    @Scanned
+    private String basemap;
+    
+    private String title;
+    
     private List<MapView> mapViews = new ArrayList<>();
+    
+    private Set<Interpretation> interpretations = new HashSet<>();
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -87,7 +91,6 @@ public class Map
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = -180, max = 180 )
     public Double getLongitude()
@@ -101,7 +104,6 @@ public class Map
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = -90, max = 90 )
     public Double getLatitude()
@@ -115,7 +117,6 @@ public class Map
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getZoom()
     {
@@ -128,7 +129,6 @@ public class Map
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getBasemap()
     {
@@ -141,7 +141,18 @@ public class Map
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public String getTitle()
+    {
+        return title;
+    }
+
+    public void setTitle( String title )
+    {
+        this.title = title;
+    }
+
+    @JsonProperty
     @JacksonXmlElementWrapper( localName = "mapViews", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "mapView", namespace = DxfNamespaces.DXF_2_0 )
     public List<MapView> getMapViews()
@@ -152,6 +163,20 @@ public class Map
     public void setMapViews( List<MapView> mapViews )
     {
         this.mapViews = mapViews;
+    }
+
+    @JsonProperty
+    @JsonSerialize( contentAs = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "interpretations", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "interpretation", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<Interpretation> getInterpretations()
+    {
+        return interpretations;
+    }
+
+    public void setInterpretations( Set<Interpretation> interpretations )
+    {
+        this.interpretations = interpretations;
     }
 
     @Override
@@ -170,6 +195,7 @@ public class Map
                 latitude = map.getLatitude();
                 zoom = map.getZoom();
                 basemap = map.getBasemap();
+                title = map.getTitle();
             }
             else if ( mergeMode.isMerge() )
             {
@@ -178,6 +204,7 @@ public class Map
                 latitude = map.getLatitude() == null ? latitude : map.getLatitude();
                 zoom = map.getZoom() == null ? zoom : map.getZoom();
                 basemap = map.getBasemap() == null ? basemap : map.getBasemap();
+                title = map.getTitle() == null ? title : map.getTitle();
             }
 
             mapViews.clear();

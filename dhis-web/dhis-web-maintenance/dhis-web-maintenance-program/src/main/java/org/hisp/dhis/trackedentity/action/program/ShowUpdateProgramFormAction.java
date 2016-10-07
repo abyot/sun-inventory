@@ -31,11 +31,12 @@ package org.hisp.dhis.trackedentity.action.program;
 import com.opensymphony.xwork2.Action;
 import org.hisp.dhis.attribute.Attribute;
 import org.hisp.dhis.attribute.AttributeService;
-import org.hisp.dhis.common.comparator.IdentifiableObjectNameComparator;
+import org.hisp.dhis.dataapproval.DataApprovalService;
 import org.hisp.dhis.dataapproval.DataApprovalWorkflow;
-import org.hisp.dhis.dataapproval.DataApprovalWorkflowService;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.dataelement.DataElementCategoryService;
+import org.hisp.dhis.period.PeriodService;
+import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramService;
 import org.hisp.dhis.program.ProgramTrackedEntityAttribute;
@@ -106,7 +107,10 @@ public class ShowUpdateProgramFormAction
     private DataElementCategoryService categoryService;
 
     @Autowired
-    private DataApprovalWorkflowService workflowService;
+    private DataApprovalService dataApprovalService;
+    
+    @Autowired
+    private PeriodService periodService;
 
     // -------------------------------------------------------------------------
     // Input/Output
@@ -217,6 +221,13 @@ public class ShowUpdateProgramFormAction
     {
         return workflows;
     }
+    
+    private List<PeriodType> periodTypes = new ArrayList<>();
+
+    public List<PeriodType> getPeriodTypes()
+    {
+        return periodTypes;
+    }
 
     // -------------------------------------------------------------------------
     // Action implementation
@@ -237,27 +248,29 @@ public class ShowUpdateProgramFormAction
             availableAttributes.remove( programTrackedEntityAttribute.getAttribute() );
         }
 
-        Collections.sort( availableAttributes, IdentifiableObjectNameComparator.INSTANCE );
+        Collections.sort( availableAttributes );
 
         programs = programService.getAllPrograms();
         programs.removeAll( programService.getPrograms( ProgramType.WITHOUT_REGISTRATION ) );
         programs.remove( program );
-        Collections.sort( programs, IdentifiableObjectNameComparator.INSTANCE );
+        Collections.sort( programs );
 
         userGroups = userGroupService.getAllUserGroups();
 
         relationshipTypes = relationshipTypeService.getAllRelationshipTypes();
-        Collections.sort( relationshipTypes, IdentifiableObjectNameComparator.INSTANCE );
+        Collections.sort( relationshipTypes );
 
         trackedEntities = trackedEntityService.getAllTrackedEntity();
-        Collections.sort( trackedEntities, IdentifiableObjectNameComparator.INSTANCE );
+        Collections.sort( trackedEntities );
 
         attributes = attributeService.getAttributes( Program.class );
 
         categoryCombos = new ArrayList<>( categoryService.getAttributeCategoryCombos() );
 
-        workflows = new ArrayList<>( workflowService.getAllWorkflows() );
-        Collections.sort( workflows, IdentifiableObjectNameComparator.INSTANCE );
+        workflows = new ArrayList<>( dataApprovalService.getAllWorkflows() );
+        Collections.sort( workflows );
+        
+        periodTypes = periodService.getAllPeriodTypes();
 
         return SUCCESS;
     }

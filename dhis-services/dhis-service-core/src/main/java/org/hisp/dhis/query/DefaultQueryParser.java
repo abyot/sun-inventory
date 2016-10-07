@@ -32,7 +32,6 @@ import org.hisp.dhis.query.operators.MatchMode;
 import org.hisp.dhis.schema.Property;
 import org.hisp.dhis.schema.Schema;
 import org.hisp.dhis.schema.SchemaService;
-import org.hisp.dhis.translation.TranslationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
@@ -46,14 +45,19 @@ public class DefaultQueryParser implements QueryParser
     @Autowired
     private SchemaService schemaService;
 
-    @Autowired
-    private TranslationService translationService;
-
     @Override
     public Query parse( Class<?> klass, List<String> filters ) throws QueryParserException
     {
+        return parse( klass, filters, Junction.Type.AND );
+    }
+
+    @Override
+    public Query parse( Class<?> klass, List<String> filters, Junction.Type rootJunction ) throws QueryParserException
+    {
         Schema schema = schemaService.getDynamicSchema( klass );
-        Query query = Query.from( schema );
+        Query query = Query.from( schema, rootJunction );
+
+        Junction junction = query.getRootJunction();
 
         for ( String filter : filters )
         {
@@ -67,11 +71,11 @@ public class DefaultQueryParser implements QueryParser
             if ( split.length >= 3 )
             {
                 int index = split[0].length() + ":".length() + split[1].length() + ":".length();
-                query.add( getRestriction( schema, split[0], split[1], filter.substring( index ) ) );
+                junction.add( getRestriction( schema, split[0], split[1], filter.substring( index ) ) );
             }
             else
             {
-                query.add( getRestriction( schema, split[0], split[1], null ) );
+                junction.add( getRestriction( schema, split[0], split[1], null ) );
             }
         }
 
@@ -80,23 +84,6 @@ public class DefaultQueryParser implements QueryParser
 
     private Restriction getRestriction( Schema schema, String path, String operator, Object arg ) throws QueryParserException
     {
-        // optimize if not translated
-        if ( !translationService.isTranslated( schema.getKlass() ) )
-        {
-            if ( path.startsWith( "displayName:" ) && schema.havePersistedProperty( "name" ) )
-            {
-                path = path.replace( "displayName:", "name:" );
-            }
-            else if ( path.startsWith( "displayShortName:" ) && schema.havePersistedProperty( "shortName" ) )
-            {
-                path = path.replace( "displayShortName:", "shortName:" );
-            }
-            else if ( path.startsWith( "displayDescription:" ) && schema.havePersistedProperty( "description" ) )
-            {
-                path = path.replace( "displayDescription:", "description:" );
-            }
-        }
-
         Property property = getProperty( schema, path );
 
         if ( property == null )
@@ -198,11 +185,11 @@ public class DefaultQueryParser implements QueryParser
             }
             case "in":
             {
-                return Restrictions.in( path, QueryUtils.parseValue( Collection.class, property.getKlass(), arg ) );
+                return Restrictions.in( path, QueryUtils.parseValue( Collection.class, property.getItemKlass(), arg ) );
             }
             case "!in":
             {
-                return Restrictions.notIn( path, QueryUtils.parseValue( Collection.class, property.getKlass(), arg ) );
+                return Restrictions.notIn( path, QueryUtils.parseValue( Collection.class, property.getItemKlass(), arg ) );
             }
             case "null":
             {
@@ -239,7 +226,7 @@ public class DefaultQueryParser implements QueryParser
                 throw new QueryParserException( "Unknown path property: " + paths[i] + " (" + path + ")" );
             }
 
-            if ( currentProperty.isSimple() && i != (paths.length - 1) )
+            if ( (currentProperty.isSimple() && !currentProperty.isCollection()) && i != (paths.length - 1) )
             {
                 throw new QueryParserException( "Simple type was found before finished parsing path expression, please check your path string." );
             }

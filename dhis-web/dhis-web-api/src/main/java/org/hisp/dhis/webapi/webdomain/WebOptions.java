@@ -30,6 +30,7 @@ package org.hisp.dhis.webapi.webdomain;
 
 import org.hisp.dhis.common.Pager;
 import org.hisp.dhis.dxf2.common.Options;
+import org.hisp.dhis.query.Junction;
 
 import java.util.Map;
 
@@ -57,12 +58,12 @@ public class WebOptions
     {
         return stringAsInt( options.get( "page" ), 1 );
     }
-    
+
     public String getViewClass()
     {
         return stringAsString( options.get( "viewClass" ), null );
     }
-    
+
     public String getViewClass( String defaultValue )
     {
         return stringAsString( options.get( "viewClass" ), defaultValue );
@@ -72,9 +73,15 @@ public class WebOptions
     {
         return stringAsInt( options.get( "pageSize" ), Pager.DEFAULT_PAGE_SIZE );
     }
-    
+
     public boolean isManage()
     {
         return stringAsBoolean( options.get( "manage" ), false );
+    }
+
+    public Junction.Type getRootJunction()
+    {
+        String rootJunction = options.get( "rootJunction" );
+        return "OR".equals( rootJunction ) ? Junction.Type.OR : Junction.Type.AND;
     }
 }

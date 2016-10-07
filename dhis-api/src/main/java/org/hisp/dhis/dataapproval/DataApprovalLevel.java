@@ -28,17 +28,17 @@ package org.hisp.dhis.dataapproval;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.common.BaseIdentifiableObject;
-import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
-import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.DxfNamespaces;
+import org.hisp.dhis.common.IdentifiableObject;
+import org.hisp.dhis.common.MergeMode;
+import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
+import org.hisp.dhis.schema.PropertyType;
+import org.hisp.dhis.schema.annotation.Property;
 
 /**
  * Records the approval of DataSet values for a given OrganisationUnit and
@@ -109,7 +109,7 @@ public class DataApprovalLevel
     {
         return categoryOptionGroupSet == null ? "" : categoryOptionGroupSet.getName();
     }
-    
+
     /**
      * Indicates whether this approval level specified a category option group set.
      */
@@ -132,14 +132,14 @@ public class DataApprovalLevel
         {
             return false;
         }
-        
-        if ( categoryOptionGroupSet != null ? 
-            !categoryOptionGroupSet.equals( other.getCategoryOptionGroupSet() ) : 
+
+        if ( categoryOptionGroupSet != null ?
+            !categoryOptionGroupSet.equals( other.getCategoryOptionGroupSet() ) :
             other.getCategoryOptionGroupSet() != null )
         {
             return false;
         }
-        
+
         return true;
     }
 
@@ -151,13 +151,13 @@ public class DataApprovalLevel
     public String toString()
     {
         return "DataApprovalLevel{" +
-                "name=" + name +
-                ", level=" + level +
-                ", orgUnitLevel=" + orgUnitLevel +
-                ", categoryOptionGroupSet='" + ( categoryOptionGroupSet == null ? "(null)" : categoryOptionGroupSet.getName() ) + "'" +
-                ", created=" + created +
-                ", lastUpdated=" + lastUpdated +
-                '}';
+            "name=" + name +
+            ", level=" + level +
+            ", orgUnitLevel=" + orgUnitLevel +
+            ", categoryOptionGroupSet='" + (categoryOptionGroupSet == null ? "(null)" : categoryOptionGroupSet.getName()) + "'" +
+            ", created=" + created +
+            ", lastUpdated=" + lastUpdated +
+            '}';
     }
 
     // -------------------------------------------------------------------------
@@ -165,7 +165,6 @@ public class DataApprovalLevel
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getLevel()
     {
@@ -178,7 +177,6 @@ public class DataApprovalLevel
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getOrgUnitLevel()
     {
@@ -192,8 +190,8 @@ public class DataApprovalLevel
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    @Property( value = PropertyType.REFERENCE, required = Property.Value.TRUE, persisted = Property.Value.TRUE, owner = Property.Value.TRUE )
     public CategoryOptionGroupSet getCategoryOptionGroupSet()
     {
         return categoryOptionGroupSet;
@@ -205,7 +203,6 @@ public class DataApprovalLevel
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getOrgUnitLevelName()
     {
@@ -215,5 +212,29 @@ public class DataApprovalLevel
     public void setOrgUnitLevelName( String orgUnitLevelName )
     {
         this.orgUnitLevelName = orgUnitLevelName;
+    }
+
+    @Override
+    public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
+    {
+        super.mergeWith( other, mergeMode );
+
+        if ( other.getClass().isInstance( this ) )
+        {
+            DataApprovalLevel dataApprovalLevel = (DataApprovalLevel) other;
+
+            level = dataApprovalLevel.getLevel();
+            orgUnitLevel = dataApprovalLevel.getOrgUnitLevel();
+
+            if ( mergeMode.isReplace() )
+            {
+                categoryOptionGroupSet = dataApprovalLevel.getCategoryOptionGroupSet();
+            }
+            else if ( mergeMode.isMerge() )
+            {
+                categoryOptionGroupSet = dataApprovalLevel.getCategoryOptionGroupSet() == null ?
+                    categoryOptionGroupSet : dataApprovalLevel.getCategoryOptionGroupSet();
+            }
+        }
     }
 }

@@ -51,9 +51,12 @@ import com.google.common.collect.Lists;
 public class DataSetOrganisationUnitCategoryResourceTable
     extends ResourceTable<DataSet>
 {
-    public DataSetOrganisationUnitCategoryResourceTable( List<DataSet> objects )
+    private DataElementCategoryOptionCombo defaultOptionCombo;
+    
+    public DataSetOrganisationUnitCategoryResourceTable( List<DataSet> objects, DataElementCategoryOptionCombo defaultOptionCombo )
     {
         this.objects = objects;
+        this.defaultOptionCombo = defaultOptionCombo;
     }
 
     @Override
@@ -93,26 +96,27 @@ public class DataSetOrganisationUnitCategoryResourceTable
         {
             DataElementCategoryCombo categoryCombo = dataSet.getCategoryCombo();
             
-            DataElementCategoryOptionCombo defaultOptionCombo = dataSet.getCategoryCombo().getOptionCombos().iterator().next();
-            
             for ( OrganisationUnit orgUnit : dataSet.getSources() )
             {
-                if ( !categoryCombo.isDefault() && orgUnit.hasCategoryOptions() )
+                if ( !categoryCombo.isDefault() )
                 {
-                    Set<DataElementCategoryOption> orgUnitOptions = orgUnit.getCategoryOptions();
-                    
-                    for ( DataElementCategoryOptionCombo optionCombo : categoryCombo.getOptionCombos() )
+                    if ( orgUnit.hasCategoryOptions() )
                     {
-                        Set<DataElementCategoryOption> optionComboOptions = optionCombo.getCategoryOptions();
+                        Set<DataElementCategoryOption> orgUnitOptions = orgUnit.getCategoryOptions();
                         
-                        if ( orgUnitOptions.containsAll( optionComboOptions ) )
+                        for ( DataElementCategoryOptionCombo optionCombo : categoryCombo.getOptionCombos() )
                         {
-                            Date startDate = DateUtils.min( optionComboOptions.stream().map( co -> co.getStartDate() ).collect( Collectors.toSet() ) );
-                            Date endDate = DateUtils.max( optionComboOptions.stream().map( co -> co.getEndDate() ).collect( Collectors.toSet() ) );
+                            Set<DataElementCategoryOption> optionComboOptions = optionCombo.getCategoryOptions();
                             
-                            List<Object> values = Lists.newArrayList( dataSet.getId(), orgUnit.getId(), optionCombo.getId(), startDate, endDate );
-                            
-                            batchArgs.add( values.toArray() );
+                            if ( orgUnitOptions.containsAll( optionComboOptions ) )
+                            {
+                                Date startDate = DateUtils.min( optionComboOptions.stream().map( co -> co.getStartDate() ).collect( Collectors.toSet() ) );
+                                Date endDate = DateUtils.max( optionComboOptions.stream().map( co -> co.getEndDate() ).collect( Collectors.toSet() ) );
+                                
+                                List<Object> values = Lists.newArrayList( dataSet.getId(), orgUnit.getId(), optionCombo.getId(), startDate, endDate );
+                                
+                                batchArgs.add( values.toArray() );
+                            }
                         }
                     }
                 }

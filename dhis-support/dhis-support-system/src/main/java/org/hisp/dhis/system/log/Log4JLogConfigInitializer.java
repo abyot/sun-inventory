@@ -28,11 +28,7 @@ package org.hisp.dhis.system.log;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import java.io.File;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
@@ -42,7 +38,10 @@ import org.apache.log4j.RollingFileAppender;
 import org.hisp.dhis.external.location.LocationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.util.List;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author Lars Helge Overland
@@ -58,7 +57,9 @@ public class Log4JLogConfigInitializer
     private static final String ANALYTICS_TABLE_LOGGER_FILENAME = "dhis-analytics-table.log";
     private static final String DATA_EXCHANGE_LOGGER_FILENAME = "dhis-data-exchange.log";
     private static final String DATA_SYNC_LOGGER_FILENAME = "dhis-data-sync.log";
+    private static final String METADATA_SYNC_LOGGER_FILENAME = "dhis-metadata-sync.log";
     private static final String GENERAL_LOGGER_FILENAME = "dhis.log";
+    private static final String PUSH_ANALYSIS_LOGGER_FILENAME = "dhis-push-analysis.log";
     private static final String LOG4J_CONF_PROP = "log4j.configuration";
 
     private static final Log log = LogFactory.getLog( Log4JLogConfigInitializer.class );
@@ -88,6 +89,10 @@ public class Log4JLogConfigInitializer
         configureLoggers( DATA_EXCHANGE_LOGGER_FILENAME, Lists.newArrayList( "org.hisp.dhis.dxf2" ) );
         
         configureLoggers( DATA_SYNC_LOGGER_FILENAME, Lists.newArrayList( "org.hisp.dhis.dxf2.synch" ) );
+
+        configureLoggers( METADATA_SYNC_LOGGER_FILENAME, Lists.newArrayList( "org.hisp.dhis.dxf2.metadata" ) );
+
+        configureLoggers( PUSH_ANALYSIS_LOGGER_FILENAME, Lists.newArrayList( "org.hisp.dhis.pushanalysis" ) );
         
         configureRootLogger( GENERAL_LOGGER_FILENAME );
     }

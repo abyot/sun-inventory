@@ -28,7 +28,6 @@ package org.hisp.dhis.organisationunit;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.i18n.I18nService;
 import org.hisp.dhis.commons.filter.Filter;
 import org.hisp.dhis.commons.filter.FilterUtils;
 import org.hisp.dhis.user.CurrentUserService;
@@ -41,12 +40,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.hisp.dhis.i18n.I18nUtils.*;
-
 /**
  * @author Torgeir Lorange Ostby
- * @version $Id: DefaultOrganisationUnitGroupService.java 5017 2008-04-25
- *          09:19:19Z larshelg $
  */
 @Transactional
 public class DefaultOrganisationUnitGroupService
@@ -68,13 +63,6 @@ public class DefaultOrganisationUnitGroupService
     public void setOrganisationUnitGroupSetStore( OrganisationUnitGroupSetStore organisationUnitGroupSetStore )
     {
         this.organisationUnitGroupSetStore = organisationUnitGroupSetStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     @Autowired
@@ -108,32 +96,31 @@ public class DefaultOrganisationUnitGroupService
     @Override
     public OrganisationUnitGroup getOrganisationUnitGroup( int id )
     {
-        return i18n( i18nService, organisationUnitGroupStore.get( id ) );
+        return organisationUnitGroupStore.get( id );
     }
 
     @Override
     public List<OrganisationUnitGroup> getOrganisationUnitGroupsByUid( Collection<String> uids )
     {
-        return i18n( i18nService, organisationUnitGroupStore.getByUid( uids ) );
+        return organisationUnitGroupStore.getByUid( uids );
     }
 
     @Override
     public OrganisationUnitGroup getOrganisationUnitGroup( String uid )
     {
-        return i18n( i18nService, organisationUnitGroupStore.getByUid( uid ) );
+        return organisationUnitGroupStore.getByUid( uid );
     }
 
     @Override
     public List<OrganisationUnitGroup> getOrganisationUnitGroupByName( String name )
     {
-        return new ArrayList<>(
-            i18n( i18nService, organisationUnitGroupStore.getAllEqName( name ) ) );
+        return new ArrayList<>( organisationUnitGroupStore.getAllEqName( name ) );
     }
 
     @Override
     public OrganisationUnitGroup getOrganisationUnitGroupByCode( String code )
     {
-        return i18n( i18nService, organisationUnitGroupStore.getByCode( code ) );
+        return organisationUnitGroupStore.getByCode( code );
     }
 
     @Override
@@ -147,19 +134,19 @@ public class DefaultOrganisationUnitGroupService
             return null;
         }
 
-        return i18n( i18nService, organisationUnitGroups.get( 0 ) );
+        return organisationUnitGroups.get( 0 );
     }
 
     @Override
     public List<OrganisationUnitGroup> getAllOrganisationUnitGroups()
     {
-        return i18n( i18nService, organisationUnitGroupStore.getAll() );
+        return organisationUnitGroupStore.getAll();
     }
 
     @Override
     public List<OrganisationUnitGroup> getOrganisationUnitGroupsWithGroupSets()
     {
-        return i18n( i18nService, organisationUnitGroupStore.getOrganisationUnitGroupsWithGroupSets() );
+        return organisationUnitGroupStore.getOrganisationUnitGroupsWithGroupSets();
     }
 
     @Override
@@ -171,19 +158,19 @@ public class DefaultOrganisationUnitGroupService
     @Override
     public int getOrganisationUnitGroupCountByName( String name )
     {
-        return getCountByName( i18nService, organisationUnitGroupStore, name );
+        return organisationUnitGroupStore.getCountLikeName( name );
     }
 
     @Override
     public List<OrganisationUnitGroup> getOrganisationUnitGroupsBetween( int first, int max )
     {
-        return getObjectsBetween( i18nService, organisationUnitGroupStore, first, max );
+        return organisationUnitGroupStore.getAllOrderedName( first, max );
     }
 
     @Override
     public List<OrganisationUnitGroup> getOrganisationUnitGroupsBetweenByName( String name, int first, int max )
     {
-        return getObjectsBetweenByName( i18nService, organisationUnitGroupStore, name, first, max );
+        return organisationUnitGroupStore.getAllLikeName( name, first, max );
     }
 
     // -------------------------------------------------------------------------
@@ -211,45 +198,31 @@ public class DefaultOrganisationUnitGroupService
     @Override
     public OrganisationUnitGroupSet getOrganisationUnitGroupSet( int id )
     {
-        return i18n( i18nService, organisationUnitGroupSetStore.get( id ) );
-    }
-
-    @Override
-    public OrganisationUnitGroupSet getOrganisationUnitGroupSet( int id, boolean i18nGroups )
-    {
-        OrganisationUnitGroupSet groupSet = getOrganisationUnitGroupSet( id );
-
-        if ( i18nGroups )
-        {
-            i18n( i18nService, groupSet.getOrganisationUnitGroups() );
-        }
-
-        return groupSet;
+        return organisationUnitGroupSetStore.get( id );
     }
 
     @Override
     public OrganisationUnitGroupSet getOrganisationUnitGroupSet( String uid )
     {
-        return i18n( i18nService, organisationUnitGroupSetStore.getByUid( uid ) );
+        return organisationUnitGroupSetStore.getByUid( uid );
     }
 
     @Override
     public List<OrganisationUnitGroupSet> getOrganisationUnitGroupSetsByUid( Collection<String> uids )
     {
-        return i18n( i18nService, organisationUnitGroupSetStore.getByUid( uids ) );
+        return  organisationUnitGroupSetStore.getByUid( uids );
     }
 
     @Override
     public List<OrganisationUnitGroupSet> getOrganisationUnitGroupSetByName( String name )
     {
-        return new ArrayList<>( i18n( i18nService,
-            organisationUnitGroupSetStore.getAllEqName( name ) ) );
+        return new ArrayList<>( organisationUnitGroupSetStore.getAllEqName( name ) );
     }
 
     @Override
     public List<OrganisationUnitGroupSet> getAllOrganisationUnitGroupSets()
     {
-        return i18n( i18nService, organisationUnitGroupSetStore.getAll() );
+        return organisationUnitGroupSetStore.getAll();
     }
 
     @Override
@@ -320,20 +293,20 @@ public class DefaultOrganisationUnitGroupService
     @Override
     public int getOrganisationUnitGroupSetCountByName( String name )
     {
-        return getCountByName( i18nService, organisationUnitGroupSetStore, name );
+        return organisationUnitGroupSetStore.getCountLikeName( name );
     }
 
     @Override
     public List<OrganisationUnitGroupSet> getOrganisationUnitGroupSetsBetween( int first, int max )
     {
-        return getObjectsBetween( i18nService, organisationUnitGroupSetStore, first, max );
+        return organisationUnitGroupSetStore.getAllOrderedName( first, max );
     }
 
     @Override
     public List<OrganisationUnitGroupSet> getOrganisationUnitGroupSetsBetweenByName( String name, int first,
         int max )
     {
-        return getObjectsBetweenByName( i18nService, organisationUnitGroupSetStore, name, first, max );
+        return organisationUnitGroupSetStore.getAllLikeName( name, first, max ) ;
     }
 
     @Override

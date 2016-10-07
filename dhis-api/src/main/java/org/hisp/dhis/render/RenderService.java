@@ -29,6 +29,7 @@ package org.hisp.dhis.render;
  */
 
 import org.hisp.dhis.common.IdentifiableObject;
+import org.hisp.dhis.metadata.version.MetadataVersion;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,4 +74,14 @@ public interface RenderService
      * @return Map of all id object types that were found
      */
     Map<Class<? extends IdentifiableObject>, List<IdentifiableObject>> fromMetadata( InputStream inputStream, RenderFormat format ) throws IOException;
+
+    /**
+     * Parses the input stream for the collection of MetadataVersion objects.
+     *
+     * @param inputStream
+     * @param format
+     * @return List of MetadataVersion objects.
+     * @throws IOException
+     */
+    List<MetadataVersion> fromMetadataVersion(InputStream inputStream, RenderFormat format) throws IOException;
 }

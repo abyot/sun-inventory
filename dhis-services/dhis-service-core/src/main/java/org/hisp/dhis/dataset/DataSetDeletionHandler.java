@@ -30,16 +30,22 @@ package org.hisp.dhis.dataset;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hisp.dhis.common.IdentifiableObjectManager;
+import org.hisp.dhis.dataapproval.DataApprovalWorkflow;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
+import org.hisp.dhis.dataelement.DataElementCategoryService;
 import org.hisp.dhis.dataelement.DataElementOperand;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.indicator.Indicator;
 import org.hisp.dhis.legend.LegendSet;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.system.deletion.DeletionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.hisp.dhis.dataelement.DataElementCategoryCombo.DEFAULT_CATEGORY_COMBO_NAME;
 
 /**
  * @author Lars Helge Overland
@@ -49,7 +55,13 @@ public class DataSetDeletionHandler
 {
     @Autowired
     private IdentifiableObjectManager idObjectManager;
-    
+
+    @Autowired
+    private DataSetService dataSetService;
+
+    @Autowired
+    private DataElementCategoryService categoryService;
+
     // -------------------------------------------------------------------------
     // DeletionHandler implementation
     // -------------------------------------------------------------------------
@@ -62,14 +74,11 @@ public class DataSetDeletionHandler
 
     @Override
     public void deleteDataElement( DataElement dataElement )
-    {
-        Iterator<DataSet> iterator = dataElement.getDataSets().iterator();
-        
-        while ( iterator.hasNext() )
+    {        
+        for ( DataSetElement element : dataElement.getDataSetElements() )
         {
-            DataSet dataSet = iterator.next();
-            dataSet.removeDataElement( dataElement );
-            idObjectManager.updateNoAcl( dataSet );
+            dataElement.removeDataSetElement( element );
+            idObjectManager.updateNoAcl( element.getDataSet() );
         }
         
         for ( DataSet dataSet : idObjectManager.getAllNoAcl( DataSet.class ) )
@@ -139,13 +148,16 @@ public class DataSetDeletionHandler
     @Override
     public void deleteDataElementCategoryCombo( DataElementCategoryCombo categoryCombo )
     {
+        DataElementCategoryCombo defaultCategoryCombo = categoryService
+            .getDataElementCategoryComboByName( DEFAULT_CATEGORY_COMBO_NAME );
+
         Collection<DataSet> dataSets = idObjectManager.getAllNoAcl( DataSet.class );
 
         for ( DataSet dataSet : dataSets )
         {            
             if ( dataSet != null && categoryCombo.equals( dataSet.getCategoryCombo() ) )
             {
-                dataSet.setCategoryCombo( null );
+                dataSet.setCategoryCombo( defaultCategoryCombo );
                 idObjectManager.updateNoAcl( dataSet );
             }
         }        
@@ -163,4 +175,29 @@ public class DataSetDeletionHandler
             idObjectManager.updateNoAcl( dataSet );
         }
     }
+
+    @Override
+    public void deleteDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        List<DataSet> associatedDataSets = dataSetService.getDataSetsByDataEntryForm( dataEntryForm );
+
+        for ( DataSet dataSet : associatedDataSets )
+        {
+            dataSet.setDataEntryForm( null );
+            idObjectManager.updateNoAcl( dataSet );
+        }
+    }
+    
+    @Override
+    public void deleteDataApprovalWorkflow( DataApprovalWorkflow workflow )
+    {
+        Iterator<DataSet> iterator = workflow.getDataSets().iterator();
+        
+        while ( iterator.hasNext() )
+        {
+            DataSet dataSet = iterator.next();
+            dataSet.setWorkflow( null );
+            idObjectManager.updateNoAcl( dataSet );
+        }
+    }    
 }

@@ -16,9 +16,9 @@
                              foreign-key="fk_attributevalue_trackedentityattributeid"/>
         </composite-id>
 
-        <property name="created" type="timestamp"/>
+        <property name="created" type="timestamp" not-null="true" />
 
-        <property name="lastUpdated" type="timestamp"/>
+        <property name="lastUpdated" type="timestamp" not-null="true" />
 
         <property name="plainValue" column="value" access="property" length="50000"/>
 

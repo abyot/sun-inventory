@@ -99,16 +99,7 @@ public class DefaultDhisConfigurationProvider
         }
         catch ( LocationManagerException ex1 )
         {
-            log.debug( "Could not load dhis.conf, looking for hibernate.properties" );
-
-            try // Deprecated
-            {
-                in = locationManager.getInputStream( "hibernate.properties" );
-            }
-            catch ( LocationManagerException ex2 )
-            {
-                log.debug( "Could not load hibernate.properties" );
-            }
+            log.debug( "Could not load dhis.conf" );
         }
 
         Properties properties = new Properties();
@@ -252,6 +243,12 @@ public class DefaultDhisConfigurationProvider
     }
 
     @Override
+    public boolean isClusterEnabled()
+    {        
+        return StringUtils.isNotBlank( getProperty( ConfigurationKey.CLUSTER_INSTANCE_HOSTNAME ) );
+    }
+
+    @Override
     public boolean isLdapConfigured()
     {
         String ldapUrl = getProperty( ConfigurationKey.LDAP_URL );
@@ -262,7 +259,7 @@ public class DefaultDhisConfigurationProvider
     }
 
     @Override
-    public EncryptionStatus isEncryptionConfigured()
+    public EncryptionStatus getEncryptionStatus()
     {
         String password;
         

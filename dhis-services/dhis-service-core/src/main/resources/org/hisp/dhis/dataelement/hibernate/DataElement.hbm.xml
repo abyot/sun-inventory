@@ -40,7 +40,7 @@
       </type>
     </property>
 
-    <many-to-one name="categoryCombo" class="org.hisp.dhis.dataelement.DataElementCategoryCombo"
+    <many-to-one name="dataElementCategoryCombo" class="org.hisp.dhis.dataelement.DataElementCategoryCombo"
       column="categorycomboid" not-null="true" foreign-key="fk_dataelement_categorycomboid" />
 
     <property name="url" />
@@ -51,10 +51,9 @@
       <many-to-many class="org.hisp.dhis.dataelement.DataElementGroup" column="dataelementgroupid" />
     </set>
 
-    <set name="dataSets" table="datasetmembers" inverse="true">
-      <cache usage="read-write" />
-      <key column="dataelementid" />
-      <many-to-many class="org.hisp.dhis.dataset.DataSet" column="datasetid" />
+    <set name="dataSetElements" table="datasetmembers" inverse="true">
+      <key column="dataelementid" foreign-key="fk_datasetmembers_dataelementid" not-null="true" />
+      <one-to-many class="org.hisp.dhis.dataset.DataSetElement" />
     </set>
 
     <list name="aggregationLevels" table="dataelementaggregationlevels">
@@ -73,6 +72,10 @@
 
     <many-to-one name="legendSet" class="org.hisp.dhis.legend.LegendSet" column="legendsetid"
       foreign-key="fk_dataelement_legendset" />
+    
+    <property name="aggregateExportCategoryOptionCombo" column="aggregateexportcategoryoptioncombo" />
+
+    <property name="aggregateExportAttributeOptionCombo" column="aggregateexportattributeoptioncombo" />
 
     <!-- Dynamic attribute values -->
     <set name="attributeValues" table="dataelementattributevalues" cascade="delete-orphan">
@@ -82,14 +85,10 @@
     </set>
 
     <!-- Object Translation -->
-    <set name="translations" table="dataelementtranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="dataelementtranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="dataelementid" foreign-key="fk_objecttranslation_dataelementid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
     <!-- Access properties -->
@@ -105,7 +104,4 @@
 
   </class>
 
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 </hibernate-mapping>

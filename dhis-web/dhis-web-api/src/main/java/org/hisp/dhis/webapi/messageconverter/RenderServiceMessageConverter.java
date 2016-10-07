@@ -28,6 +28,7 @@ package org.hisp.dhis.webapi.messageconverter;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.google.common.collect.ImmutableList;
 import org.hisp.dhis.render.RenderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpInputMessage;
@@ -44,12 +45,17 @@ import java.io.IOException;
  */
 public class RenderServiceMessageConverter extends AbstractHttpMessageConverter<Object>
 {
+    public static final ImmutableList<MediaType> SUPPORTED_MEDIA_TYPES = ImmutableList.<MediaType>builder()
+        .add( new MediaType( "application", "json" ) )
+        .add( new MediaType( "application", "xml" ) )
+        .build();
+
     @Autowired
     private RenderService renderService;
 
-    public RenderServiceMessageConverter( MediaType... supportedMediaTypes )
+    public RenderServiceMessageConverter()
     {
-        super( supportedMediaTypes );
+        setSupportedMediaTypes( SUPPORTED_MEDIA_TYPES );
     }
 
     @Override

@@ -29,14 +29,13 @@ package org.hisp.dhis.dataentryform;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DisplayDensity;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
+import org.hisp.dhis.common.IdentifiableObject;
+import org.hisp.dhis.common.MergeMode;
 
 import java.util.Objects;
 
@@ -112,12 +111,14 @@ public class DataEntryForm
     // hashCode and equals
     // -------------------------------------------------------------------------
 
-    @Override public int hashCode()
+    @Override
+    public int hashCode()
     {
         return 31 * super.hashCode() + Objects.hash( name, style, htmlCode, format );
     }
 
-    @Override public boolean equals( Object obj )
+    @Override
+    public boolean equals( Object obj )
     {
         if ( this == obj )
         {
@@ -143,7 +144,6 @@ public class DataEntryForm
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getName()
     {
@@ -156,7 +156,6 @@ public class DataEntryForm
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DisplayDensity getStyle()
     {
@@ -169,7 +168,6 @@ public class DataEntryForm
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getHtmlCode()
     {
@@ -182,7 +180,6 @@ public class DataEntryForm
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getFormat()
     {
@@ -192,5 +189,29 @@ public class DataEntryForm
     public void setFormat( int format )
     {
         this.format = format;
+    }
+
+    @Override
+    public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
+    {
+        super.mergeWith( other, mergeMode );
+
+        if ( other.getClass().isInstance( this ) )
+        {
+            DataEntryForm dataEntryForm = (DataEntryForm) other;
+
+            format = dataEntryForm.getFormat();
+
+            if ( mergeMode.isReplace() )
+            {
+                style = dataEntryForm.getStyle();
+                htmlCode = dataEntryForm.getHtmlCode();
+            }
+            else if ( mergeMode.isMerge() )
+            {
+                style = dataEntryForm.getStyle() == null ? style : dataEntryForm.getStyle();
+                htmlCode = dataEntryForm.getHtmlCode() == null ? htmlCode : dataEntryForm.getHtmlCode();
+            }
+        }
     }
 }

@@ -28,6 +28,8 @@ package org.hisp.dhis.configuration;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import org.hisp.dhis.user.User;
+
 /**
  * @author Lars Helge Overland
  */
@@ -56,4 +58,9 @@ public interface ConfigurationService
      * @return true if the given origin is CORS white listed.
      */
     boolean isCorsWhitelisted( String origin );
+
+    /**
+     * Indicates whether the current user is part of the feedback Recipients group
+     */
+    boolean isUserInFeedbackRecipientUserGroup(User user);
 }

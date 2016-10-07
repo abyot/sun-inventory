@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -61,7 +62,7 @@ public class SmsConfigurationController
     private SmsConfigurationManager smsConfigurationManager;
 
     @RequestMapping( method = RequestMethod.GET )
-    public String getSmsConfiguration( Model model )
+    public @ResponseBody SmsConfiguration getSmsConfiguration()
     {
         SmsConfiguration smsConfiguration = smsConfigurationManager.getSmsConfiguration();
 
@@ -70,25 +71,19 @@ public class SmsConfigurationController
             smsConfiguration = new SmsConfiguration();
         }
 
-        model.addAttribute( "model", smsConfiguration );
-
-        return "smsConfiguration";
+        return smsConfiguration;
     }
 
     @RequestMapping( value = "test", method = RequestMethod.GET )
-    public String getTest( Model model )
+    public @ResponseBody SmsConfiguration getTest()
     {
-
         SmsConfiguration smsConfiguration = new SmsConfiguration();
 
         SmsGatewayConfig gatewayConfig = new GenericHttpGatewayConfig();
         gatewayConfig.setUrlTemplate( "http://storset.org/" );
         smsConfiguration.setGateways( Collections.singletonList( gatewayConfig ) );
 
-        model.addAttribute( "model", smsConfiguration );
-        model.addAttribute( "viewClass", "detailed" );
-
-        return "smsConfiguration";
+        return smsConfiguration;
     }
 
     // --------------------------------------------------------------------------
@@ -96,7 +91,7 @@ public class SmsConfigurationController
     // --------------------------------------------------------------------------
 
     @RequestMapping( method = RequestMethod.PUT )
-    public String putSmsConfig( @RequestBody SmsConfiguration smsConfiguration, Model model )
+    public @ResponseBody SmsConfiguration putSmsConfig( @RequestBody SmsConfiguration smsConfiguration, Model model )
         throws Exception
     {
         if ( smsConfiguration == null )
@@ -105,7 +100,8 @@ public class SmsConfigurationController
         }
 
         smsConfigurationManager.updateSmsConfiguration( smsConfiguration );
-        return getSmsConfiguration( model );
+
+        return getSmsConfiguration();
     }
 
     @ExceptionHandler

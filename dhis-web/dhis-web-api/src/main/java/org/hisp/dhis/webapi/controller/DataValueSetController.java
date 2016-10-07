@@ -100,20 +100,23 @@ public class DataValueSetController
 
     @RequestMapping( method = RequestMethod.GET, produces = CONTENT_TYPE_XML )
     public void getDataValueSetXml(
-        @RequestParam Set<String> dataSet,
+        @RequestParam( required = false ) Set<String> dataSet,
+        @RequestParam( required = false ) Set<String> dataElementGroup,
         @RequestParam( required = false ) Set<String> period,
         @RequestParam( required = false ) Date startDate,
         @RequestParam( required = false ) Date endDate,
         @RequestParam Set<String> orgUnit,
         @RequestParam( required = false ) boolean children,
+        @RequestParam( required = false ) boolean includeDeleted,
         @RequestParam( required = false ) Date lastUpdated,
+        @RequestParam( required = false ) String lastUpdatedDuration,
         @RequestParam( required = false ) Integer limit,
         IdSchemes idSchemes, HttpServletResponse response ) throws IOException
     {
         response.setContentType( CONTENT_TYPE_XML );
 
-        DataExportParams params = dataValueSetService.getFromUrl( dataSet, period,
-            startDate, endDate, orgUnit, children, lastUpdated, limit, idSchemes );
+        DataExportParams params = dataValueSetService.getFromUrl( dataSet, dataElementGroup,
+            period, startDate, endDate, orgUnit, children, includeDeleted, lastUpdated, lastUpdatedDuration, limit, idSchemes );
 
         dataValueSetService.writeDataValueSetXml( params, response.getOutputStream() );
     }
@@ -126,6 +129,7 @@ public class DataValueSetController
         @RequestParam( required = false ) Date endDate,
         @RequestParam Set<String> orgUnit,
         @RequestParam( required = false ) boolean children,
+        @RequestParam( required = false ) boolean includeDeleted,
         @RequestParam( required = false ) Date lastUpdated,
         @RequestParam( required = false ) Integer limit,
         IdSchemes idSchemes, HttpServletResponse response ) throws IOException, AdxException
@@ -133,48 +137,54 @@ public class DataValueSetController
         response.setContentType( CONTENT_TYPE_XML_ADX );
 
         DataExportParams params = adxDataService.getFromUrl( dataSet, period,
-            startDate, endDate, orgUnit, children, lastUpdated, limit, idSchemes );
+            startDate, endDate, orgUnit, children, includeDeleted, lastUpdated, limit, idSchemes );
 
         adxDataService.writeDataValueSet( params, response.getOutputStream() );
     }
 
     @RequestMapping( method = RequestMethod.GET, produces = CONTENT_TYPE_JSON )
     public void getDataValueSetJson(
-        @RequestParam Set<String> dataSet,
+        @RequestParam( required = false ) Set<String> dataSet,
+        @RequestParam( required = false ) Set<String> dataElementGroup,
         @RequestParam( required = false ) Set<String> period,
         @RequestParam( required = false ) Date startDate,
         @RequestParam( required = false ) Date endDate,
         @RequestParam Set<String> orgUnit,
         @RequestParam( required = false ) boolean children,
+        @RequestParam( required = false ) boolean includeDeleted,
         @RequestParam( required = false ) Date lastUpdated,
+        @RequestParam( required = false ) String lastUpdatedDuration,
         @RequestParam( required = false ) Integer limit,
         IdSchemes idSchemes, HttpServletResponse response ) throws IOException
     {
         response.setContentType( CONTENT_TYPE_JSON );
 
-        DataExportParams params = dataValueSetService.getFromUrl( dataSet, period,
-            startDate, endDate, orgUnit, children, lastUpdated, limit, idSchemes );
+        DataExportParams params = dataValueSetService.getFromUrl( dataSet, dataElementGroup,
+            period, startDate, endDate, orgUnit, children, includeDeleted, lastUpdated, lastUpdatedDuration, limit, idSchemes );
 
         dataValueSetService.writeDataValueSetJson( params, response.getOutputStream() );
     }
 
     @RequestMapping( method = RequestMethod.GET, produces = CONTENT_TYPE_CSV )
     public void getDataValueSetCsv(
-        @RequestParam Set<String> dataSet,
+        @RequestParam( required = false ) Set<String> dataSet,
+        @RequestParam( required = false ) Set<String> dataElementGroup,
         @RequestParam( required = false ) Set<String> period,
         @RequestParam( required = false ) Date startDate,
         @RequestParam( required = false ) Date endDate,
         @RequestParam Set<String> orgUnit,
         @RequestParam( required = false ) boolean children,
+        @RequestParam( required = false ) boolean includeDeleted,
         @RequestParam( required = false ) Date lastUpdated,
+        @RequestParam( required = false ) String lastUpdatedDuration,
         @RequestParam( required = false ) Integer limit,
         IdSchemes idSchemes,
         HttpServletResponse response ) throws IOException
     {
         response.setContentType( CONTENT_TYPE_CSV );
 
-        DataExportParams params = dataValueSetService.getFromUrl( dataSet, period,
-            startDate, endDate, orgUnit, children, lastUpdated, limit, idSchemes );
+        DataExportParams params = dataValueSetService.getFromUrl( dataSet, dataElementGroup,
+            period, startDate, endDate, orgUnit, children, includeDeleted, lastUpdated, lastUpdatedDuration, limit, idSchemes );
 
         dataValueSetService.writeDataValueSetCsv( params, response.getWriter() );
     }

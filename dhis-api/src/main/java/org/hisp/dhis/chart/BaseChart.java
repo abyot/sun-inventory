@@ -30,7 +30,6 @@ package org.hisp.dhis.chart;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -44,9 +43,7 @@ import org.hisp.dhis.common.Grid;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
+import org.hisp.dhis.common.RegressionType;
 import org.hisp.dhis.i18n.I18nFormat;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.Period;
@@ -72,13 +69,11 @@ public abstract class BaseChart
 
     protected boolean hideLegend;
 
-    protected boolean regression;
-
     protected boolean hideTitle;
 
     protected boolean hideSubtitle;
 
-    protected String title;
+    protected RegressionType regressionType;
 
     protected Double targetLineValue;
 
@@ -99,7 +94,7 @@ public abstract class BaseChart
     protected Integer rangeAxisSteps; // Minimum 1
 
     protected Integer rangeAxisDecimals;
-
+    
     // -------------------------------------------------------------------------
     // Dimensional properties
     // -------------------------------------------------------------------------
@@ -114,7 +109,7 @@ public abstract class BaseChart
 
     protected transient List<Period> relativePeriods = new ArrayList<>();
 
-    protected transient User user;
+    protected transient User relativeUser;
 
     protected transient List<OrganisationUnit> organisationUnitsAtLevel = new ArrayList<>();
 
@@ -131,6 +126,8 @@ public abstract class BaseChart
     public abstract List<DimensionalItemObject> category();
 
     public abstract AnalyticsType getAnalyticsType();
+
+    protected abstract void clearTransientChartStateProperties();
 
     // -------------------------------------------------------------------------
     // Logic
@@ -157,7 +154,7 @@ public abstract class BaseChart
 
         for ( String filter : filterDimensions )
         {
-            DimensionalObject object = getDimensionalObject( filter, relativePeriodDate, user, true,
+            DimensionalObject object = getDimensionalObject( filter, relativePeriodDate, relativeUser, true,
                 organisationUnitsAtLevel, organisationUnitsInGroups, format );
 
             if ( object != null )
@@ -185,15 +182,28 @@ public abstract class BaseChart
         return getAnalyticsType().equals( type );
     }
 
-    public boolean hasTitle()
-    {
-        return title != null && !title.isEmpty();
-    }
-
     @Override
     public boolean haveUniqueNames()
     {
         return false;
+    }
+
+    @Override
+    protected void clearTransientStateProperties()
+    {
+        format = null;
+        relativePeriods = new ArrayList<>();
+        relativeUser = null;
+        organisationUnitsAtLevel = new ArrayList<>();
+        organisationUnitsInGroups = new ArrayList<>();
+        dataItemGrid = null;
+
+        clearTransientChartStateProperties();
+    }
+    
+    public boolean isRegression()
+    {
+        return regressionType == null || RegressionType.NONE != regressionType;
     }
 
     // -------------------------------------------------------------------------
@@ -241,7 +251,6 @@ public abstract class BaseChart
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDomainAxisLabel()
     {
@@ -254,7 +263,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getRangeAxisLabel()
     {
@@ -267,7 +275,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ChartType getType()
     {
@@ -280,7 +287,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isHideLegend()
     {
@@ -293,20 +299,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public boolean isRegression()
-    {
-        return regression;
-    }
-
-    public void setRegression( boolean regression )
-    {
-        this.regression = regression;
-    }
-
-    @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isHideTitle()
     {
@@ -319,7 +311,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isHideSubtitle()
     {
@@ -332,20 +323,18 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public String getTitle()
+    public RegressionType getRegressionType()
     {
-        return this.title;
+        return regressionType;
     }
 
-    public void setTitle( String title )
+    public void setRegressionType( RegressionType regressionType )
     {
-        this.title = title;
+        this.regressionType = regressionType;
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Double getTargetLineValue()
     {
@@ -358,7 +347,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getTargetLineLabel()
     {
@@ -371,7 +359,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Double getBaseLineValue()
     {
@@ -384,7 +371,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getBaseLineLabel()
     {
@@ -397,7 +383,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isShowData()
     {
@@ -410,7 +395,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isHideEmptyRows()
     {
@@ -423,7 +407,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Double getRangeAxisMaxValue()
     {
@@ -436,7 +419,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Double getRangeAxisMinValue()
     {
@@ -449,7 +431,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getRangeAxisSteps()
     {
@@ -462,7 +443,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getRangeAxisDecimals()
     {
@@ -475,7 +455,6 @@ public abstract class BaseChart
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "filterDimensions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "filterDimension", namespace = DxfNamespaces.DXF_2_0 )
     public List<String> getFilterDimensions()
@@ -502,7 +481,6 @@ public abstract class BaseChart
             BaseChart chart = (BaseChart) other;
 
             hideLegend = chart.isHideLegend();
-            regression = chart.isRegression();
             hideTitle = chart.isHideTitle();
             hideSubtitle = chart.isHideSubtitle();
             showData = chart.isShowData();
@@ -513,7 +491,7 @@ public abstract class BaseChart
                 domainAxisLabel = chart.getDomainAxisLabel();
                 rangeAxisLabel = chart.getRangeAxisLabel();
                 type = chart.getType();
-                title = chart.getTitle();
+                regressionType = chart.getRegressionType();
                 targetLineValue = chart.getTargetLineValue();
                 targetLineLabel = chart.getTargetLineLabel();
                 baseLineValue = chart.getBaseLineValue();
@@ -528,7 +506,7 @@ public abstract class BaseChart
                 domainAxisLabel = chart.getDomainAxisLabel() == null ? domainAxisLabel : chart.getDomainAxisLabel();
                 rangeAxisLabel = chart.getRangeAxisLabel() == null ? rangeAxisLabel : chart.getRangeAxisLabel();
                 type = chart.getType() == null ? type : chart.getType();
-                title = chart.getTitle() == null ? title : chart.getTitle();
+                regressionType = chart.getRegressionType() == null ? regressionType : chart.getRegressionType();
                 targetLineValue = chart.getTargetLineValue() == null ? targetLineValue : chart.getTargetLineValue();
                 targetLineLabel = chart.getTargetLineLabel() == null ? targetLineLabel : chart.getTargetLineLabel();
                 baseLineValue = chart.getBaseLineValue() == null ? baseLineValue : chart.getBaseLineValue();

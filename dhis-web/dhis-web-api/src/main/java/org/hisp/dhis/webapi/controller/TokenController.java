@@ -28,8 +28,8 @@ package org.hisp.dhis.webapi.controller;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.external.conf.DhisConfigurationProvider;
 import org.hisp.dhis.external.conf.GoogleAccessToken;
@@ -62,7 +62,7 @@ public class TokenController
 
     private static final String TOKEN_CACHE_KEY = "keyGoogleAccessToken";
 
-    private static final Cache<String, Optional<GoogleAccessToken>> TOKEN_CACHE = CacheBuilder.newBuilder().
+    private static final Cache<String, Optional<GoogleAccessToken>> TOKEN_CACHE = Caffeine.newBuilder().
         maximumSize( 1 ).expireAfterWrite( 10, TimeUnit.MINUTES ).build();
 
     @Autowired
@@ -74,7 +74,7 @@ public class TokenController
     {
         ContextUtils.setCacheControl( response, CacheControl.noStore() );
 
-        Optional<GoogleAccessToken> tokenOptional = TOKEN_CACHE.get( TOKEN_CACHE_KEY, () -> config.getGoogleAccessToken() );
+        Optional<GoogleAccessToken> tokenOptional = TOKEN_CACHE.get( TOKEN_CACHE_KEY, c -> config.getGoogleAccessToken() );
 
         if ( !tokenOptional.isPresent() )
         {
@@ -82,7 +82,7 @@ public class TokenController
         }
 
         GoogleAccessToken token = tokenOptional.get();
-        
+
         token.setExpiresInSeconds( ChronoUnit.SECONDS.between( LocalDateTime.now(), token.getExpiresOn() ) );
 
         return token;

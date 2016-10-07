@@ -37,7 +37,7 @@ import java.util.Properties;
 
 /**
  * Interface which provides access to the DHIS 2 configuration specified through
- * the dhis.config or hibernate.properties file.
+ * the dhis.config file.
  * 
  * @author Lars Helge Overland
  */
@@ -105,9 +105,16 @@ public interface DhisConfigurationProvider
     /**
      * Indicates whether the system is set to read-only mode.
      * 
-     * @return the if the system is in read-only mode.
+     * @return true if the system is in read-only mode.
      */
     public boolean isReadOnlyMode();
+    
+    /**
+     * Indicates whether clustering is enabled.
+     * 
+     * @return true if clustering is enabled.
+     */
+    boolean isClusterEnabled();
     
     /**
      * Indicates whether LDAP authentication is configured.
@@ -117,9 +124,9 @@ public interface DhisConfigurationProvider
     boolean isLdapConfigured();
 
     /**
-     * Indicates whether encryption is correctly configured and available in the system.
+     * Returns the status of the encryption setup.
      *
-     * @return EncryptionStatus reflecting the status of encryption in the system
+     * @return the EncryptionStatus.
      */
-    EncryptionStatus isEncryptionConfigured();
+    EncryptionStatus getEncryptionStatus();
 }

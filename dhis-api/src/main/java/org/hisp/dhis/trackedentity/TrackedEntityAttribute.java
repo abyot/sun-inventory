@@ -2,7 +2,6 @@ package org.hisp.dhis.trackedentity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -13,8 +12,6 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.ValueType;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.option.Option;
 import org.hisp.dhis.option.OptionSet;
 import org.hisp.dhis.schema.annotation.PropertyRange;
@@ -78,10 +75,10 @@ public class TrackedEntityAttribute
 
     private Boolean confidential = false;
 
-    private Boolean unique = false;    
-    
+    private Boolean unique = false;
+
     private Boolean generated = false;
-    
+
     private String pattern;
 
     // For Local ID type
@@ -89,7 +86,7 @@ public class TrackedEntityAttribute
     private Boolean orgunitScope = false;
 
     private Boolean programScope = false;
-    
+
     private TrackedEntityAttributeSearchScope searchScope;
 
     // -------------------------------------------------------------------------
@@ -179,7 +176,7 @@ public class TrackedEntityAttribute
     // -------------------------------------------------------------------------
 
     //TODO dimension, not item
-    
+
     @Override
     public DimensionItemType getDimensionItemType()
     {
@@ -191,7 +188,6 @@ public class TrackedEntityAttribute
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     public boolean isOptionSetValue()
     {
         return optionSet != null;
@@ -202,7 +198,6 @@ public class TrackedEntityAttribute
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getInherit()
     {
@@ -216,7 +211,6 @@ public class TrackedEntityAttribute
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getDescription()
@@ -231,7 +225,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ValueType getValueType()
     {
@@ -244,7 +237,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty( "trackedEntityAttributeGroup" )
-    @JsonView( { DetailedView.class } )
     @JsonSerialize( as = BaseIdentifiableObject.class )
     @JacksonXmlProperty( localName = "trackedEntityAttributeGroup", namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntityAttributeGroup getAttributeGroup()
@@ -258,7 +250,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getExpression()
     {
@@ -271,7 +262,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getDisplayOnVisitSchedule()
     {
@@ -284,7 +274,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getSortOrderInVisitSchedule()
     {
@@ -297,7 +286,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getDisplayInListNoProgram()
     {
@@ -310,7 +298,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getSortOrderInListNoProgram()
     {
@@ -323,7 +310,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean isUnique()
     {
@@ -334,9 +320,8 @@ public class TrackedEntityAttribute
     {
         this.unique = unique;
     }
-    
+
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean isGenerated()
     {
@@ -347,9 +332,8 @@ public class TrackedEntityAttribute
     {
         this.generated = generated;
     }
-    
+
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getPattern()
     {
@@ -362,7 +346,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getOrgunitScope()
     {
@@ -375,7 +358,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getProgramScope()
     {
@@ -389,7 +371,6 @@ public class TrackedEntityAttribute
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public OptionSet getOptionSet()
     {
@@ -403,7 +384,6 @@ public class TrackedEntityAttribute
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntity getTrackedEntity()
     {
@@ -416,7 +396,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getConfidential()
     {
@@ -429,7 +408,6 @@ public class TrackedEntityAttribute
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntityAttributeSearchScope getSearchScope()
     {
@@ -439,8 +417,8 @@ public class TrackedEntityAttribute
     public void setSearchScope( TrackedEntityAttributeSearchScope searchScope )
     {
         this.searchScope = searchScope;
-    }    
-    
+    }
+
     @Override
     public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
     {
@@ -480,7 +458,7 @@ public class TrackedEntityAttribute
                 sortOrderInVisitSchedule = trackedEntityAttribute.getSortOrderInVisitSchedule() == null ? sortOrderInVisitSchedule : trackedEntityAttribute.getSortOrderInVisitSchedule();
                 displayInListNoProgram = trackedEntityAttribute.getDisplayInListNoProgram() == null ? displayInListNoProgram : trackedEntityAttribute.getDisplayInListNoProgram();
                 sortOrderInListNoProgram = trackedEntityAttribute.getSortOrderInListNoProgram() == null ? sortOrderInListNoProgram : trackedEntityAttribute.getSortOrderInListNoProgram();
-                unique = trackedEntityAttribute.isUnique() == null ? unique : trackedEntityAttribute.isUnique(); 
+                unique = trackedEntityAttribute.isUnique() == null ? unique : trackedEntityAttribute.isUnique();
                 generated = trackedEntityAttribute.isGenerated() == null ? generated : trackedEntityAttribute.isGenerated();
                 pattern = trackedEntityAttribute.getPattern() == null ? pattern : trackedEntityAttribute.getPattern();
                 orgunitScope = trackedEntityAttribute.getOrgunitScope() == null ? orgunitScope : trackedEntityAttribute.getOrgunitScope();

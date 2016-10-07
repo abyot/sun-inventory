@@ -28,13 +28,10 @@ package org.hisp.dhis.trackedentity;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
+import org.hisp.dhis.common.GenericIdentifiableObjectStore;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import org.hisp.dhis.common.GenericIdentifiableObjectStore;
-import org.hisp.dhis.i18n.I18nService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Chau Thu Tran
@@ -52,13 +49,6 @@ public class DefaultTrackedEntityAttributeGroupService
     public void setAttributeGroupStore( GenericIdentifiableObjectStore<TrackedEntityAttributeGroup> attributeGroupStore )
     {
         this.attributeGroupStore = attributeGroupStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     // -------------------------------------------------------------------------
@@ -86,49 +76,24 @@ public class DefaultTrackedEntityAttributeGroupService
     @Override
     public TrackedEntityAttributeGroup getTrackedEntityAttributeGroup( int id )
     {
-        return i18n( i18nService, attributeGroupStore.get( id ) );
+        return attributeGroupStore.get( id );
     }
 
     @Override
     public TrackedEntityAttributeGroup getTrackedEntityAttributeGroup( String uid )
     {
-        return i18n( i18nService, attributeGroupStore.getByUid( uid ) );
+        return attributeGroupStore.getByUid( uid );
     }
 
     @Override
     public TrackedEntityAttributeGroup getTrackedEntityAttributeGroupByName( String name )
     {
-        return i18n( i18nService, attributeGroupStore.getByName( name ) );
+        return attributeGroupStore.getByName( name );
     }
 
     @Override
     public List<TrackedEntityAttributeGroup> getAllTrackedEntityAttributeGroups()
     {
-        return i18n( i18nService, attributeGroupStore.getAll() );
+        return attributeGroupStore.getAll();
     }
-
-    @Override
-    public Integer getTrackedEntityAttributeGroupCountByName( String name )
-    {
-        return attributeGroupStore.getCountLikeName( name );
-    }
-
-    @Override
-    public List<TrackedEntityAttributeGroup> getTrackedEntityAttributeGroupsBetweenByName( String name, int min, int max )
-    {
-        return attributeGroupStore.getAllLikeName( name, min, max );
-    }
-
-    @Override
-    public Integer getTrackedEntityAttributeGroupCount()
-    {
-        return attributeGroupStore.getCount();
-    }
-
-    @Override
-    public List<TrackedEntityAttributeGroup> getTrackedEntityAttributeGroupsBetween( int min, int max )
-    {
-        return attributeGroupStore.getAllOrderedName( min, max );
-    }
-
 }

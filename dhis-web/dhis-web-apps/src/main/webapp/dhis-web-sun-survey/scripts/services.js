@@ -178,10 +178,15 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                         });
                     }*/
                     
-                    angular.forEach(dataSets, function(ds){                        
-                        angular.forEach(ds.dataElements, function(de){
-                            de = dhis2.metadata.processMetaDataAttribute( de );
-                        });                        
+                    angular.forEach(dataSets, function(ds){
+                        var dataElements = [];
+                        angular.forEach(ds.dataSetElements, function(dse){
+                            if( dse.dataElement ){
+                                dataElements.push( dhis2.metadata.processMetaDataAttribute( dse.dataElement ) );
+                            }                            
+                        });
+                        ds.dataElements = dataElements;
+                        delete ds.dataSetElements;
                     });
                     
                     $rootScope.$apply(function(){
@@ -206,10 +211,15 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                         }
                     });
                     
-                    angular.forEach(dataSets, function(ds){                        
-                        angular.forEach(ds.dataElements, function(de){
-                            de = dhis2.metadata.processMetaDataAttribute( de );
-                        });                        
+                    angular.forEach(dataSets, function(ds){
+                        var dataElements = [];
+                        angular.forEach(ds.dataSetElements, function(dse){
+                            if( dse.dataElement ){
+                                dataElements.push( dhis2.metadata.processMetaDataAttribute( dse.dataElement ) );
+                            }                            
+                        });
+                        ds.dataElements = dataElements;
+                        delete ds.dataSetElements;
                     });
                     
                     $rootScope.$apply(function(){

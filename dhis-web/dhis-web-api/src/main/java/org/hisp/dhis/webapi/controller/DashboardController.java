@@ -34,8 +34,6 @@ import org.hisp.dhis.dashboard.DashboardItem;
 import org.hisp.dhis.dashboard.DashboardItemType;
 import org.hisp.dhis.dashboard.DashboardSearchResult;
 import org.hisp.dhis.dashboard.DashboardService;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.common.TranslateParams;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.hibernate.exception.DeleteAccessDeniedException;
 import org.hisp.dhis.hibernate.exception.UpdateAccessDeniedException;
@@ -44,17 +42,18 @@ import org.hisp.dhis.schema.descriptors.DashboardSchemaDescriptor;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.hisp.dhis.webapi.webdomain.WebOptions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,20 +76,20 @@ public class DashboardController
     // -------------------------------------------------------------------------
 
     @RequestMapping( value = "/q/{query}", method = RequestMethod.GET )
-    public String search( @PathVariable String query, @RequestParam( required = false ) Set<DashboardItemType> max,
-        Model model, HttpServletResponse response ) throws Exception
+    public @ResponseBody DashboardSearchResult search( @PathVariable String query, @RequestParam( required = false ) Set<DashboardItemType> max )
+        throws Exception
     {
-        DashboardSearchResult result = dashboardService.search( query, max );
-        model.addAttribute( "model", result );
+        DashboardSearchResult dashboardSearchResult = dashboardService.search( query, max );
 
-        return "dashboardSearchResult";
+        return dashboardSearchResult;
     }
 
     @Override
     @RequestMapping( method = RequestMethod.POST, consumes = "application/json" )
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void postJsonObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         Dashboard dashboard = renderService.fromJson( request.getInputStream(), Dashboard.class );
+        dashboard.getTranslations().clear();
 
         dashboardService.mergeDashboard( dashboard );
         dashboardService.saveDashboard( dashboard );
@@ -101,7 +100,7 @@ public class DashboardController
 
     @Override
     @RequestMapping( value = "/{uid}", method = RequestMethod.PUT, consumes = "application/json" )
-    public void putJsonObjectLegacy( ImportOptions importOptions, @PathVariable( "uid" ) String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void putJsonObject( @PathVariable( "uid" ) String uid, HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         Dashboard dashboard = dashboardService.getDashboard( uid );
 
@@ -116,7 +115,6 @@ public class DashboardController
         }
 
         Dashboard newDashboard = renderService.fromJson( request.getInputStream(), Dashboard.class );
-
         dashboard.setName( newDashboard.getName() ); // TODO Name only for now
 
         dashboardService.updateDashboard( dashboard );
@@ -124,6 +122,7 @@ public class DashboardController
 
     @Override
     @RequestMapping( value = "/{uid}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void deleteObject( @PathVariable( "uid" ) String uid, HttpServletRequest request, HttpServletResponse response )
         throws Exception
     {
@@ -181,7 +180,7 @@ public class DashboardController
 
         if ( dashboard == null )
         {
-            throw new WebMessageException( WebMessageUtils.notFound( "Dashboard does not exist: " + dashboardUid) );
+            throw new WebMessageException( WebMessageUtils.notFound( "Dashboard does not exist: " + dashboardUid ) );
         }
 
         if ( !aclService.canUpdate( currentUserService.getCurrentUser(), dashboard ) )
@@ -299,7 +298,7 @@ public class DashboardController
     // -------------------------------------------------------------------------
 
     @Override
-    protected void postProcessEntity( Dashboard entity, WebOptions options, Map<String, String> parameters, TranslateParams translateParams ) throws Exception
+    protected void postProcessEntity( Dashboard entity, WebOptions options, Map<String, String> parameters ) throws Exception
     {
         for ( DashboardItem item : entity.getItems() )
         {

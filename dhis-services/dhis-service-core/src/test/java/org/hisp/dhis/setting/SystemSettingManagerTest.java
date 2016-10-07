@@ -125,17 +125,20 @@ public class SystemSettingManagerTest
     @Test
     public void testGetSystemSettingsAsMap()
     {
-        systemSettingManager.saveSystemSetting( "settingA", "valueA" );
-        systemSettingManager.saveSystemSetting( "settingB", "valueB" );
-        systemSettingManager.saveSystemSetting( "settingC", "valueC" );
+        systemSettingManager.saveSystemSetting( SettingKey.APP_STORE_URL, "valueA" );
+        systemSettingManager.saveSystemSetting( SettingKey.APPLICATION_TITLE, "valueB" );
+        systemSettingManager.saveSystemSetting( SettingKey.APPLICATION_NOTIFICATION, "valueC" );
 
         Map<String, Serializable> settingsMap = systemSettingManager.getSystemSettingsAsMap();
 
-        assertTrue( settingsMap.containsKey( "settingA" ) );
-        assertTrue( settingsMap.containsKey( "settingB" ) );
-        assertTrue( settingsMap.containsKey( "settingC" ) );
-        assertEquals( "valueA", settingsMap.get( "settingA" ) );
-        assertEquals( "valueB", settingsMap.get( "settingB" ) );
-        assertEquals( "valueC", settingsMap.get( "settingC" ) );
+        assertTrue( settingsMap.containsKey( SettingKey.APP_STORE_URL.getName() ) );
+        assertTrue( settingsMap.containsKey( SettingKey.APPLICATION_TITLE.getName() ) );
+        assertTrue( settingsMap.containsKey( SettingKey.APPLICATION_NOTIFICATION.getName() ) );
+        
+        assertEquals( "valueA", settingsMap.get( SettingKey.APP_STORE_URL.getName() ) );
+        assertEquals( "valueB", settingsMap.get( SettingKey.APPLICATION_TITLE.getName() ) );
+        assertEquals( "valueC", settingsMap.get( SettingKey.APPLICATION_NOTIFICATION.getName() ) );
+        assertEquals( SettingKey.CACHE_STRATEGY.getDefaultValue(), settingsMap.get( SettingKey.CACHE_STRATEGY.getName() ) );
+        assertEquals( SettingKey.CREDENTIALS_EXPIRES.getDefaultValue(), settingsMap.get( SettingKey.CREDENTIALS_EXPIRES.getName() ) );
     }
 }

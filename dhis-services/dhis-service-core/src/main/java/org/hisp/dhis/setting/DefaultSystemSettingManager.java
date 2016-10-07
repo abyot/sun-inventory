@@ -28,8 +28,8 @@ package org.hisp.dhis.setting;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -47,7 +47,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -65,7 +64,7 @@ public class DefaultSystemSettingManager
     /**
      * Cache for system settings. Does not accept nulls. Disabled during test phase.
      */
-    private static final Cache<String, Optional<Serializable>> SETTING_CACHE = CacheBuilder.newBuilder()
+    private static final Cache<String, Optional<Serializable>> SETTING_CACHE = Caffeine.newBuilder()
         .expireAfterAccess( 1, TimeUnit.HOURS )
         .initialCapacity( 200 )
         .maximumSize( SystemUtils.isTestRun() ? 0 : 400 )
@@ -183,17 +182,10 @@ public class DefaultSystemSettingManager
     @Override
     public Serializable getSystemSetting( SettingKey setting )
     {
-        try
-        {
-            Optional<Serializable> value = SETTING_CACHE.get( setting.getName(),
-                () -> getSystemSettingOptional( setting.getName(), setting.getDefaultValue() ) );
+        Optional<Serializable> value = SETTING_CACHE.get( setting.getName(),
+            c -> getSystemSettingOptional( setting.getName(), setting.getDefaultValue() ) );
 
-            return value.orElse( null );
-        }
-        catch ( ExecutionException ignored )
-        {
-            return null;
-        }
+        return value.orElse( null );
     }
 
     /**
@@ -262,7 +254,15 @@ public class DefaultSystemSettingManager
     @Transactional
     public Map<String, Serializable> getSystemSettingsAsMap()
     {
-        Map<String, Serializable> settingsMap = new HashMap<>();
+        final Map<String, Serializable> settingsMap = new HashMap<>();
+        
+        for ( SettingKey key : SettingKey.values() )
+        {
+            if ( key.hasDefaultValue() )
+            {
+                settingsMap.put( key.getName(), key.getDefaultValue() );
+            }
+        }
 
         Collection<SystemSetting> systemSettings = getAllSystemSettings();
 

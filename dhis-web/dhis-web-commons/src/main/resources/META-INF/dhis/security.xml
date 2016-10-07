@@ -116,6 +116,7 @@
     <sec:intercept-url pattern="/api/account/password" access="permitAll()" />
     <sec:intercept-url pattern="/api/account" access="permitAll()" />
     <sec:intercept-url pattern="/api/staticContent/*" method="GET" access="permitAll()"/>
+    <sec:intercept-url pattern="/api/externalFileResources/*" method="GET" access="permitAll()"/>
     <sec:intercept-url pattern="/**" access="isAuthenticated()" />
     <sec:custom-filter ref="resourceServerFilter" before="PRE_AUTH_FILTER" />
     <sec:custom-filter ref="automaticAccessFilter" before="LOGOUT_FILTER" />
@@ -350,6 +351,7 @@
       <set>
         <value>ALL</value>
         <value>F_DASHBOARD_PUBLIC_ADD</value>
+        <value>F_METADATA_MANAGE</value>
         <value>F_CHART_PUBLIC_ADD</value>
         <value>F_MAP_PUBLIC_ADD</value>
         <value>F_USERGROUP_PUBLIC_ADD</value>
@@ -418,7 +420,6 @@
         <value>F_CATEGORY_OPTION_GROUP_SET_PUBLIC_ADD</value>
         <value>F_CATEGORY_OPTION_GROUP_SET_PRIVATE_ADD</value>
         <value>F_CATEGORY_OPTION_GROUP_SET_DELETE</value>
-        <value>F_MANAGE_TICKETS</value>
         <value>F_ORGANISATIONUNIT_ADD</value>
         <value>F_ORGANISATIONUNIT_DELETE</value>
         <value>F_ORGUNITGROUP_PUBLIC_ADD</value>
@@ -429,6 +430,27 @@
         <value>F_ORGUNITGROUPSET_DELETE</value>
         <value>F_ORGANISATIONUNITLEVEL_UPDATE</value>
         <value>F_ORGANISATIONUNIT_MOVE</value>
+        <value>F_PREDICTOR_ADD</value>
+        <value>F_PREDICTOR_DELETE</value>
+        <value>F_CONSTANT_ADD</value>
+        <value>F_CONSTANT_DELETE</value>
+        <value>F_ATTRIBUTE_ADD</value>
+        <value>F_ATTRIBUTE_DELETE</value>
+        <value>F_OPTIONSET_PUBLIC_ADD</value>
+        <value>F_OPTIONSET_PRIVATE_ADD</value>
+        <value>F_OPTIONSET_DELETE</value>
+        <value>F_OPTIONGROUP_PUBLIC_ADD</value>
+        <value>F_OPTIONGROUP_PRIVATE_ADD</value>
+        <value>F_OPTIONGROUP_DELETE</value>
+        <value>F_OPTIONGROUPSET_PUBLIC_ADD</value>
+        <value>F_OPTIONGROUPSET_PRIVATE_ADD</value>
+        <value>F_OPTIONGROUPSET_DELETE</value>
+        <value>F_PUSHANALYSIS_ADD</value>
+        <value>F_PUSHANALYSIS_DELETE</value>
+        <value>F_EXTERNALMAPLAYER_PRIVATE_ADD</value>
+        <value>F_EXTERNALMAPLAYER_PUBLIC_ADD</value>
+        <value>F_EXTERNALMAPLAYER_DELETE</value>
+
       </set>
     </property>
   </bean>

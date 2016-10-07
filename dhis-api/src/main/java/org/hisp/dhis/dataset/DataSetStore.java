@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hisp.dhis.common.GenericNameableObjectStore;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.PeriodType;
 
@@ -64,4 +65,11 @@ public interface DataSetStore
     List<DataSet> getDataSetsForMobile();
 
     List<DataSet> getDataSetsBySources( Collection<OrganisationUnit> sources );
+
+    /**
+     * Gets all DataSets associated with the given DataEntryForm.
+     * @param dataEntryForm the DataEntryForm.
+     * @return a list of DataSets.
+     */
+    List<DataSet> getDataSetsByDataEntryForm( DataEntryForm dataEntryForm );
 }

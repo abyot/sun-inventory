@@ -6,6 +6,8 @@
 <hibernate-mapping>
   <class name="org.hisp.dhis.relationship.Relationship" table="relationship">
 
+    <cache usage="read-write" />
+    
     <id name="id" column="relationshipid">
       <generator class="native" />
     </id>

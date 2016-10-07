@@ -85,15 +85,6 @@ public interface DataElementCategoryService
     /**
      * Returns a DataElementCategory.
      *
-     * @param id                  the id of the DataElementCategory to return.
-     * @param i18nCategoryOptions whether to translate category options.
-     * @return the DataElementCategory with the given id, or null if no match.
-     */
-    DataElementCategory getDataElementCategory( int id, boolean i18nCategoryOptions );
-
-    /**
-     * Returns a DataElementCategory.
-     *
      * @param uid the uid of the DataElementCategory to return.
      * @return the DataElementCategory with the given uid, or null if no match.
      */
@@ -442,20 +433,6 @@ public interface DataElementCategoryService
     List<DataElementCategoryOptionCombo> getAllDataElementCategoryOptionCombos();
 
     /**
-     * Returns {@link DataElementCategoryOptionCombo} list with paging
-     *
-     * @param min First result
-     * @param max Maximum results
-     * @return a list of all category-option-combo
-     */
-    List<DataElementCategoryOptionCombo> getOptionCombosBetween( int min, int max );
-
-    /**
-     * Returns The number of all DataElementCategoryOptionCombo available
-     */
-    Integer getOptionComboCount();
-
-    /**
      * Generates and persists a default DataElementCategory,
      * DataElementCategoryOption, DataElementCategoryCombo and
      * DataElementCategoryOptionCombo.
@@ -494,11 +471,13 @@ public interface DataElementCategoryService
      */
     void updateOptionCombos( DataElementCategoryCombo categoryCombo );
 
+    void addAndPruneOptionCombos( DataElementCategoryCombo categoryCombo );
+
     /**
      * Generates the complete set of category option combos for all category
      * combos.
      */
-    void updateAllOptionCombos();
+    void addAndPruneAllOptionCombos();
 
     /**
      * Returns the category option combo with the given uid. Respects access control
@@ -510,54 +489,13 @@ public interface DataElementCategoryService
      */
     DataElementCategoryOptionCombo getDataElementCategoryOptionComboAcl( IdentifiableProperty property, String id );
 
-    List<DataElementCategory> getDataElementCategoriesBetween( int first, int max );
-
-    List<DataElementCategory> getDataElementCategoriesBetweenByName( String name, int first, int max );
-
     Map<String, Integer> getDataElementCategoryOptionComboUidIdMap();
 
-    int getDataElementCategoryCount();
-
-    int getDataElementCategoryCountByName( String name );
-
-    List<DataElementCategory> getDataElementCategoryBetween( int first, int max );
-
-    List<DataElementCategory> getDataElementCategoryBetweenByName( String name, int first, int max );
-
-    int getDataElementCategoryOptionCount();
-
-    int getDataElementCategoryOptionCountByName( String name );
-
-    List<DataElementCategoryOption> getDataElementCategoryOptionsBetween( int first, int max );
-
-    List<DataElementCategoryOption> getDataElementCategoryOptionsBetweenByName( String name, int first, int max );
-
-    int getDataElementCategoryOptionComboCount();
-
-    int getDataElementCategoryOptionComboCountByName( String name );
-
-    int getDataElementCategoryComboCount();
-
-    int getDataElementCategoryComboCountByName( String name );
-
-    List<DataElementCategoryCombo> getDataElementCategoryCombosBetween( int first, int max );
-
-    List<DataElementCategoryCombo> getDataElementCategoryCombosBetweenByName( String name, int first, int max );
-
     void updateCategoryOptionComboNames();
-    
+
     // -------------------------------------------------------------------------
     // DataElementOperand
     // -------------------------------------------------------------------------
-
-    /**
-     * Populates all transient properties on each Operand in the given
-     * collection.
-     *
-     * @param operands the collection of Operands.
-     * @return a set of Operands.
-     */
-    List<DataElementOperand> populateOperands( List<DataElementOperand> operands );
 
     /**
      * Gets the Operands for the given Collection of DataElements.
@@ -593,23 +531,9 @@ public interface DataElementCategoryService
 
     void deleteCategoryOptionGroup( CategoryOptionGroup group );
 
-    List<CategoryOptionGroup> getCategoryOptionGroupsBetween( int first, int max );
-
-    List<CategoryOptionGroup> getCategoryOptionGroupsBetweenByName( int first, int max, String name );
-
     List<CategoryOptionGroup> getAllCategoryOptionGroups();
 
     List<CategoryOptionGroup> getCategoryOptionGroups( CategoryOptionGroupSet groupSet );
-
-    CategoryOptionGroup getCategoryOptionGroupByName( String name );
-
-    CategoryOptionGroup getCategoryOptionGroupByCode( String code );
-
-    CategoryOptionGroup getCategoryOptionGroupByShortName( String shortName );
-
-    int getCategoryOptionGroupCount();
-
-    int getCategoryOptionGroupCountByName( String name );
 
     /**
      * Returns a set of CategoryOptionGroups that may be seen by the current
@@ -636,21 +560,11 @@ public interface DataElementCategoryService
 
     void deleteCategoryOptionGroupSet( CategoryOptionGroupSet group );
 
-    List<CategoryOptionGroupSet> getCategoryOptionGroupSetsBetween( int first, int max );
-
-    List<CategoryOptionGroupSet> getCategoryOptionGroupSetsBetweenByName( int first, int max, String name );
-
     List<CategoryOptionGroupSet> getAllCategoryOptionGroupSets();
 
     List<CategoryOptionGroupSet> getDisaggregationCategoryOptionGroupSetsNoAcl();
 
     List<CategoryOptionGroupSet> getAttributeCategoryOptionGroupSetsNoAcl();
-
-    CategoryOptionGroupSet getCategoryOptionGroupSetByName( String name );
-
-    int getCategoryOptionGroupSetCount();
-
-    int getCategoryOptionGroupSetCountByName( String name );
 
     DataElementCategoryOption getDefaultDataElementCategoryOption();
 

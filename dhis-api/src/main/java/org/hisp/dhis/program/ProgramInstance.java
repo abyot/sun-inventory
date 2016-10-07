@@ -29,20 +29,15 @@ package org.hisp.dhis.program;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.event.EventStatus;
 import org.hisp.dhis.message.MessageConversation;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
-import org.hisp.dhis.sms.outbound.OutboundSms;
 import org.hisp.dhis.trackedentity.TrackedEntityInstance;
 import org.hisp.dhis.trackedentitycomment.TrackedEntityComment;
 import org.springframework.util.Assert;
@@ -76,16 +71,17 @@ public class ProgramInstance
 
     private Set<ProgramStageInstance> programStageInstances = new HashSet<>();
 
-    @Deprecated
-    private List<OutboundSms> outboundSms = new ArrayList<>();
-
     private List<MessageConversation> messageConversations = new ArrayList<>();
 
     private Boolean followup = false;
 
     private List<TrackedEntityComment> comments = new ArrayList<>();
-    
+
     private String completedBy;
+    
+    private Double longitude;
+
+    private Double latitude;
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -261,7 +257,6 @@ public class ProgramInstance
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public OrganisationUnit getOrganisationUnit()
     {
@@ -360,16 +355,6 @@ public class ProgramInstance
         this.programStageInstances = programStageInstances;
     }
 
-    public List<OutboundSms> getOutboundSms()
-    {
-        return outboundSms;
-    }
-
-    public void setOutboundSms( List<OutboundSms> outboundSms )
-    {
-        this.outboundSms = outboundSms;
-    }
-
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getFollowup()
@@ -416,5 +401,29 @@ public class ProgramInstance
     public void setCompletedBy( String completedBy )
     {
         this.completedBy = completedBy;
-    }  
+    }
+    
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Double getLongitude()
+    {
+        return longitude;
+    }
+       
+    public void setLongitude( Double longitude )
+    {
+        this.longitude = longitude;
+    }
+    
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Double getLatitude()
+    {
+        return latitude;
+    }
+    
+    public void setLatitude( Double latitude )
+    {
+        this.latitude = latitude;
+    }
 }

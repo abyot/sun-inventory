@@ -42,8 +42,8 @@ public enum DataStatisticsEventType
     EVENT_REPORT_VIEW( "eventreport" ),
     EVENT_CHART_VIEW( "eventchart" ),
     DASHBOARD_VIEW( "dashboard" ),
-    DATA_SET_REPORT_VIEW( null ), //TODO
-    TOTAL_VIEW( "dataset" );
+    DATA_SET_REPORT_VIEW( "dataset" ),
+    TOTAL_VIEW( null );
     
     private String table;
     

@@ -29,8 +29,8 @@ package org.hisp.dhis.period;
  */
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.hisp.dhis.calendar.CalendarService;
 import org.hisp.dhis.calendar.DateInterval;
 import org.hisp.dhis.calendar.DateTimeUnit;
@@ -48,7 +48,6 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -61,8 +60,8 @@ public abstract class PeriodType
     implements Serializable
 {
     // Cache for period lookup, uses calendar.name() + periodType.getName() + date.getTime() as key
-    private static Cache<String, Period> PERIOD_CACHE = CacheBuilder.newBuilder()
-        .expireAfterAccess( 1, TimeUnit.HOURS )
+    private static Cache<String, Period> PERIOD_CACHE = Caffeine.newBuilder()
+        .expireAfterAccess( 1, TimeUnit.SECONDS )
         .initialCapacity( 10000 )
         .maximumSize( 30000 )
         .build();
@@ -241,15 +240,7 @@ public abstract class PeriodType
      */
     public Period createPeriod( final Date date )
     {
-        try
-        {
-            return PERIOD_CACHE.get( getCacheKey( date ), () -> createPeriod( createCalendarInstance( date ) ) );
-        }
-        catch ( ExecutionException ignored )
-        {
-        }
-
-        return null;
+        return PERIOD_CACHE.get( getCacheKey( date ), s -> createPeriod( createCalendarInstance( date ) ) );
     }
 
     public Period createPeriod( Calendar cal )
@@ -271,15 +262,7 @@ public abstract class PeriodType
      */
     public Period createPeriod( final Date date, final org.hisp.dhis.calendar.Calendar calendar )
     {
-        try
-        {
-            return PERIOD_CACHE.get( getCacheKey( calendar, date ), () -> createPeriod( calendar.fromIso( DateTimeUnit.fromJdkDate( date ) ), calendar ) );
-        }
-        catch ( ExecutionException ignored )
-        {
-        }
-
-        return null;
+        return PERIOD_CACHE.get( getCacheKey( calendar, date ), p -> createPeriod( calendar.fromIso( DateTimeUnit.fromJdkDate( date ) ), calendar ) );
     }
 
     public Period toIsoPeriod( DateTimeUnit start, DateTimeUnit end )

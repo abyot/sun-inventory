@@ -42,9 +42,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Resource;
-
 import org.hisp.dhis.DhisTest;
+import org.hisp.dhis.IntegrationTest;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.CodeGenerator;
 import org.hisp.dhis.common.IdentifiableObjectManager;
@@ -75,14 +74,15 @@ import org.hisp.dhis.user.UserGroupAccessService;
 import org.hisp.dhis.user.UserGroupService;
 import org.hisp.dhis.user.UserService;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.google.common.collect.Sets;
 
 /**
  * @author Jim Grace
  */
+@Category( IntegrationTest.class )
 public class DataApprovalServiceCategoryOptionGroupTest
     extends DhisTest
 {
@@ -97,9 +97,6 @@ public class DataApprovalServiceCategoryOptionGroupTest
 
     @Autowired
     private DataApprovalLevelService dataApprovalLevelService;
-
-    @Autowired
-    private DataApprovalWorkflowService dataApprovalWorkflowService;
 
     @Autowired
     private PeriodService periodService;
@@ -287,7 +284,8 @@ public class DataApprovalServiceCategoryOptionGroupTest
     // -------------------------------------------------------------------------
 
     @Override
-    public void setUpTest() throws Exception
+    public void setUpTest() 
+        throws Exception
     {
         userService = _userService;
 
@@ -308,20 +306,6 @@ public class DataApprovalServiceCategoryOptionGroupTest
         organisationUnitService.addOrganisationUnit( brazil );
         organisationUnitService.addOrganisationUnit( china );
         organisationUnitService.addOrganisationUnit( india );
-
-        int globalId = global.getId();
-        int americasId = americas.getId();
-        int asiaId = asia.getId();
-        int brazilId = brazil.getId();
-        int chinaId = china.getId();
-        int indiaId = india.getId();
-
-        String globalUid = global.getUid();
-        String americasUid = americas.getUid();
-        String asiaUid = asia.getUid();
-        String brazilUid = brazil.getUid();
-        String chinaUid = china.getUid();
-        String indiaUid = india.getUid();
 
         userA = createUser( 'A' );
         userService.addUser( userA );
@@ -501,8 +485,8 @@ public class DataApprovalServiceCategoryOptionGroupTest
         workflowAll = new DataApprovalWorkflow( "workflowAll", periodType, newHashSet( globalLevel1, countryLevel2, agencyLevel3, partnerLevel4 ) );
         workflowAgency = new DataApprovalWorkflow( "workflowAgency", periodType, newHashSet( globalLevel1, countryLevel2, agencyLevel3 ) );
 
-        dataApprovalWorkflowService.addWorkflow( workflowAll );
-        dataApprovalWorkflowService.addWorkflow( workflowAgency );
+        dataApprovalService.addWorkflow( workflowAll );
+        dataApprovalService.addWorkflow( workflowAgency );
 
         systemSettingManager.saveSystemSetting( SettingKey.HIDE_UNAPPROVED_DATA_IN_ANALYTICS, true );
         systemSettingManager.saveSystemSetting( SettingKey.ACCEPTANCE_REQUIRED_FOR_APPROVAL, true );
@@ -702,58 +686,11 @@ public class DataApprovalServiceCategoryOptionGroupTest
     }
 
     // -------------------------------------------------------------------------
-    // Generate test code helper methods
-    // -------------------------------------------------------------------------
-
-    private void generateUserApprovalsAndPermissions( CurrentUserService mockUserService, DataApprovalWorkflow workflow, Period period, OrganisationUnit orgUnit )
-    {
-        String[] approvalStrings = getUserApprovalsAndPermissions( mockUserService, workflow, period, orgUnit );
-
-        int count = 0;
-
-        for ( String s : approvalStrings )
-        {
-            System.out.println( "\"" + s + "\"" + ( ++count < approvalStrings.length ? "," : " }," ) );
-        }
-
-        String username = mockUserService.getCurrentUsername();
-
-        System.out.println( "userApprovalsAndPermissions( "
-            + username.substring( 0, 1 ).toLowerCase() + username.substring( 1, username.length() )
-            + ", workflowAll, periodA, null ) );" );
-    }
-
-    @SuppressWarnings("unused")
-    private void generateAllApprovalsAndPermissions()
-    {
-        generateUserApprovalsAndPermissions( superUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( globalConsultant, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( globalUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( globalApproveOnly, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( globalAcceptOnly, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( globalReadEverything, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( brazilInteragencyUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaInteragencyUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaInteragencyApproveOnly, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinalInteragencyAcceptOnly, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( indiaInteragencyUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( brazilAgencyAUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaAgencyAUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaAgencyAApproveOnly, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaAgencyAAcceptOnly, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaAgencyBUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( indiaAgencyAUser, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( brazilPartner1User, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaPartner1User, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( chinaPartner2User, workflowAll, periodA, null );
-        generateUserApprovalsAndPermissions( indiaPartner1User, workflowAll, periodA, null );
-    }
-
-    // -------------------------------------------------------------------------
     // Tests
     // -------------------------------------------------------------------------
 
     @Test
+    @Category( IntegrationTest.class )
     public void testGetUserDataApprovalLevels()
     {
         assertEquals( "GlobalLevel1, CountryLevel2, AgencyLevel3, PartnerLevel4", getUserLevels( superUser ) );
@@ -780,6 +717,7 @@ public class DataApprovalServiceCategoryOptionGroupTest
     }
 
     @Test
+    @Category( IntegrationTest.class )
     public void testApprovals()
     {
         // ---------------------------------------------------------------------
@@ -2323,26 +2261,5 @@ public class DataApprovalServiceCategoryOptionGroupTest
 
         assertTrue( unaccept( globalConsultant, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
         assertTrue( accept( globalConsultant, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-
-        //TODO: Fix and test:
-//        assertFalse( accept( globalReadEverything, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//
-//        assertFalse( unaccept( brazilInteragencyUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( chinaInteragencyUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( indiaInteragencyUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//
-//        assertFalse( unaccept( brazilAgencyAUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( chinaAgencyAUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( chinaAgencyBUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( indiaAgencyAUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//
-//        assertFalse( unaccept( brazilPartner1User, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( chinaPartner1User, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( chinaPartner2User, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//        assertFalse( unaccept( indiaPartner1User, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//
-//        assertTrue( unaccept( globalUser, countryLevel2, workflowAll, periodA, china, chinaA1_1Combo ) );
-//
-//        generateAllApprovalsAndPermissions();
     }
 }

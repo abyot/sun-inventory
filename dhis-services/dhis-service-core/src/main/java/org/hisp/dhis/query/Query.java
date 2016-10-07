@@ -53,6 +53,8 @@ public class Query extends Criteria
 
     private Integer maxResults = Integer.MAX_VALUE;
 
+    private Junction.Type rootJunctionType = Junction.Type.AND;
+
     private List<? extends IdentifiableObject> objects;
 
     public static Query from( Schema schema )
@@ -60,9 +62,20 @@ public class Query extends Criteria
         return new Query( schema );
     }
 
+    public static Query from( Schema schema, Junction.Type rootJunction )
+    {
+        return new Query( schema, rootJunction );
+    }
+
     private Query( Schema schema )
     {
         super( schema );
+    }
+
+    private Query( Schema schema, Junction.Type rootJunctionType )
+    {
+        super( schema );
+        this.rootJunctionType = rootJunctionType;
     }
 
     public Schema getSchema()
@@ -143,6 +156,19 @@ public class Query extends Criteria
     {
         this.maxResults = maxResults;
         return this;
+    }
+
+    public Junction getRootJunction()
+    {
+        switch ( rootJunctionType )
+        {
+            case AND:
+                return addConjunction();
+            case OR:
+                return addDisjunction();
+        }
+
+        throw new QueryException( "Unhandled junction type: " + rootJunctionType );
     }
 
     public List<? extends IdentifiableObject> getObjects()

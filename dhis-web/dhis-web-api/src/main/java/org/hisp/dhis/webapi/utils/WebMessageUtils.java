@@ -32,12 +32,12 @@ import org.hisp.dhis.dxf2.common.Status;
 import org.hisp.dhis.dxf2.importsummary.ImportStatus;
 import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
 import org.hisp.dhis.dxf2.importsummary.ImportSummary;
-import org.hisp.dhis.dxf2.metadata.ImportTypeSummary;
-import org.hisp.dhis.dxf2.metadata2.feedback.ImportReport;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
 import org.hisp.dhis.dxf2.webmessage.WebMessage;
 import org.hisp.dhis.dxf2.webmessage.responses.ErrorReportsWebMessageResponse;
 import org.hisp.dhis.dxf2.webmessage.responses.ImportReportWebMessageResponse;
 import org.hisp.dhis.dxf2.webmessage.responses.ObjectReportWebMessageResponse;
+import org.hisp.dhis.dxf2.webmessage.responses.TypeReportWebMessageResponse;
 import org.hisp.dhis.feedback.ErrorReport;
 import org.hisp.dhis.feedback.ObjectReport;
 import org.hisp.dhis.feedback.TypeReport;
@@ -173,34 +173,6 @@ public final class WebMessageUtils
         return createWebMessage( message, devMessage, Status.ERROR, HttpStatus.UNAUTHORIZED );
     }
 
-    public static WebMessage importTypeSummary( ImportTypeSummary importTypeSummary )
-    {
-        WebMessage webMessage = new WebMessage();
-
-        if ( importTypeSummary.isStatus( ImportStatus.ERROR ) )
-        {
-            webMessage.setMessage( "An error occurred, please check import summary." );
-            webMessage.setStatus( Status.ERROR );
-            webMessage.setHttpStatus( HttpStatus.CONFLICT );
-        }
-        else if ( !importTypeSummary.getConflicts().isEmpty() )
-        {
-            webMessage.setMessage( "One more conflicts encountered, please check import summary." );
-            webMessage.setStatus( Status.WARNING );
-            webMessage.setHttpStatus( HttpStatus.CONFLICT );
-        }
-        else
-        {
-            webMessage.setMessage( "Import was successful." );
-            webMessage.setStatus( Status.OK );
-            webMessage.setHttpStatus( HttpStatus.OK );
-        }
-
-        webMessage.setResponse( importTypeSummary );
-
-        return webMessage;
-    }
-
     public static WebMessage importSummary( ImportSummary importSummary )
     {
         WebMessage webMessage = new WebMessage();
@@ -262,6 +234,26 @@ public final class WebMessageUtils
         {
             webMessage.setMessage( "One more more errors occurred, please see full details in import report." );
             webMessage.setStatus( Status.WARNING );
+            webMessage.setHttpStatus( HttpStatus.CONFLICT );
+        }
+
+        return webMessage;
+    }
+
+    public static WebMessage typeReport( TypeReport typeReport )
+    {
+        WebMessage webMessage = new WebMessage();
+        webMessage.setResponse( new TypeReportWebMessageResponse( typeReport ) );
+
+        if ( typeReport.getErrorReports().isEmpty() )
+        {
+            webMessage.setStatus( Status.OK );
+            webMessage.setHttpStatus( HttpStatus.OK );
+        }
+        else
+        {
+            webMessage.setMessage( "One more more errors occurred, please see full details in import report." );
+            webMessage.setStatus( Status.ERROR );
             webMessage.setHttpStatus( HttpStatus.CONFLICT );
         }
 

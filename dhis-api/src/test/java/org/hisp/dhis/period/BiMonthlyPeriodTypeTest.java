@@ -59,6 +59,7 @@ public class BiMonthlyPeriodTypeTest
         endDate = new DateTime(2009, 8, 31, 0, 0 );
         testDate = new DateTime(2009, 8, 15, 0, 0 );
         
+
         Period period = periodType.createPeriod( testDate.toDate() );
         
         assertEquals( startDate.toDate(), period.getStartDate() );

@@ -28,22 +28,19 @@ package org.hisp.dhis.importexport.action.dxf2;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.opensymphony.xwork2.Action;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.commons.util.StreamUtils;
 import org.hisp.dhis.dataelement.CategoryOptionGroup;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementGroup;
-import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.dxf2.csv.CsvImportService;
 import org.hisp.dhis.dxf2.gml.GmlImportService;
-import org.hisp.dhis.dxf2.metadata.ImportService;
+import org.hisp.dhis.dxf2.metadata.AtomicMode;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
+import org.hisp.dhis.dxf2.metadata.MetadataImportService;
+import org.hisp.dhis.dxf2.metadata.objectbundle.ObjectBundleMode;
 import org.hisp.dhis.importexport.ImportStrategy;
 import org.hisp.dhis.importexport.action.util.ImportMetaDataCsvTask;
 import org.hisp.dhis.importexport.action.util.ImportMetaDataGmlTask;
@@ -53,15 +50,19 @@ import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.scheduling.TaskCategory;
 import org.hisp.dhis.scheduling.TaskId;
+import org.hisp.dhis.schema.SchemaService;
 import org.hisp.dhis.system.notification.Notifier;
 import org.hisp.dhis.system.scheduling.Scheduler;
-import org.hisp.dhis.translation.Translation;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.validation.ValidationRule;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.opensymphony.xwork2.Action;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
@@ -69,33 +70,36 @@ import com.opensymphony.xwork2.Action;
 public class MetaDataImportAction
     implements Action
 {
-    private static final Map<String, Class<? extends IdentifiableObject>> KEY_CLASS_MAP = new HashMap<String, Class<? extends IdentifiableObject>>() {{
-       put( "dataelement", DataElement.class );
-       put( "dataelementgroup", DataElementGroup.class);
-       put( "categoryoption", DataElementCategoryOption.class );
-       put( "categoryoptiongroup", CategoryOptionGroup.class );
-       put( "organisationunit", OrganisationUnit.class );
-       put( "organisationunitgroup", OrganisationUnitGroup.class );
-       put( "validationrule", ValidationRule.class );
-       put( "optionset", OptionSet.class );
-       put( "translation", Translation.class );
+    private static final Map<String, Class<? extends IdentifiableObject>> CSV_SUPPORTED_CLASSES = new HashMap<String, Class<? extends IdentifiableObject>>()
+    {{
+        put( "dataelement", DataElement.class );
+        put( "dataelementgroup", DataElementGroup.class );
+        put( "categoryoption", DataElementCategoryOption.class );
+        put( "categoryoptiongroup", CategoryOptionGroup.class );
+        put( "organisationunit", OrganisationUnit.class );
+        put( "organisationunitgroup", OrganisationUnitGroup.class );
+        put( "validationrule", ValidationRule.class );
+        put( "optionset", OptionSet.class );
     }};
-    
+
     // -------------------------------------------------------------------------
     // Dependencies
     // -------------------------------------------------------------------------
 
     @Autowired
-    private ImportService importService;
-    
+    private MetadataImportService importService;
+
     @Autowired
     private CsvImportService csvImportService;
 
     @Autowired
     private GmlImportService gmlImportService;
-    
+
     @Autowired
     private CurrentUserService currentUserService;
+
+    @Autowired
+    private SchemaService schemaService;
 
     @Autowired
     private Scheduler scheduler;
@@ -121,37 +125,32 @@ public class MetaDataImportAction
         this.dryRun = dryRun;
     }
 
-    private ImportStrategy strategy;
+    private ImportStrategy strategy = ImportStrategy.CREATE_AND_UPDATE;
 
     public void setStrategy( String strategy )
     {
         this.strategy = ImportStrategy.valueOf( strategy );
     }
 
-    private String importFormat;
+    private AtomicMode atomicMode = AtomicMode.NONE;
 
-    public String getImportFormat()
+    public void setAtomicMode( AtomicMode atomicMode )
     {
-        return importFormat;
+        this.atomicMode = atomicMode;
     }
+
+    private String importFormat;
 
     public void setImportFormat( String importFormat )
     {
         this.importFormat = importFormat;
     }
-    
+
     private String classKey;
 
     public void setClassKey( String classKey )
     {
         this.classKey = classKey;
-    }
-
-    private boolean preheatCache = true;
-    
-    public void setPreheatCache( boolean preheatCache )
-    {
-        this.preheatCache = preheatCache;
     }
 
     // -------------------------------------------------------------------------
@@ -164,7 +163,7 @@ public class MetaDataImportAction
         strategy = strategy != null ? strategy : ImportStrategy.NEW_AND_UPDATES;
 
         User user = currentUserService.getCurrentUser();
-        
+
         TaskId taskId = new TaskId( TaskCategory.METADATA_IMPORT, user );
 
         notifier.clear( taskId );
@@ -172,30 +171,36 @@ public class MetaDataImportAction
         InputStream in = new FileInputStream( upload );
         in = StreamUtils.wrapAndCheckCompressionFormat( in );
 
-        ImportOptions importOptions = new ImportOptions();
-        importOptions.setStrategy( strategy );
-        importOptions.setDryRun( dryRun );
-        importOptions.setPreheatCache( preheatCache );
-
-        String userId = user != null ? user.getUid() : null;
+        MetadataImportParams importParams = createMetadataImportParams( taskId, strategy, atomicMode, dryRun );
 
         if ( "csv".equals( importFormat ) )
         {
-            if( classKey != null && KEY_CLASS_MAP.get( classKey ) != null )
+            if ( classKey != null && CSV_SUPPORTED_CLASSES.containsKey( classKey ) )
             {
-                scheduler.executeTask( new ImportMetaDataCsvTask( userId, importService, csvImportService,
-                    importOptions, in, taskId, KEY_CLASS_MAP.get( classKey ) ) );
+                scheduler.executeTask( new ImportMetaDataCsvTask( importService, csvImportService, schemaService,
+                    importParams, in, CSV_SUPPORTED_CLASSES.get( classKey ) ) );
             }
         }
         else if ( "gml".equals( importFormat ) )
         {
-            scheduler.executeTask( new ImportMetaDataGmlTask( userId, gmlImportService, importOptions, in, taskId ) );
+            scheduler.executeTask( new ImportMetaDataGmlTask( gmlImportService, importParams, in ) );
         }
         else if ( "json".equals( importFormat ) || "xml".equals( importFormat ) )
         {
-            scheduler.executeTask( new ImportMetaDataTask( userId, importService, importOptions, in, taskId, importFormat ) );
+            scheduler.executeTask( new ImportMetaDataTask( importService, schemaService, importParams, in, importFormat ) );
         }
-        
+
         return SUCCESS;
+    }
+
+    private MetadataImportParams createMetadataImportParams( TaskId taskId, ImportStrategy strategy, AtomicMode atomicMode, boolean dryRun )
+    {
+        MetadataImportParams importParams = new MetadataImportParams();
+        importParams.setTaskId( taskId );
+        importParams.setImportMode( dryRun ? ObjectBundleMode.VALIDATE : ObjectBundleMode.COMMIT );
+        importParams.setAtomicMode( atomicMode );
+        importParams.setImportStrategy( strategy );
+
+        return importParams;
     }
 }

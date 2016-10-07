@@ -28,7 +28,6 @@ package org.hisp.dhis.webapi.controller.user;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.dxf2.common.ImportOptions;
 import org.hisp.dhis.schema.descriptors.UserCredentialsSchemaDescriptor;
 import org.hisp.dhis.user.UserCredentials;
 import org.hisp.dhis.webapi.controller.AbstractCrudController;
@@ -49,13 +48,13 @@ public class UserCredentialsController
     extends AbstractCrudController<UserCredentials>
 {
     @Override
-    public void postXmlObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void postXmlObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         throw new HttpServerErrorException( HttpStatus.BAD_REQUEST );
     }
 
     @Override
-    public void postJsonObjectLegacy( ImportOptions importOptions, HttpServletRequest request, HttpServletResponse response ) throws Exception
+    public void postJsonObject( HttpServletRequest request, HttpServletResponse response ) throws Exception
     {
         throw new HttpServerErrorException( HttpStatus.BAD_REQUEST );
     }

@@ -62,10 +62,12 @@ public class SecurityServiceTest
         credentials = new UserCredentials();
         credentials.setUsername( "johndoe" );
         credentials.setPassword( "" );
+        credentials.setAutoFields();
 
         User userA = createUser( 'A' );
         userA.setEmail( "validA@email.com" );
         userA.setUserCredentials( credentials );
+
         credentials.setUserInfo( userA );
         userService.addUserCredentials( credentials );
 

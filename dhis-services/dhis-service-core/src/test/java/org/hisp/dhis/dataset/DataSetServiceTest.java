@@ -49,7 +49,6 @@ import org.hisp.dhis.dataapproval.DataApprovalLevelService;
 import org.hisp.dhis.dataapproval.DataApprovalService;
 import org.hisp.dhis.dataapproval.DataApprovalStore;
 import org.hisp.dhis.dataapproval.DataApprovalWorkflow;
-import org.hisp.dhis.dataapproval.DataApprovalWorkflowService;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementService;
@@ -60,7 +59,6 @@ import org.hisp.dhis.period.MonthlyPeriodType;
 import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.PeriodService;
 import org.hisp.dhis.period.PeriodType;
-import org.hisp.dhis.setting.SystemSettingManager;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserAuthorityGroup;
@@ -114,18 +112,15 @@ public class DataSetServiceTest
 
     @Autowired
     private DataApprovalStore approvalStore;
+    
+    @Autowired
+    private DataApprovalService dataApprovalService;
 
     @Autowired
     private DataApprovalLevelService levelService;
 
-    @Autowired
-    private DataApprovalWorkflowService workflowService;
-
     @Resource( name = "jdbcTemplate" )
     private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private SystemSettingManager systemSettingManager;
 
     // -------------------------------------------------------------------------
     // Fixture
@@ -167,27 +162,6 @@ public class DataSetServiceTest
         user.setFirstName( "John" );
         user.setSurname( "Doe" );
         userService.addUser( mockCurrentUserService.getCurrentUser() );
-
-        // TODO remove dependency on resource tables in approval and remove this
-        
-        jdbcTemplate.execute(
-            "CREATE TABLE _orgunitstructure " +
-            "(" +
-            "  organisationunitid integer NOT NULL, " +
-            "  organisationunituid character(11) NOT NULL, " +
-            "  level integer, " +
-            "  idlevel1 integer, " +
-            "  CONSTRAINT _orgunitstructure_pkey PRIMARY KEY (organisationunitid)" +
-            ");" );
-
-        jdbcTemplate.execute( "INSERT INTO _orgunitstructure VALUES (" + unitA.getId() + ", '" + unitA.getUid() + "', 1, " + unitA.getId() + ");" );
-        jdbcTemplate.execute( "INSERT INTO _orgunitstructure VALUES (" + unitB.getId() + ", '" + unitB.getUid() + "', 2, " + unitB.getId() + ");" );
-        jdbcTemplate.execute( "INSERT INTO _orgunitstructure VALUES (" + unitC.getId() + ", '" + unitC.getUid() + "', 3, " + unitC.getId() + ");" );
-        jdbcTemplate.execute( "INSERT INTO _orgunitstructure VALUES (" + unitD.getId() + ", '" + unitD.getUid() + "', 4, " + unitD.getId() + ");" );
-        jdbcTemplate.execute( "INSERT INTO _orgunitstructure VALUES (" + unitE.getId() + ", '" + unitE.getUid() + "', 3, " + unitE.getId() + ");" );
-        jdbcTemplate.execute( "INSERT INTO _orgunitstructure VALUES (" + unitF.getId() + ", '" + unitF.getUid() + "', 4, " + unitF.getId() + ");" );
-
-        systemSettingManager.invalidateCache();
     }
 
     @Override
@@ -221,7 +195,7 @@ public class DataSetServiceTest
         levelService.addDataApprovalLevel( level );
 
         DataApprovalWorkflow workflow = new DataApprovalWorkflow( "Workflow A", period.getPeriodType(), newHashSet( level ) );
-        workflowService.addWorkflow( workflow );
+        dataApprovalService.addWorkflow( workflow );
 
         dataSet.setWorkflow( workflow );
         dataSetService.updateDataSet( dataSet );
@@ -416,13 +390,13 @@ public class DataSetServiceTest
 
         DataElement dataElementA = createDataElement( 'A' );
         DataElement dataElementB = createDataElement( 'B' );
-        dataElementA.getDataSets().add( dataSetA );
-        dataElementA.getDataSets().add( dataSetB );
-        dataSetA.getDataElements().add( dataElementA );
-        dataSetB.getDataElements().add( dataElementA );
+        
+        dataSetA.addDataSetElement( dataElementA );
+        dataSetB.addDataSetElement( dataElementA );
 
         dataElementService.addDataElement( dataElementA );
         dataElementService.addDataElement( dataElementB );
+        
         dataSetService.addDataSet( dataSetA );
         dataSetService.addDataSet( dataSetB );
 
@@ -512,5 +486,20 @@ public class DataSetServiceTest
         assertTrue( dataSetService.isLocked( dataSetA, period, unitA, attributeOptionCombo, getDate( 2000, 4, 25 ) ) );
         assertFalse( dataSetService.isLocked( dataSetB, period, unitA, attributeOptionCombo, getDate( 2000, 4, 10 ) ) );
         assertTrue( dataSetService.isLocked( dataSetB, period, unitA, attributeOptionCombo, getDate( 2000, 4, 25 ) ) );
+    }
+
+    @Test
+    public void testDataSetDateRange()
+    {
+        DataSet dataSetA = createDataSet( 'A', periodType );
+        DataSet dataSetB = createDataSet( 'B', periodType );
+
+        dataSetA.setStartDate( getDate( 1999, 1, 1 ) );
+        dataSetA.setEndDate( getDate( 2009, 12, 31 ) );
+        dataSetB.setStartDate( getDate( 1999, 1, 1 ) );
+        dataSetB.setEndDate( getDate( 1999, 12, 31 ) );
+
+        assertTrue( dataSetA.isValidPeriodForDataEntry( period ) );
+        assertFalse( dataSetB.isValidPeriodForDataEntry( period ) );
     }
 }

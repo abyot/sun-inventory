@@ -32,7 +32,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.google.common.collect.Lists;
 import org.hisp.dhis.attribute.Attribute;
 import org.hisp.dhis.chart.Chart;
 import org.hisp.dhis.color.Color;
@@ -40,7 +39,6 @@ import org.hisp.dhis.color.ColorSet;
 import org.hisp.dhis.common.DimensionalObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.NameableObject;
-import org.hisp.dhis.common.filter.MetaDataFilter;
 import org.hisp.dhis.constant.Constant;
 import org.hisp.dhis.dashboard.Dashboard;
 import org.hisp.dhis.dashboard.DashboardItem;
@@ -70,17 +68,17 @@ import org.hisp.dhis.indicator.IndicatorType;
 import org.hisp.dhis.interpretation.Interpretation;
 import org.hisp.dhis.legend.Legend;
 import org.hisp.dhis.legend.LegendSet;
+import org.hisp.dhis.mapping.ExternalMapLayer;
 import org.hisp.dhis.mapping.Map;
-import org.hisp.dhis.mapping.MapLayer;
 import org.hisp.dhis.mapping.MapView;
 import org.hisp.dhis.message.MessageConversation;
+import org.hisp.dhis.metadata.version.MetadataVersion;
 import org.hisp.dhis.option.Option;
 import org.hisp.dhis.option.OptionSet;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupSet;
 import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
-import org.hisp.dhis.predictor.Predictor;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramIndicator;
 import org.hisp.dhis.program.ProgramStage;
@@ -99,7 +97,6 @@ import org.hisp.dhis.sqlview.SqlView;
 import org.hisp.dhis.trackedentity.TrackedEntity;
 import org.hisp.dhis.trackedentity.TrackedEntityAttribute;
 import org.hisp.dhis.trackedentity.TrackedEntityAttributeGroup;
-import org.hisp.dhis.translation.Translation;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserAuthorityGroup;
 import org.hisp.dhis.user.UserGroup;
@@ -114,12 +111,14 @@ import java.util.List;
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
  */
-@JacksonXmlRootElement( localName = "metaData", namespace = DxfNamespaces.DXF_2_0 )
+@JacksonXmlRootElement( localName = "metadata", namespace = DxfNamespaces.DXF_2_0 )
 public class Metadata
 {
     private Date created;
 
-    private List<Schema> schemas = Lists.newArrayList();
+    private List<Schema> schemas = new ArrayList<>();
+
+    private List<MetadataVersion> metadataVersions = new ArrayList<>();
 
     private List<Attribute> attributes = new ArrayList<>();
 
@@ -191,8 +190,6 @@ public class Metadata
 
     private List<ValidationRule> validationRules = new ArrayList<>();
 
-    private List<Predictor> predictors = new ArrayList<>();
-
     private List<ValidationRuleGroup> validationRuleGroups = new ArrayList<>();
 
     private List<SqlView> sqlViews = new ArrayList<>();
@@ -211,15 +208,13 @@ public class Metadata
 
     private List<LegendSet> legendSets = new ArrayList<>();
 
-    private List<MapLayer> mapLayers = new ArrayList<>();
+    private List<ExternalMapLayer> externalMapLayers = new ArrayList<>();
 
     private List<DataEntryForm> dataEntryForms = new ArrayList<>();
 
     private List<Section> sections = new ArrayList<>();
 
     private List<DataSet> dataSets = new ArrayList<>();
-
-    private List<MetaDataFilter> metaDataFilters = new ArrayList<>();
 
     private List<Event> events = new ArrayList<>();
 
@@ -235,7 +230,7 @@ public class Metadata
 
     private List<ProgramIndicator> programIndicators = new ArrayList<>();
 
-    private List<ProgramValidation> programValidations = Lists.newArrayList();
+    private List<ProgramValidation> programValidations = new ArrayList<>();
 
     private List<ProgramStageSection> programStageSections = new ArrayList<>();
 
@@ -256,8 +251,6 @@ public class Metadata
     private List<TrackedEntityAttribute> trackedEntityAttributes = new ArrayList<>();
 
     private List<TrackedEntityAttributeGroup> trackedEntityAttributeGroups = new ArrayList<>();
-
-    private List<Translation> translations = new ArrayList<>();
 
     private List<Color> colors = new ArrayList<>();
 
@@ -290,6 +283,19 @@ public class Metadata
     public void setSchemas( List<Schema> schemas )
     {
         this.schemas = schemas;
+    }
+
+    @JsonProperty
+    @JacksonXmlElementWrapper( localName = "metadataVersions", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "metadataVersion", namespace = DxfNamespaces.DXF_2_0 )
+    public List<MetadataVersion> getMetadataVersions()
+    {
+        return metadataVersions;
+    }
+
+    public void setMetadataVersions( List<MetadataVersion> metadataVersions )
+    {
+        this.metadataVersions = metadataVersions;
     }
 
     @JsonProperty
@@ -722,19 +728,6 @@ public class Metadata
     }
 
     @JsonProperty
-    @JacksonXmlElementWrapper( localName = "predictors", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "predictor", namespace = DxfNamespaces.DXF_2_0 )
-    public List<Predictor> getPredictors()
-    {
-        return predictors;
-    }
-
-    public void setPredictors( List<Predictor> predictors )
-    {
-        this.predictors = predictors;
-    }
-
-    @JsonProperty
     @JacksonXmlElementWrapper( localName = "validationRuleGroups", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "validationRuleGroup", namespace = DxfNamespaces.DXF_2_0 )
     public List<ValidationRuleGroup> getValidationRuleGroups()
@@ -904,16 +897,16 @@ public class Metadata
     }
 
     @JsonProperty
-    @JacksonXmlElementWrapper( localName = "mapLayers", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "mapLayer", namespace = DxfNamespaces.DXF_2_0 )
-    public List<MapLayer> getMapLayers()
+    @JacksonXmlElementWrapper( localName = "externalMapLayers", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "externalMapLayer", namespace = DxfNamespaces.DXF_2_0 )
+    public List<ExternalMapLayer> getExternalMapLayers()
     {
-        return mapLayers;
+        return externalMapLayers;
     }
 
-    public void setMapLayers( List<MapLayer> mapLayers )
+    public void setExternalMapLayers( List<ExternalMapLayer> externalMapLayers )
     {
-        this.mapLayers = mapLayers;
+        this.externalMapLayers = externalMapLayers;
     }
 
     @JsonProperty
@@ -1151,19 +1144,6 @@ public class Metadata
     }
 
     @JsonProperty
-    @JacksonXmlElementWrapper( localName = "translations", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "translation", namespace = DxfNamespaces.DXF_2_0 )
-    public List<Translation> getTranslations()
-    {
-        return translations;
-    }
-
-    public void setTranslations( List<Translation> translations )
-    {
-        this.translations = translations;
-    }
-
-    @JsonProperty
     @JacksonXmlElementWrapper( localName = "dimensions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "dimension", namespace = DxfNamespaces.DXF_2_0 )
     public List<DimensionalObject> getDimensions()
@@ -1174,19 +1154,6 @@ public class Metadata
     public void setDimensions( List<DimensionalObject> dimensions )
     {
         this.dimensions = dimensions;
-    }
-
-    @JsonProperty
-    @JacksonXmlElementWrapper( localName = "metaDataFilters", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "metaDataFilter", namespace = DxfNamespaces.DXF_2_0 )
-    public List<MetaDataFilter> getMetaDataFilters()
-    {
-        return metaDataFilters;
-    }
-
-    public void setMetaDataFilters( List<MetaDataFilter> metaDataFilters )
-    {
-        this.metaDataFilters = metaDataFilters;
     }
 
     @JsonProperty
@@ -1253,7 +1220,6 @@ public class Metadata
             ", organisationUnitLevels=" + organisationUnitLevels +
             ", validationRules=" + validationRules +
             ", validationRuleGroups=" + validationRuleGroups +
-            ", predictors=" + predictors +
             ", sqlViews=" + sqlViews +
             ", charts=" + charts +
             ", reports=" + reports +
@@ -1262,13 +1228,12 @@ public class Metadata
             ", mapViews=" + mapViews +
             ", legends=" + legends +
             ", legendSets=" + legendSets +
-            ", mapLayers=" + mapLayers +
+            ", externalMapLayers=" + externalMapLayers +
             ", sections=" + sections +
             ", dataSets=" + dataSets +
             ", programs=" + programs +
             ", programStages=" + programStages +
             ", relationshipTypes=" + relationshipTypes +
-            ", metaDataFilters=" + metaDataFilters +
             ", trackedEntities=" + trackedEntities +
             ", trackedEntityAttributes=" + trackedEntityAttributes +
             ", trackedEntityAttributeGroups=" + trackedEntityAttributeGroups +

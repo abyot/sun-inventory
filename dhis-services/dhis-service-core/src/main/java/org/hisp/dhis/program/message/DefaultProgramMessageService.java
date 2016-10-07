@@ -28,21 +28,12 @@ package org.hisp.dhis.program.message;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-
+import com.google.common.collect.Sets;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.IdentifiableObjectManager;
 import org.hisp.dhis.common.IllegalQueryException;
-import org.hisp.dhis.common.ValueType;
 import org.hisp.dhis.message.MessageSender;
-import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramInstance;
@@ -50,19 +41,26 @@ import org.hisp.dhis.program.ProgramInstanceService;
 import org.hisp.dhis.program.ProgramService;
 import org.hisp.dhis.program.ProgramStageInstance;
 import org.hisp.dhis.program.ProgramStageInstanceService;
-import org.hisp.dhis.sms.outbound.GatewayResponse;
-import org.hisp.dhis.trackedentity.TrackedEntityInstance;
+import org.hisp.dhis.sms.BatchResponseStatus;
+import org.hisp.dhis.sms.MessageBatchCreatorService;
+import org.hisp.dhis.sms.MessageBatchStatus;
+import org.hisp.dhis.sms.MessageResponseSummary;
+import org.hisp.dhis.sms.outbound.MessageBatch;
 import org.hisp.dhis.trackedentity.TrackedEntityInstanceService;
-import org.hisp.dhis.trackedentityattributevalue.TrackedEntityAttributeValue;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * @author Zubair <rajazubair.asghar@gmail.com>
  */
-
 @Transactional
 public class DefaultProgramMessageService
     implements ProgramMessageService
@@ -99,6 +97,12 @@ public class DefaultProgramMessageService
 
     @Autowired
     private CurrentUserService currentUserService;
+
+    @Autowired
+    private List<DeliveryChannelStrategy> strategies;
+
+    @Autowired
+    private List<MessageBatchCreatorService> batchCreators;
 
     // -------------------------------------------------------------------------
     // Implementation methods
@@ -196,47 +200,47 @@ public class DefaultProgramMessageService
     }
 
     @Override
-    public String sendMessage( ProgramMessage programMessage )
+    public BatchResponseStatus sendMessages( List<ProgramMessage> programMessages )
     {
-        String result = "";
+        List<MessageResponseSummary> summaries = new ArrayList<>();
 
-        ProgramMessage tmp = fillAttributes( programMessage );
+        List<ProgramMessage> populatedProgramMessages = new ArrayList<>();
 
-        Map<DeliveryChannel, Set<String>> to = fillRecipients( tmp );
-
-        for ( MessageSender messageSender : messageSenders )
+        for ( ProgramMessage message : programMessages )
         {
-            if ( messageSender.accept( programMessage.getDeliveryChannels() ) )
+            populatedProgramMessages.add( setAttributesBasedOnStrategy( message ) );
+        }
+
+        List<MessageBatch> batches = createBatches( populatedProgramMessages );
+
+        for ( MessageBatch batch : batches )
+        {
+            for ( MessageSender messageSender : messageSenders )
             {
-                if ( messageSender.isServiceReady() )
+                if ( messageSender.accept( Sets.newHashSet( batch.getDeliveryChannel() ) ) )
                 {
-                    log.info( "Invoking " + messageSender.getClass().getSimpleName() );
+                    if ( messageSender.isServiceReady() )
+                    {
+                        log.info( "Invoking message sender: " + messageSender.getClass().getSimpleName() );
 
-                    result = messageSender.sendMessage( tmp.getSubject(), tmp.getText(),
-                        to.get( messageSender.getDeliveryChannel() ) );
-                }
-                else
-                {
-                    log.error( "No gateway configuration found." );
+                        summaries.add( messageSender.sendMessageBatch( batch ) );
+                    }
+                    else
+                    {
+                        log.error( "No server/gateway configuration found for delivery channel: " + messageSender.getDeliveryChannel() );
 
-                    return GatewayResponse.RESULT_CODE_503.getResponseMessage();
+                        summaries.add( new MessageResponseSummary( "No server/gateway configuration found for delivery channel: " + messageSender.getDeliveryChannel(),
+                            messageSender.getDeliveryChannel(), MessageBatchStatus.FAILED ) );
+                    }
                 }
             }
         }
 
-        if ( programMessage.getStoreCopy() )
-        {
-            programMessage.setProgramInstance( (ProgramInstance) getEntity( programMessage, ProgramInstance.class ) );
-            programMessage.setProgramStageInstance(
-                (ProgramStageInstance) getEntity( programMessage, ProgramStageInstance.class ) );
-            programMessage.setProcessedDate( new Date() );
-            programMessage.setMessageStatus(
-                result.equals( "success" ) ? ProgramMessageStatus.SENT : ProgramMessageStatus.FAILED );
-
-            saveProgramMessage( programMessage );
-        }
-
-        return result;
+        BatchResponseStatus status = new BatchResponseStatus( summaries );
+        
+        saveProgramMessages( programMessages, status );
+        
+        return status;
     }
 
     @Override
@@ -248,7 +252,7 @@ public class DefaultProgramMessageService
 
         if ( params.hasProgramInstance() )
         {
-            programInstance = params.getProgramInstrance();
+            programInstance = params.getProgramInstance();
         }
 
         if ( params.hasProgramStageInstance() )
@@ -260,7 +264,7 @@ public class DefaultProgramMessageService
 
         if ( user != null && !programs.contains( programInstance.getProgram() ) )
         {
-            throw new IllegalQueryException( "User does not have access to the required program." );
+            throw new IllegalQueryException( "User does not have access to the required program" );
         }
     }
 
@@ -271,7 +275,7 @@ public class DefaultProgramMessageService
 
         if ( !params.hasProgramInstance() && !params.hasProgramStageInstance() )
         {
-            violation = "ProgramInstance or ProgramStageInstance must be provided.";
+            violation = "Program instance or program stage instance must be provided";
         }
 
         if ( violation != null )
@@ -294,44 +298,26 @@ public class DefaultProgramMessageService
             violation = "Message content must be provided";
         }
 
-        if ( message.getDeliveryChannels().isEmpty() )
+        if ( message.getDeliveryChannels() == null || message.getDeliveryChannels().isEmpty() )
         {
-            violation = "Delivery Channel must be provided";
+            violation = "Delivery channel must be specified";
         }
 
         if ( message.getProgramInstance() == null && message.getProgramStageInstance() == null )
         {
-            violation = "ProgramInstance or ProgramStageInstance must be provided";
-        }
-
-        if ( message.getDeliveryChannels().contains( DeliveryChannel.SMS ) )
-        {
-            if ( !recipients.hasOrganisationUnit() && !recipients.hasTrackedEntityInstance()
-                && recipients.getPhoneNumbers().isEmpty() )
-            {
-                violation = "No destination found for SMS";
-            }
-        }
-
-        if ( message.getDeliveryChannels().contains( DeliveryChannel.EMAIL ) )
-        {
-            if ( !recipients.hasOrganisationUnit() && !recipients.hasTrackedEntityInstance()
-                && recipients.getEmailAddresses().isEmpty() )
-            {
-                violation = "No destination found for EMAIL";
-            }
+            violation = "Program instance or program stage instance must be specified";
         }
 
         if ( recipients.getTrackedEntityInstance() != null && trackedEntityInstanceService
             .getTrackedEntityInstance( recipients.getTrackedEntityInstance().getUid() ) == null )
         {
-            violation = "TrackedEntity does not exist";
+            violation = "Tracked entity does not exist";
         }
 
         if ( recipients.getOrganisationUnit() != null
             && organisationUnitService.getOrganisationUnit( recipients.getOrganisationUnit().getUid() ) == null )
         {
-            violation = "OrganisationUnit does not exist";
+            violation = "Organisation unit does not exist";
         }
 
         if ( violation != null )
@@ -339,6 +325,7 @@ public class DefaultProgramMessageService
             log.info( "Message validation failed: " + violation );
 
             throw new IllegalQueryException( violation );
+
         }
     }
 
@@ -346,16 +333,52 @@ public class DefaultProgramMessageService
     // Supportive Methods
     // ---------------------------------------------------------------------
 
-    private Object getEntity( ProgramMessage programMessage, Class<? extends BaseIdentifiableObject> klass )
+    private void saveProgramMessages( List<ProgramMessage> messageBatch, BatchResponseStatus status )
     {
-        if ( programMessage.getProgramInstance() != null
-            && programMessage.getProgramInstance().getClass().equals( klass ) )
+        for ( ProgramMessage message : messageBatch )
+        {
+            if ( message.isStoreCopy() )
+            {
+                message.setProgramInstance( getProgramInstance( message ) );
+                message.setProgramStageInstance( getProgramStageInstance( message ) );
+                message.setProcessedDate( new Date() );
+                message.setMessageStatus( status.isOk() ? ProgramMessageStatus.SENT : ProgramMessageStatus.FAILED );
+
+                saveProgramMessage( message );
+            }
+        }
+    }
+
+    private List<MessageBatch> createBatches( List<ProgramMessage> programMessages )
+    {
+        List<MessageBatch> batches = new ArrayList<>();
+
+        for ( MessageBatchCreatorService batchCreator : batchCreators )
+        {
+            MessageBatch tmpBatch = batchCreator.getMessageBatch( programMessages );
+
+            if ( !tmpBatch.getBatch().isEmpty() )
+            {
+                batches.add( tmpBatch );
+            }
+        }
+
+        return batches;
+    }
+
+    private ProgramInstance getProgramInstance( ProgramMessage programMessage )
+    {
+        if ( programMessage.getProgramInstance() != null )
         {
             return programInstanceService.getProgramInstance( programMessage.getProgramInstance().getUid() );
         }
 
-        if ( programMessage.getProgramStageInstance() != null
-            && programMessage.getProgramStageInstance().getClass().equals( klass ) )
+        return null;
+    }
+
+    private ProgramStageInstance getProgramStageInstance( ProgramMessage programMessage )
+    {
+        if ( programMessage.getProgramStageInstance() != null )
         {
             return programStageInstanceService
                 .getProgramStageInstance( programMessage.getProgramStageInstance().getUid() );
@@ -364,112 +387,21 @@ public class DefaultProgramMessageService
         return null;
     }
 
-    private ProgramMessage fillAttributes( ProgramMessage message )
+    private ProgramMessage setAttributesBasedOnStrategy( ProgramMessage message )
     {
-        OrganisationUnit orgUnit = null;
+        Set<DeliveryChannel> channels = message.getDeliveryChannels();
 
-        TrackedEntityInstance tei = null;
-
-        if ( message.getRecipients().getOrganisationUnit() != null )
+        for ( DeliveryChannel channel : channels )
         {
-            String ou = message.getRecipients().getOrganisationUnit().getUid();
-
-            orgUnit = organisationUnitService.getOrganisationUnit( ou );
-
-            message.getRecipients().setOrganisationUnit( orgUnit );
-        }
-
-        if ( message.getRecipients().getTrackedEntityInstance() != null )
-        {
-            String teiUid = message.getRecipients().getTrackedEntityInstance().getUid();
-
-            tei = trackedEntityInstanceService.getTrackedEntityInstance( teiUid );
-
-            message.getRecipients().setTrackedEntityInstance( tei );
-        }
-
-        if ( message.getDeliveryChannels().contains( DeliveryChannel.EMAIL ) )
-        {
-            if ( orgUnit != null )
+            for ( DeliveryChannelStrategy strategy : strategies )
             {
-                message.getRecipients().getEmailAddresses()
-                    .add( getOrgnisationUnitRecipient( orgUnit, DeliveryChannel.EMAIL ) );
-            }
-
-            if ( tei != null )
-            {
-                message.getRecipients().getEmailAddresses()
-                    .add( getTrackedEntityInstanceRecipient( tei, ValueType.EMAIL ) );
-            }
-        }
-
-        if ( message.getDeliveryChannels().contains( DeliveryChannel.SMS ) )
-        {
-            if ( orgUnit != null )
-            {
-                message.getRecipients().getPhoneNumbers()
-                    .add( getOrgnisationUnitRecipient( orgUnit, DeliveryChannel.SMS ) );
-            }
-
-            if ( tei != null )
-            {
-                message.getRecipients().getPhoneNumbers()
-                    .add( getTrackedEntityInstanceRecipient( tei, ValueType.PHONE_NUMBER ) );
+                if ( strategy.getDeliveryChannel().equals( channel ) )
+                {
+                    strategy.setAttributes( message );
+                }
             }
         }
 
         return message;
-    }
-
-    private Map<DeliveryChannel, Set<String>> fillRecipients( ProgramMessage tmp )
-    {
-        Map<DeliveryChannel, Set<String>> mapper = new HashMap<>();
-
-        mapper.put( DeliveryChannel.EMAIL, tmp.getRecipients().getEmailAddresses() );
-        mapper.put( DeliveryChannel.SMS, tmp.getRecipients().getPhoneNumbers() );
-        return mapper;
-    }
-
-    private String getOrgnisationUnitRecipient( OrganisationUnit orgUnit, DeliveryChannel channel )
-    {
-        String to = null;
-
-        if ( channel.equals( DeliveryChannel.EMAIL ) )
-        {
-            to = orgUnit.getEmail();
-        }
-
-        if ( channel.equals( DeliveryChannel.SMS ) )
-        {
-            to = orgUnit.getPhoneNumber();
-        }
-
-        if ( to != null )
-        {
-            return to;
-        }
-        else
-        {
-            log.error( "OrganisationUnit does not have required parameter" );
-
-            throw new IllegalQueryException( "OrganisationUnit does not have required parameter" );
-        }
-    }
-
-    private String getTrackedEntityInstanceRecipient( TrackedEntityInstance tei, ValueType type )
-    {
-        Set<TrackedEntityAttributeValue> attributeValues = tei.getTrackedEntityAttributeValues();
-
-        for ( TrackedEntityAttributeValue value : attributeValues )
-        {
-            if ( value.getAttribute().getValueType().equals( type ) )
-            {
-                return value.getPlainValue();
-            }
-        }
-
-        log.error( "TrackedEntity does not have " + type.toString() );
-
-        throw new IllegalQueryException( "TrackedEntity does not have " + type.toString() );
     }
 }

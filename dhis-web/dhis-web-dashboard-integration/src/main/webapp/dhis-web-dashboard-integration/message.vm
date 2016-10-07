@@ -72,7 +72,7 @@
                     </td>
                     <td onclick="read( '${conversation.uid}' )">
                         <span class="margin-left 4px">
-                            #if( $showTicketTools && $conversation.priority != "NONE" )
+                            #if( $showTicketTools && $conversation.priority != "NONE" && $conversation.status != "SOLVED" )
                                 <span class="message-priority message-priority-${conversation.priority}">$!{conversation.priority}</span>
                             #end
                         </span>

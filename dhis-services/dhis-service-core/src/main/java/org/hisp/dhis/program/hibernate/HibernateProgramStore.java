@@ -30,9 +30,11 @@ package org.hisp.dhis.program.hibernate;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 import org.hisp.dhis.common.hibernate.HibernateIdentifiableObjectStore;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramStore;
@@ -83,5 +85,19 @@ public class HibernateProgramStore
     public List<Program> getByTrackedEntity( TrackedEntity trackedEntity )
     {
         return getCriteria( Restrictions.eq( "trackedEntity", trackedEntity ) ).list();
+    }
+
+    @Override
+    @SuppressWarnings( "unchecked" )
+    public List<Program> getByDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        if ( dataEntryForm == null )
+        {
+            return Lists.newArrayList();
+        }
+
+        final String hql = "from Program p where p.dataEntryForm = :dataEntryForm";
+
+        return getQuery( hql ).setEntity( "dataEntryForm", dataEntryForm ).list();
     }
 }

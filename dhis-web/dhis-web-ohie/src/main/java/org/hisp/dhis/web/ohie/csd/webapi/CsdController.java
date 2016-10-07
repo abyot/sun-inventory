@@ -59,7 +59,7 @@ import org.hisp.dhis.web.ohie.csd.domain.Service;
 import org.hisp.dhis.web.ohie.csd.exception.MissingGetDirectoryModificationsRequestException;
 import org.hisp.dhis.web.ohie.csd.exception.MissingGetModificationsRequestException;
 import org.hisp.dhis.web.ohie.csd.exception.MissingLastModifiedException;
-import org.hisp.dhis.web.ohie.fred.webapi.v1.utils.GeoUtils;
+import org.hisp.dhis.web.ohie.utils.GeoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -172,6 +172,7 @@ public class CsdController
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+    
     private void validateRequest( Envelope envelope )
     {
         try

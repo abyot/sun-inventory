@@ -28,13 +28,10 @@ package org.hisp.dhis.sqlview;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
@@ -42,15 +39,14 @@ import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.cache.CacheStrategy;
 import org.hisp.dhis.common.cache.Cacheable;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.annotation.PropertyRange;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * @author Dang Duy Hieu
@@ -62,18 +58,18 @@ public class SqlView
 {
     public static final String PREFIX_VIEWNAME = "_view";
 
-    public static final Set<String> PROTECTED_TABLES = ImmutableSet.<String>builder().add( 
-        "users", "userinfo", "trackedentityattribute", "trackedentityattributevalue" ).build();
+    public static final Set<String> PROTECTED_TABLES = ImmutableSet.<String>builder().add(
+        "users", "userinfo", "trackedentityattribute", "trackedentityattributevalue", "oauth_access_token", "oauth2client" ).build();
 
     public static final Set<String> ILLEGAL_KEYWORDS = ImmutableSet.<String>builder().add(
-        "delete", "alter", "update", "create", "drop", "commit", "createdb", 
+        "delete", "alter", "update", "create", "drop", "commit", "createdb",
         "createuser", "insert", "rename", "replace", "restore", "write" ).build();
 
     private static final String CRITERIA_SEP = ":";
     private static final String REGEX_SEP = "|";
-    
+
     private static final String QUERY_VALUE_REGEX = "^[\\w\\s\\-]*$";
-    
+
     // -------------------------------------------------------------------------
     // Properties
     // -------------------------------------------------------------------------
@@ -85,7 +81,7 @@ public class SqlView
     private SqlViewType type;
 
     private CacheStrategy cacheStrategy = CacheStrategy.RESPECT_SYSTEM_SETTING;
-    
+
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
@@ -136,7 +132,7 @@ public class SqlView
                     String[] criteria = param.split( CRITERIA_SEP );
                     String filter = criteria[0];
                     String value = criteria[1];
-                    
+
                     map.put( filter, value );
                 }
             }
@@ -148,7 +144,7 @@ public class SqlView
     public static Set<String> getInvalidQueryParams( Set<String> params )
     {
         Set<String> invalid = new HashSet<>();
-        
+
         for ( String param : params )
         {
             if ( !isValidQueryParam( param ) )
@@ -156,7 +152,7 @@ public class SqlView
                 invalid.add( param );
             }
         }
-        
+
         return invalid;
     }
 
@@ -167,11 +163,11 @@ public class SqlView
     {
         return StringUtils.isAlphanumeric( param );
     }
-    
+
     public static Set<String> getInvalidQueryValues( Collection<String> values )
     {
         Set<String> invalid = new HashSet<>();
-        
+
         for ( String value : values )
         {
             if ( !isValidQueryValue( value ) )
@@ -179,7 +175,7 @@ public class SqlView
                 invalid.add( value );
             }
         }
-        
+
         return invalid;
     }
 
@@ -190,10 +186,10 @@ public class SqlView
     {
         return value != null && value.matches( QUERY_VALUE_REGEX );
     }
-    
+
     public static String getProtectedTablesRegex()
     {
-        StringBuffer regex = new StringBuffer( "^.*?(\"|'|`|\\s|^)(" );
+        StringBuffer regex = new StringBuffer( "^(.*\\W)?(" );
 
         for ( String table : PROTECTED_TABLES )
         {
@@ -201,17 +197,24 @@ public class SqlView
         }
 
         regex.delete( regex.length() - 1, regex.length() );
-        
-        return regex.append( ")(\"|'|`|\\s|$).*$" ).toString();
+
+        return regex.append( ")(\\W.*)?$" ).toString();
     }
 
-
-    public static final String[] getIllegalKeyWords()
+    public static String getIllegalKeywordsRegex()
     {
-        return ILLEGAL_KEYWORDS.toArray(new String[ILLEGAL_KEYWORDS.size()]);
+        StringBuffer regex = new StringBuffer( "^(.*\\W)?(" );
+
+        for ( String word : ILLEGAL_KEYWORDS )
+        {
+            regex.append( word ).append( REGEX_SEP );
+        }
+
+        regex.delete( regex.length() - 1, regex.length() );
+
+        return regex.append( ")(\\W.*)?$" ).toString();
     }
 
-    
     /**
      * Indicates whether this SQL view is a query.
      */
@@ -227,13 +230,12 @@ public class SqlView
     {
         return SqlViewType.MATERIALIZED_VIEW.equals( type );
     }
-    
+
     // -------------------------------------------------------------------------
     // Getters and setters
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getDescription()
@@ -247,7 +249,6 @@ public class SqlView
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getSqlQuery()
     {
@@ -260,7 +261,6 @@ public class SqlView
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public SqlViewType getType()
     {
@@ -273,7 +273,6 @@ public class SqlView
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Override
     public CacheStrategy getCacheStrategy()

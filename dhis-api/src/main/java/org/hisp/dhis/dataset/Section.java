@@ -29,7 +29,6 @@ package org.hisp.dhis.dataset;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -38,9 +37,6 @@ import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.dataelement.DataElementOperand;
@@ -60,10 +56,8 @@ public class Section
 
     private DataSet dataSet;
 
-    @Scanned
     private List<DataElement> dataElements = new ArrayList<>();
 
-    @Scanned
     private List<Indicator> indicators = new ArrayList<>();
 
     private Set<DataElementOperand> greyedFields = new HashSet<>();
@@ -110,6 +104,11 @@ public class Section
         greyedFields.remove( greyedField );
     }
 
+    private void addIndicator( Indicator indicator )
+    {
+        indicators.remove( indicator );
+    }
+
     public void removeAllGreyedFields()
     {
         greyedFields.clear();
@@ -120,6 +119,11 @@ public class Section
         dataElements.clear();
     }
 
+    public void removeAllIndicators()
+    {
+        indicators.clear();
+    }
+
     public boolean hasCategoryCombo()
     {
         return getCategoryCombo() != null;
@@ -127,43 +131,17 @@ public class Section
 
     public DataElementCategoryCombo getCategoryCombo()
     {
-        return dataElements != null && !dataElements.isEmpty() ? dataElements.get( 0 ).getCategoryCombo() : null;
-    }
-
-    public boolean hasMultiDimensionalDataElement()
-    {
-        for ( DataElement element : dataElements )
+        for ( DataElement dataElement : dataElements )
         {
-            if ( element.isMultiDimensional() )
+            DataElementCategoryCombo categoryCombo = dataElement.getCategoryCombo( dataSet );
+            
+            if ( categoryCombo != null )
             {
-                return true;
+                return categoryCombo;
             }
         }
-
-        return false;
-    }
-
-    public boolean categorComboIsInvalid()
-    {
-        if ( dataElements != null && dataElements.size() > 0 )
-        {
-            DataElementCategoryCombo categoryCombo = null;
-
-            for ( DataElement element : dataElements )
-            {
-                if ( element != null )
-                {
-                    if ( categoryCombo != null && !categoryCombo.equals( element.getCategoryCombo() ) )
-                    {
-                        return true;
-                    }
-
-                    categoryCombo = element.getCategoryCombo();
-                }
-            }
-        }
-
-        return false;
+        
+        return null;
     }
 
     public boolean hasDataElements()
@@ -182,7 +160,6 @@ public class Section
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getDescription()
@@ -197,7 +174,6 @@ public class Section
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataSet getDataSet()
     {
@@ -211,7 +187,6 @@ public class Section
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "dataElements", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "dataElement", namespace = DxfNamespaces.DXF_2_0 )
     public List<DataElement> getDataElements()
@@ -226,7 +201,6 @@ public class Section
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "indicators", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "indicator", namespace = DxfNamespaces.DXF_2_0 )
     public List<Indicator> getIndicators()
@@ -240,7 +214,6 @@ public class Section
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getSortOrder()
     {
@@ -253,7 +226,6 @@ public class Section
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "greyedFields", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "greyedField", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataElementOperand> getGreyedFields()
@@ -279,10 +251,12 @@ public class Section
             if ( mergeMode.isReplace() )
             {
                 dataSet = section.getDataSet();
+                description = section.getDescription();
             }
             else if ( mergeMode.isMerge() )
             {
                 dataSet = section.getDataSet() == null ? dataSet : section.getDataSet();
+                description = section.getDescription() == null ? description : section.getDescription();
             }
 
             removeAllDataElements();
@@ -290,6 +264,9 @@ public class Section
 
             removeAllGreyedFields();
             section.getGreyedFields().forEach( this::addGreyedField );
+
+            removeAllIndicators();
+            section.getIndicators().forEach( this::addIndicator );
         }
     }
 }

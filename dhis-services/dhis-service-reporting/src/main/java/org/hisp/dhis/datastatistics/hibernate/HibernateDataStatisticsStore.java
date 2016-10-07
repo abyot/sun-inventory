@@ -227,13 +227,13 @@ public class HibernateDataStatisticsStore
                 "cast(round(cast(sum(dashboardviews) as numeric),0) as int) as dashboardViews, " +
                 "cast(round(cast(sum(datasetreportviews) as numeric),0) as int) as dataSetReportViews, " +
                 "max(active_users) as activeUsers," +
-                "sum(totalviews)/max(active_users) as averageViews, " +
-                "sum(mapviews)/max(active_users) as averageMapViews, " +
-                "sum(chartviews)/max(active_users) as averageChartViews, " +
-                "sum(reporttableviews)/max(active_users) as averageReportTableViews, " +
-                "sum(eventreportviews)/max(active_users) as averageEventReportViews, " +
-                "sum(eventchartviews)/max(active_users) as averageEventChartViews, " +
-                "sum(dashboardviews)/max(active_users) as averageDashboardViews, " +
+                "coalesce(sum(totalviews)/nullif(max(active_users), 0), 0) as averageViews," +
+                "coalesce(sum(mapviews)/nullif(max(active_users), 0), 0) as averageMapViews, " +
+                "coalesce(sum(chartviews)/nullif(max(active_users), 0), 0) as averageChartViews, " +
+                "coalesce(sum(reporttableviews)/nullif(max(active_users), 0), 0) as averageReportTableViews, " +
+                "coalesce(sum(eventreportviews)/nullif(max(active_users), 0), 0) as averageEventReportViews, " +
+                "coalesce(sum(eventchartviews)/nullif(max(active_users), 0), 0) as averageEventChartViews, " +
+                "coalesce(sum(dashboardviews)/nullif(max(active_users), 0), 0) as averageDashboardViews, " +
                 "cast(round(cast(sum(totalviews) as numeric),0) as int) as totalViews," +
                 "cast(round(cast(sum(maps) as numeric),0) as int) as savedMaps," +
                 "cast(round(cast(sum(charts) as numeric),0) as int) as savedCharts," +

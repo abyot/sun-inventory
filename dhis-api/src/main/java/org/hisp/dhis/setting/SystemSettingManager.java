@@ -55,6 +55,11 @@ public interface SystemSettingManager
 
     List<SystemSetting> getAllSystemSettings();
 
+    /**
+     * Returns all system settings as a mapping between the setting name and the
+     * value. Includes system settings which have a default value but no explicitly
+     * set value.
+     */
     Map<String, Serializable> getSystemSettingsAsMap();
 
     Map<String, Serializable> getSystemSettingsAsMap( Set<String> names );

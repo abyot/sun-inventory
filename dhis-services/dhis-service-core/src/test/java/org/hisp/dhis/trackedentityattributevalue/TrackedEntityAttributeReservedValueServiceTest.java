@@ -78,9 +78,9 @@ public class TrackedEntityAttributeReservedValueServiceTest
         trackedEntityAttributeA.setGenerated( true );
         trackedEntityAttributeB.setGenerated( false );
         trackedEntityAttributeC.setGenerated( true );
-        trackedEntityAttributeC.setPattern( "000000" );
+        trackedEntityAttributeC.setPattern( "######" );
         trackedEntityAttributeD.setGenerated( true );
-        trackedEntityAttributeD.setPattern( "0" );
+        trackedEntityAttributeD.setPattern( "#" );
         
         trackedEntityAttributeStore.save( trackedEntityAttributeA );
         trackedEntityAttributeStore.save( trackedEntityAttributeB );

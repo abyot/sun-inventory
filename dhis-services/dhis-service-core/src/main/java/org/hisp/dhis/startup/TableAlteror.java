@@ -29,12 +29,12 @@ package org.hisp.dhis.startup;
  */
 
 import com.google.common.collect.Lists;
-import org.amplecode.quick.StatementHolder;
-import org.amplecode.quick.StatementManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.jdbc.StatementBuilder;
 import org.hisp.dhis.system.startup.AbstractStartupRoutine;
+import org.hisp.quick.StatementHolder;
+import org.hisp.quick.StatementManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +59,7 @@ public class TableAlteror
 
     @Autowired
     private StatementManager statementManager;
-
+    
     @Autowired
     private StatementBuilder statementBuilder;
 
@@ -158,6 +158,7 @@ public class TableAlteror
         executeSql( "ALTER TABLE eventchart DROP COLUMN datatype" );
         executeSql( "ALTER TABLE validationrule DROP COLUMN type" );
         executeSql( "ALTER TABLE organisationunit DROP COLUMN active" );
+        executeSql( "ALTER TABLE organisationunit DROP COLUMN uuid" );
 
         executeSql( "DROP INDEX datamart_crosstab" );
 
@@ -201,10 +202,16 @@ public class TableAlteror
 
         executeSql( "ALTER TABLE organisationunit DROP COLUMN hasPatients" );
 
-        // dataelement_categorycombo not null
+        // category combo not null
         executeSql( "update dataelement set categorycomboid = " + defaultCategoryComboId + " where categorycomboid is null" );
-        executeSql( "alter table dataelement add constraint fk_dataelement_categorycombo foreign key (categorycomboid) references categorycombo (categorycomboid) match simple;" );
+        executeSql( "alter table dataelement alter column categorycomboid set not null" );
 
+        executeSql( "update dataset set categorycomboid = " + defaultCategoryComboId + " where categorycomboid is null" );
+        executeSql( "alter table dataset alter column categorycomboid set not null" );
+        
+        executeSql( "update program set categorycomboid = " + defaultCategoryComboId + " where categorycomboid is null" );
+        executeSql( "alter table program alter column categorycomboid set not null" );
+        
         // categories_categoryoptions
         // set to 0 temporarily
         int c1 = executeSql( "UPDATE categories_categoryoptions SET sort_order=0 WHERE sort_order is NULL OR sort_order=0" );
@@ -245,19 +252,25 @@ public class TableAlteror
         executeSql( "UPDATE validationrule SET periodtypeid = (SELECT periodtypeid FROM periodtype WHERE name='Monthly') WHERE periodtypeid is null" );
 
         // set varchar to text
-        executeSql( "ALTER TABLE dataelement ALTER description TYPE text" );
-        executeSql( "ALTER TABLE indicator ALTER description TYPE text" );
-        executeSql( "ALTER TABLE validationrule ALTER description TYPE text" );
-        executeSql( "ALTER TABLE expression ALTER expression TYPE text" );
-        executeSql( "ALTER TABLE translation ALTER value TYPE text" );
-        executeSql( "ALTER TABLE organisationunit ALTER comment TYPE text" );
-        executeSql( "ALTER TABLE program ALTER description TYPE text" );
-        executeSql( "ALTER TABLE trackedentityattribute ALTER description TYPE text" );
-        executeSql( "ALTER TABLE trackedentityattributegroup ALTER description TYPE text" );
-        executeSql( "ALTER TABLE programrule ALTER condition TYPE text" );
-        executeSql( "ALTER TABLE programruleaction ALTER content TYPE text" );
-        executeSql( "ALTER TABLE programruleaction ALTER data TYPE text" );
-        executeSql( "ALTER TABLE trackedentitycomment ALTER commenttext TYPE text" );
+        executeSql( "ALTER TABLE dataelement ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE dataelementgroupset ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE indicatorgroupset ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE orgunitgroupset ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE indicator ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE validationrule ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE expression ALTER COLUMN expression TYPE text" );
+        executeSql( "ALTER TABLE translation ALTER COLUMN value TYPE text" );
+        executeSql( "ALTER TABLE organisationunit ALTER COLUMN comment TYPE text" );
+        executeSql( "ALTER TABLE program ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE trackedentityattribute ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE trackedentityattributegroup ALTER COLUMN description TYPE text" );
+        executeSql( "ALTER TABLE programrule ALTER COLUMN condition TYPE text" );
+        executeSql( "ALTER TABLE programruleaction ALTER COLUMN content TYPE text" );
+        executeSql( "ALTER TABLE programruleaction ALTER COLUMN data TYPE text" );
+        executeSql( "ALTER TABLE trackedentitycomment ALTER COLUMN commenttext TYPE text" );
+        executeSql( "ALTER TABLE users ALTER COLUMN openid TYPE text" );
+        executeSql( "ALTER TABLE users ALTER COLUMN ldapid TYPE text" );
+        executeSql( "ALTER TABLE dataentryform ALTER COLUMN htmlcode TYPE text" );
 
         executeSql( "ALTER TABLE minmaxdataelement RENAME minvalue TO minimumvalue" );
         executeSql( "ALTER TABLE minmaxdataelement RENAME maxvalue TO maximumvalue" );
@@ -667,6 +680,7 @@ public class TableAlteror
 
         // remove unused configurations
         executeSql( "delete from systemsetting where name='keySmsConfig'" );
+        executeSql( "delete from systemsetting where name='keySmsConfiguration'" );
 
         // update denominator of indicator which has indicatortype as 'number'
         executeSql( "UPDATE indicator SET denominator = 1, denominatordescription = '' WHERE indicatortypeid IN (SELECT DISTINCT indicatortypeid FROM indicatortype WHERE indicatornumber = true) AND denominator IS NULL" );
@@ -712,10 +726,8 @@ public class TableAlteror
         executeSql( "UPDATE dataset SET version=0 WHERE version IS NULL" );
         executeSql( "UPDATE program SET version=0 WHERE version IS NULL" );
         executeSql( "update program set shortname = substring(name,0,50) where shortname is null" );
-        executeSql( "update program set categorycomboid = " + defaultCategoryComboId + " where categorycomboid is null" );
 
         executeSql( "update programstageinstance set attributeoptioncomboid = " + defaultOptionComboId + " where attributeoptioncomboid is null" );
-        executeSql( "update programstageinstance set categoryoptioncomboid = " + defaultOptionComboId + " where categoryoptioncomboid is null" );
         executeSql( "update programstageinstance set storedby=completedby where storedby is null and completedby is not null" );
 
         executeSql( "ALTER TABLE datavalue ALTER COLUMN lastupdated TYPE timestamp" );
@@ -734,7 +746,6 @@ public class TableAlteror
         executeSql( "ALTER TABLE dataset DROP COLUMN symbol" );
         executeSql( "ALTER TABLE users ALTER COLUMN password DROP NOT NULL" );
 
-        executeSql( "update dataset set categorycomboid = " + defaultCategoryComboId + " where categorycomboid is null" );
 
         // set default dataDimension on orgUnitGroupSet and deGroupSet
         executeSql( "UPDATE dataelementgroupset SET datadimension=true WHERE datadimension IS NULL" );
@@ -745,7 +756,6 @@ public class TableAlteror
         // set attribute defaults
         executeSql( "UPDATE attribute SET dataelementattribute=false WHERE dataelementattribute IS NULL" );
         executeSql( "UPDATE attribute SET dataelementgroupattribute=false WHERE dataelementgroupattribute IS NULL" );
-        executeSql( "UPDATE attribute SET dataelementcategoryattribute=false WHERE dataelementcategoryattribute IS NULL" );
         executeSql( "UPDATE attribute SET indicatorattribute=false WHERE indicatorattribute IS NULL" );
         executeSql( "UPDATE attribute SET indicatorgroupattribute=false WHERE indicatorgroupattribute IS NULL" );
         executeSql( "UPDATE attribute SET organisationunitattribute=false WHERE organisationunitattribute IS NULL" );
@@ -767,6 +777,7 @@ public class TableAlteror
         executeSql( "UPDATE attribute SET legendsetattribute=false WHERE legendsetattribute IS NULL" );
         executeSql( "UPDATE attribute SET programIndicatorAttribute=false WHERE programIndicatorAttribute IS NULL" );
         executeSql( "UPDATE attribute SET sqlViewAttribute=false WHERE sqlViewAttribute IS NULL" );
+        executeSql( "UPDATE attribute SET sectionAttribute=false WHERE sectionAttribute IS NULL" );
 
         executeSql( "update attribute set isunique=false where isunique is null" );
 
@@ -860,7 +871,7 @@ public class TableAlteror
         executeSql( "update program set enrollmentdatelabel = dateofenrollmentdescription where enrollmentdatelabel is null" );
         executeSql( "update program set incidentdatelabel = dateofincidentdescription where incidentdatelabel is null" );
         executeSql( "update programinstance set incidentdate = dateofincident where incidentdate is null" );
-        executeSql( "alter table programinstance alter column incidentdate set not null" );
+        executeSql( "alter table programinstance alter column incidentdate drop not null" );
         executeSql( "alter table program drop column dateofenrollmentdescription" );
         executeSql( "alter table program drop column dateofincidentdescription" );
         executeSql( "alter table programinstance drop column dateofincident" );
@@ -881,6 +892,7 @@ public class TableAlteror
         executeSql( "alter table keyjsonvalue alter column namespacekey set not null" );
         executeSql( "alter table keyjsonvalue drop column key" );
         executeSql( "alter table trackedentityattributevalue drop column encrypted_value" );
+        executeSql( "alter table predictor drop column predictororglevels" );
 
         // Remove data mart
         executeSql( "drop table aggregateddatasetcompleteness" );
@@ -901,10 +913,31 @@ public class TableAlteror
 
         executeSql( "alter table datastatisticsevent alter column eventtype type character varying" );
         executeSql( "alter table orgunitlevel drop constraint orgunitlevel_name_key" );
+        
+        executeSql( "update interpretation set likes = 0 where likes is null" );
+        
+        executeSql( "update chart set regressiontype = 'NONE' where regression is false or regression is null" );
+        executeSql( "update chart set regressiontype = 'LINEAR' where regression is true" );
+        executeSql( "alter table chart alter column regressiontype set not null" );
+        executeSql( "alter table chart drop column regression" );
 
+        executeSql( "update eventchart set regressiontype = 'NONE' where regression is false or regression is null" );
+        executeSql( "update eventchart set regressiontype = 'LINEAR' where regression is true" );
+        executeSql( "alter table eventchart alter column regressiontype set not null" );
+        executeSql( "alter table eventchart drop column regression" );
+
+        executeSql( "alter table validationrule drop column ruletype" );
+        executeSql( "alter table validationrule drop column skiptestexpressionid" );
+        executeSql( "alter table validationrule drop column organisationunitlevel" );
+        executeSql( "alter table validationrule drop column sequentialsamplecount" );
+        executeSql( "alter table validationrule drop column annualsamplecount" );
+        executeSql( "alter table validationrule drop column sequentialskipcount" );
+        
         updateEnums();
 
-        oauth2();
+        upgradeDataValueSoftDelete();
+        
+        initOauth2();
 
         upgradeDataValuesWithAttributeOptionCombo();
         upgradeCompleteDataSetRegistrationsWithAttributeOptionCombo();
@@ -928,11 +961,27 @@ public class TableAlteror
         upgradeDataDimensionItemsToReportingRateMetric();
 
         updateObjectTranslation();
+        upgradeDataSetElements();
+
+        removeOutdatedTranslationProperties();
 
         log.info( "Tables updated" );
     }
+    
+    private void removeOutdatedTranslationProperties()
+    {
+        executeSql( "delete from indicatortranslations where objecttranslationid in (select objecttranslationid from objecttranslation where property in ('numeratorDescription', 'denominatorDescription'))" );
+        executeSql( "delete from objecttranslation where property in ('numeratorDescription', 'denominatorDescription')" );
+    }
+    
+    private void upgradeDataValueSoftDelete()
+    {
+        executeSql( "update datavalue set deleted = false where deleted is null" );
+        executeSql( "alter table datavalue alter column deleted set not null" );
+        executeSql( "create index in_datavalue_deleted on datavalue(deleted)" );
+    }
 
-    public void oauth2()
+    private void initOauth2()
     {
         // OAuth2
         executeSql( "CREATE TABLE oauth_code (" +
@@ -1023,6 +1072,29 @@ public class TableAlteror
         executeSql( "update dataentryform set style='NONE' where style='none'" );
     }
 
+    private void upgradeDataSetElements()
+    {
+        String autoIncr = statementBuilder.getAutoIncrementValue();
+        String uid = statementBuilder.getUid();
+        
+        String insertSql = 
+            "insert into datasetelement(datasetelementid,uid,datasetid,dataelementid,created,lastupdated) " +
+            "select " + autoIncr + "  as datasetelementid, " +
+            uid + " as uid, " +
+            "dsm.datasetid as datasetid, " +
+            "dsm.dataelementid as dataelementid, " +
+            "now() as created, " +
+            "now() as lastupdated " +
+            "from datasetmembers dsm; " +
+            "drop table datasetmembers; ";        
+        
+        executeSql( insertSql );
+        
+        executeSql( "alter table datasetelement alter column uid set not null" );
+        executeSql( "alter table datasetelement alter column created set not null" );
+        executeSql( "alter table datasetelement alter column lastupdated set not null" );
+    }
+    
     private void upgradeAggregationType( String table )
     {
         executeSql( "update " + table + " set aggregationtype='SUM' where aggregationtype='sum'" );
@@ -1062,7 +1134,7 @@ public class TableAlteror
     {
         List<String> tables = Lists.newArrayList( "user", "usergroup", "organisationunit", "orgunitgroup", "orgunitgroupset",
             "section", "dataset", "sqlview", "dataelement", "dataelementgroup", "dataelementgroupset", "categorycombo",
-            "dataelementcategory", "indicator", "indicatorgroup", "indicatorgroupset", "indicatortype",
+            "dataelementcategory", "dataelementcategoryoption", "indicator", "indicatorgroup", "indicatorgroupset", "indicatortype",
             "validationrule", "validationrulegroup", "constant", "attribute", "attributegroup",
             "program", "programstage", "programindicator", "trackedentity", "trackedentityattribute" );
 
@@ -1464,7 +1536,6 @@ public class TableAlteror
         addTranslationTable( listTables, "MapView", "mapviewtranslations", "mapview", "mapviewid" );
         addTranslationTable( listTables, "Message", "messagetranslations", "message", "messageid" );
         addTranslationTable( listTables, "MessageConversation", "messageconversationtranslations", "messageconversation", "messageconversationid" );
-        addTranslationTable( listTables, "MetaDataFilter", "metadatafiltertranslations", "metadatafilter", "metadatafilterid" );
         addTranslationTable( listTables, "Option", "optionvaluetranslations", "optionvalue", "optionvalueid" );
         addTranslationTable( listTables, "OptionSet", "optionsettranslations", "optionset", "optionsetid" );
         addTranslationTable( listTables, "OrganisationUnit", "organisationunittranslations", "organisationunit", "organisationunitid" );
@@ -1493,7 +1564,6 @@ public class TableAlteror
         addTranslationTable( listTables, "TrackedEntityAttribute", "trackedentityattributetranslations", "trackedentityattribute", "trackedentityattributeid" );
         addTranslationTable( listTables, "TrackedEntityAttributeGroup", "trackedentityattributegrouptranslations", "trackedentityattributegroup", "trackedentityattributegroupid" );
         addTranslationTable( listTables, "TrackedEntityInstance", "trackedentityinstancetranslations", "trackedentityinstance", "trackedentityinstanceid" );
-        addTranslationTable( listTables, "TrackedEntityInstanceReminder", "trackedentityinstanceremindertranslations", "trackedentityinstancereminder", "trackedentityinstancereminderid" );
         addTranslationTable( listTables, "User", "userinfotranslations", "userinfo", "userinfoid" );
         addTranslationTable( listTables, "UserAuthorityGroup", "userroletranslations", "userrole", "userroleid" );
         addTranslationTable( listTables, "UserCredentials", "usertranslations", "users", "userid" );

@@ -29,15 +29,11 @@ package org.hisp.dhis.trackedentityattributevalue;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.trackedentity.TrackedEntityAttribute;
 import org.hisp.dhis.trackedentity.TrackedEntityInstance;
 
@@ -46,7 +42,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
- *
  * @author Markus Bekken
  */
 @JacksonXmlRootElement( localName = "trackedEntityAttributeReservedValue", namespace = DxfNamespaces.DXF_2_0 )
@@ -59,15 +54,15 @@ public class TrackedEntityAttributeReservedValue
     private static final long serialVersionUID = -1439881198734016116L;
 
     private int id;
-    
+
     private TrackedEntityAttribute trackedEntityAttribute;
 
     private Date created;
-    
+
     private Date expiryDate;
 
     private String value;
-    
+
     private TrackedEntityInstance valueUtilizedByTEI;
 
     // -------------------------------------------------------------------------
@@ -97,8 +92,8 @@ public class TrackedEntityAttributeReservedValue
         {
             setCreated( c.getTime() );
         }
-        
-        if ( getExpiryDate() == null ) 
+
+        if ( getExpiryDate() == null )
         {
             c.add( Calendar.YEAR, 1 );
             setExpiryDate( c.getTime() );
@@ -114,9 +109,9 @@ public class TrackedEntityAttributeReservedValue
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( (getTrackedEntityAttribute() == null) ? 0 : getTrackedEntityAttribute().hashCode() );
-        result = prime * result + ( (getValue() == null) ? 0 : getValue().hashCode() );
-        result = prime * result + ( (getCreated() == null) ? 0 : getCreated().hashCode() );
+        result = prime * result + ((getTrackedEntityAttribute() == null) ? 0 : getTrackedEntityAttribute().hashCode());
+        result = prime * result + ((getValue() == null) ? 0 : getValue().hashCode());
+        result = prime * result + ((getCreated() == null) ? 0 : getCreated().hashCode());
         return result;
     }
 
@@ -178,8 +173,6 @@ public class TrackedEntityAttributeReservedValue
     // Getters and setters
     // -------------------------------------------------------------------------
 
-    @JsonProperty
-    @JacksonXmlProperty( isAttribute = false )
     public int getId()
     {
         return id;
@@ -189,7 +182,7 @@ public class TrackedEntityAttributeReservedValue
     {
         this.id = id;
     }
-    
+
     @JsonProperty
     @JacksonXmlProperty( isAttribute = true )
     public Date getCreated()
@@ -220,15 +213,14 @@ public class TrackedEntityAttributeReservedValue
     {
         return this.value;
     }
-    
+
     public void setValue( String value )
     {
         this.value = value;
     }
-    
+
     @JsonProperty( "valueUtilizedByTEI" )
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "ValueUtilizedByTEI", namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntityInstance getValueUtilizedByTEI()
     {
@@ -242,7 +234,6 @@ public class TrackedEntityAttributeReservedValue
 
     @JsonProperty( "trackedEntityAttribute" )
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "trackedEntityAttribute", namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntityAttribute getTrackedEntityAttribute()
     {

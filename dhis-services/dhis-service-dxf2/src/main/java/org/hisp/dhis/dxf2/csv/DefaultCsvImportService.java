@@ -28,16 +28,7 @@ package org.hisp.dhis.dxf2.csv;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.system.util.DateUtils.getMediumDate;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.csvreader.CsvReader;
 import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.analytics.AggregationType;
 import org.hisp.dhis.common.BaseIdentifiableObject;
@@ -64,13 +55,19 @@ import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.period.MonthlyPeriodType;
 import org.hisp.dhis.period.PeriodType;
-import org.hisp.dhis.translation.Translation;
 import org.hisp.dhis.validation.Importance;
-import org.hisp.dhis.validation.RuleType;
 import org.hisp.dhis.validation.ValidationRule;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.csvreader.CsvReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.hisp.dhis.system.util.DateUtils.getMediumDate;
 
 /**
  * TODO Unit testing
@@ -130,10 +127,6 @@ public class DefaultCsvImportService
         else if ( OptionSet.class.equals( clazz ) )
         {
             setOptionSetsFromCsv( reader, metadata );
-        }
-        else if ( Translation.class.equals( clazz ) )
-        {
-            metadata.setTranslations( translationsFromCsv( reader ) );
         }
 
         return metadata;
@@ -214,22 +207,25 @@ public class DefaultCsvImportService
                 object.setZeroIsSignificant( Boolean.valueOf( getSafe( values, 11, "false", null ) ) );
                 String optionSetUid = getSafe( values, 12, null, 11 );
                 String commentOptionSetUid = getSafe( values, 13, null, 11 );
+                object.setAutoFields();
 
                 if ( categoryComboUid != null )
                 {
                     DataElementCategoryCombo cc = new DataElementCategoryCombo();
                     cc.setUid( categoryComboUid );
-                    object.setCategoryCombo( cc );
+                    cc.setAutoFields();
+                    object.setDataElementCategoryCombo( cc );
                 }
                 else
                 {
-                    object.setCategoryCombo( categoryCombo );
+                    object.setDataElementCategoryCombo( categoryCombo );
                 }
 
                 if ( optionSetUid != null )
                 {
                     OptionSet optionSet = new OptionSet();
                     optionSet.setUid( optionSetUid );
+                    optionSet.setAutoFields();
                     object.setOptionSet( optionSet );
                 }
 
@@ -237,6 +233,7 @@ public class DefaultCsvImportService
                 {
                     OptionSet optionSet = new OptionSet();
                     optionSet.setUid( commentOptionSetUid );
+                    optionSet.setAutoFields();
                     object.setCommentOptionSet( optionSet );
                 }
 
@@ -261,6 +258,7 @@ public class DefaultCsvImportService
                 DataElementGroup object = new DataElementGroup();
                 setIdentifiableObject( object, values );
                 object.setShortName( getSafe( values, 3, object.getName(), 50 ) );
+                object.setAutoFields();
                 list.add( object );
             }
         }
@@ -287,7 +285,8 @@ public class DefaultCsvImportService
                 object.setDescription( getSafe( values, 3, null, 255 ) );
                 object.setInstruction( getSafe( values, 4, null, 255 ) );
                 object.setImportance( Importance.valueOf( getSafe( values, 5, Importance.MEDIUM.toString(), 255 ) ) );
-                object.setRuleType( RuleType.valueOf( getSafe( values, 6, RuleType.VALIDATION.toString(), 255 ) ) );
+                // Left here so nobody wonders what field 6 is for
+                // object.setRuleType( RuleType.valueOf( getSafe( values, 6, RuleType.VALIDATION.toString(), 255 ) ) );
                 object.setOperator( Operator.safeValueOf( getSafe( values, 7, Operator.equal_to.toString(), 255 ) ) );
                 object.setPeriodType( PeriodType.getByNameIgnoreCase( getSafe( values, 8, MonthlyPeriodType.NAME, 255 ) ) );
 
@@ -303,6 +302,7 @@ public class DefaultCsvImportService
 
                 object.setLeftSide( leftSide );
                 object.setRightSide( rightSide );
+                object.setAutoFields();
 
                 list.add( object );
             }
@@ -327,17 +327,17 @@ public class DefaultCsvImportService
                 String parentUid = getSafe( values, 3, null, 230 ); // Could be UID, code, name
                 object.setShortName( getSafe( values, 4, object.getName(), 50 ) );
                 object.setDescription( getSafe( values, 5, null, null ) );
-                object.setUuid( getSafe( values, 6, null, 36 ) );
-                object.setOpeningDate( getMediumDate( getSafe( values, 7, "1970-01-01", null ) ) );
-                object.setClosedDate( getMediumDate( getSafe( values, 8, null, null ) ) );
-                object.setComment( getSafe( values, 9, null, null ) );
-                object.setFeatureType( FeatureType.valueOf( getSafe( values, 10, "NONE", 50 ) ) );
-                object.setCoordinates( getSafe( values, 11, null, null ) );
-                object.setUrl( getSafe( values, 12, null, 255 ) );
-                object.setContactPerson( getSafe( values, 13, null, 255 ) );
-                object.setAddress( getSafe( values, 14, null, 255 ) );
-                object.setEmail( getSafe( values, 15, null, 150 ) );
-                object.setPhoneNumber( getSafe( values, 16, null, 150 ) );
+                object.setOpeningDate( getMediumDate( getSafe( values, 6, "1970-01-01", null ) ) );
+                object.setClosedDate( getMediumDate( getSafe( values, 7, null, null ) ) );
+                object.setComment( getSafe( values, 8, null, null ) );
+                object.setFeatureType( FeatureType.valueOf( getSafe( values, 9, "NONE", 50 ) ) );
+                object.setCoordinates( getSafe( values, 10, null, null ) );
+                object.setUrl( getSafe( values, 11, null, 255 ) );
+                object.setContactPerson( getSafe( values, 12, null, 255 ) );
+                object.setAddress( getSafe( values, 13, null, 255 ) );
+                object.setEmail( getSafe( values, 14, null, 150 ) );
+                object.setPhoneNumber( getSafe( values, 15, null, 150 ) );
+                object.setAutoFields();
 
                 if ( parentUid != null )
                 {
@@ -366,6 +366,7 @@ public class DefaultCsvImportService
             {
                 OrganisationUnitGroup object = new OrganisationUnitGroup();
                 setIdentifiableObject( object, values );
+                object.setAutoFields();
                 object.setShortName( getSafe( values, 3, object.getName(), 50 ) );
                 list.add( object );
             }
@@ -402,12 +403,14 @@ public class DefaultCsvImportService
             {
                 OptionSet optionSet = new OptionSet();
                 setIdentifiableObject( optionSet, values );
+                optionSet.setAutoFields();
                 optionSet.setValueType( ValueType.TEXT );
 
                 Option option = new Option();
                 option.setName( getSafe( values, 3, null, 230 ) );
                 option.setUid( getSafe( values, 4, CodeGenerator.generateCode(), 11 ) );
                 option.setCode( getSafe( values, 5, null, 50 ) );
+                option.setAutoFields();
 
                 if ( optionSet.getName() == null || option.getCode() == null )
                 {
@@ -436,30 +439,6 @@ public class DefaultCsvImportService
         }
     }
 
-    private List<Translation> translationsFromCsv( CsvReader reader )
-        throws IOException
-    {
-        List<Translation> list = new ArrayList<>();
-        
-        while ( reader.readRecord() )
-        {
-            String[] values = reader.getValues();
-            
-            if ( values != null && values.length > 0 )
-            {
-                Translation translation = new Translation();
-                translation.setObjectUid( getSafe( values, 0, null, 11 ) );
-                translation.setClassName( getSafe( values, 1, null, 120 ) );
-                translation.setLocale( getSafe( values, 2, null, 15 ) );
-                translation.setProperty( getSafe( values, 3, null, 60 ) );
-                translation.setValue( getSafe( values, 4, null, null ) );
-                list.add( translation );
-            }
-        }
-        
-        return list;
-    }
-    
     // -------------------------------------------------------------------------
     // Supportive methods
     // -------------------------------------------------------------------------

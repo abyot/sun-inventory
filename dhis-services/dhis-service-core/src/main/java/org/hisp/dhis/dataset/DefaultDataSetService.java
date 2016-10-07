@@ -28,33 +28,31 @@ package org.hisp.dhis.dataset;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.getCountByName;
-import static org.hisp.dhis.i18n.I18nUtils.getObjectsBetween;
-import static org.hisp.dhis.i18n.I18nUtils.getObjectsBetweenByName;
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.hisp.dhis.dataapproval.DataApprovalService;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
-import org.hisp.dhis.i18n.I18nService;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitQueryParams;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.PeriodType;
+import org.hisp.dhis.query.QueryParserException;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.joda.time.DateTime;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Lars Helge Overland
@@ -81,13 +79,6 @@ public class DefaultDataSetService
         this.lockExceptionStore = lockExceptionStore;
     }
 
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
-    }
-
     private OrganisationUnitService organisationUnitService;
 
     public void setOrganisationUnitService( OrganisationUnitService organisationUnitService )
@@ -101,7 +92,7 @@ public class DefaultDataSetService
     {
         this.currentUserService = currentUserService;
     }
-    
+
     private DataApprovalService dataApprovalService;
 
     public void setDataApprovalService( DataApprovalService dataApprovalService )
@@ -134,105 +125,61 @@ public class DefaultDataSetService
     @Override
     public DataSet getDataSet( int id )
     {
-        return i18n( i18nService, dataSetStore.get( id ) );
+        return dataSetStore.get( id );
     }
 
     @Override
     public DataSet getDataSet( String uid )
     {
-        return i18n( i18nService, dataSetStore.getByUid( uid ) );
+        return dataSetStore.getByUid( uid );
     }
 
     @Override
     public DataSet getDataSetNoAcl( String uid )
     {
-        return i18n( i18nService, dataSetStore.getByUidNoAcl( uid ) );
-    }
-
-    @Override
-    public DataSet getDataSet( int id, boolean i18nDataElements, boolean i18nIndicators, boolean i18nOrgUnits )
-    {
-        return getDataSet( id, i18nDataElements, i18nIndicators, i18nOrgUnits, false );
-    }
-
-    @Override
-    public DataSet getDataSet( int id, boolean i18nDataElements, boolean i18nIndicators, boolean i18nOrgUnits, boolean i18nSections )
-    {
-        DataSet dataSet = getDataSet( id );
-
-        if ( dataSet != null )
-        {
-            if ( i18nDataElements )
-            {
-                i18n( i18nService, dataSet.getDataElements() );
-            }
-    
-            if ( i18nIndicators )
-            {
-                i18n( i18nService, dataSet.getIndicators() );
-            }
-    
-            if ( i18nOrgUnits )
-            {
-                i18n( i18nService, dataSet.getSources() );
-            }
-    
-            if ( i18nSections && dataSet.hasSections() )
-            {
-                i18n( i18nService, dataSet.getSections() );
-    
-                for ( Section section : dataSet.getSections() )
-                {
-                    i18n( i18nService, section.getDataElements() );
-                }
-            }
-        }
-
-        return dataSet;
-    }
-
-    @Override
-    public DataSet getDataSet( String id, boolean i18nDataElements, boolean i18nIndicators, boolean i18nOrgUnits, boolean i18nSections )
-    {
-        DataSet dataSet = getDataSet( id );
-        
-        return dataSet != null ? getDataSet( dataSet.getId(), i18nDataElements, i18nIndicators, i18nOrgUnits, i18nSections ) : null;
+        return dataSetStore.getByUidNoAcl( uid );
     }
 
     @Override
     public List<DataSet> getDataSetByName( String name )
     {
-        return new ArrayList<>( i18n( i18nService, dataSetStore.getAllEqName( name ) ) );
+        return new ArrayList<>( dataSetStore.getAllEqName( name ) );
     }
 
     @Override
     public List<DataSet> getDataSetByShortName( String shortName )
     {
-        return new ArrayList<>( i18n( i18nService, dataSetStore.getAllEqShortName( shortName ) ) );
+        return new ArrayList<>( dataSetStore.getAllEqShortName( shortName ) );
     }
 
     @Override
     public DataSet getDataSetByCode( String code )
     {
-        return i18n( i18nService, dataSetStore.getByCode( code ) );
+        return dataSetStore.getByCode( code );
     }
 
     @Override
     public List<DataSet> getDataSetsBySources( Collection<OrganisationUnit> sources )
     {
-        return i18n( i18nService, dataSetStore.getDataSetsBySources( sources ) );
+        return dataSetStore.getDataSetsBySources( sources );
+    }
+
+    @Override
+    public List<DataSet> getDataSetsByDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        return dataSetStore.getDataSetsByDataEntryForm( dataEntryForm );
     }
 
     @Override
     public List<DataSet> getAllDataSets()
     {
-        return i18n( i18nService, dataSetStore.getAll() );
+        return dataSetStore.getAll();
     }
 
     @Override
     public List<DataSet> getDataSetsByPeriodType( PeriodType periodType )
     {
-        return i18n( i18nService, dataSetStore.getDataSetsByPeriodType( periodType ) );
+        return dataSetStore.getDataSetsByPeriodType( periodType );
     }
 
     @Override
@@ -240,75 +187,45 @@ public class DefaultDataSetService
     {
         return dataSetStore.getByUid( uids );
     }
-    
+
     @Override
     public List<DataSet> getDataSetsByUidNoAcl( Collection<String> uids )
     {
         return dataSetStore.getByUidNoAcl( uids );
     }
-
-    @Override
-    public Set<DataElement> getDataElements( DataSet dataSet )
-    {
-        return i18n( i18nService, dataSet.getDataElements() );
-    }
-
+    
     @Override
     public List<DataSet> getDataSetsForMobile( OrganisationUnit source )
     {
-        return i18n( i18nService, dataSetStore.getDataSetsForMobile( source ) );
+        return dataSetStore.getDataSetsForMobile( source );
     }
 
     @Override
     public List<DataSet> getDataSetsForMobile()
     {
-        return i18n( i18nService, dataSetStore.getDataSetsForMobile() );
-    }
-
-    @Override
-    public int getDataSetCount()
-    {
-        return dataSetStore.getCount();
-    }
-
-    @Override
-    public int getDataSetCountByName( String name )
-    {
-        return getCountByName( i18nService, dataSetStore, name );
-    }
-
-    @Override
-    public List<DataSet> getDataSetsBetween( int first, int max )
-    {
-        return getObjectsBetween( i18nService, dataSetStore, first, max );
-    }
-
-    @Override
-    public List<DataSet> getDataSetsBetweenByName( String name, int first, int max )
-    {
-        return getObjectsBetweenByName( i18nService, dataSetStore, name, first, max );
+        return dataSetStore.getDataSetsForMobile();
     }
 
     @Override
     public List<DataSet> getCurrentUserDataSets()
     {
         User user = currentUserService.getCurrentUser();
-        
+
         if ( user == null )
         {
             return Lists.newArrayList();
         }
-        
+
         if ( user.isSuper() )
         {
             return getAllDataSets();
         }
         else
         {
-            return i18n( i18nService, Lists.newArrayList( user.getUserCredentials().getAllDataSets() ) );
+            return Lists.newArrayList( user.getUserCredentials().getAllDataSets() );
         }
     }
-    
+
     // -------------------------------------------------------------------------
     // DataSet LockExceptions
     // -------------------------------------------------------------------------
@@ -368,6 +285,12 @@ public class DefaultDataSetService
     }
 
     @Override
+    public void deleteLockExceptionCombination( DataSet dataSet, Period period, OrganisationUnit organisationUnit )
+    {
+        lockExceptionStore.deleteCombination( dataSet, period, organisationUnit );
+    }
+
+    @Override
     public boolean isLockedPeriod( DataSet dataSet, Period period, OrganisationUnit organisationUnit, Date now )
     {
         now = now != null ? now : new Date();
@@ -385,19 +308,19 @@ public class DefaultDataSetService
     }
 
     @Override
-    public boolean isLocked( DataSet dataSet, Period period, OrganisationUnit organisationUnit, 
+    public boolean isLocked( DataSet dataSet, Period period, OrganisationUnit organisationUnit,
         DataElementCategoryOptionCombo attributeOptionCombo, Date now, boolean useOrgUnitChildren )
     {
         if ( !useOrgUnitChildren )
         {
             return isLocked( dataSet, period, organisationUnit, attributeOptionCombo, now );
         }
-        
+
         if ( organisationUnit == null || !organisationUnit.hasChild() )
         {
             return false;
         }
-        
+
         for ( OrganisationUnit child : organisationUnit.getChildren() )
         {
             if ( isLocked( dataSet, period, child, attributeOptionCombo, now ) )
@@ -405,7 +328,7 @@ public class DefaultDataSetService
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -431,12 +354,12 @@ public class DefaultDataSetService
 
         return dataApprovalService.isApproved( dataSet.getWorkflow(), period, organisationUnit, attributeOptionCombo );
     }
-    
+
     @Override
     public void mergeWithCurrentUserOrganisationUnits( DataSet dataSet, Collection<OrganisationUnit> mergeOrganisationUnits )
     {
         Set<OrganisationUnit> selectedOrgUnits = Sets.newHashSet( dataSet.getSources() );
-        
+
         OrganisationUnitQueryParams params = new OrganisationUnitQueryParams();
         params.setParents( currentUserService.getCurrentUser().getOrganisationUnits() );
 
@@ -449,4 +372,92 @@ public class DefaultDataSetService
 
         updateDataSet( dataSet );
     }
+
+    @Override
+    public List<LockException> filterLockExceptions( List<String> filters )
+    {
+        List<LockException> lockExceptions = getAllLockExceptions();
+        Set<LockException> returnList = new HashSet<>( lockExceptions );
+
+        for ( String filter : filters )
+        {
+            String[] split = filter.split( ":" );
+
+            if ( split.length != 3 )
+            {
+                throw new QueryParserException( "Invalid filter: " + filter );
+            }
+
+            if ( "organisationUnit.id".equalsIgnoreCase( split[0] ) )
+            {
+                returnList.retainAll( getLockExceptionByOrganisationUnit( split[1], split[2], returnList ) );
+            }
+
+            if ( "dataSet.id".equalsIgnoreCase( split[0] ) )
+            {
+                returnList.retainAll( getLockExceptionByDataSet( split[1], split[2], returnList ) );
+            }
+
+            if ( "period".equalsIgnoreCase( split[0] ) )
+            {
+                returnList.retainAll( getLockExceptionByPeriod( split[1], split[2], returnList ) );
+            }
+        }
+
+
+        return new ArrayList<>( returnList );
+    }
+
+    private List<LockException> getLockExceptionByOrganisationUnit( String operator, String orgUnitIds, Collection<LockException> lockExceptions )
+    {
+
+        List<String> ids = parseIdFromString( orgUnitIds, operator );
+
+        return lockExceptions.stream()
+            .filter( lockException -> ids.contains( lockException.getOrganisationUnit().getUid() ) )
+            .collect( Collectors.toList() );
+    }
+
+    private List<LockException> getLockExceptionByDataSet( String operator, String dataSetIds, Collection<LockException> lockExceptions )
+    {
+        List<String> ids = parseIdFromString( dataSetIds, operator );
+
+        return lockExceptions.stream()
+            .filter( lockException -> ids.contains( lockException.getDataSet().getUid() ) )
+            .collect( Collectors.toList() );
+    }
+
+    private List<LockException> getLockExceptionByPeriod( String operator, String periods, Collection<LockException> lockExceptions )
+    {
+        List<String> ids = parseIdFromString( periods, operator );
+
+        return lockExceptions.stream()
+            .filter( lockException -> ids.contains( lockException.getPeriod().getIsoDate() ) )
+            .collect( Collectors.toList() );
+    }
+
+    private List<String> parseIdFromString( String input, String operator )
+    {
+        List<String> ids = new ArrayList<>();
+
+        if ( "in".equalsIgnoreCase( operator ) )
+        {
+            if ( input.startsWith( "[" ) && input.endsWith( "]" ) )
+            {
+                String[] split = input.substring( 1, input.length() - 1 ).split( "," );
+                Collections.addAll( ids, split );
+            }
+            else
+            {
+                throw new QueryParserException( "Invalid query: " + input );
+            }
+        }
+        else if ( "eq".equalsIgnoreCase( operator ) )
+        {
+            ids.add( input );
+        }
+        return ids;
+    }
+
+
 }

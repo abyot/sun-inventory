@@ -4,6 +4,12 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd">
 
+
+
+  <bean id="org.hisp.dhis.pushanalysis.PushAnalysisService" class="org.hisp.dhis.pushanalysis.DefaultPushAnalysisService">
+    <property name="pushAnalysisStore" ref="org.hisp.dhis.pushanalysis.PushAnalysisStore" />
+  </bean>
+
   <!-- DataStatistics -->
 
   <bean id="org.hisp.dhis.datastatistics.DataStatisticsEventStore" class="org.hisp.dhis.datastatistics.hibernate.HibernateDataStatisticsEventStore">
@@ -156,9 +162,9 @@
         <entry key="analyticsLast3YearsTask" value-ref="analyticsLast3YearsTask" />
         <entry key="monitoringLastDayTask" value-ref="monitoringLastDayTask" />
         <entry key="dataSynchTask" value-ref="dataSynchTask" />
-        <entry key="smsSchedulerTask" value-ref="smsSchedulerTask" />
-        <entry key="sendScheduledMessageTask" value-ref="sendScheduledMessageTask" />
+        <entry key="metadataSyncTask" value-ref="metadataSyncTask" />
         <entry key="sendScheduledMessageTaskNow" value-ref="sendScheduledMessageTaskNow" />
+        <entry key="scheduledProgramNotificationsTask" value-ref="scheduledProgramNotificationsTask" />
       </map>
     </property>
   </bean>

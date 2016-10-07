@@ -13,6 +13,11 @@ function programIndicatorManagementForm( context ) {
   location.href = 'programIndicator.action?programId=' + context.id;
 }
 
+function programIndicatorGroupManagementForm( context ) {
+  location.href = 'programIndicatorGroup.action?programId=' + context.id;
+}
+
+
 function showUpdateProgramForm( context ) {
   location.href = 'showUpdateProgramForm.action?id=' + context.id;
 }
@@ -33,8 +38,8 @@ function validationCriteria( context ) {
   location.href = 'validationCriteria.action?id=' + context.id;
 }
 
-function programReminder( context ){
-  location.href = 'programReminder.action?id=' + context.id;
+function programNotification( context ){
+  location.href = 'programNotification.action?id=' + context.id;
 }
 
 function viewProgramEntryForm( context ){

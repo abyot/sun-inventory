@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -93,12 +95,8 @@ public class JdbcEventAnalyticsManager
     private static final String COL_COUNT = "count";
     private static final String COL_EXTENT = "extent";
 
+    @Resource( name = "readOnlyJdbcTemplate" )
     private JdbcTemplate jdbcTemplate;
-
-    public void setJdbcTemplate( JdbcTemplate jdbcTemplate )
-    {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Autowired
     private StatementBuilder statementBuilder;
@@ -220,6 +218,11 @@ public class JdbcEventAnalyticsManager
             {
                 int value = rowSet.getInt( "value" );
                 grid.addValue( value );
+            }
+            
+            if ( params.isIncludeNumDen() )
+            {
+                grid.addNullValues( 3 );
             }
         }
     }
@@ -722,6 +725,11 @@ public class JdbcEventAnalyticsManager
         // Various filters
         // ---------------------------------------------------------------------
 
+        if ( params.hasEventStatus() )
+        {
+            sql += "and psistatus = '" + params.getEventStatus().name() + "' ";
+        }
+
         if ( params.isCoordinatesOnly() )
         {
             sql += "and (longitude is not null and latitude is not null) ";
@@ -741,7 +749,7 @@ public class JdbcEventAnalyticsManager
         {
             sql += "and geom && ST_MakeEnvelope(" + params.getBbox() + ",4326)";
         }
-
+        
         return sql;
     }
     

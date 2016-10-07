@@ -29,13 +29,9 @@ package org.hisp.dhis.common;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.hisp.dhis.analytics.AggregationType;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.legend.LegendSet;
 
 /**
@@ -97,7 +93,6 @@ public class BaseDimensionalItemObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDimensionItem()
     {
@@ -106,7 +101,6 @@ public class BaseDimensionalItemObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DimensionItemType getDimensionItemType()
     {
@@ -121,7 +115,6 @@ public class BaseDimensionalItemObject
     @Override
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DimensionalView.class, DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public LegendSet getLegendSet()
     {
@@ -135,7 +128,6 @@ public class BaseDimensionalItemObject
 
     @Override
     @JsonProperty
-    @JsonView( { DimensionalView.class, DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public AggregationType getAggregationType()
     {

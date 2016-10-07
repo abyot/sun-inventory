@@ -111,9 +111,9 @@ public class ContextUtils
 
             cacheStrategy = strategy != null ? CacheStrategy.valueOf( strategy ) : CacheStrategy.NO_CACHE;
         }
-        
+
         if ( cacheStrategy == null || CacheStrategy.NO_CACHE.equals( cacheStrategy ) )
-        {            
+        {
             response.setHeader( HEADER_CACHE_CONTROL, CacheControl.noStore().getHeaderValue() );
         }
         else if ( cacheStrategy.equals( CacheStrategy.CACHE_15_MINUTES ) )
@@ -125,7 +125,7 @@ public class ContextUtils
             response.setHeader( HEADER_CACHE_CONTROL, CacheControl.maxAge( 1, TimeUnit.HOURS ).cachePublic().getHeaderValue() );
         }
         else if ( CacheStrategy.CACHE_6AM_TOMORROW.equals( cacheStrategy ) )
-        {     
+        {
             response.setHeader( HEADER_CACHE_CONTROL, CacheControl.maxAge( getSecondsUntilTomorrow( 6 ), TimeUnit.SECONDS ).cachePublic().getHeaderValue() );
         }
         else if ( CacheStrategy.CACHE_TWO_WEEKS.equals( cacheStrategy ) )
@@ -140,7 +140,7 @@ public class ContextUtils
             response.setHeader( HEADER_CONTENT_DISPOSITION, type + "; filename=\"" + filename + "\"" );
         }
     }
-    
+
     public static void setCacheControl( HttpServletResponse response, CacheControl value )
     {
         response.setHeader( HEADER_CACHE_CONTROL, value.getHeaderValue() );

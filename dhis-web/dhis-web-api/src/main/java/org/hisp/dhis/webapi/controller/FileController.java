@@ -37,11 +37,13 @@ import org.hisp.dhis.webapi.service.WebMessageService;
 import org.hisp.dhis.webapi.utils.ContextUtils;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -95,6 +97,7 @@ public class FileController
 
     @RequestMapping( value = "/script", method = RequestMethod.DELETE )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_INSERT_CUSTOM_JS_CSS')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeCustomScript( HttpServletResponse response )
     {
         systemSettingManager.deleteSystemSetting( SettingKey.CUSTOM_JS );
@@ -131,6 +134,7 @@ public class FileController
 
     @RequestMapping( value = "/style", method = RequestMethod.DELETE )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_INSERT_CUSTOM_JS_CSS')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void removeCustomStyle( HttpServletResponse response )
     {
         systemSettingManager.deleteSystemSetting( SettingKey.CUSTOM_CSS );

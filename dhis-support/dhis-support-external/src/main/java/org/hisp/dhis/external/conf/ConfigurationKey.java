@@ -48,12 +48,16 @@ public enum ConfigurationKey
     LDAP_SEARCH_BASE( "ldap.search.base", "" ),
     LDAP_SEARCH_FILTER( "ldap.search.filter", "(cn={0})" ),
     FILESTORE_PROVIDER( "filestore.provider", "filesystem" ),
-    FILE_STORE_CONTAINER( "filestore.container", "files" ),
-    FILE_STORE_LOCATION( "filestore.location" ),
-    FILE_STORE_IDENTITY( "filestore.identity", "" ),
-    FILE_STORE_SECRET( "filestore.secret", "" ),
+    FILESTORE_CONTAINER( "filestore.container", "files" ),
+    FILESTORE_LOCATION( "filestore.location" ),
+    FILESTORE_IDENTITY( "filestore.identity", "" ),
+    FILESTORE_SECRET( "filestore.secret", "" ),
     GOOGLE_SERVICE_ACCOUNT_CLIENT_ID( "google.service.account.client.id" ),
-    GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL( "google.service.account.client.email" );
+    GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL( "google.service.account.client.email" ),
+    META_DATA_SYNC_RETRY( "metadata.sync.retry", "3" ),
+    META_DATA_SYNC_RETRY_TIME_FREQUENCY_MILLISEC( "metadata.sync.retry.time.frequency.millisec", "30000" ),
+    CLUSTER_INSTANCE_HOSTNAME( "cluster.instance0.hostname" ),
+    CLUSTER_INSTANCE_CACHE_PORT( "cluster.instance0.cache.port", "4001" );
 
     private final String key;
     

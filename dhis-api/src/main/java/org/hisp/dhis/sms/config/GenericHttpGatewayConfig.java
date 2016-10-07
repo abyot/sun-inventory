@@ -1,11 +1,5 @@
 package org.hisp.dhis.sms.config;
 
-import java.util.Map;
-
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.hisp.dhis.common.adapter.ParametersMapXmlAdapter;
-
 /*
  * Copyright (c) 2004-2016, University of Oslo
  * All rights reserved.
@@ -34,6 +28,8 @@ import org.hisp.dhis.common.adapter.ParametersMapXmlAdapter;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class GenericHttpGatewayConfig
@@ -41,27 +37,25 @@ public class GenericHttpGatewayConfig
 {
     private static final long serialVersionUID = 6340853488475760213L;
 
-    private Map<String, String> keyValueParameters;
-
     private String messageParameter;
 
     private String recipientParameter;
     
+    private List<GenericGatewayParameter> parameters;
+
     public GenericHttpGatewayConfig()
     {
     }
 
-    @JsonProperty( value = "keyValueParameters" )
-    @XmlJavaTypeAdapter( ParametersMapXmlAdapter.class )
-    public Map<String, String> getKeyValueParameters()
+    @JsonProperty( value = "parameters" )
+    public List<GenericGatewayParameter> getParameters()
     {
-        return keyValueParameters;
-  
+        return parameters;
     }
 
-    public void setKeyValueParameters( Map<String, String> keyValueParameters )
+    public void setParameters( List<GenericGatewayParameter> parameters )
     {
-        this.keyValueParameters = keyValueParameters;
+        this.parameters = parameters;
     }
 
     @JsonProperty( value = "messageParameter" )

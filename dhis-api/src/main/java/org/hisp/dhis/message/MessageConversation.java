@@ -29,20 +29,15 @@ package org.hisp.dhis.message;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-
 import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.user.User;
 
@@ -62,9 +57,9 @@ public class MessageConversation
 {
     private static final int RECIPIENTS_MAX_DISPLAY = 25;
 
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Persistent fields
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     private String subject;
 
@@ -72,10 +67,8 @@ public class MessageConversation
 
     private Date lastMessage;
 
-    @Scanned
     private Set<UserMessage> userMessages = new HashSet<>();
 
-    @Scanned
     private List<Message> messages = new ArrayList<>();
 
     private int messageCount;
@@ -84,9 +77,9 @@ public class MessageConversation
 
     private MessageConversationStatus status;
 
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Transient fields
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     private transient boolean read;
 
@@ -100,9 +93,9 @@ public class MessageConversation
 
     private transient String lastSenderFirstname;
 
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Constructors
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     public MessageConversation()
     {
@@ -119,9 +112,9 @@ public class MessageConversation
         this.status = MessageConversationStatus.NONE;
     }
 
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Logic
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     @Override
     public String toString()
@@ -332,9 +325,9 @@ public class MessageConversation
         return userMessages.size() - RECIPIENTS_MAX_DISPLAY;
     }
 
-    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Persistent fields
-    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     @Override
     public String getName()
@@ -343,7 +336,6 @@ public class MessageConversation
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getSubject()
@@ -358,7 +350,6 @@ public class MessageConversation
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public User getLastSender()
     {
@@ -371,7 +362,6 @@ public class MessageConversation
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Date getLastMessage()
     {
@@ -384,7 +374,6 @@ public class MessageConversation
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "userMessages", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "userMessage", namespace = DxfNamespaces.DXF_2_0 )
     public Set<UserMessage> getUserMessages()
@@ -398,7 +387,6 @@ public class MessageConversation
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "messages", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "message", namespace = DxfNamespaces.DXF_2_0 )
     public List<Message> getMessages()
@@ -411,9 +399,9 @@ public class MessageConversation
         this.messages = messages;
     }
 
-    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Transient fields
-    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     @JsonProperty
     @JacksonXmlProperty( isAttribute = true )
@@ -531,9 +519,9 @@ public class MessageConversation
         }
     }
 
-    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Supportive methods
-    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     private String getFullNameNullSafe( String firstName, String surname )
     {

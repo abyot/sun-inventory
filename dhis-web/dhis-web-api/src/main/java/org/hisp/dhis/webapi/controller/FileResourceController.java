@@ -72,6 +72,7 @@ import java.util.Date;
 public class FileResourceController
 {
     private static final String DEFAULT_FILENAME = "untitled";
+
     private static final String DEFAULT_CONTENT_TYPE = MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE;
 
     // ---------------------------------------------------------------------

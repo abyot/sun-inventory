@@ -28,10 +28,13 @@ package org.hisp.dhis.configuration;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Iterator;
-
 import org.hisp.dhis.common.GenericStore;
+import org.hisp.dhis.user.CurrentUserService;
+import org.hisp.dhis.user.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Iterator;
 
 /**
  * @author Lars Helge Overland
@@ -41,6 +44,9 @@ public class DefaultConfigurationService
     implements ConfigurationService
 {
     private GenericStore<Configuration> configurationStore;
+
+    @Autowired
+    CurrentUserService currentUserService;
 
     public void setConfigurationStore( GenericStore<Configuration> configurationStore )
     {
@@ -76,5 +82,12 @@ public class DefaultConfigurationService
     public boolean isCorsWhitelisted( String origin )
     {
         return getConfiguration().getCorsWhitelist().contains( origin );
+    }
+
+    @Override
+    public boolean isUserInFeedbackRecipientUserGroup( User user )
+    {
+        user = ( user == null ? currentUserService.getCurrentUser() : user );
+        return getConfiguration().getFeedbackRecipients().getMembers().contains( user );
     }
 }

@@ -33,10 +33,10 @@ import org.hisp.dhis.common.GenericIdentifiableObjectStore;
 import org.hisp.dhis.constant.Constant;
 import org.hisp.dhis.dataelement.CategoryOptionGroup;
 import org.hisp.dhis.dataelement.DataElement;
-import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementGroup;
 import org.hisp.dhis.dataset.DataSet;
+import org.hisp.dhis.dataset.Section;
 import org.hisp.dhis.document.Document;
 import org.hisp.dhis.indicator.Indicator;
 import org.hisp.dhis.indicator.IndicatorGroup;
@@ -82,7 +82,6 @@ public interface AttributeStore
         .put( TrackedEntityAttribute.class, "trackedEntityAttributeAttribute" )
         .put( DataElementCategoryOption.class, "categoryOptionAttribute" )
         .put( CategoryOptionGroup.class, "categoryOptionGroupAttribute" )
-        .put( DataElementCategory.class, "categoryAttribute" )
         .put( Document.class, "documentAttribute" )
         .put( Option.class, "optionAttribute" )
         .put( OptionSet.class, "optionSetAttribute" )
@@ -90,6 +89,7 @@ public interface AttributeStore
         .put( LegendSet.class, "legendSetAttribute")
         .put( ProgramIndicator.class, "programIndicatorAttribute")
         .put( SqlView.class, "sqlViewAttribute")
+        .put( Section.class, "sectionAttribute")
         .build();
 
     /**

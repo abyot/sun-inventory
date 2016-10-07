@@ -29,7 +29,6 @@ package org.hisp.dhis.indicator;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -38,9 +37,6 @@ import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
 
@@ -54,7 +50,6 @@ import java.util.Set;
 public class IndicatorGroup
     extends BaseIdentifiableObject
 {
-    @Scanned
     private Set<Indicator> members = new HashSet<>();
 
     private IndicatorGroupSet groupSet;
@@ -126,7 +121,6 @@ public class IndicatorGroup
 
     @JsonProperty( "indicators" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "indicators", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "indicator", namespace = DxfNamespaces.DXF_2_0 )
     public Set<Indicator> getMembers()
@@ -141,9 +135,8 @@ public class IndicatorGroup
 
     @JsonProperty( "indicatorGroupSet" )
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( localName = "indicatorGroupSet", namespace = DxfNamespaces.DXF_2_0 )
-    @Property( value = PropertyType.REFERENCE, required = Property.Required.FALSE )
+    @Property( value = PropertyType.REFERENCE, required = Property.Value.FALSE )
     public IndicatorGroupSet getGroupSet()
     {
         return groupSet;

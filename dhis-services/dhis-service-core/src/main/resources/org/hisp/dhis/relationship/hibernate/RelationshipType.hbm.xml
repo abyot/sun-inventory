@@ -8,6 +8,8 @@
 <hibernate-mapping>
   <class name="org.hisp.dhis.relationship.RelationshipType" table="relationshiptype">
 
+    <cache usage="read-write" />
+    
     <id name="id" column="relationshiptypeid">
       <generator class="native" />
     </id>
@@ -20,20 +22,12 @@
     <property name="bIsToA" column="b_is_to_a" not-null="true" />
 
     <!-- Object Translation -->
-    <set name="translations" table="relationshiptypetranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="relationshiptypetranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="relationshiptypeid" foreign-key="fk_objecttranslation_relationshiptypeid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

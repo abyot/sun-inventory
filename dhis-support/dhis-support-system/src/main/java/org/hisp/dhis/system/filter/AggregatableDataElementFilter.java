@@ -28,13 +28,8 @@ package org.hisp.dhis.system.filter;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-import com.google.common.collect.Sets;
-import org.hisp.dhis.common.ValueType;
 import org.hisp.dhis.commons.filter.Filter;
 import org.hisp.dhis.dataelement.DataElement;
-
-import java.util.Set;
 
 /**
  * @author Lars Helge Overland
@@ -44,15 +39,9 @@ public class AggregatableDataElementFilter
 {
     public static final AggregatableDataElementFilter INSTANCE = new AggregatableDataElementFilter();
 
-    private static final Set<ValueType> VALUE_TYPES = Sets.newHashSet(
-        ValueType.BOOLEAN, ValueType.TRUE_ONLY, ValueType.TEXT, ValueType.LONG_TEXT, ValueType.LETTER,
-        ValueType.INTEGER, ValueType.INTEGER_POSITIVE, ValueType.INTEGER_NEGATIVE, ValueType.INTEGER_ZERO_OR_POSITIVE,
-        ValueType.NUMBER, ValueType.UNIT_INTERVAL, ValueType.PERCENTAGE, ValueType.COORDINATE
-    );
-
     @Override
     public boolean retain( DataElement object )
     {
-        return object != null && VALUE_TYPES.contains( object.getValueType() );
+        return object != null && object.getValueType().isAggregateable() && object.getAggregationType().isAggregateable();
     }
 }

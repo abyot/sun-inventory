@@ -86,7 +86,13 @@ public class DefaultQueryService
     @Override
     public Query getQueryFromUrl( Class<?> klass, List<String> filters, List<Order> orders ) throws QueryParserException
     {
-        Query query = queryParser.parse( klass, filters );
+        return getQueryFromUrl( klass, filters, orders, Junction.Type.AND );
+    }
+
+    @Override
+    public Query getQueryFromUrl( Class<?> klass, List<String> filters, List<Order> orders, Junction.Type rootJunction ) throws QueryParserException
+    {
+        Query query = queryParser.parse( klass, filters, rootJunction );
         query.addOrders( orders );
 
         return query;
@@ -110,7 +116,10 @@ public class DefaultQueryService
             }
         }
 
-        log.debug( "Doing in-memory for " + query.getCriterions().size() + " criterions and " + query.getOrders().size() + " orders." );
+        if ( log.isDebugEnabled() )
+        {
+            log.debug( "Doing in-memory for " + query.getCriterions().size() + " criterions and " + query.getOrders().size() + " orders." );
+        }
 
         query.setObjects( objects );
 

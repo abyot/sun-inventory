@@ -29,14 +29,11 @@ package org.hisp.dhis.message;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.user.User;
 
 import java.util.UUID;
@@ -56,11 +53,11 @@ public class UserMessage
     private boolean read;
 
     private boolean followUp;
-    
+
     private transient String lastRecipientSurname;
 
     private transient String lastRecipientFirstname;
-    
+
     public String getLastRecipientSurname()
     {
         return lastRecipientSurname;
@@ -80,7 +77,7 @@ public class UserMessage
     {
         this.lastRecipientFirstname = lastRecipientFirstname;
     }
-    
+
     public String getLastRecipientName()
     {
         return lastRecipientFirstname + " " + lastRecipientSurname;
@@ -116,7 +113,6 @@ public class UserMessage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getKey()
     {
@@ -130,7 +126,6 @@ public class UserMessage
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public User getUser()
     {
@@ -143,7 +138,6 @@ public class UserMessage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isRead()
     {
@@ -156,7 +150,6 @@ public class UserMessage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isFollowUp()
     {

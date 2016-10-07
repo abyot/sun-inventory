@@ -31,6 +31,7 @@ package org.hisp.dhis.webapi.controller.sms;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.message.MessageSender;
 import org.hisp.dhis.render.RenderService;
+import org.hisp.dhis.sms.MessageResponseStatus;
 import org.hisp.dhis.sms.command.SMSCommand;
 import org.hisp.dhis.sms.command.SMSCommandService;
 import org.hisp.dhis.sms.incoming.IncomingSms;
@@ -40,6 +41,7 @@ import org.hisp.dhis.sms.parse.ParserType;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.service.WebMessageService;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,7 +86,7 @@ public class SmsController
     // GET
     // -------------------------------------------------------------------------
 
-    @PreAuthorize( "hasRole('ALL') or hasRole(' F_MOBILE_SENDSMS')" )
+    @PreAuthorize( "hasRole('ALL') or hasRole('F_MOBILE_SENDSMS')" )
     @RequestMapping( value = "/commands", method = RequestMethod.GET, produces = "application/json" )
     public void getSmsCommands( HttpServletRequest request, HttpServletResponse response )
         throws IOException
@@ -93,23 +95,24 @@ public class SmsController
 
         if ( commands != null && !commands.isEmpty() )
         {
+        	response.setContentType( MediaType.APPLICATION_JSON_VALUE );
             renderService.toJson( response.getOutputStream(), commands );
         }
     }
 
-    @PreAuthorize( "hasRole('ALL') or hasRole(' F_MOBILE_SENDSMS')" )
+    @PreAuthorize( "hasRole('ALL') or hasRole('F_MOBILE_SENDSMS')" )
     @RequestMapping( value = "/commands/{commandName}", method = RequestMethod.GET, produces = "application/json" )
     public void getSmsCommandTypes( @PathVariable( "commandName" ) String commandName, @RequestParam ParserType type,
-        HttpServletRequest request, HttpServletResponse response)
-            throws IOException, WebMessageException
+        HttpServletRequest request, HttpServletResponse response )
+        throws IOException, WebMessageException
     {
         SMSCommand command = smsCommandService.getSMSCommand( commandName, type );
 
         if ( command == null )
         {
-            throw new WebMessageException( WebMessageUtils.notFound( "No sms command found" ) );
+            throw new WebMessageException( WebMessageUtils.notFound( "No SMS command found" ) );
         }
-
+        response.setContentType( MediaType.APPLICATION_JSON_VALUE );
         renderService.toJson( response.getOutputStream(), command );
     }
 
@@ -117,11 +120,11 @@ public class SmsController
     // POST
     // -------------------------------------------------------------------------
 
-    @PreAuthorize( "hasRole('ALL') or hasRole(' F_MOBILE_SENDSMS')" )
+    @PreAuthorize( "hasRole('ALL') or hasRole('F_MOBILE_SENDSMS')" )
     @RequestMapping( value = "/outbound", method = RequestMethod.POST )
     public void sendSMSMessage( @RequestParam String recipient, @RequestParam String message,
         HttpServletResponse response, HttpServletRequest request )
-            throws WebMessageException
+        throws WebMessageException
     {
         if ( recipient == null || recipient.length() <= 0 )
         {
@@ -133,34 +136,34 @@ public class SmsController
             throw new WebMessageException( WebMessageUtils.conflict( "Message must be specified" ) );
         }
 
-        String result = smsSender.sendMessage( null, message, recipient );
+        MessageResponseStatus status = smsSender.sendMessage( null, message, recipient );
 
-        if ( "success".equals( result ) )
+        if ( status.isOk() )
         {
-            webMessageService.send( WebMessageUtils.ok( "SENT" ), response, request );
+            webMessageService.send( WebMessageUtils.ok( "SMS sent" ), response, request );
         }
         else
         {
-            throw new WebMessageException( WebMessageUtils.error( result ) );
+            throw new WebMessageException( WebMessageUtils.error( "SMS failed" ) );
         }
     }
 
-    @PreAuthorize( "hasRole('ALL') or hasRole(' F_MOBILE_SENDSMS')" )
+    @PreAuthorize( "hasRole('ALL') or hasRole('F_MOBILE_SENDSMS')" )
     @RequestMapping( value = "/outbound", method = RequestMethod.POST, consumes = "application/json" )
     public void sendSMSMessage( HttpServletResponse response, HttpServletRequest request )
         throws WebMessageException, IOException
     {
         OutboundSms sms = renderService.fromJson( request.getInputStream(), OutboundSms.class );
 
-        String result = smsSender.sendMessage( null, sms.getMessage(), sms.getRecipients() );
+        MessageResponseStatus status = smsSender.sendMessage( null, sms.getMessage(), sms.getRecipients() );
 
-        if ( "success".equals( result ) )
+        if ( status.isOk() )
         {
-            webMessageService.send( WebMessageUtils.ok( "SENT" ), response, request );
+            webMessageService.send( WebMessageUtils.ok( "SMS sent" ), response, request );
         }
         else
         {
-            throw new WebMessageException( WebMessageUtils.error( result ) );
+            throw new WebMessageException( WebMessageUtils.error( "SMS failed" ) );
         }
     }
 
@@ -168,8 +171,8 @@ public class SmsController
     @PreAuthorize( "hasRole('ALL') or hasRole('F_MOBILE_SETTINGS')" )
     public void receiveSMSMessage( @RequestParam String originator, @RequestParam( required = false ) Date receivedTime,
         @RequestParam String message, @RequestParam( defaultValue = "Unknown", required = false ) String gateway,
-        HttpServletRequest request, HttpServletResponse response)
-            throws WebMessageException, ParseException
+        HttpServletRequest request, HttpServletResponse response )
+        throws WebMessageException, ParseException
     {
         if ( originator == null || originator.length() <= 0 )
         {
@@ -195,7 +198,7 @@ public class SmsController
 
         int smsId = incomingSMSService.save( sms );
 
-        webMessageService.send( WebMessageUtils.ok( "Received SMS:" + smsId ), response, request );
+        webMessageService.send( WebMessageUtils.ok( "Received SMS: " + smsId ), response, request );
     }
 
     @RequestMapping( value = "/import", method = RequestMethod.POST, consumes = "application/json" )

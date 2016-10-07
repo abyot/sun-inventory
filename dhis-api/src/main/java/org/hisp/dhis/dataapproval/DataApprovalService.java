@@ -42,6 +42,59 @@ public interface DataApprovalService
 {
     String ID = DataApprovalService.class.getName();
 
+    // -------------------------------------------------------------------------
+    // Data approval workflow
+    // -------------------------------------------------------------------------
+
+    /**
+     * Adds a DataApprovalWorkflow.
+     *
+     * @param workflow the DataApprovalWorkflow to add.
+     * @return a generated unique id of the added Workflow.
+     */
+    int addWorkflow( DataApprovalWorkflow workflow );
+
+    /**
+     * Updates a DataApprovalWorkflow.
+     *
+     * @param workflow the DataApprovalWorkflow to update.
+     */
+    void updateWorkflow( DataApprovalWorkflow workflow );
+
+    /**
+     * Deletes a DataApprovalWorkflow.
+     *
+     * @param workflow the DataApprovalWorkflow to delete.
+     */
+    void deleteWorkflow( DataApprovalWorkflow workflow );
+
+    /**
+     * Returns a DataApprovalWorkflow.
+     *
+     * @param id the id of the DataApprovalWorkflow to return.
+     * @return the DataApprovalWorkflow with the given id, or null if no match.
+     */
+    DataApprovalWorkflow getWorkflow( int id );
+
+    /**
+     * Returns a DataApprovalWorkflow.
+     *
+     * @param uid the uid of the DataApprovalWorkflow to return.
+     * @return the DataApprovalWorkflow with the given id, or null if no match.
+     */
+    DataApprovalWorkflow getWorkflow( String uid );
+
+    /**
+     * Returns all DataApprovalWorkflows.
+     *
+     * @return a list of all DataApprovalWorkflows.
+     */
+    List<DataApprovalWorkflow> getAllWorkflows();
+
+    // -------------------------------------------------------------------------
+    // Data approval logic
+    // -------------------------------------------------------------------------
+
     /**
      * Approves data.
      *

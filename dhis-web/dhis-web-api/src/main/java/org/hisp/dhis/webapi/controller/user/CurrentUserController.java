@@ -33,7 +33,6 @@ import com.google.common.collect.Sets;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObjectManager;
 import org.hisp.dhis.common.cache.CacheStrategy;
-import org.hisp.dhis.common.view.DetailedView;
 import org.hisp.dhis.commons.util.TextUtils;
 import org.hisp.dhis.dashboard.DashboardItem;
 import org.hisp.dhis.dataapproval.DataApprovalLevel;
@@ -41,9 +40,7 @@ import org.hisp.dhis.dataapproval.DataApprovalLevelService;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.DataSetService;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
 import org.hisp.dhis.fieldfilter.FieldFilterService;
-import org.hisp.dhis.i18n.I18nService;
 import org.hisp.dhis.interpretation.Interpretation;
 import org.hisp.dhis.interpretation.InterpretationService;
 import org.hisp.dhis.message.MessageConversation;
@@ -144,9 +141,6 @@ public class CurrentUserController
     private IdentifiableObjectManager manager;
 
     @Autowired
-    private I18nService i18nService;
-
-    @Autowired
     protected AclService aclService;
 
     @Autowired
@@ -210,7 +204,7 @@ public class CurrentUserController
         }
 
         response.setContentType( MediaType.APPLICATION_JSON_VALUE );
-        renderService.toJson( response.getOutputStream(), dashboards, DetailedView.class );
+        renderService.toJson( response.getOutputStream(), dashboards );
     }
 
     @RequestMapping( value = "/inbox", produces = { "application/json", "text/*" } )
@@ -483,17 +477,8 @@ public class CurrentUserController
             userOrganisationUnits.addAll( children );
         }
 
-        String viewName = parameters.get( "viewClass" );
-
-        if ( viewName == null )
-        {
-            viewName = "detailed";
-        }
-
-        Class<?> viewClass = JacksonUtils.getViewClass( viewName );
-
         response.setContentType( MediaType.APPLICATION_JSON_VALUE );
-        renderService.toJson( response.getOutputStream(), userOrganisationUnits, viewClass );
+        renderService.toJson( response.getOutputStream(), userOrganisationUnits );
     }
 
     @RequestMapping( value = { "/assignedPrograms", "/programs" }, produces = { "application/json", "text/*" } )
@@ -568,18 +553,12 @@ public class CurrentUserController
                         organisationUnits.add( organisationUnit );
                         programs.add( program );
 
-                        if ( programAssociations.get( organisationUnit.getUid() ) == null )
-                        {
-                            programAssociations.put( organisationUnit.getUid(), new ArrayList<>() );
-                        }
-
+                        programAssociations.putIfAbsent( organisationUnit.getUid(), new ArrayList<>() );
                         programAssociations.get( organisationUnit.getUid() ).add( program );
                     }
                 }
             }
         }
-
-        i18nService.internationalise( programs );
 
         Forms forms = new Forms();
 
@@ -680,8 +659,6 @@ public class CurrentUserController
             }
         }
 
-        i18nService.internationalise( organisationUnits );
-
         for ( OrganisationUnit organisationUnit : organisationUnits )
         {
             FormOrganisationUnit formOrganisationUnit = new FormOrganisationUnit();
@@ -695,20 +672,16 @@ public class CurrentUserController
             }
 
             Set<DataSet> dataSets = new HashSet<>( Sets.intersection( organisationUnit.getDataSets(), userDataSets ) );
-            i18nService.internationalise( dataSets );
 
             for ( DataSet dataSet : dataSets )
             {
-                i18nService.internationalise( dataSet.getDataElements() );
-                i18nService.internationalise( dataSet.getSections() );
-
                 String uid = dataSet.getUid();
 
                 FormDataSet formDataSet = new FormDataSet();
                 formDataSet.setId( uid );
                 formDataSet.setLabel( dataSet.getDisplayName() );
 
-                forms.getForms().put( uid, FormUtils.fromDataSet( dataSet, false ) );
+                forms.getForms().put( uid, FormUtils.fromDataSet( dataSet, false, userOrganisationUnits ) );
                 formOrganisationUnit.getDataSets().add( formDataSet );
 
                 if ( optionSets )

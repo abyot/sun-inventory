@@ -144,8 +144,8 @@ public class ExportDataValueAction
 
         HttpServletResponse response = ServletActionContext.getResponse();
 
-        DataExportParams params = dataValueSetService.getFromUrl( selectedDataSets, null,
-            getMediumDate( startDate ), getMediumDate( endDate ), orgUnits, true, null, null, idSchemes );
+        DataExportParams params = dataValueSetService.getFromUrl( selectedDataSets, null, null,
+            getMediumDate( startDate ), getMediumDate( endDate ), orgUnits, true, false, null, null, null, idSchemes );
 
         if ( FORMAT_CSV.equals( exportFormat ) )
         {

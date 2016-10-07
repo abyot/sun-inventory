@@ -1127,7 +1127,7 @@ Ext.onReady( function() {
 
                     // period
                     if (!Ext.Array.contains(objectNames, 'pe') && !(config.startDate && config.endDate)) {
-                        ns.alert('At least one fixed period, one relative period or start/end dates must be specified');
+                        webAlert('At least one fixed period, one relative period or start/end dates must be specified');
                         return;
                     }
 
@@ -1137,7 +1137,7 @@ Ext.onReady( function() {
 
 					// column
 					if (!config.columns) {
-						ns.alert('No series items selected');
+						webAlert('No series items selected');
 						return;
 					}
 
@@ -1149,7 +1149,7 @@ Ext.onReady( function() {
 
 					// row
 					if (!config.rows) {
-						ns.alert('No category items selected');
+						webAlert('No category items selected');
 						return;
 					}
 

@@ -28,18 +28,11 @@ package org.hisp.dhis.reporttable;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.common.DimensionalObject.CATEGORYOPTIONCOMBO_DIM_ID;
-import static org.hisp.dhis.common.DimensionalObject.DATA_X_DIM_ID;
-import static org.hisp.dhis.common.DimensionalObject.ORGUNIT_DIM_ID;
-import static org.hisp.dhis.common.DimensionalObject.PERIOD_DIM_ID;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.apache.commons.lang3.StringUtils;
 import org.hisp.dhis.analytics.AnalyticsMetaDataKey;
 import org.hisp.dhis.common.BaseAnalyticalObject;
@@ -57,9 +50,6 @@ import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.ReportingRate;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.i18n.I18nFormat;
@@ -70,12 +60,14 @@ import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.RelativePeriods;
 import org.hisp.dhis.user.User;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.hisp.dhis.common.DimensionalObject.*;
 
 /**
  * @author Lars Helge Overland
@@ -220,7 +212,16 @@ public class ReportTable
     /**
      * The title of the report table grid.
      */
-    private transient String title;
+    private transient String gridTitle;
+
+    @Override
+    protected void clearTransientStateProperties()
+    {
+        gridColumns = new ArrayList<>();
+        gridRows = new ArrayList<>();
+        reportingPeriodName = null;
+        gridTitle = null;
+    }
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -306,6 +307,7 @@ public class ReportTable
         verify( (periods != null && !periods.isEmpty()) || hasRelativePeriods(), "Must contain periods or relative periods" );
 
         this.relativePeriodDate = date;
+        this.relativeOrganisationUnit = organisationUnit;
 
         // Handle report parameters
 
@@ -317,14 +319,12 @@ public class ReportTable
         if ( organisationUnit != null && hasReportParams() && reportParams.isParamParentOrganisationUnit() )
         {
             organisationUnit.setCurrentParent( true );
-            this.relativeOrganisationUnit = organisationUnit;
             addTransientOrganisationUnits( organisationUnit.getChildren() );
             addTransientOrganisationUnit( organisationUnit );
         }
 
         if ( organisationUnit != null && hasReportParams() && reportParams.isParamOrganisationUnit() )
         {
-            this.relativeOrganisationUnit = organisationUnit;
             addTransientOrganisationUnit( organisationUnit );
         }
 
@@ -332,7 +332,7 @@ public class ReportTable
 
         if ( isDimensional() )
         {
-            transientCategoryOptionCombos.addAll( getCategoryCombo().getSortedOptionCombos() );
+            transientCategoryOptionCombos.addAll( getFirstCategoryCombo().getSortedOptionCombos() );
             verify( nonEmptyLists( transientCategoryOptionCombos ) == 1, "Category option combos size must be larger than 0" );
         }
 
@@ -373,7 +373,7 @@ public class ReportTable
         addIfEmpty( gridColumns );
         addIfEmpty( gridRows );
 
-        title = IdentifiableObjectUtils.join( filterItems );
+        gridTitle = IdentifiableObjectUtils.join( filterItems );
     }
 
     @Override
@@ -401,7 +401,7 @@ public class ReportTable
     public boolean isDimensional()
     {
         return !getDataElements().isEmpty() && (
-            columnDimensions.contains( CATEGORYOPTIONCOMBO_DIM_ID ) || rowDimensions.contains( CATEGORYOPTIONCOMBO_DIM_ID ) );
+            columnDimensions.contains( CATEGORYOPTIONCOMBO_DIM_ID ) || rowDimensions.contains( CATEGORYOPTIONCOMBO_DIM_ID ));
     }
 
     /**
@@ -414,7 +414,7 @@ public class ReportTable
 
         for ( DimensionalItemObject object : objects )
         {
-            builder.append( object != null ? ( object.getDisplayProperty( displayProperty ) + SPACE ) : EMPTY );
+            builder.append( object != null ? (object.getDisplayProperty( displayProperty ) + SPACE) : EMPTY );
         }
 
         return builder.length() > 0 ? builder.substring( 0, builder.lastIndexOf( SPACE ) ) : TOTAL_COLUMN_PRETTY_NAME;
@@ -440,7 +440,7 @@ public class ReportTable
             }
             else
             {
-                buffer.append( object != null ? ( object.getShortName() + SEPARATOR ) : EMPTY );
+                buffer.append( object != null ? (object.getShortName() + SEPARATOR) : EMPTY );
             }
         }
 
@@ -517,10 +517,10 @@ public class ReportTable
      * Generates a grid for this report table based on the given aggregate value
      * map.
      *
-     * @param grid the grid, should be empty and not null.
-     * @param valueMap the mapping of identifiers to aggregate values.
+     * @param grid            the grid, should be empty and not null.
+     * @param valueMap        the mapping of identifiers to aggregate values.
      * @param displayProperty the display property to use for meta data.
-     * @param paramColumns whether to include report parameter columns.
+     * @param paramColumns    whether to include report parameter columns.
      * @return a grid.
      */
     @SuppressWarnings( "unchecked" )
@@ -537,11 +537,11 @@ public class ReportTable
         if ( name != null )
         {
             grid.setTitle( name );
-            grid.setSubtitle( title );
+            grid.setSubtitle( gridTitle );
         }
         else
         {
-            grid.setTitle( title );
+            grid.setTitle( gridTitle );
         }
 
         // ---------------------------------------------------------------------
@@ -661,7 +661,7 @@ public class ReportTable
 
         if ( showHierarchy && rowDimensions.contains( ORGUNIT_DIM_ID ) && grid.hasMetaDataKey( AnalyticsMetaDataKey.ORG_UNIT_NAME_HIERARCHY.getKey() ) )
         {
-            int ouIdIndex = ( rowDimensions.indexOf( ORGUNIT_DIM_ID ) * 4 ); // Org unit name position
+            int ouIdIndex = (rowDimensions.indexOf( ORGUNIT_DIM_ID ) * 4); // Org unit name position
             int ouNameIndex = ouIdIndex + 1;
             Map<Object, Object> hierarchyNameMap = (Map<Object, Object>) grid.getMetaData().get( AnalyticsMetaDataKey.ORG_UNIT_NAME_HIERARCHY.getKey() );
             grid.substituteMetaData( ouIdIndex, ouNameIndex, hierarchyNameMap );
@@ -706,11 +706,11 @@ public class ReportTable
     /**
      * Returns the category combo of the first data element.
      */
-    private DataElementCategoryCombo getCategoryCombo()
+    private DataElementCategoryCombo getFirstCategoryCombo()
     {
         if ( !getDataElements().isEmpty() )
         {
-            return getDataElements().get( 0 ).getCategoryCombo();
+            return getDataElements().get( 0 ).getCategoryCombos().iterator().next();
         }
 
         return null;
@@ -727,7 +727,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isRegression()
     {
@@ -740,7 +739,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isCumulative()
     {
@@ -753,7 +751,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "columnDimensions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "columnDimension", namespace = DxfNamespaces.DXF_2_0 )
     public List<String> getColumnDimensions()
@@ -767,7 +764,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "rowDimensions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "rowDimension", namespace = DxfNamespaces.DXF_2_0 )
     public List<String> getRowDimensions()
@@ -781,7 +777,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "filterDimensions", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "filterDimension", namespace = DxfNamespaces.DXF_2_0 )
     public List<String> getFilterDimensions()
@@ -795,7 +790,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ReportParams getReportParams()
     {
@@ -809,7 +803,6 @@ public class ReportTable
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getSortOrder()
     {
@@ -824,7 +817,6 @@ public class ReportTable
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getTopLimit()
     {
@@ -838,7 +830,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isRowTotals()
     {
@@ -851,7 +842,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isColTotals()
     {
@@ -864,7 +854,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isRowSubTotals()
     {
@@ -877,7 +866,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isColSubTotals()
     {
@@ -890,7 +878,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isHideEmptyRows()
     {
@@ -904,7 +891,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DisplayDensity getDisplayDensity()
     {
@@ -917,7 +903,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public FontSize getFontSize()
     {
@@ -930,7 +915,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public LegendSet getLegendSet()
     {
@@ -943,7 +927,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isShowHierarchy()
     {
@@ -957,7 +940,6 @@ public class ReportTable
 
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isShowDimensionLabels()
     {
@@ -970,7 +952,6 @@ public class ReportTable
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class, DimensionalView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isSkipRounding()
     {
@@ -986,7 +967,7 @@ public class ReportTable
     // Get- and set-methods for transient properties
     // -------------------------------------------------------------------------
 
-	@JsonIgnore
+    @JsonIgnore
     public String getReportingPeriodName()
     {
         return reportingPeriodName;
@@ -1021,16 +1002,16 @@ public class ReportTable
     }
 
     @JsonIgnore
-    public String getTitle()
+    public String getGridTitle()
     {
-        return title;
+        return gridTitle;
     }
 
-    public void setTitle( String title )
+    public void setGridTitle( String gridTitle )
     {
-        this.title = title;
+        this.gridTitle = gridTitle;
     }
-
+    
     @Override
     public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
     {

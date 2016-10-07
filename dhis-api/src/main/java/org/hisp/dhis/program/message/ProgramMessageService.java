@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.hisp.dhis.sms.BatchResponseStatus;
 import org.hisp.dhis.user.User;
 
 /**
@@ -54,8 +55,8 @@ public interface ProgramMessageService
     // -------------------------------------------------------------------------
     // Transport Service methods
     // -------------------------------------------------------------------------
-
-    String sendMessage( ProgramMessage programMessage );
+    
+    BatchResponseStatus sendMessages( List<ProgramMessage> programMessages );
 
     // -------------------------------------------------------------------------
     // GET
@@ -74,7 +75,7 @@ public interface ProgramMessageService
     // -------------------------------------------------------------------------
 
     int saveProgramMessage( ProgramMessage programMessage );
-
+    
     void updateProgramMessage( ProgramMessage programMessage );
 
     // -------------------------------------------------------------------------

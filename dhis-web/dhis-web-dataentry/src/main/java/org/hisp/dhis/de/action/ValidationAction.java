@@ -28,13 +28,8 @@ package org.hisp.dhis.de.action;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
+import com.google.common.collect.Sets;
+import com.opensymphony.xwork2.Action;
 import org.hisp.dhis.dataanalysis.DataAnalysisService;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementCategoryService;
@@ -42,6 +37,7 @@ import org.hisp.dhis.dataelement.DataElementOperand;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.DataSetService;
 import org.hisp.dhis.datavalue.DeflatedDataValue;
+import org.hisp.dhis.dxf2.utils.InputUtils;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.Period;
@@ -49,12 +45,15 @@ import org.hisp.dhis.period.PeriodService;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.validation.ValidationResult;
 import org.hisp.dhis.validation.ValidationRuleService;
-import org.hisp.dhis.dxf2.utils.InputUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.common.collect.Sets;
-import com.opensymphony.xwork2.Action;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author Margrethe Store
@@ -167,23 +166,23 @@ public class ValidationAction
     // Output
     // -------------------------------------------------------------------------
 
-    private Map<OrganisationUnit, List<ValidationResult>> validationResults = new TreeMap<>();
+    private Map<String, List<ValidationResult>> validationResults = new TreeMap<>();
 
-    public Map<OrganisationUnit, List<ValidationResult>> getValidationResults()
+    public Map<String, List<ValidationResult>> getValidationResults()
     {
         return validationResults;
     }
 
-    private Map<OrganisationUnit, List<DeflatedDataValue>> dataValues = new TreeMap<>();
+    private Map<String, List<DeflatedDataValue>> dataValues = new TreeMap<>();
 
-    public Map<OrganisationUnit, List<DeflatedDataValue>> getDataValues()
+    public Map<String, List<DeflatedDataValue>> getDataValues()
     {
         return dataValues;
     }
-    
-    private Map<OrganisationUnit, List<DataElementOperand>> commentViolations = new TreeMap<>();
 
-    public Map<OrganisationUnit, List<DataElementOperand>> getCommentViolations()
+    private Map<String, List<DataElementOperand>> commentViolations = new TreeMap<>();
+
+    public Map<String, List<DataElementOperand>> getCommentViolations()
     {
         return commentViolations;
     }
@@ -209,7 +208,7 @@ public class ValidationAction
             attributeOptionCombo = dataElementCategoryService.getDefaultDataElementCategoryOptionCombo();
         }
 
-        if ( selectedPeriod == null || orgUnit == null || ( multiOu && !orgUnit.hasChild() ) )
+        if ( selectedPeriod == null || orgUnit == null || (multiOu && !orgUnit.hasChild()) )
         {
             return SUCCESS;
         }
@@ -231,7 +230,7 @@ public class ValidationAction
         Collections.sort( organisationUnits );
 
         Date from = new DateTime( period.getStartDate() ).minusYears( 2 ).toDate();
-        
+
         for ( OrganisationUnit organisationUnit : organisationUnits )
         {
             List<DeflatedDataValue> values = new ArrayList<>( minMaxOutlierAnalysisService.analyse( Sets.newHashSet( organisationUnit ),
@@ -239,21 +238,21 @@ public class ValidationAction
 
             if ( !values.isEmpty() )
             {
-                dataValues.put( organisationUnit, values );
+                dataValues.put( organisationUnit.getUid(), values );
             }
 
             List<ValidationResult> results = new ArrayList<>( validationRuleService.validate( dataSet, period, organisationUnit, attributeOptionCombo ) );
 
             if ( !results.isEmpty() )
             {
-                validationResults.put( organisationUnit, results );
+                validationResults.put( organisationUnit.getUid(), results );
             }
-            
+
             List<DataElementOperand> violations = validationRuleService.validateRequiredComments( dataSet, period, organisationUnit, attributeOptionCombo );
-            
+
             if ( !violations.isEmpty() )
             {
-                commentViolations.put( organisationUnit, violations );
+                commentViolations.put( organisationUnit.getUid(), violations );
             }
         }
 

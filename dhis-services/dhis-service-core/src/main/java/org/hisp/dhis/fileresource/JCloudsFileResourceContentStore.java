@@ -52,6 +52,8 @@ import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
 import org.joda.time.Minutes;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,9 +65,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Pattern;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 /**
  * @author Halvdan Hoem Grelland
@@ -119,13 +118,13 @@ public class JCloudsFileResourceContentStore
     public void init()
     {
         String provider = configurationProvider.getProperty( ConfigurationKey.FILESTORE_PROVIDER );
-        String location = configurationProvider.getProperty( ConfigurationKey.FILE_STORE_LOCATION );
-        String identity = configurationProvider.getProperty( ConfigurationKey.FILE_STORE_IDENTITY );
-        String secret = configurationProvider.getProperty( ConfigurationKey.FILE_STORE_SECRET );
+        String location = configurationProvider.getProperty( ConfigurationKey.FILESTORE_LOCATION );
+        String identity = configurationProvider.getProperty( ConfigurationKey.FILESTORE_IDENTITY );
+        String secret = configurationProvider.getProperty( ConfigurationKey.FILESTORE_SECRET );
 
         provider = validateAndSelectProvider( provider );
 
-        container = configurationProvider.getProperty( ConfigurationKey.FILE_STORE_CONTAINER );
+        container = configurationProvider.getProperty( ConfigurationKey.FILESTORE_CONTAINER );
 
         if ( !isValidContainerName( container ) )
         {
@@ -133,10 +132,10 @@ public class JCloudsFileResourceContentStore
             {
                 log.warn( "Container name '" + container + "' is illegal." +
                     "Standard domain name naming conventions apply (and underscores are not allowed). " +
-                    "Using default container name '" + ConfigurationKey.FILE_STORE_CONTAINER.getDefaultValue() + "'." );
+                    "Using default container name '" + ConfigurationKey.FILESTORE_CONTAINER.getDefaultValue() + "'." );
             }
 
-            container = ConfigurationKey.FILE_STORE_CONTAINER.getDefaultValue();
+            container = ConfigurationKey.FILESTORE_CONTAINER.getDefaultValue();
         }
 
         Properties overrides = new Properties();
@@ -241,6 +240,20 @@ public class JCloudsFileResourceContentStore
         }
 
         return isEmptyOrFailed ? null : byteSource;
+    }
+
+    @Override public String saveFileResourceContent( FileResource fileResource, byte[] bytes )
+    {
+        Blob blob = createBlob( fileResource, bytes );
+
+        if ( blob == null )
+        {
+            return null;
+        }
+
+        putBlob( blob );
+
+        return fileResource.getStorageKey();
     }
 
     @Override
@@ -349,6 +362,17 @@ public class JCloudsFileResourceContentStore
         }
 
         return etag;
+    }
+
+    private Blob createBlob( FileResource fileResource, byte[] bytes )
+    {
+        return blobStore.blobBuilder( fileResource.getStorageKey() )
+            .payload( bytes )
+            .contentLength( fileResource.getContentLength() )
+            .contentMD5( HashCode.fromString( fileResource.getContentMd5() ) )
+            .contentType( fileResource.getContentType() )
+            .contentDisposition( "filename=" + fileResource.getName() )
+            .build();
     }
 
     private Blob createBlob( FileResource fileResource, File file )

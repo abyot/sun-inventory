@@ -1,6 +1,5 @@
 package org.hisp.dhis.program;
 
-import java.util.Date;
 
 /*
  * Copyright (c) 2004-2016, University of Oslo
@@ -33,6 +32,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Date;
 
 import org.hisp.dhis.DhisSpringTest;
 import org.hisp.dhis.common.CodeGenerator;
@@ -44,6 +44,10 @@ import org.hisp.dhis.program.message.ProgramMessageQueryParams;
 import org.hisp.dhis.program.message.ProgramMessageRecipients;
 import org.hisp.dhis.program.message.ProgramMessageService;
 import org.hisp.dhis.program.message.ProgramMessageStatus;
+import org.hisp.dhis.sms.config.BulkSmsGatewayConfig;
+import org.hisp.dhis.sms.config.GatewayAdministrationService;
+import org.hisp.dhis.sms.config.SmsConfiguration;
+import org.hisp.dhis.sms.config.SmsConfigurationManager;
 import org.hisp.dhis.trackedentity.TrackedEntityInstance;
 import org.hisp.dhis.trackedentity.TrackedEntityInstanceService;
 
@@ -68,6 +72,8 @@ public class ProgramMessageServiceTest
     private ProgramInstance piA;
 
     private TrackedEntityInstance teiA;
+    
+    private BulkSmsGatewayConfig bulkSmsConfig;
 
     private ProgramMessageStatus messageStatus = ProgramMessageStatus.OUTBOUND;
 
@@ -80,12 +86,16 @@ public class ProgramMessageServiceTest
     private ProgramMessage pmsgB;
 
     private ProgramMessage pmsgC;
+    
+    private ProgramMessage pmsgD;
 
     private ProgramMessageRecipients recipientsA;
 
     private ProgramMessageRecipients recipientsB;
 
     private ProgramMessageRecipients recipientsC;
+    
+    private ProgramMessageRecipients recipientsD;
 
     private String uidA;
 
@@ -95,7 +105,7 @@ public class ProgramMessageServiceTest
 
     private String text = "Hi";
 
-    private String msisdn = "4740332255";
+    private String msisdn = "4742312555";
 
     private String subject = "subjectText";
 
@@ -117,6 +127,12 @@ public class ProgramMessageServiceTest
 
     @Autowired
     private ProgramService programService;
+    
+    @Autowired
+    private GatewayAdministrationService gatewayAdminService;
+    
+    @Autowired
+    private SmsConfigurationManager smsConfigurationManager;
 
     // -------------------------------------------------------------------------
     // Prerequisite
@@ -126,11 +142,14 @@ public class ProgramMessageServiceTest
     public void setUpTest()
     {
         ouA = createOrganisationUnit( 'A' );
+        ouA.setPhoneNumber( msisdn );
+        
         ouB = createOrganisationUnit( 'B' );
+        
         orgUnitService.addOrganisationUnit( ouA );
         orgUnitService.addOrganisationUnit( ouB );
 
-        Program program = new Program();
+        Program program = createProgram( 'A' );
         program.setAutoFields();
         program.setOrganisationUnits( Sets.newSet( ouA, ouB ) );
         program.setName( "programA" );
@@ -170,6 +189,10 @@ public class ProgramMessageServiceTest
         recipientsC = new ProgramMessageRecipients();
         recipientsC.setOrganisationUnit( ouA );
         recipientsC.setTrackedEntityInstance( teiA );
+        
+        recipientsD = new ProgramMessageRecipients();
+        recipientsD.setOrganisationUnit( ouA );
+        recipientsD.setTrackedEntityInstance( null );
 
         Set<String> phoneNumberListA = new HashSet<>();
         phoneNumberListA.add( msisdn );
@@ -185,29 +208,18 @@ public class ProgramMessageServiceTest
 
         channels.add( DeliveryChannel.SMS );
 
-        pmsgA = new ProgramMessage();
-        pmsgA.setText( text );
-        pmsgA.setSubject( subject );
-        pmsgA.setRecipients( recipientsA );
-        pmsgA.setMessageStatus( messageStatus );
-        pmsgA.setDeliveryChannels( channels );
+        pmsgA = createProgramMessage( text, subject, recipientsA, messageStatus, channels );
         pmsgA.setProgramInstance( piA );
         pmsgA.setStoreCopy( false );
 
-        pmsgB = new ProgramMessage();
-        pmsgB.setText( text );
-        pmsgB.setSubject( subject );
-        pmsgB.setRecipients( recipientsB );
-        pmsgB.setMessageStatus( messageStatus );
+        pmsgB = createProgramMessage( text, subject, recipientsB, messageStatus, channels );
         pmsgB.setProgramInstance( piA );
-        pmsgB.setDeliveryChannels( channels );
 
-        pmsgC = new ProgramMessage();
-        pmsgC.setText( text );
-        pmsgC.setSubject( subject );
-        pmsgC.setRecipients( recipientsC );
-        pmsgC.setMessageStatus( messageStatus );
-        pmsgC.setDeliveryChannels( channels );
+        pmsgC = createProgramMessage( text, subject, recipientsC, messageStatus, channels );      
+
+        pmsgD = createProgramMessage( text, subject, recipientsD, messageStatus, channels );
+        pmsgD.setProgramInstance( piA );
+        pmsgD.setStoreCopy( false );
 
         uidA = CodeGenerator.generateCode( 10 );
         uidB = CodeGenerator.generateCode( 10 );
@@ -221,7 +233,19 @@ public class ProgramMessageServiceTest
         params.setOrganisationUnit( ouUids );
         params.setProgramInstance( piA );
         params.setMessageStatus( messageStatus );
-
+        
+        bulkSmsConfig = new BulkSmsGatewayConfig();
+        bulkSmsConfig.setDefault( true );
+        bulkSmsConfig.setName( "bulk" );
+        bulkSmsConfig.setUsername( "user_uio" );
+        bulkSmsConfig.setPassword( "5cKMMQTGNMkD" );
+            
+        SmsConfiguration smsConfig = new SmsConfiguration();
+        smsConfig.getGateways().add( bulkSmsConfig);
+        
+        smsConfigurationManager.updateSmsConfiguration( smsConfig );
+        
+        gatewayAdminService.loadGatewayConfigurationMap( smsConfig );
     }
 
     // -------------------------------------------------------------------------
@@ -302,7 +326,7 @@ public class ProgramMessageServiceTest
         assertTrue( equals( list, pmsgA, pmsgB ) );
         assertTrue( channels.equals( list.get( 0 ).getDeliveryChannels() ) );
     }
-
+    
     @Test
     public void testSaveProgramMessage()
     {

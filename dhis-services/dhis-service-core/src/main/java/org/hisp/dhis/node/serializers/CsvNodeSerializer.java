@@ -39,7 +39,7 @@ import org.hisp.dhis.node.types.CollectionNode;
 import org.hisp.dhis.node.types.ComplexNode;
 import org.hisp.dhis.node.types.RootNode;
 import org.hisp.dhis.node.types.SimpleNode;
-import org.joda.time.DateTime;
+import org.hisp.dhis.system.util.DateUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -144,8 +144,7 @@ public class CsvNodeSerializer extends AbstractNodeSerializer
 
         if ( Date.class.isAssignableFrom( simpleNode.getValue().getClass() ) )
         {
-            DateTime dateTime = new DateTime( simpleNode.getValue() );
-            value = DT_FORMATTER.print( dateTime );
+            value = DateUtils.getIso8601NoTz( (Date) simpleNode.getValue() );
         }
 
         csvGenerator.writeObjectField( simpleNode.getName(), value );

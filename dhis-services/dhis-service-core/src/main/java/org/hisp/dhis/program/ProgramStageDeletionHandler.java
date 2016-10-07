@@ -28,9 +28,11 @@ package org.hisp.dhis.program;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.system.deletion.DeletionHandler;
 
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Lars Helge Overland
@@ -69,6 +71,18 @@ public class ProgramStageDeletionHandler
             ProgramStage programStage = iterator.next();
             iterator.remove();
             programStageService.deleteProgramStage( programStage );
+        }
+    }
+
+    @Override
+    public void deleteDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        List<ProgramStage> associatedProgramStages = programStageService.getProgramStagesByDataEntryForm( dataEntryForm );
+
+        for ( ProgramStage programStage : associatedProgramStages )
+        {
+            programStage.setDataEntryForm( null );
+            programStageService.updateProgramStage( programStage );
         }
     }
 }

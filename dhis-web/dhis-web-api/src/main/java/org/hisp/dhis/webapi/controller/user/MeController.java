@@ -35,35 +35,37 @@ import org.hisp.dhis.fieldfilter.FieldFilterService;
 import org.hisp.dhis.node.NodeUtils;
 import org.hisp.dhis.node.types.CollectionNode;
 import org.hisp.dhis.node.types.RootNode;
+import org.hisp.dhis.node.types.SimpleNode;
 import org.hisp.dhis.render.RenderService;
+import org.hisp.dhis.security.PasswordManager;
 import org.hisp.dhis.system.util.ValidationUtils;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserService;
 import org.hisp.dhis.webapi.controller.exception.NotAuthenticatedException;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
+import org.hisp.dhis.webapi.mvc.annotation.ApiVersion.Version;
 import org.hisp.dhis.webapi.service.ContextService;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
  */
 @Controller
 @RequestMapping( value = "/me", method = RequestMethod.GET )
-@ApiVersion( ApiVersion.Version.V24 )
+@ApiVersion( { Version.V24, Version.V25 } )
 public class MeController
 {
     @Autowired
@@ -83,6 +85,9 @@ public class MeController
 
     @Autowired
     private IdentifiableObjectManager manager;
+
+    @Autowired
+    private PasswordManager passwordManager;
 
     @RequestMapping( value = "", method = RequestMethod.GET )
     public @ResponseBody RootNode getCurrentUser() throws Exception
@@ -169,9 +174,51 @@ public class MeController
         renderService.toJson( response.getOutputStream(), currentUser.getUserCredentials().getAllAuthorities() );
     }
 
+    @RequestMapping( value = "/verifyPassword", method = RequestMethod.POST, consumes = "text/*" )
+    public @ResponseBody RootNode verifyPasswordText( @RequestBody String password, HttpServletResponse response )
+        throws WebMessageException
+    {
+        return verifyPasswordInternal( password, getCurrentUserOrThrow() );
+    }
+
+    @RequestMapping( value = "/verifyPassword", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE )
+    public @ResponseBody RootNode verifyPasswordJson( @RequestBody Map<String, String> body, HttpServletResponse response )
+        throws WebMessageException
+    {
+        return verifyPasswordInternal( body.get( "password" ), getCurrentUserOrThrow() );
+    }
+
     //------------------------------------------------------------------------------------------------
-    // Utils
+    // Supportive methods
     //------------------------------------------------------------------------------------------------
+
+    private RootNode verifyPasswordInternal( String password, User currentUser )
+        throws WebMessageException
+    {
+        if ( password == null )
+        {
+            throw new WebMessageException( WebMessageUtils.conflict( "Required attribute 'password' missing or null." ) );
+        }
+
+        boolean valid = passwordManager.matches( password, currentUser.getUserCredentials().getPassword() );
+
+        RootNode rootNode = NodeUtils.createRootNode( "response" );
+        rootNode.addChild( new SimpleNode( "isCorrectPassword", valid ) );
+
+        return rootNode;
+    }
+
+    private User getCurrentUserOrThrow() throws WebMessageException
+    {
+        User user = currentUserService.getCurrentUser();
+
+        if ( user == null || user.getUserCredentials() == null )
+        {
+            throw new WebMessageException( WebMessageUtils.unathorized( "Not authenticated" ) );
+        }
+
+        return user;
+    }
 
     private void merge( User currentUser, User user )
     {

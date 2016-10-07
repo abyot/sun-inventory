@@ -28,11 +28,15 @@ package org.hisp.dhis.program.hibernate;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.google.common.collect.Lists;
 import org.hibernate.criterion.Restrictions;
 import org.hisp.dhis.common.hibernate.HibernateIdentifiableObjectStore;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramStage;
 import org.hisp.dhis.program.ProgramStageStore;
+
+import java.util.List;
 
 /**
  * @author Chau Thu Tran
@@ -51,5 +55,19 @@ public class HibernateProgramStageStore
         return (ProgramStage) getCriteria( 
             Restrictions.eq( "name", name ), 
             Restrictions.eq( "program", program ) ).uniqueResult();
+    }
+
+    @Override
+    @SuppressWarnings( "unchecked" )
+    public List<ProgramStage> getByDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        if ( dataEntryForm == null )
+        {
+            return Lists.newArrayList();
+        }
+
+        final String hql = "from ProgramStage p where p.dataEntryForm = :dataEntryForm";
+
+        return getQuery( hql ).setEntity( "dataEntryForm", dataEntryForm ).list();
     }
 }

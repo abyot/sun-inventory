@@ -60,6 +60,9 @@ public class DataApprovalStoreTest
 
     @Autowired
     private DataApprovalLevelService dataApprovalLevelService;
+    
+    @Autowired
+    private DataApprovalService dataApprovalService;
 
     @Autowired
     private PeriodService periodService;
@@ -67,9 +70,6 @@ public class DataApprovalStoreTest
     @Autowired
     private DataElementCategoryService categoryService;
 
-    @Autowired
-    private DataApprovalWorkflowService workflowService;
-    
     @Autowired
     private UserService userService;
 
@@ -123,9 +123,9 @@ public class DataApprovalStoreTest
         workflowA12 = new DataApprovalWorkflow( "workflowA12", periodType, newHashSet( level1, level2 ) );
         workflowB12 = new DataApprovalWorkflow( "workflowB12", periodType, newHashSet( level1, level2 ) );
 
-        workflowService.addWorkflow( workflowA1 );
-        workflowService.addWorkflow( workflowA12 );
-        workflowService.addWorkflow( workflowB12 );
+        dataApprovalService.addWorkflow( workflowA1 );
+        dataApprovalService.addWorkflow( workflowA12 );
+        dataApprovalService.addWorkflow( workflowB12 );
 
         periodA = createPeriod( getDay( 5 ), getDay( 6 ) );
         periodB = createPeriod( getDay( 6 ), getDay( 7 ) );

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.trackedentity.TrackedEntity;
 import org.hisp.dhis.user.User;
@@ -144,6 +145,14 @@ public interface ProgramService
      * @param trackedEntity {@link TrackedEntity}
      */
     List<Program> getProgramsByTrackedEntity( TrackedEntity trackedEntity );
+
+    /**
+     * Get all Programs with the given DataEntryForm.
+     *
+     * @param dataEntryForm the DataEntryForm.
+     * @return a list of Programs.
+     */
+    List<Program> getProgramsByDataEntryForm( DataEntryForm dataEntryForm );
 
     /**
      * Returns The number of Programs with the key searched

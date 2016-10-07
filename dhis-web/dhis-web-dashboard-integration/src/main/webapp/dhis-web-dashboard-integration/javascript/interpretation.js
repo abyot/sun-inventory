@@ -53,7 +53,7 @@ function postComment( uid ) {
 
   $("#commentArea" + uid).val("");
 
-  var url = "../api/interpretations/" + uid + "/comment";
+  var url = "../api/interpretations/" + uid + "/comments";
 
   var created = getCurrentDate();
 

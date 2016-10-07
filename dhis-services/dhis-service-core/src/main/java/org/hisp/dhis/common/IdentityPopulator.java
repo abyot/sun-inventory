@@ -38,7 +38,6 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * @author bobj
@@ -151,8 +150,6 @@ public class IdentityPopulator
 
         log.debug( "Identifiable properties updated" );
 
-        createOrgUnitUuids();
-
         log.debug( "Organisation unit uuids updated" );
 
         updatePasswordLastUpdated();
@@ -183,31 +180,5 @@ public class IdentityPopulator
     private String getIdColumn( String table )
     {
         return TABLE_ID_MAP.getOrDefault( table, (table + "id") );
-    }
-
-    private void createOrgUnitUuids()
-    {
-        try
-        {
-            SqlRowSet resultSet = jdbcTemplate.queryForRowSet( "SELECT * from organisationunit WHERE uuid IS NULL" );
-            int count = 0;
-
-            while ( resultSet.next() )
-            {
-                ++count;
-                int id = resultSet.getInt( "organisationunitid" );
-                String sql = "update organisationunit set uuid = '" + UUID.randomUUID().toString() + "' where organisationunitid = " + id;
-                jdbcTemplate.update( sql );
-            }
-
-            if ( count > 0 )
-            {
-                log.info( count + " UUIDs updated on organisationunit" );
-            }
-        }
-        catch ( Exception ex ) // Log and continue
-        {
-            log.error( "Problem updating organisationunit: ", ex );
-        }
     }
 }

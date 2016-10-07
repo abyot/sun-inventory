@@ -29,7 +29,6 @@ package org.hisp.dhis.program;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -41,19 +40,19 @@ import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.VersionedObject;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataapproval.DataApprovalWorkflow;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
+import org.hisp.dhis.program.notification.ProgramNotificationTemplate;
+import org.hisp.dhis.programrule.ProgramRule;
+import org.hisp.dhis.programrule.ProgramRuleVariable;
+import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.relationship.RelationshipType;
 import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.trackedentity.TrackedEntity;
 import org.hisp.dhis.trackedentity.TrackedEntityAttribute;
-import org.hisp.dhis.trackedentity.TrackedEntityInstanceReminder;
 import org.hisp.dhis.user.UserAuthorityGroup;
 import org.hisp.dhis.validation.ValidationCriteria;
 
@@ -77,13 +76,10 @@ public class Program
 
     private String incidentDateLabel;
 
-    @Scanned
     private Set<OrganisationUnit> organisationUnits = new HashSet<>();
 
-    @Scanned
     private Set<ProgramStage> programStages = new HashSet<>();
 
-    @Scanned
     private Set<ValidationCriteria> validationCriteria = new HashSet<>();
 
     private ProgramType programType;
@@ -92,19 +88,19 @@ public class Program
 
     private Boolean ignoreOverdueEvents = false;
 
-    @Scanned
     private List<ProgramTrackedEntityAttribute> programAttributes = new ArrayList<>();
 
-    @Scanned
     private Set<UserAuthorityGroup> userRoles = new HashSet<>();
 
-    @Scanned
     private Set<ProgramIndicator> programIndicators = new HashSet<>();
+    
+    private Set<ProgramRule> programRules = new HashSet<>();
+    
+    private Set<ProgramRuleVariable> programRuleVariables = new HashSet<>();
 
     private Boolean onlyEnrollOnce = false;
 
-    @Scanned
-    private Set<TrackedEntityInstanceReminder> instanceReminders = new HashSet<>();
+    private Set<ProgramNotificationTemplate> notificationTemplates = new HashSet<>();
 
     private Boolean selectEnrollmentDatesInFuture = false;
 
@@ -141,12 +137,32 @@ public class Program
     private DataApprovalWorkflow workflow;
 
     private Boolean displayFrontPageList = false;
-    
+
     /**
-     * Property indicating whether first stage can appear for data entry on the 
-     * same page with registration 
+     * Property indicating whether first stage can appear for data entry on the
+     * same page with registration
      */
     private Boolean useFirstStageDuringRegistration = false;
+    
+    /**
+     * Property indicating whether program allows for capturing of coordinates
+     */
+    private Boolean captureCoordinates = false;
+    
+    /**
+     * How many days after period is over will this program block creation and modification of events
+     */
+    private int expiryDays;
+    
+    /**
+     * The PeriodType indicating the frequency that this program will use to decide on expiry
+     */
+    private PeriodType expiryPeriodType;
+    
+    /**
+     * How many days after an event is completed will this program block modification of the event
+     */
+    private int completeEventsExpiryDays;
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -155,7 +171,7 @@ public class Program
     public Program()
     {
     }
-    
+
     public Program( String name, String description )
     {
         this.name = name;
@@ -238,12 +254,12 @@ public class Program
     public List<TrackedEntityAttribute> getTrackedEntityAttributes()
     {
         List<TrackedEntityAttribute> attributes = new ArrayList<>();
-        
+
         for ( ProgramTrackedEntityAttribute attribute : programAttributes )
         {
             attributes.add( attribute.getAttribute() );
         }
-        
+
         return attributes;
     }
 
@@ -291,7 +307,7 @@ public class Program
     {
         return organisationUnits.contains( unit );
     }
-    
+
     @Override
     public int increaseVersion()
     {
@@ -304,7 +320,6 @@ public class Program
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getVersion()
     {
@@ -319,7 +334,6 @@ public class Program
 
     @JsonProperty( "organisationUnits" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "organisationUnits", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "organisationUnit", namespace = DxfNamespaces.DXF_2_0 )
     public Set<OrganisationUnit> getOrganisationUnits()
@@ -334,7 +348,6 @@ public class Program
 
     @JsonProperty( "programStages" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "programStages", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "programStage", namespace = DxfNamespaces.DXF_2_0 )
     public Set<ProgramStage> getProgramStages()
@@ -348,7 +361,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getEnrollmentDateLabel()
@@ -362,7 +374,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getIncidentDateLabel()
@@ -376,7 +387,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ProgramType getProgramType()
     {
@@ -390,7 +400,6 @@ public class Program
 
     @JsonProperty( "validationCriterias" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "validationCriterias", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "validationCriteria", namespace = DxfNamespaces.DXF_2_0 )
     public Set<ValidationCriteria> getValidationCriteria()
@@ -404,7 +413,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getDisplayIncidentDate()
     {
@@ -417,7 +425,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getIgnoreOverdueEvents()
     {
@@ -430,7 +437,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isRegistration()
     {
@@ -438,7 +444,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isWithoutRegistration()
     {
@@ -447,7 +452,6 @@ public class Program
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "userRoles", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "userRole", namespace = DxfNamespaces.DXF_2_0 )
     public Set<UserAuthorityGroup> getUserRoles()
@@ -462,7 +466,6 @@ public class Program
 
     @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "programIndicators", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "programIndicator", namespace = DxfNamespaces.DXF_2_0 )
     public Set<ProgramIndicator> getProgramIndicators()
@@ -476,7 +479,34 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
+    @JsonSerialize( contentAs = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "programRules", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "programRule", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<ProgramRule> getProgramRules()
+    {
+        return programRules;
+    }
+
+    public void setProgramRules( Set<ProgramRule> programRules )
+    {
+        this.programRules = programRules;
+    }
+
+    @JsonProperty
+    @JsonSerialize( contentAs = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "programRuleVariables", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "programRuleVariable", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<ProgramRuleVariable> getProgramRuleVariables()
+    {
+        return programRuleVariables;
+    }
+
+    public void setProgramRuleVariables( Set<ProgramRuleVariable> programRuleVariables )
+    {
+        this.programRuleVariables = programRuleVariables;
+    }
+
+    @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getOnlyEnrollOnce()
     {
@@ -488,23 +518,21 @@ public class Program
         this.onlyEnrollOnce = onlyEnrollOnce;
     }
 
-    @JsonProperty( "trackedEntityInstanceReminders" )
+    @JsonProperty
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlElementWrapper( localName = "trackedEntityInstanceReminders", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "trackedEntityInstanceReminder", namespace = DxfNamespaces.DXF_2_0 )
-    public Set<TrackedEntityInstanceReminder> getInstanceReminders()
+    @JacksonXmlProperty( localName = "notificationTemplate", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlElementWrapper( localName = "notificationTemplates", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<ProgramNotificationTemplate> getNotificationTemplates()
     {
-        return instanceReminders;
+        return notificationTemplates;
     }
 
-    public void setInstanceReminders( Set<TrackedEntityInstanceReminder> instanceReminders )
+    public void setNotificationTemplates( Set<ProgramNotificationTemplate> notificationTemplates )
     {
-        this.instanceReminders = instanceReminders;
+        this.notificationTemplates = notificationTemplates;
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getSelectEnrollmentDatesInFuture()
     {
@@ -517,7 +545,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getSelectIncidentDatesInFuture()
     {
@@ -530,7 +557,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getRelationshipText()
@@ -544,7 +570,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public RelationshipType getRelationshipType()
     {
@@ -558,7 +583,6 @@ public class Program
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Program getRelatedProgram()
     {
@@ -571,7 +595,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getRelationshipFromA()
     {
@@ -584,7 +607,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getDataEntryMethod()
     {
@@ -598,7 +620,6 @@ public class Program
 
     @JsonProperty( "programTrackedEntityAttributes" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "programTrackedEntityAttributes", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "programTrackedEntityAttribute", namespace = DxfNamespaces.DXF_2_0 )
     public List<ProgramTrackedEntityAttribute> getProgramAttributes()
@@ -612,7 +633,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "trackedEntity", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "trackedEntity", namespace = DxfNamespaces.DXF_2_0 )
     public TrackedEntity getTrackedEntity()
@@ -626,7 +646,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "dataEntryForm", namespace = DxfNamespaces.DXF_2_0 )
     public DataEntryForm getDataEntryForm()
     {
@@ -640,7 +659,6 @@ public class Program
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataElementCategoryCombo getCategoryCombo()
     {
@@ -653,7 +671,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataApprovalWorkflow getWorkflow()
     {
@@ -675,7 +692,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean isSkipOffline()
     {
@@ -688,7 +704,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getDisplayFrontPageList()
     {
@@ -701,7 +716,6 @@ public class Program
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getUseFirstStageDuringRegistration()
     {
@@ -711,9 +725,51 @@ public class Program
     public void setUseFirstStageDuringRegistration( Boolean useFirstStageDuringRegistration )
     {
         this.useFirstStageDuringRegistration = useFirstStageDuringRegistration;
+    }    
+    
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Boolean getCaptureCoordinates()
+    {
+        return captureCoordinates;
     }
 
-    @Override
+    public void setCaptureCoordinates( Boolean captureCoordinates )
+    {
+        this.captureCoordinates = captureCoordinates;
+    }
+    
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public int getExpiryDays() {
+		return expiryDays;
+	}
+
+	public void setExpiryDays(int expiryDays) {
+		this.expiryDays = expiryDays;
+	}
+	
+	@JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+	public PeriodType getExpiryPeriodType() {
+		return expiryPeriodType;
+	}
+
+	public void setExpiryPeriodType(PeriodType expiryPeriodType) {
+		this.expiryPeriodType = expiryPeriodType;
+	}
+
+	@JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+	public int getCompleteEventsExpiryDays() {
+		return completeEventsExpiryDays;
+	}
+
+	public void setCompleteEventsExpiryDays(int completeEventsExpiryDays) {
+		this.completeEventsExpiryDays = completeEventsExpiryDays;
+	}
+
+	@Override
     public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
     {
         super.mergeWith( other, mergeMode );
@@ -723,6 +779,8 @@ public class Program
             Program program = (Program) other;
 
             version = program.getVersion();
+            expiryDays = program.getExpiryDays();            
+            completeEventsExpiryDays = program.getCompleteEventsExpiryDays();
 
             if ( mergeMode.isReplace() )
             {
@@ -741,6 +799,9 @@ public class Program
                 dataEntryMethod = program.getDataEntryMethod();
                 trackedEntity = program.getTrackedEntity();
                 useFirstStageDuringRegistration = program.getUseFirstStageDuringRegistration();
+                categoryCombo = program.getCategoryCombo();
+                captureCoordinates = program.getCaptureCoordinates();
+                expiryPeriodType = program.getExpiryPeriodType();
             }
             else if ( mergeMode.isMerge() )
             {
@@ -759,6 +820,9 @@ public class Program
                 dataEntryMethod = program.getDataEntryMethod() == null ? dataEntryMethod : program.getDataEntryMethod();
                 trackedEntity = program.getTrackedEntity() == null ? trackedEntity : program.getTrackedEntity();
                 useFirstStageDuringRegistration = program.getUseFirstStageDuringRegistration() == null ? useFirstStageDuringRegistration : program.getUseFirstStageDuringRegistration();
+                categoryCombo = program.getCategoryCombo() == null ? categoryCombo : program.getCategoryCombo();
+                captureCoordinates = program.getCaptureCoordinates() == null ? captureCoordinates : program.getCaptureCoordinates();
+                expiryPeriodType = program.getExpiryPeriodType() == null ? expiryPeriodType : program.getExpiryPeriodType();
             }
 
             organisationUnits.clear();
@@ -781,8 +845,8 @@ public class Program
             userRoles.clear();
             userRoles.addAll( program.getUserRoles() );
 
-            instanceReminders.clear();
-            instanceReminders.addAll( program.getInstanceReminders() );
+            notificationTemplates.clear();
+            notificationTemplates.addAll( program.getNotificationTemplates() );
         }
     }
 }

@@ -62,9 +62,6 @@ public class DefaultAnalyticsSecurityManager
     private static final Log log = LogFactory.getLog( DefaultAnalyticsSecurityManager.class );
     
     @Autowired
-    private CurrentUserService currentUserService;
-    
-    @Autowired
     private DataApprovalLevelService approvalLevelService;
     
     @Autowired
@@ -72,6 +69,9 @@ public class DefaultAnalyticsSecurityManager
     
     @Autowired
     private DimensionService dimensionService;
+
+    @Autowired
+    private CurrentUserService currentUserService;
     
     // -------------------------------------------------------------------------
     // AnalyticsSecurityManager implementation
@@ -105,10 +105,19 @@ public class DefaultAnalyticsSecurityManager
             }
         }
     }
+
+    @Override
+    public User getCurrentUser( DataQueryParams params )
+    {
+        return params != null && params.hasCurrentUser() ? 
+            params.getCurrentUser() : currentUserService.getCurrentUser();
+    }
     
     @Override
-    public void applyDataApprovalConstraints( DataQueryParams params )
+    public DataQueryParams withDataApprovalConstraints( DataQueryParams params )
     {
+        DataQueryParams.Builder paramsBuilder = DataQueryParams.newBuilder( params );
+        
         User user = currentUserService.getCurrentUser();
 
         boolean hideUnapprovedData = (Boolean) systemSettingManager.getSystemSetting( SettingKey.HIDE_UNAPPROVED_DATA_IN_ANALYTICS );
@@ -141,21 +150,27 @@ public class DefaultAnalyticsSecurityManager
             
             if ( approvalLevels != null && !approvalLevels.isEmpty() )
             {
-                params.setDataApprovalLevels( approvalLevels );
+                paramsBuilder.withDataApprovalLevels( approvalLevels );
                 
                 log.debug( "User: " + user.getUsername() + " constrained by data approval levels: " + approvalLevels.values() );
             }
         }
+        
+        return paramsBuilder.build();
     }
     
     @Override
-    public void applyDimensionConstraints( DataQueryParams params )
+    public DataQueryParams withDimensionConstraints( DataQueryParams params )
     {
-        applyOrganisationUnitConstraint( params );
-        applyUserConstraints( params );
+        DataQueryParams.Builder builder = DataQueryParams.newBuilder( params );
+        
+        applyOrganisationUnitConstraint( builder, params );
+        applyUserConstraints( builder, params );
+        
+        return builder.build();
     }
 
-    private void applyOrganisationUnitConstraint( DataQueryParams params )
+    private void applyOrganisationUnitConstraint( DataQueryParams.Builder builder, DataQueryParams params )
     {
         User user = currentUserService.getCurrentUser();
 
@@ -181,18 +196,18 @@ public class DefaultAnalyticsSecurityManager
         // Apply constraint as filter, and remove potential all-dimension
         // -----------------------------------------------------------------
 
-        params.removeDimensionOrFilter( DimensionalObject.ORGUNIT_DIM_ID );
+        builder.removeDimensionOrFilter( DimensionalObject.ORGUNIT_DIM_ID );
 
         List<OrganisationUnit> orgUnits = new ArrayList<>( user.getDataViewOrganisationUnits() );
 
         DimensionalObject constraint = new BaseDimensionalObject( DimensionalObject.ORGUNIT_DIM_ID, DimensionType.ORGANISATION_UNIT, orgUnits );
         
-        params.getFilters().add( constraint );
+        builder.addFilter( constraint );
 
         log.debug( "User: " + user.getUsername() + " constrained by data view organisation units" );        
     }
     
-    private void applyUserConstraints( DataQueryParams params )
+    private void applyUserConstraints( DataQueryParams.Builder builder, DataQueryParams params )
     {
         User user = currentUserService.getCurrentUser();
 
@@ -233,14 +248,14 @@ public class DefaultAnalyticsSecurityManager
             // Apply constraint as filter, and remove potential all-dimension
             // -----------------------------------------------------------------
 
-            params.removeDimensionOrFilter( dimension.getDimension() );
+            builder.removeDimensionOrFilter( dimension.getDimension() );
             
             DimensionalObject constraint = new BaseDimensionalObject( dimension.getDimension(), 
                 dimension.getDimensionType(), null, dimension.getDisplayName(), canReadItems );
             
-            params.getFilters().add( constraint );
+            builder.addFilter( constraint );
 
-            log.info( "User: " + user.getUsername() + " constrained by dimension: " + constraint.getDimension() );
+            log.debug( "User: " + user.getUsername() + " constrained by dimension: " + constraint.getDimension() );
         }        
     }
 }

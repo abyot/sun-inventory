@@ -2561,9 +2561,9 @@ Ext.onReady( function() {
 			store: Ext.create('Ext.data.Store', {
 				fields: ['id', 'text'],
 				data: [
+					{id: finalsStyleConf.none, text: NS.i18n.none},
 					{id: finalsStyleConf.comma, text: NS.i18n.comma},
-					{id: finalsStyleConf.space, text: NS.i18n.space},
-					{id: 'none', text: 'None'}
+					{id: finalsStyleConf.space, text: NS.i18n.space}
 				]
 			})
 		});
@@ -4115,28 +4115,22 @@ Ext.onReady( function() {
 		dataElementsByStageStore = Ext.create('Ext.data.Store', {
 			fields: ['id', 'name', 'isAttribute', 'isProgramIndicator'],
 			data: [],
-			sorters: [
-                {
-                    property: 'isAttribute',
-                    direction: 'DESC'
-                },
-                {
-                    property: 'name',
-                    direction: 'ASC'
-                }
-            ],
+			sorters: [{
+                property: 'name',
+                direction: 'ASC'
+            }],
             onLoadData: function() {
 
                 // layout window
                 var layoutWindow = ns.app.aggregateLayoutWindow;
 
-                this.each( function(record) {
+                this.each(function(record) {
                     if (Ext.Array.contains(ns.core.conf.valueType.numericTypes, record.data.valueType)) {
                         layoutWindow.valueStore.add(record.data);
                     }
                 });
 
-                this.toggleProgramIndicators();
+                //this.toggleProgramIndicators();
             },
             toggleProgramIndicators: function(type) {
                 type = type || ns.app.typeToolbar.getType();
@@ -5747,6 +5741,8 @@ Ext.onReady( function() {
 			recordsToSelect: [],
 			recordsToRestore: [],
 			multipleSelectIf: function(map, doUpdate) {
+                this.recordsToSelect = Ext.Array.clean(this.recordsToSelect);
+
 				if (this.recordsToSelect.length === ns.core.support.prototype.object.getLength(map)) {
 					this.getSelectionModel().select(this.recordsToSelect);
 					this.recordsToSelect = [];
@@ -7449,6 +7445,12 @@ Ext.onReady( function() {
                             console.log("core", ns.core);
                             console.log("app", ns.app);
                         }
+
+                        // data statistics
+                        Ext.Ajax.request({
+                            url: ns.core.init.contextPath + '/api/dataStatistics?eventType=EVENT_REPORT_VIEW' + (ns.app.layout.id ? '&favorite=' + ns.app.layout.id : ''),
+                            method: 'POST'
+                        });
                     };
 
                     getSXLayout = function() {
@@ -8630,6 +8632,7 @@ Ext.onReady( function() {
                                                         else {
                                                             Ext.Ajax.request({
                                                                 url: contextPath + '/api/optionSets.json?fields=id,version&paging=false',
+                                                                disableCaching: false,
                                                                 success: function(r) {
                                                                     var optionSets = Ext.decode(r.responseText).optionSets || [],
                                                                         ids = [],

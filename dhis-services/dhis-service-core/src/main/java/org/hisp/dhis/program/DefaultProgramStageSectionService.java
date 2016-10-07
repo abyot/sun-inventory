@@ -28,9 +28,6 @@ package org.hisp.dhis.program;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
-
-import org.hisp.dhis.i18n.I18nService;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -49,13 +46,6 @@ public class DefaultProgramStageSectionService
     public void setProgramStageSectionStore( ProgramStageSectionStore programStageSectionStore )
     {
         this.programStageSectionStore = programStageSectionStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     // -------------------------------------------------------------------------
@@ -83,12 +73,12 @@ public class DefaultProgramStageSectionService
     @Override
     public ProgramStageSection getProgramStageSection( int id )
     {
-        return i18n( i18nService, programStageSectionStore.get( id ) );
+        return programStageSectionStore.get( id );
     }
 
     @Override
     public ProgramStageSection getProgramStageSectionByName( String name, ProgramStage programStage )
     {
-        return i18n( i18nService, programStageSectionStore.getByNameAndProgramStage( name, programStage ) );
+        return programStageSectionStore.getByNameAndProgramStage( name, programStage );
     }
 }

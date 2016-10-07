@@ -31,9 +31,13 @@ package org.hisp.dhis.program;
 import static org.junit.Assert.assertEquals;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.hisp.dhis.DhisSpringTest;
+import org.hisp.dhis.dataentryform.DataEntryForm;
+import org.hisp.dhis.dataentryform.DataEntryFormService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.junit.Test;
@@ -54,11 +58,16 @@ public class ProgramStageStoreTest
     @Autowired
     private OrganisationUnitService organisationUnitService;
 
+    @Autowired
+    private DataEntryFormService dataEntryFormService;
+
     private Program program;
 
     private ProgramStage stageA;
 
     private ProgramStage stageB;
+
+    private ProgramStage stageC;
 
     @Override
     public void setUpTest()
@@ -74,8 +83,12 @@ public class ProgramStageStoreTest
         stageA.setUid( "UID-A" );
 
         stageB = new ProgramStage( "B", program );
-        stageA.setProgram( program );
+        stageB.setProgram( program );
         stageB.setUid( "UID-B" );
+
+        stageC = new ProgramStage( "C", program );
+        stageB.setProgram( program );
+        stageC.setUid( "UID-C" );
     }
 
     @Test
@@ -94,4 +107,28 @@ public class ProgramStageStoreTest
         assertEquals( stageB, programStageStore.getByNameAndProgram( "B", program ) );
     }
 
+    @Test
+    public void testGetByDataEntryForm()
+    {
+        DataEntryForm formX = createDataEntryForm( 'X' );
+        DataEntryForm formY = createDataEntryForm( 'Y' );
+
+        dataEntryFormService.addDataEntryForm( formX );
+        dataEntryFormService.addDataEntryForm( formY );
+
+        stageA.setDataEntryForm( formX );
+        stageB.setDataEntryForm( formY );
+
+        programStageStore.save( stageA );
+        programStageStore.save( stageB );
+        programStageStore.save( stageC );
+
+        program.setProgramStages( Sets.newHashSet( stageA, stageB, stageC ) );
+        programService.updateProgram( program );
+
+        List<ProgramStage> hasFormX = programStageStore.getByDataEntryForm( formX );
+
+        assertEquals( 1, hasFormX.size() );
+        assertEquals( stageA, hasFormX.get( 0 ) );
+    }
 }

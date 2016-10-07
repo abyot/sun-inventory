@@ -17,7 +17,7 @@
 
     <property name="name" column="name" not-null="true" unique="true" length="230" />
 
-    <property name="valueType" length="50">
+    <property name="valueType" length="50" not-null="true">
       <type name="org.hibernate.type.EnumType">
         <param name="enumClass">org.hisp.dhis.common.ValueType</param>
         <param name="useNamed">true</param>
@@ -53,20 +53,12 @@
     </set>
 
     <!-- Object Translation -->
-    <set name="translations" table="optionsettranslations" cascade="delete-orphan" lazy="false">
+    <set name="translations" table="optionsettranslations" cascade="delete-orphan">
       <cache usage="read-write" />
       <key column="optionsetid" foreign-key="fk_objecttranslation_optionsetid" />
-
-      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation">
-        <column name="objecttranslationid" unique="true" />
-        <filter name="locale" condition="locale = :locale" />
-      </many-to-many>
+      <many-to-many class="org.hisp.dhis.translation.ObjectTranslation" column="objecttranslationid" unique="true" />
     </set>
 
   </class>
-
-  <filter-def name="locale">
-    <filter-param name="locale" type="string" />
-  </filter-def>
 
 </hibernate-mapping>

@@ -42,7 +42,7 @@
 	    	<select id="validationRuleGroupId" name="validationRuleGroupId" style="width:20em">
 	    		<option value="-1">[ $i18n.getString( "all_validation_rules" ) ]</option>
 	    		#foreach( $group in $validationRuleGroups )
-	    			<option value="$group.id">$encoder.htmlEncode( $group.name )</option>
+	    			<option value="$group.id">$encoder.htmlEncode( $!group.displayName )</option>
 		    	#end
             </select>
     	</td>

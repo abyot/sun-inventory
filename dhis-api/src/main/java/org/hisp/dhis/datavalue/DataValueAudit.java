@@ -30,6 +30,8 @@ package org.hisp.dhis.datavalue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.google.common.base.MoreObjects;
+
 import org.hisp.dhis.common.AuditType;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.dataelement.DataElement;
@@ -44,16 +46,9 @@ import java.util.Objects;
  * @author Quang Nguyen
  * @author Halvdan Hoem Grelland
  */
-
 public class DataValueAudit
 {
     private int id;
-
-    private String value;
-
-    private String modifiedBy;
-
-    private Date created;
 
     private DataElement dataElement;
 
@@ -64,6 +59,12 @@ public class DataValueAudit
     private DataElementCategoryOptionCombo categoryOptionCombo;
 
     private DataElementCategoryOptionCombo attributeOptionCombo;
+
+    private String value;
+
+    private String modifiedBy;
+
+    private Date created;
 
     private AuditType auditType;
 
@@ -83,43 +84,72 @@ public class DataValueAudit
         this.categoryOptionCombo = dataValue.getCategoryOptionCombo();
         this.attributeOptionCombo = dataValue.getAttributeOptionCombo();
 
-        this.created = new Date();
         this.value = value;
         this.modifiedBy = modifiedBy;
+        this.created = new Date();
         this.auditType = auditType;
     }
 
+    public DataValueAudit( DataElement dataElement, Period period, OrganisationUnit organisationUnit, 
+        DataElementCategoryOptionCombo categoryOptionCombo, DataElementCategoryOptionCombo attributeOptionCombo,
+        String value, String modifiedBy, AuditType auditType )
+    {
+        this.dataElement = dataElement;
+        this.period = period;
+        this.organisationUnit = organisationUnit;
+        this.categoryOptionCombo = categoryOptionCombo;
+        this.attributeOptionCombo = attributeOptionCombo;
+        this.value = value;
+        this.modifiedBy = modifiedBy;
+        this.created = new Date();
+        this.auditType = auditType;
+    }
+    
     @Override
     public int hashCode()
     {
-        return Objects.hash( id, value, modifiedBy, created, dataElement, period, organisationUnit, categoryOptionCombo, attributeOptionCombo, auditType );
+        return Objects.hash( dataElement, period, organisationUnit, categoryOptionCombo, attributeOptionCombo, value, modifiedBy, created, auditType );
     }
 
     @Override
-    public boolean equals( Object obj )
+    public boolean equals( Object object )
     {
-        if ( this == obj )
+        if ( this == object )
         {
             return true;
         }
 
-        if ( obj == null || getClass() != obj.getClass() )
+        if ( object == null || getClass() != object.getClass() )
         {
             return false;
         }
 
-        final DataValueAudit other = (DataValueAudit) obj;
+        final DataValueAudit other = (DataValueAudit) object;
 
-        return Objects.equals( this.id, other.id )
-            && Objects.equals( this.value, other.value )
-            && Objects.equals( this.modifiedBy, other.modifiedBy )
-            && Objects.equals( this.created, other.created )
-            && Objects.equals( this.dataElement, other.dataElement )
+        return Objects.equals( this.dataElement, other.dataElement )
             && Objects.equals( this.period, other.period )
             && Objects.equals( this.organisationUnit, other.organisationUnit )
             && Objects.equals( this.categoryOptionCombo, other.categoryOptionCombo )
             && Objects.equals( this.attributeOptionCombo, other.attributeOptionCombo )
+            && Objects.equals( this.value, other.value )
+            && Objects.equals( this.modifiedBy, other.modifiedBy )
+            && Objects.equals( this.created, other.created )
             && Objects.equals( this.auditType, other.auditType );
+    }
+    
+    @Override
+    public String toString()
+    {
+        return MoreObjects.toStringHelper( this )
+            .add( "data element", dataElement )
+            .add( "period", period )
+            .add( "organisation unit", organisationUnit )
+            .add( "category option combo", categoryOptionCombo )
+            .add( "attribute option combo", attributeOptionCombo )
+            .add( "value", value )
+            .add( "modified by", modifiedBy )
+            .add( "created", created )
+            .add( "audit type", auditType ).toString();
     }
 
     // -------------------------------------------------------------------------
@@ -134,42 +164,6 @@ public class DataValueAudit
     public void setId( int id )
     {
         this.id = id;
-    }
-
-    @JsonProperty
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public String getValue()
-    {
-        return value;
-    }
-
-    public void setValue( String value )
-    {
-        this.value = value;
-    }
-
-    @JsonProperty
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public String getModifiedBy()
-    {
-        return modifiedBy;
-    }
-
-    public void setModifiedBy( String modifiedBy )
-    {
-        this.modifiedBy = modifiedBy;
-    }
-
-    @JsonProperty
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public Date getCreated()
-    {
-        return created;
-    }
-
-    public void setCreated( Date created )
-    {
-        this.created = created;
     }
 
     @JsonProperty
@@ -232,6 +226,42 @@ public class DataValueAudit
         this.attributeOptionCombo = attributeOptionCombo;
     }
 
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public String getValue()
+    {
+        return value;
+    }
+
+    public void setValue( String value )
+    {
+        this.value = value;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public String getModifiedBy()
+    {
+        return modifiedBy;
+    }
+
+    public void setModifiedBy( String modifiedBy )
+    {
+        this.modifiedBy = modifiedBy;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated( Date created )
+    {
+        this.created = created;
+    }
+    
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public AuditType getAuditType()

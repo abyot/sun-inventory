@@ -28,6 +28,7 @@ package org.hisp.dhis.predictor;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.common.BaseDimensionalItemObject;
@@ -41,14 +42,13 @@ import org.hisp.dhis.datavalue.DataValue;
 import org.hisp.dhis.datavalue.DataValueService;
 import org.hisp.dhis.expression.Expression;
 import org.hisp.dhis.expression.ExpressionService;
-import org.hisp.dhis.i18n.I18nService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
+import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.Period;
+import org.hisp.dhis.period.PeriodService;
 import org.hisp.dhis.period.PeriodType;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -60,8 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
-
 /**
  * Created by haase on 6/12/16.
  */
@@ -72,9 +70,6 @@ public class DefaultPredictorService
 
     @Autowired
     private PredictorStore predictorStore;
-    
-    @Autowired
-    private I18nService i18nService;
 
     @Autowired
     private ConstantService constantService;
@@ -90,6 +85,9 @@ public class DefaultPredictorService
 
     @Autowired
     private OrganisationUnitService organisationUnitService;
+
+    @Autowired
+    private PeriodService periodService;
 
     // -------------------------------------------------------------------------
     // Predictor
@@ -116,31 +114,31 @@ public class DefaultPredictorService
     @Override
     public Predictor getPredictor( int id )
     {
-        return i18n( i18nService, predictorStore.get( id ) );
+        return predictorStore.get( id );
     }
 
     @Override
     public Predictor getPredictor( String uid )
     {
-        return i18n( i18nService, predictorStore.getByUid( uid ) );
+        return predictorStore.getByUid( uid );
     }
 
     @Override
     public List<Predictor> getAllPredictors()
     {
-        return i18n( i18nService, predictorStore.getAll() );
+        return predictorStore.getAll();
     }
 
     @Override
     public List<Predictor> getPredictorsByUid( Collection<String> uids )
     {
-        return i18n( i18nService, predictorStore.getByUid( uids ) );
+        return predictorStore.getByUid( uids );
     }
 
     @Override
     public List<Predictor> getPredictorsByName( String name )
     {
-        return new ArrayList<>( i18n( i18nService, predictorStore.getAllEqName( name ) ) );
+        return new ArrayList<>( predictorStore.getAllEqName( name ) );
     }
 
     @Override
@@ -149,36 +147,56 @@ public class DefaultPredictorService
         return predictorStore.getCount();
     }
 
-    private Set<BaseDimensionalItemObject> getExpressionInputs( String expr_string )
+    private Set<BaseDimensionalItemObject> getExpressionInputs( String exprString )
     {
-        return expressionService.getDataInputsInExpression( expr_string );
+        return expressionService.getDataInputsInExpression( exprString );
     }
 
     @Override
     public Collection<DataValue> getPredictions( Predictor p, Date start, Date end )
     {
+        List<OrganisationUnit> sources = new ArrayList<OrganisationUnit>();
+
+        for ( OrganisationUnitLevel level : p.getOrganisationUnitLevels() )
+        {
+            sources.addAll( organisationUnitService.getOrganisationUnitsAtLevel( level.getLevel() ) );
+        }
+
+        Collection<Period> basePeriods = getPeriodsBetween( p.getPeriodType(), start, end );
+
+        return getPredictions( p, sources, basePeriods );
+    }
+
+    @Override
+    public Collection<DataValue> getPredictions( Predictor p, Collection<OrganisationUnit> sources, Date start, Date end )
+    {
+        Collection<Period> basePeriods = getPeriodsBetween( p.getPeriodType(), start, end );
+
+        return getPredictions( p, sources, basePeriods );
+    }
+
+    @Override
+    public Collection<DataValue> getPredictions( Predictor predictor, Collection<OrganisationUnit> sources, Collection<Period> periods )
+    {
         // Is end inclusive or exclusive? And what if end is in the middle of a
         // period? Does the period get included?
         List<DataValue> results = new ArrayList<DataValue>();
-        Expression generator = p.getGenerator();
-        Expression skipTest = p.getSampleSkipTest();
-        DataElement output = p.getOutput();
+        Expression generator = predictor.getGenerator();
+        Expression skipTest = predictor.getSampleSkipTest();
+        DataElement output = predictor.getOutput();
         Set<BaseDimensionalItemObject> datarefs = getExpressionInputs( generator.getExpression() );
-        Set<BaseDimensionalItemObject> skiprefs = (skipTest == null) ? (null)
+        Set<BaseDimensionalItemObject> skiprefs = skipTest == null ? new HashSet<BaseDimensionalItemObject>()
             : getExpressionInputs( skipTest.getExpression() );
         Set<BaseDimensionalItemObject> samplerefs = new HashSet<BaseDimensionalItemObject>();
         Set<String> aggregates = expressionService.getAggregatesInExpression( generator.getExpression() );
         Map<String, Double> constantMap = constantService.getConstantMap();
 
-        ListMap<Period, Period> periodMaps = getSamplePeriods( p.getPeriodType(), start, end,
-            p.getSequentialSkipCount(), p.getSequentialSampleCount(), p.getAnnualSampleCount() );
+        ListMap<Period, Period> periodMaps = getSamplePeriods( periods, predictor.getPeriodType(),
+            predictor.getSequentialSkipCount(), predictor.getSequentialSampleCount(),
+                predictor.getAnnualSampleCount() );
 
-        List<OrganisationUnit> sources = new ArrayList<OrganisationUnit>();
-        for ( Integer level : p.getOrganisationUnitLevels() )
-            sources.addAll( organisationUnitService.getOrganisationUnitsAtLevel( level ) );
-
-        Set<Period> base_periods = periodMaps.keySet();
-        Set<Period> sample_periods = periodMaps.uniqueValues();
+        Set<Period> basePeriods = periodMaps.keySet();
+        Set<Period> samplePeriods = periodMaps.uniqueValues();
 
         for ( String aggregate : aggregates )
         {
@@ -188,23 +206,38 @@ public class DefaultPredictorService
         for ( OrganisationUnit source : sources )
         {
             MapMap<OrganisationUnit, Period, MapMap<Integer, BaseDimensionalItemObject, Double>> valueMaps = getDataValues(
-                datarefs, sourceList( source ), base_periods );
-            Map<Period, MapMap<Integer, BaseDimensionalItemObject, Double>> skipdata = (skipTest == null) ? (null)
-                : getDataValues( skiprefs, sourceList( source ), sample_periods ).get( source );
+                datarefs, sourceList( source ), basePeriods );
+            Map<Period, MapMap<Integer, BaseDimensionalItemObject, Double>> skipdata = skipTest == null ? null :
+                getDataValues( skiprefs, sourceList( source ), samplePeriods ).get( source );
 
-            for ( Period period : base_periods )
+            for ( Period period : basePeriods )
             {
                 MapMap<Integer, BaseDimensionalItemObject, Double> valueMap = valueMaps.getValue( source, period );
+                
                 Map<Integer, ListMap<String, Double>> sampleMap = getSampleMaps( aggregates, samplerefs, source,
                     periodMaps.get( period ), skipTest, skipdata, constantMap );
 
+                Set<Integer> allAoc = new HashSet<Integer>();
+                
                 if ( valueMap != null )
                 {
-                    for ( Integer aoc : valueMap.keySet() )
+                    allAoc.addAll( valueMap.keySet() );
+                }
+                
+                if ( sampleMap != null )
+                {
+                    allAoc.addAll( sampleMap.keySet() );
+                }
+
+                if ( allAoc.size() > 0 )
+                {
+                    for ( Integer aoc : allAoc )
                     {
-                        Map<? extends BaseDimensionalItemObject, Double> bindings = valueMap.get( aoc );
-                        Double value = null;
+                        Map<? extends BaseDimensionalItemObject, Double> bindings = valueMap == null ? 
+                            emptyBindings() : valueMap.get( aoc );
                         
+                        Double value = null;
+
                         if ( sampleMap == null )
                         {
                             value = expressionService.getExpressionValue( generator, bindings, constantMap, null, 0, null );
@@ -214,13 +247,14 @@ public class DefaultPredictorService
                             value = expressionService.getExpressionValue( generator, bindings, constantMap, null, 0, null, sampleMap.get( aoc ) );
                         }
 
-                        if ( ( value != null ) && ( !( value.isNaN() ) ) && ( !( ( value.isInfinite() ) ) ) )
+                        if ( value != null && !value.isNaN() && !value.isInfinite() )
                         {
                             DataValue dv = new DataValue( output, period, source,
                                 categoryService.getDefaultDataElementCategoryOptionCombo(),
                                 categoryService.getDataElementCategoryOptionCombo( aoc ) );
-                            
+
                             dv.setValue( value.toString() );
+                            
                             results.add( dv );
                         }
                     }
@@ -231,12 +265,17 @@ public class DefaultPredictorService
         return results;
     }
 
-    private Map<Integer, ListMap<String, Double>> getSampleMaps( Collection<String> aggregate_exprs,
+    private Map<? extends BaseDimensionalItemObject, Double> emptyBindings()
+    {
+        return new HashMap<BaseDimensionalItemObject, Double>();
+    }
+
+    private Map<Integer, ListMap<String, Double>> getSampleMaps( Collection<String> aggregateExpressions,
         Set<BaseDimensionalItemObject> samplerefs, OrganisationUnit source, Collection<Period> periods,
-        Expression skipTest, Map<Period, MapMap<Integer, BaseDimensionalItemObject, Double>> skipdata,
+        Expression skipTest, Map<Period, MapMap<Integer, BaseDimensionalItemObject, Double>> skipData,
         Map<String, Double> constantMap )
     {
-        Map<Integer, ListMap<String, Double>> result = new HashMap<Integer, ListMap<String, Double>>();
+        Map<Integer, ListMap<String, Double>> result = new HashMap<>();
         
         MapMap<OrganisationUnit, Period, MapMap<Integer, BaseDimensionalItemObject, Double>> dataMaps = getDataValues(
             samplerefs, sourceList( source ), periods );
@@ -245,33 +284,34 @@ public class DefaultPredictorService
 
         if ( dataMap != null )
         {
-            if ( skipTest != null )
+            if ( ( skipTest != null ) && (skipData != null) )
             {
                 for ( Period period : periods )
                 {
-                    MapMap<Integer, BaseDimensionalItemObject, Double> period_data = skipdata.get( period );
+                    MapMap<Integer, BaseDimensionalItemObject, Double> periodData = skipData.get( period );
                     
-                    if ( period_data != null )
+                    if ( periodData != null )
                     {
-                        for ( Integer aoc : period_data.keySet() )
+                        for ( Integer aoc : periodData.keySet() )
                         {
-                            Map<BaseDimensionalItemObject, Double> bindings = period_data.get( aoc );
-                            Double test_value = expressionService.getExpressionValue( skipTest, bindings, constantMap, null, 0 );
+                            Map<BaseDimensionalItemObject, Double> bindings = periodData.get( aoc );
+                            Double testValue = expressionService.getExpressionValue( skipTest, bindings, constantMap, null, 0 );
                             
-                            log.info( "skipTest " + skipTest.getExpression() + " yielded " + test_value );
+                            log.debug( "skipTest " + skipTest.getExpression() + " yielded " + testValue );
                             
-                            if ( ( test_value != null ) && ( !( test_value.equals( 0 ) ) ) )
+                            if ( testValue != null && !testValue.equals( 0 ) )
                             {
-                                MapMap<Integer, BaseDimensionalItemObject, Double> inperiod = dataMap.get( period );
-                                log.info( "Removing sample for aoc=" + aoc + " at " + period + " from " + source );
-                                inperiod.remove( aoc );
+                                MapMap<Integer, BaseDimensionalItemObject, Double> inPeriod = dataMap.get( period );
+                                
+                                log.debug( "Removing sample for aoc=" + aoc + " at " + period + " from " + source );
+                                inPeriod.remove( aoc );
                             }
                         }
                     }
                 }
             }
             
-            for ( String aggregate : aggregate_exprs )
+            for ( String aggregate : aggregateExpressions )
             {
                 Expression exp = new Expression( aggregate, "aggregated",
                     expressionService.getDataElementsInExpression( aggregate ) );
@@ -285,6 +325,7 @@ public class DefaultPredictorService
                         for ( Integer aoc : inperiod.keySet() )
                         {
                             Double value = expressionService.getExpressionValue( exp, inperiod.get( aoc ), constantMap, null, 0 );
+                            
                             ListMap<String, Double> samplemap = result.get( aoc );
                             
                             if ( samplemap == null )
@@ -300,10 +341,12 @@ public class DefaultPredictorService
             }
         }
 
+
+
         return result;
     }
 
-    private List<DataValue> readDataValues( BaseDimensionalItemObject input, Collection<OrganisationUnit> orgs,
+    private List<DataValue> readDataValues( BaseDimensionalItemObject input, Collection<OrganisationUnit> sources,
         Collection<Period> periods )
     {
         List<DataValue> result;
@@ -311,12 +354,13 @@ public class DefaultPredictorService
         if ( input instanceof DataElement )
         {
             DataElement de = (DataElement) input;
-            result = dataValueService.getDataValues( de, periods, orgs );
+            result = dataValueService.getRecursiveDeflatedDataValues( de, null, periods, sources );
         }
         else if ( input instanceof DataElementOperand )
         {
             DataElementOperand deo = (DataElementOperand) input;
-            result = dataValueService.getDataValues( deo.getDataElement(), deo.getCategoryOptionCombo(), periods, orgs );
+            result = dataValueService.getRecursiveDeflatedDataValues(
+                    deo.getDataElement(), deo.getCategoryOptionCombo(), periods, sources );
         }
         else
         {
@@ -326,54 +370,58 @@ public class DefaultPredictorService
         return result;
     }
 
-    private void gatherDataValues( BaseDimensionalItemObject input, Collection<OrganisationUnit> orgs,
-        Collection<Period> periods,
-        MapMap<OrganisationUnit, Period, MapMap<Integer, BaseDimensionalItemObject, Double>> result )
+    private void gatherDataValues( BaseDimensionalItemObject input, Collection<OrganisationUnit> sources,
+            Collection<Period> periods, MapMap<OrganisationUnit, Period,
+            MapMap<Integer, BaseDimensionalItemObject, Double>> result )
     {
-        List<DataValue> values = readDataValues( input, orgs, periods );
+        List<DataValue> values = readDataValues( input, sources, periods );
 
-        for ( DataValue v : values )
+        for ( DataValue value : values )
         {
-            Period pe = v.getPeriod();
-            OrganisationUnit ou = v.getSource();
-            Integer aoc = v.getAttributeOptionCombo().getId();
-            MapMap<Integer, BaseDimensionalItemObject, Double> valuemap = result.getValue( ou, pe );
-            Map<BaseDimensionalItemObject, Double> deomap = (valuemap == null) ? (null) : (valuemap.get( aoc ));
+            Period pe = value.getPeriod();
+            OrganisationUnit source = value.getSource();
+            Integer aoc = value.getAttributeOptionCombo().getId();
+            MapMap<Integer, BaseDimensionalItemObject, Double> valueMap =
+                    result.getValue( source, pe );
+            Map<BaseDimensionalItemObject, Double> deoMap =
+                    valueMap == null ? null : valueMap.get( aoc );
 
-            if ( valuemap == null )
+            if ( valueMap == null )
             {
-                Map<Period, MapMap<Integer, BaseDimensionalItemObject, Double>> periodSubMap = result.get( ou );
+                Map<Period, MapMap<Integer, BaseDimensionalItemObject, Double>>  periodSubMap = result.get( source );
                 
                 if ( periodSubMap == null )
                 {
                     periodSubMap = new HashMap<Period, MapMap<Integer, BaseDimensionalItemObject, Double>>();
-                    result.put( ou, periodSubMap );
+                    result.put( source, periodSubMap );
                 }
 
-                valuemap = new MapMap<Integer, BaseDimensionalItemObject, Double>();
+                valueMap = new MapMap<Integer, BaseDimensionalItemObject, Double>();
 
-                periodSubMap.put( pe, valuemap );
+                periodSubMap.put( pe, valueMap );
             }
             
-            if ( deomap == null )
+            if ( deoMap == null )
             {
-                deomap = new HashMap<BaseDimensionalItemObject, Double>();
-                valuemap.put( aoc, deomap );
+                deoMap = new HashMap<BaseDimensionalItemObject, Double>();
+                valueMap.put( aoc, deoMap );
             }
-                        
-            deomap.put( input, Double.valueOf( v.getValue() ) );
+
+            deoMap.put( input, Double.valueOf( value.getValue() ) );
         }
     }
 
     private MapMap<OrganisationUnit, Period, MapMap<Integer, BaseDimensionalItemObject, Double>> getDataValues(
-        Collection<BaseDimensionalItemObject> inputs, Collection<OrganisationUnit> orgs, Collection<Period> periods )
+        Collection<BaseDimensionalItemObject> inputs,
+        Collection<OrganisationUnit> sources,
+        Collection<Period> periods )
     {
         MapMap<OrganisationUnit, Period, MapMap<Integer, BaseDimensionalItemObject, Double>> result = 
             new MapMap<OrganisationUnit, Period, MapMap<Integer, BaseDimensionalItemObject, Double>>();
         
         for ( BaseDimensionalItemObject input : inputs )
         {
-            gatherDataValues( input, orgs, periods, result );
+            gatherDataValues( input, sources, periods, result );
         }
         
         return result;
@@ -383,101 +431,183 @@ public class DefaultPredictorService
     {
         return Lists.newArrayList( source );
     }
+
+    private Set<Period> getPeriodsBetween( PeriodType ptype, Date first, Date last )
+    {
+        Set<Period> periods=new HashSet<Period>();
+
+        Period period = ptype.createPeriod( first );
+
+        if ( last == null )
+        {
+            periods.add( period );
+            return periods;
+        }
+
+        while ( ( period != null ) && ( !(period.getEndDate().after( last ) ) ) )
+        {
+            periods.add( period );
+            period = ptype.getNextPeriod( period );
+        }
+
+        return periods;
+    }
     
-    private ListMap<Period, Period> getSamplePeriods( PeriodType ptype, Date first, Date last, int skip_count,
-        int sequential_count, int annual_count )
+    private ListMap<Period, Period> getSamplePeriods( Collection<Period> periods, PeriodType ptype,
+        int skipCount, int sequentialCount, int annualCount )
     {
         // Is end inclusive or exclusive? And what if end is in the middle of a
         // period? Does the period get included?
-        
-        Period period = ptype.createPeriod( first );
+
         ListMap<Period, Period> results = new ListMap<Period, Period>();
-        
-        while ( ( period != null ) && ( !(period.getStartDate().after( last ) ) ) )
+
+        for ( Period period: periods ) 
         {
             results.put( period, new ArrayList<Period>() );
             
-            if ( sequential_count > 0 )
+            if ( sequentialCount > 0 )
             {
-                Period sample_period = ptype.getPreviousPeriod( period );
-                int i = 0, j = 0;
+                Period samplePeriod = ptype.getPreviousPeriod( period );
+                int i = 0;
                 
-                while ( j < skip_count )
+                while ( i < skipCount )
                 {
-                    sample_period = ptype.getPreviousPeriod( sample_period );
-                    j++;
+                    samplePeriod = ptype.getPreviousPeriod( samplePeriod );
+                    i++;
                 }
-                
-                while ( i < sequential_count )
+
+                // We try to get a 'known period' for two reasons:
+                //  1. It will have an id (which lets us do direct sql queries against the datavalue table)
+                //  2. If there isn't a known period, there won't be any samples!
+                Period knownPeriod = getPeriod( samplePeriod );
+
+                while ( i < sequentialCount )
                 {
-                    results.putValue( period, sample_period );
-                    sample_period = ptype.getPreviousPeriod( sample_period );
+                    if ( knownPeriod != null )
+                    {
+                        results.putValue( period, knownPeriod );
+                    }
+                    else
+                    {
+                        log.debug( "Ignoring unregistered period " + samplePeriod );
+                    }
+                    
+                    samplePeriod = ptype.getPreviousPeriod( samplePeriod );
+                    knownPeriod = getPeriod( samplePeriod );
                     i++;
                 }
             }
 
-            if ( annual_count > 0 )
+            if ( annualCount > 0 )
             {
-                int year_count = 0;
-                Calendar yearly_calendar = PeriodType.createCalendarInstance( period.getStartDate() );
+                int yearCount = 0;
+                Calendar yearlyCalendar = PeriodType.createCalendarInstance( period.getStartDate() );
 
                 // Move to the previous year
-                yearly_calendar.set( Calendar.YEAR, yearly_calendar.get( Calendar.YEAR ) - 1 );
+                yearlyCalendar.set( Calendar.YEAR, yearlyCalendar.get( Calendar.YEAR ) - 1 );
 
-                while ( year_count < annual_count )
+                while ( yearCount < annualCount )
                 {
                     // Defensive copy because createPeriod mutates Calendar
-                    Calendar past_year = PeriodType.createCalendarInstance( yearly_calendar.getTime() );
+                    Calendar pastYear = PeriodType.createCalendarInstance( yearlyCalendar.getTime() );
                     
-                    Period past_period = ptype.createPeriod( past_year );
+                    Period pastPeriod = ptype.createPeriod( pastYear );
                     
-                    if ( sequential_count == 0 )
+                    if ( sequentialCount == 0 )
                     {
-                        results.putValue( period, past_period );
+                        Period knownPeriod = getPeriod( pastPeriod );
+                        
+                        if ( knownPeriod != null )
+                        {
+                            results.putValue( period, knownPeriod );
+                        }
+                        else
+                        {
+                            log.debug( "Ignoring unregistered period " + pastPeriod );
+                        }
                     }
                     else
                     {
-                        Period sample_period = ptype.getNextPeriod( past_period, -sequential_count );
-                        int period_count = 0, limit = sequential_count * 2 + 1;
-                        
-                        while ( period_count < limit )
+                        Period samplePeriod = pastPeriod;
+                        Period knownPeriod = getPeriod( samplePeriod );
+                        int j = 0;
+                        while ( j < sequentialCount+1 ) // The +1 includes the identical past year period
                         {
-                            results.putValue( period, sample_period );
-                            sample_period = ptype.getNextPeriod( sample_period );
-                            period_count++;
+                            if ( knownPeriod != null )
+                            {
+                                results.putValue( period, knownPeriod );
+                            }
+                            else
+                            {
+                                log.debug( "Ignoring unregistered period " + samplePeriod );
+                            }
+                            
+                            samplePeriod = ptype.getNextPeriod( samplePeriod );
+                            knownPeriod = getPeriod( samplePeriod );
+                            j++;
+                        }
+
+                        // Reset past year, because createPeriod may have mutated it
+                        pastYear = PeriodType.createCalendarInstance( yearlyCalendar.getTime() );
+
+                        j=0; 
+                        samplePeriod = ptype.getPreviousPeriod( pastPeriod );
+                        knownPeriod = getPeriod( samplePeriod );
+                        
+                        while ( j < sequentialCount )
+                        {
+                            if ( knownPeriod != null )
+                            {
+                                results.putValue( period, knownPeriod );
+                            }
+                            else
+                            {
+                                log.debug( "Ignoring unregistered period " + samplePeriod );
+                            }
+                            
+                            samplePeriod = ptype.getPreviousPeriod( samplePeriod );
+                            knownPeriod = getPeriod( samplePeriod );
+                            j++;
                         }
                     }
                     
                     // Move to the previous year
-                    yearly_calendar.set( Calendar.YEAR, yearly_calendar.get( Calendar.YEAR ) - 1 );
-                    year_count++;
+                    yearlyCalendar.set( Calendar.YEAR, yearlyCalendar.get( Calendar.YEAR ) - 1 );
+                    yearCount++;
                 }
             }
-
-            // Advance to the next period
-            period = ptype.getNextPeriod( period );
         }
-
         return results;
     }
 
-    @Override
-    public int predict( Predictor p, Date start, Date end )
+    private Period getPeriod( Period predictor )
     {
-        Collection<DataValue> values = getPredictions( p, start, end );
-        
-        for ( DataValue v : values )
+        return predictor.getId() != 0 ? predictor : periodService.getPeriod( predictor.getStartDate(), predictor.getEndDate(), predictor.getPeriodType() );
+    }
+
+    @Override
+    public int predict( Predictor predictor, Date start, Date end )
+    {
+        Collection<DataValue> values = getPredictions( predictor, start, end );
+
+        for ( DataValue value : values )
         {
-            if ( dataValueService.addDataValue( v ) )
-            {
-                log.info( "Saving succeeded for " + v );
-            }
-            else
-            {
-                log.warn( "Saving failed for " + v );
-            }
+            dataValueService.addDataValue( value );
         }
-        
+
+        return values.size();
+    }
+
+    @Override
+    public int predict( Predictor predictor, Collection<OrganisationUnit> sources, Collection<Period> basePeriods )
+    {
+        Collection<DataValue> values = getPredictions( predictor, sources, basePeriods );
+
+        for ( DataValue value : values )
+        {
+            dataValueService.addDataValue( value );
+        }
+
         return values.size();
     }
 }

@@ -29,7 +29,6 @@ package org.hisp.dhis.dataapproval;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -41,9 +40,7 @@ import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeDeserializer;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeSerializer;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
+import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
@@ -70,15 +67,19 @@ public class DataApprovalWorkflow
     extends BaseIdentifiableObject
 {
     /**
-     * The period type for approving data with this workflow
+     * The period type for approving data with this workflow.
      */
     private PeriodType periodType;
 
     /**
-     * The data approval levels used in this workflow
+     * The data approval levels used in this workflow.
      */
-    @Scanned
     private Set<DataApprovalLevel> levels = new HashSet<>();
+    
+    /**
+     * The data sets part of this workflow. Inverse side.
+     */
+    private Set<DataSet> dataSets = new HashSet<>();
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -128,7 +129,6 @@ public class DataApprovalWorkflow
     @JsonProperty
     @JsonSerialize( using = JacksonPeriodTypeSerializer.class )
     @JsonDeserialize( using = JacksonPeriodTypeDeserializer.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.TEXT )
     public PeriodType getPeriodType()
@@ -143,7 +143,6 @@ public class DataApprovalWorkflow
 
     @JsonProperty( "dataApprovalLevels" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "dataApprovalLevels", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "dataApprovalLevel", namespace = DxfNamespaces.DXF_2_0 )
     public Set<DataApprovalLevel> getLevels()
@@ -154,6 +153,20 @@ public class DataApprovalWorkflow
     public void setLevels( Set<DataApprovalLevel> levels )
     {
         this.levels = levels;
+    }
+
+    @JsonProperty
+    @JsonSerialize( contentAs = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "dataSets", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "dataSet", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<DataSet> getDataSets()
+    {
+        return dataSets;
+    }
+
+    public void setDataSets( Set<DataSet> dataSets )
+    {
+        this.dataSets = dataSets;
     }
 
     @Override

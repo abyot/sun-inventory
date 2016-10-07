@@ -29,7 +29,6 @@ package org.hisp.dhis.legend;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -37,9 +36,6 @@ import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -53,7 +49,6 @@ public class LegendSet
 {
     private String symbolizer;
 
-    @Scanned
     private Set<Legend> legends = new HashSet<>();
 
     public LegendSet()
@@ -94,7 +89,6 @@ public class LegendSet
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getSymbolizer()
     {
@@ -107,7 +101,6 @@ public class LegendSet
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "legends", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "legend", namespace = DxfNamespaces.DXF_2_0 )
     public Set<Legend> getLegends()

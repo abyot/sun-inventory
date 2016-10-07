@@ -1,5 +1,27 @@
 package org.hisp.dhis.sms.config;
 
+import com.google.common.collect.ImmutableMap;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hisp.dhis.sms.MessageResponseStatus;
+import org.hisp.dhis.sms.outbound.ClickatellRequestEntity;
+import org.hisp.dhis.sms.outbound.ClickatellResponseEntity;
+import org.hisp.dhis.sms.outbound.GatewayResponse;
+import org.hisp.dhis.sms.outbound.MessageBatch;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+import java.util.Set;
+
 /*
  * Copyright (c) 2004-2016, University of Oslo
  * All rights reserved.
@@ -27,30 +49,6 @@ package org.hisp.dhis.sms.config;
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hisp.dhis.sms.config.ClickatellGatewayConfig;
-import org.hisp.dhis.sms.config.SmsGatewayConfig;
-import org.hisp.dhis.sms.outbound.ClickatellRequestEntity;
-import org.hisp.dhis.sms.outbound.ClickatellResponseEntity;
-import org.hisp.dhis.sms.outbound.GatewayResponse;
-import org.hisp.dhis.sms.outbound.OutboundSms;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
-
-import com.google.common.collect.ImmutableMap;
 
 /**
  * @author Zubair <rajazubair.asghar@gmail.com>
@@ -99,19 +97,19 @@ public class ClickatellGateway
         return gatewayConfig != null && gatewayConfig instanceof ClickatellGatewayConfig;
     }
 
-    public GatewayResponse send( List<OutboundSms> smsBatch, SmsGatewayConfig config )
+    public List<MessageResponseStatus> sendBatch( MessageBatch batch, SmsGatewayConfig config )
     {
         return null;
     }
 
     @Override
-    public GatewayResponse send( String subject, String text, Set<String> recipients, SmsGatewayConfig config )
+    public MessageResponseStatus send( String subject, String text, Set<String> recipients, SmsGatewayConfig config )
     {
         ClickatellGatewayConfig clickatellConfiguration = (ClickatellGatewayConfig) config;
-        HttpEntity<ClickatellRequestEntity> request = new HttpEntity<ClickatellRequestEntity>(
-            getRequestBody( text, recipients ), getRequestHeaderParameters( clickatellConfiguration ) );
+        HttpEntity<ClickatellRequestEntity> request =
+            new HttpEntity<>( getRequestBody( text, recipients ), getRequestHeaderParameters( clickatellConfiguration ) );
 
-        return responseHandler( send( clickatellConfiguration.getUrlTemplate(), request ) );
+        return handleResponse( send( clickatellConfiguration.getUrlTemplate(), request ) );
     }
 
     // -------------------------------------------------------------------------
@@ -120,7 +118,7 @@ public class ClickatellGateway
 
     private HttpStatus send( String urlTemplate, HttpEntity<?> request )
     {
-        ResponseEntity<ClickatellResponseEntity> response = null;
+        ResponseEntity<ClickatellResponseEntity> response;
         HttpStatus statusCode = null;
 
         try
@@ -152,9 +150,12 @@ public class ClickatellGateway
         return statusCode;
     }
 
-    private GatewayResponse responseHandler( HttpStatus status )
+    private MessageResponseStatus handleResponse( HttpStatus httpStatus )
     {
-        return CLICKATELL_GATEWAY_RESPONSE_MAP.get( status );
+        MessageResponseStatus status = new MessageResponseStatus();
+        status.setResponseObject( CLICKATELL_GATEWAY_RESPONSE_MAP.get( httpStatus ) );
+
+        return status;
     }
 
     private ClickatellRequestEntity getRequestBody( String text, Set<String> recipients )

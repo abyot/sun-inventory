@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 
 import org.hisp.dhis.analytics.AnalyticsTable;
 import org.hisp.dhis.analytics.AnalyticsTableColumn;
+import org.hisp.dhis.dataelement.CategoryOptionGroupSet;
 import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupSet;
 import org.hisp.dhis.organisationunit.OrganisationUnitLevel;
@@ -172,7 +173,10 @@ public class JdbcCompletenessTableManager
         
         List<OrganisationUnitLevel> levels =
             organisationUnitService.getFilledOrganisationUnitLevels();
-        
+
+        List<CategoryOptionGroupSet> attributeCategoryOptionGroupSets =
+            categoryService.getAttributeCategoryOptionGroupSetsNoAcl();
+
         List<DataElementCategory> attributeCategories =
             categoryService.getAttributeDataDimensionCategoriesNoAcl();
         
@@ -186,7 +190,12 @@ public class JdbcCompletenessTableManager
             String column = quote( PREFIX_ORGUNITLEVEL + level.getLevel() );
             columns.add( new AnalyticsTableColumn( column, "character(11)", "ous." + column ) );
         }
-        
+
+        for ( CategoryOptionGroupSet groupSet : attributeCategoryOptionGroupSets )
+        {
+            columns.add( new AnalyticsTableColumn( quote( groupSet.getUid() ), "character(11)", "acs." + quote( groupSet.getUid() ) ) );
+        }
+
         for ( DataElementCategory category : attributeCategories )
         {
             columns.add( new AnalyticsTableColumn( quote( category.getUid() ), "character(11)", "acs." + quote( category.getUid() ) ) );

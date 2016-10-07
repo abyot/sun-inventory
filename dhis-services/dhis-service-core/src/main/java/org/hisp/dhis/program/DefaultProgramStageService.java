@@ -28,10 +28,10 @@ package org.hisp.dhis.program;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
-
-import org.hisp.dhis.i18n.I18nService;
+import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * @author Abyot Asalefew
@@ -49,13 +49,6 @@ public class DefaultProgramStageService
     public void setProgramStageStore( ProgramStageStore programStageStore )
     {
         this.programStageStore = programStageStore;
-    }
-
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
     }
 
     // -------------------------------------------------------------------------
@@ -77,19 +70,25 @@ public class DefaultProgramStageService
     @Override
     public ProgramStage getProgramStage( int id )
     {
-        return i18n( i18nService, programStageStore.get( id ) );
+        return programStageStore.get( id );
     }
 
     @Override
     public ProgramStage getProgramStage( String uid )
     {
-        return i18n( i18nService, programStageStore.getByUid( uid ) );
+        return programStageStore.getByUid( uid );
     }
 
     @Override
     public ProgramStage getProgramStageByName( String name, Program program )
     {
-        return i18n( i18nService, programStageStore.getByNameAndProgram( name, program ) );
+        return programStageStore.getByNameAndProgram( name, program );
+    }
+
+    @Override
+    public List<ProgramStage> getProgramStagesByDataEntryForm( DataEntryForm dataEntryForm )
+    {
+        return programStageStore.getByDataEntryForm( dataEntryForm );
     }
 
     @Override

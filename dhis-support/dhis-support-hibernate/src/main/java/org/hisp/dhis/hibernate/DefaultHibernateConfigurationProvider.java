@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -40,6 +41,8 @@ import java.util.Properties;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.cfg.Configuration;
@@ -62,6 +65,15 @@ public class DefaultHibernateConfigurationProvider
     private Configuration configuration = null;
 
     private static final String MAPPING_RESOURCES_ROOT = "org/hisp/dhis/";
+    private static final String FILENAME_CACHE_NAMES = "hibernate-caches.txt";
+    private static final String PROP_EHCACHE_PEER_PROVIDER_RIM_URLS = "ehcache.peer.provider.rmi.urls";
+    private static final String PROP_EHCACHE_PEER_LISTENER_HOSTNAME = "ehcache.peer.listener.hostname";
+    private static final String PROP_EHCACHE_PEER_LISTENER_PORT = "ehcache.peer.listener.port";
+    private static final String FORMAT_CLUSTER_INSTANCE_HOSTNAME = "cluster.instance%d.hostname";
+    private static final String FORMAT_CLUSTER_INSTANCE_CACHE_PORT = "cluster.instance%d.cache.port";
+    private static final String FILENAME_EHCACHE_REPLICATION = "/ehcache-replication.xml";
+    
+    private static final int MAX_CLUSTER_INSTANCES = 5;
 
     // -------------------------------------------------------------------------
     // Property resources
@@ -71,6 +83,7 @@ public class DefaultHibernateConfigurationProvider
     
     private List<Resource> jarResources = new ArrayList<>();
     private List<Resource> dirResources = new ArrayList<>();
+    private List<String> clusterHostnames = new ArrayList<>();
     
     // -------------------------------------------------------------------------
     // Dependencies
@@ -165,6 +178,19 @@ public class DefaultHibernateConfigurationProvider
                 log.info( "Could not read external configuration from file system" );
             }
         }
+        
+        // ---------------------------------------------------------------------
+        // Handle cache replication
+        // ---------------------------------------------------------------------
+        
+        if ( configurationProvider.isClusterEnabled() )
+        {
+            configuration.setProperty( "net.sf.ehcache.configurationResourceName", FILENAME_EHCACHE_REPLICATION );
+            
+            setCacheReplicationConfigSystemProperties();
+            
+            log.info( "Clustering and cache replication enabled" );
+        }        
 
         // ---------------------------------------------------------------------
         // Disable second-level cache during testing
@@ -202,6 +228,12 @@ public class DefaultHibernateConfigurationProvider
     {
         return dirResources;
     }    
+
+    @Override
+    public List<String> getClusterHostnames()
+    {
+        return clusterHostnames;
+    }
     
     // -------------------------------------------------------------------------
     // Supportive methods
@@ -261,5 +293,67 @@ public class DefaultHibernateConfigurationProvider
         {
             inputStream.close();
         }
+    }
+    
+    /**
+     * Sets system properties to be resolved in the Ehcache cache replication 
+     * configuration.
+     */
+    private void setCacheReplicationConfigSystemProperties()
+    {
+        String instanceHost = configurationProvider.getProperty( ConfigurationKey.CLUSTER_INSTANCE_HOSTNAME );
+        String instancePort = configurationProvider.getProperty( ConfigurationKey.CLUSTER_INSTANCE_CACHE_PORT );
+        
+        Properties dhisProps = configurationProvider.getProperties();
+        
+        List<String> cacheNames = getCacheNames();
+        
+        final StringBuilder rmiUrlBuilder = new StringBuilder();
+        
+        for ( int i = 1; i < MAX_CLUSTER_INSTANCES; i++ )
+        {
+            String hostname = dhisProps.getProperty( String.format( FORMAT_CLUSTER_INSTANCE_HOSTNAME, i ) );
+            String port = dhisProps.getProperty( String.format( FORMAT_CLUSTER_INSTANCE_CACHE_PORT, i ) );
+            port = StringUtils.defaultIfBlank( port, ConfigurationKey.CLUSTER_INSTANCE_CACHE_PORT.getDefaultValue() );
+            
+            if ( StringUtils.isNotBlank( hostname ) )
+            {   
+                final String baseUrl = "//" + hostname + ":" + port + "/";
+                
+                cacheNames.stream().forEach( name -> rmiUrlBuilder.append( baseUrl + name + "|" ) );
+                
+                clusterHostnames.add( hostname );
+                                
+                log.info( "Found cluster instance: " + hostname + ":" + port );
+            }
+        }
+        
+        String rmiUrls = StringUtils.removeEnd( rmiUrlBuilder.toString(), "|" );
+        
+        if ( StringUtils.isBlank( rmiUrls ) )
+        {
+            log.warn( "At least one cluster instance must be specified when clustering is enabled" );
+        }
+        
+        System.setProperty( PROP_EHCACHE_PEER_LISTENER_HOSTNAME, instanceHost );
+        System.setProperty( PROP_EHCACHE_PEER_LISTENER_PORT, instancePort );
+        System.setProperty( PROP_EHCACHE_PEER_PROVIDER_RIM_URLS, rmiUrls );
+
+        log.info( "Ehcache config properties: " + instanceHost + ", " + instancePort + ", " + rmiUrls );
+    }
+    
+    /**
+     * Returns a list of names of all Hibernate caches.
+     */
+    private List<String> getCacheNames()
+    {
+        try ( InputStream input = new ClassPathResource( FILENAME_CACHE_NAMES ).getInputStream() )
+        {
+            return IOUtils.readLines( input );
+        }
+        catch ( IOException ex )
+        {
+            throw new UncheckedIOException( ex );
+        }        
     }
 }

@@ -28,11 +28,7 @@ package org.hisp.dhis.user;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,11 +39,16 @@ import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.security.PasswordManager;
 import org.hisp.dhis.setting.SettingKey;
 import org.hisp.dhis.setting.SystemSettingManager;
+import org.hisp.dhis.system.deletion.DeletionManager;
 import org.hisp.dhis.system.filter.UserAuthorityGroupCanIssueFilter;
 import org.hisp.dhis.system.util.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.Lists;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Chau Thu Tran
@@ -111,6 +112,9 @@ public class DefaultUserService
         this.passwordManager = passwordManager;
     }
 
+    @Autowired
+    private DeletionManager deletionManager;
+    
     // -------------------------------------------------------------------------
     // UserService implementation
     // -------------------------------------------------------------------------
@@ -140,8 +144,12 @@ public class DefaultUserService
     {
         AuditLogUtil.infoWrapper( log, currentUserService.getCurrentUsername(), user, AuditLogUtil.ACTION_DELETE );
 
-        userCredentialsStore.delete( user.getUserCredentials() );
-
+        // Invoke deletion manager directly for credentials, not intercepted
+        
+        deletionManager.execute( user.getUserCredentials() );
+        
+        // Credentials deleted through deletion handler
+        
         userStore.delete( user );
     }
 
@@ -259,19 +267,19 @@ public class DefaultUserService
 
     public boolean validateUserQueryParams( UserQueryParams params )
     {
-        if ( params.isCanManage() && ( params.getUser() == null || !params.getUser().hasManagedGroups() ) )
+        if ( params.isCanManage() && (params.getUser() == null || !params.getUser().hasManagedGroups()) )
         {
             log.warn( "Cannot get managed users as user does not have any managed groups" );
             return false;
         }
 
-        if ( params.isAuthSubset() && ( params.getUser() == null || !params.getUser().getUserCredentials().hasAuthorities() ) )
+        if ( params.isAuthSubset() && (params.getUser() == null || !params.getUser().getUserCredentials().hasAuthorities()) )
         {
             log.warn( "Cannot get users with authority subset as user does not have any authorities" );
             return false;
         }
 
-        if ( params.isDisjointRoles() && ( params.getUser() == null || !params.getUser().getUserCredentials().hasUserAuthorityGroups() ) )
+        if ( params.isDisjointRoles() && (params.getUser() == null || !params.getUser().getUserCredentials().hasUserAuthorityGroups()) )
         {
             log.warn( "Cannot get users with disjoint roles as user does not have any user roles" );
             return false;
@@ -492,14 +500,14 @@ public class DefaultUserService
         {
             return; // Leave unchanged if internal authentication and no password supplied
         }
-        
+
         if ( userCredentials.isExternalAuth() )
         {
             userCredentials.setPassword( UserService.PW_NO_INTERNAL_LOGIN );
-            
+
             return; // Set unusable, not-encoded password if external authentication
         }
-        
+
         boolean isNewPassword = StringUtils.isBlank( userCredentials.getPassword() ) ||
             !passwordManager.matches( rawPassword, userCredentials.getPassword() );
 
@@ -509,7 +517,7 @@ public class DefaultUserService
         }
 
         // Encode and set password
-        
+
         userCredentials.setPassword( passwordManager.encode( rawPassword ) );
     }
 

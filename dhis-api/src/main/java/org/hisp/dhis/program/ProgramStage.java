@@ -29,7 +29,6 @@ package org.hisp.dhis.program;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -41,17 +40,14 @@ import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.MergeMode;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeDeserializer;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeSerializer;
-import org.hisp.dhis.common.annotation.Scanned;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataentryform.DataEntryForm;
 import org.hisp.dhis.dataset.FormType;
 import org.hisp.dhis.period.PeriodType;
+import org.hisp.dhis.program.notification.ProgramNotificationTemplate;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
 import org.hisp.dhis.schema.annotation.PropertyRange;
-import org.hisp.dhis.trackedentity.TrackedEntityInstanceReminder;
 
 import java.util.HashSet;
 import java.util.List;
@@ -73,10 +69,8 @@ public class ProgramStage
 
     private Program program;
 
-    @Scanned
     private Set<ProgramStageDataElement> programStageDataElements = new HashSet<>();
 
-    @Scanned
     private Set<ProgramStageSection> programStageSections = new HashSet<>();
 
     private DataEntryForm dataEntryForm;
@@ -85,8 +79,7 @@ public class ProgramStage
 
     private String executionDateLabel;
 
-    @Scanned
-    private Set<TrackedEntityInstanceReminder> reminders = new HashSet<>();
+    private Set<ProgramNotificationTemplate> notificationTemplates = new HashSet<>();
 
     private Boolean autoGenerateEvent = true;
 
@@ -147,7 +140,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public FormType getFormType()
     {
@@ -169,7 +161,6 @@ public class ProgramStage
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getGeneratedByEnrollmentDate()
     {
@@ -182,7 +173,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getBlockEntryForm()
     {
@@ -195,7 +185,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getRemindCompleted()
     {
@@ -207,23 +196,21 @@ public class ProgramStage
         this.remindCompleted = remindCompleted;
     }
 
-    @JsonProperty( "trackedEntityInstanceReminders" )
-    @JsonView( { DetailedView.class } )
+    @JsonProperty( "notificationTemplates" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
-    @JacksonXmlElementWrapper( localName = "trackedEntityInstanceReminders", namespace = DxfNamespaces.DXF_2_0 )
-    @JacksonXmlProperty( localName = "trackedEntityInstanceReminder", namespace = DxfNamespaces.DXF_2_0 )
-    public Set<TrackedEntityInstanceReminder> getReminders()
+    @JacksonXmlElementWrapper( localName = "notificationTemplates", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "notificationTemplate", namespace = DxfNamespaces.DXF_2_0 )
+    public Set<ProgramNotificationTemplate> getNotificationTemplates()
     {
-        return reminders;
+        return notificationTemplates;
     }
 
-    public void setReminders( Set<TrackedEntityInstanceReminder> reminders )
+    public void setNotificationTemplates( Set<ProgramNotificationTemplate> notificationTemplates )
     {
-        this.reminders = reminders;
+        this.notificationTemplates = notificationTemplates;
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public DataEntryForm getDataEntryForm()
     {
@@ -236,7 +223,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getDescription()
@@ -250,7 +236,6 @@ public class ProgramStage
     }
 
     @JsonProperty( "programStageSections" )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
     @JacksonXmlElementWrapper( localName = "programStageSections", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "programStageSection", namespace = DxfNamespaces.DXF_2_0 )
@@ -265,7 +250,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getStandardInterval()
     {
@@ -278,7 +262,6 @@ public class ProgramStage
     }
 
     @JsonProperty( "repeatable" )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( localName = "repeatable", namespace = DxfNamespaces.DXF_2_0 )
     public boolean getRepeatable()
     {
@@ -291,7 +274,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public int getMinDaysFromStart()
     {
@@ -304,7 +286,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JsonSerialize( as = BaseIdentifiableObject.class )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Program getProgram()
@@ -318,7 +299,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
     @JacksonXmlElementWrapper( localName = "programStageDataElements", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "programStageDataElement", namespace = DxfNamespaces.DXF_2_0 )
@@ -333,7 +313,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 2 )
     public String getExecutionDateLabel()
@@ -347,7 +326,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getAutoGenerateEvent()
     {
@@ -360,7 +338,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getValidCompleteOnly()
     {
@@ -373,7 +350,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getDisplayGenerateEventBox()
     {
@@ -386,15 +362,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public String getDefaultTemplateMessage()
-    {
-        return "Dear {person-name}, please come to your appointment on {program-stage-name} at {due-date}";
-    }
-
-    @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getCaptureCoordinates()
     {
@@ -407,7 +374,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getAllowGenerateNextVisit()
     {
@@ -420,7 +386,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getOpenAfterEnrollment()
     {
@@ -433,7 +398,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getReportDateToUse()
     {
@@ -446,7 +410,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getPreGenerateUID()
     {
@@ -459,7 +422,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Integer getSortOrder()
     {
@@ -474,7 +436,6 @@ public class ProgramStage
     @JsonProperty
     @JsonSerialize( using = JacksonPeriodTypeSerializer.class )
     @JsonDeserialize( using = JacksonPeriodTypeDeserializer.class )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @Property( PropertyType.TEXT )
     public PeriodType getPeriodType()
@@ -488,7 +449,6 @@ public class ProgramStage
     }
 
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public Boolean getHideDueDate()
     {
@@ -582,8 +542,8 @@ public class ProgramStage
                 programStageSection.setProgramStage( this );
             }
 
-            reminders.clear();
-            reminders.addAll( programStage.getReminders() );
+            notificationTemplates.clear();
+            notificationTemplates.addAll( programStage.getNotificationTemplates() );
         }
     }
 }

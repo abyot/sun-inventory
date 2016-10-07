@@ -173,6 +173,20 @@ function clearFilter() {
 </tr>
 #end
 
+#macro( trYesOnlySelectInput $args )
+    #if( "$!args.name" == "" )
+        #set( $name = $!args.id )
+    #else
+        #set( $name = $!args.name )
+    #end
+<tr>
+    <td style="width: 200px;"><label for="$!args.id">$!args.text #if($args.mandatory)<em title="$i18n.getString( 'required' )" class="required">*</em>#end</label></td>
+    <td>
+        <input type="checkbox" id="$!args.id" name="$!name" class="{validate:{required:$args.mandatory}}" #if( $!args.value=="true" )checked#end />
+    </td>
+</tr>
+#end
+
 #macro( trDateInput $args )
 #if( "$!args.name" == "" )
 	#set( $name = $!args.id )
@@ -315,6 +329,10 @@ jQuery.each(attributes, function(i, item) {
 	{
 		json.value = jqItem.find(":selected").val();
 	}
+    else if( jqItem.is("input:checkbox") )
+    {
+        json.value = jqItem.is(":checked") ? "true" : null;
+    }
 
 	json = JSON.stringify(json);
 
@@ -352,9 +370,11 @@ jQuery.each(attributes, function(i, item) {
 		#elseif( $valueType == "LONG_TEXT" )
 			#trTextInput( { "text": $text, "id": "attribute_$id", "mandatory": $mandatory, "value": $value } )
 		#elseif( $valueType == "BOOLEAN" )
-			#trBooleanSelectInput( { "text": $text, "id": "attribute_$id", "mandatory": $mandatory, "value": $value } )	
+			#trBooleanSelectInput( { "text": $text, "id": "attribute_$id", "mandatory": $mandatory, "value": $value } )
+        #elseif( $valueType == "TRUE_ONLY" )
+            #trYesOnlySelectInput( { "text": $text, "id": "attribute_$id", "mandatory": $mandatory, "value": $value } )
 		#elseif( $valueType == "DATE" )
-			#trDateInput( { "text": $text, "id": "attribute_$id", "mandatory": $mandatory, "value": $value } )	
+			#trDateInput( { "text": $text, "id": "attribute_$id", "mandatory": $mandatory, "value": $value } )
 		#elseif( $valueType == "NUMBER" )
 			#trNumberInput( { "text": $text, "id": "attribute_$id", "mandatory": $mandatory, "value": $value } )
 		#elseif( $valueType == "INTEGER" )
@@ -515,4 +535,12 @@ jQuery.each(attributes, function(i, item) {
 
 <select id="${args.prefix}Validator" style="display:none"></select>
 
+#end
+
+#macro( absValue $integer )#if( $integer > -1 )#set( $res = $integer )$res#else#set( $res = $integer * -1)$res#end#end
+
+#macro( setIfEnumCollectionContains $name $enumCollection $value )
+    #foreach ( $item in $enumCollection )
+        #if ( $item.name().equals( $name ) )$value#end
+    #end
 #end

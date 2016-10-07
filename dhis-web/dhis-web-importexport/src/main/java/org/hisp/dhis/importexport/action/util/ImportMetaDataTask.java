@@ -30,13 +30,13 @@ package org.hisp.dhis.importexport.action.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hisp.dhis.security.SecurityContextRunnable;
 import org.hisp.dhis.commons.util.DebugUtils;
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.dxf2.common.JacksonUtils;
-import org.hisp.dhis.dxf2.metadata.ImportService;
 import org.hisp.dhis.dxf2.metadata.Metadata;
-import org.hisp.dhis.scheduling.TaskId;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
+import org.hisp.dhis.dxf2.metadata.MetadataImportService;
+import org.hisp.dhis.render.DefaultRenderService;
+import org.hisp.dhis.schema.SchemaService;
+import org.hisp.dhis.security.SecurityContextRunnable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,27 +49,24 @@ public class ImportMetaDataTask
 {
     private static final Log log = LogFactory.getLog( ImportMetaDataTask.class );
 
-    private String userUid;
+    private final MetadataImportService importService;
 
-    private ImportService importService;
+    private final SchemaService schemaService;
 
-    private ImportOptions importOptions;
+    private final MetadataImportParams importParams;
 
-    private InputStream inputStream;
+    private final InputStream inputStream;
 
-    private TaskId taskId;
+    private final String format;
 
-    private String format;
-
-    public ImportMetaDataTask( String userUid, ImportService importService, ImportOptions importOptions,
-        InputStream inputStream, TaskId taskId, String format )
+    public ImportMetaDataTask( MetadataImportService importService, SchemaService schemaService,
+        MetadataImportParams importParams, InputStream inputStream, String format )
     {
         super();
-        this.userUid = userUid;
         this.importService = importService;
-        this.importOptions = importOptions;
+        this.schemaService = schemaService;
+        this.importParams = importParams;
         this.inputStream = inputStream;
-        this.taskId = taskId;
         this.format = format;
     }
 
@@ -82,14 +79,12 @@ public class ImportMetaDataTask
         {
             if ( "json".equals( format ) )
             {
-                metadata = JacksonUtils.fromJson( inputStream, Metadata.class );
-                
+                metadata = DefaultRenderService.getJsonMapper().readValue( inputStream, Metadata.class );
                 log.info( "Read JSON file. Importing metadata." );
             }
             else
             {
-                metadata = JacksonUtils.fromXml( inputStream, Metadata.class );
-                
+                metadata = DefaultRenderService.getXmlMapper().readValue( inputStream, Metadata.class );
                 log.info( "Read XML file. Importing metadata." );
             }
         }
@@ -100,6 +95,7 @@ public class ImportMetaDataTask
             throw new RuntimeException( "Failed to parse meta data input stream", ex );
         }
 
-        importService.importMetaData( userUid, metadata, importOptions, taskId );
+        importParams.addMetadata( schemaService.getMetadataSchemas(), metadata );
+        importService.importMetadata( importParams );
     }
 }

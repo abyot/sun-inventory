@@ -32,41 +32,29 @@ import org.hisp.dhis.analytics.AnalyticsTableService;
 import org.hisp.dhis.analytics.partition.PartitionManager;
 import org.hisp.dhis.appmanager.AppManager;
 import org.hisp.dhis.cache.HibernateCacheManager;
-import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.dataelement.DataElementCategoryService;
-import org.hisp.dhis.dxf2.common.Options;
-import org.hisp.dhis.dxf2.metadata.ExportService;
-import org.hisp.dhis.dxf2.metadata.Metadata;
 import org.hisp.dhis.dxf2.webmessage.WebMessage;
-import org.hisp.dhis.feedback.ErrorReport;
 import org.hisp.dhis.maintenance.MaintenanceService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.render.RenderService;
 import org.hisp.dhis.resourcetable.ResourceTableService;
-import org.hisp.dhis.schema.Property;
-import org.hisp.dhis.schema.Schema;
-import org.hisp.dhis.schema.SchemaService;
-import org.hisp.dhis.schema.validation.SchemaValidator;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.service.WebMessageService;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Lars Helge Overland
@@ -94,15 +82,6 @@ public class MaintenanceController
     private PartitionManager partitionManager;
 
     @Autowired
-    private SchemaValidator schemaValidator;
-
-    @Autowired
-    private SchemaService schemaService;
-
-    @Autowired
-    private ExportService exportService;
-
-    @Autowired
     private RenderService renderService;
 
     @Autowired
@@ -119,16 +98,15 @@ public class MaintenanceController
 
     @RequestMapping( value = "/analyticsTablesClear", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void clearAnalyticsTables()
     {
-        for ( AnalyticsTableService service : analyticsTableService )
-        {
-            service.dropTables();
-        }
+        analyticsTableService.forEach( AnalyticsTableService::dropTables );
     }
 
     @RequestMapping( value = "/expiredInvitationsClear", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void clearExpiredInvitations()
     {
         maintenanceService.removeExpiredInvitations();
@@ -136,6 +114,7 @@ public class MaintenanceController
 
     @RequestMapping( value = "/ouPathsUpdate", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void forceUpdatePaths()
     {
         organisationUnitService.forceUpdatePaths();
@@ -143,6 +122,7 @@ public class MaintenanceController
 
     @RequestMapping( value = "/periodPruning", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void prunePeriods()
     {
         maintenanceService.prunePeriods();
@@ -150,13 +130,23 @@ public class MaintenanceController
 
     @RequestMapping( value = "/zeroDataValueRemoval", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void deleteZeroDataValues()
     {
         maintenanceService.deleteZeroDataValues();
     }
 
+    @RequestMapping( value = "/softDeletedDataValueRemoval", method = { RequestMethod.PUT, RequestMethod.POST } )
+    @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
+    public void deleteSoftDeletedDataValues()
+    {
+        maintenanceService.deleteSoftDeletedDataValues();
+    }
+    
     @RequestMapping( value = "/sqlViewsCreate", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void createSqlViews()
     {
         resourceTableService.createAllSqlViews();
@@ -164,6 +154,7 @@ public class MaintenanceController
 
     @RequestMapping( value = "/sqlViewsDrop", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void dropSqlViews()
     {
         resourceTableService.dropAllSqlViews();
@@ -171,22 +162,24 @@ public class MaintenanceController
 
     @RequestMapping( value = "/categoryOptionComboUpdate", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void updateCategoryOptionCombos()
     {
-        categoryService.updateAllOptionCombos();
+        categoryService.addAndPruneAllOptionCombos();
     }
 
     @RequestMapping( value = { "/cacheClear", "/cache" }, method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void clearCache()
     {
         cacheManager.clearCache();
         partitionManager.clearCaches();
     }
 
-    @RequestMapping( value = "/dataPruning/organisationUnits/{uid}", method = { RequestMethod.PUT,
-        RequestMethod.POST } )
+    @RequestMapping( value = "/dataPruning/organisationUnits/{uid}", method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void pruneDataByOrganisationUnit( @PathVariable String uid, HttpServletResponse response )
         throws Exception
     {
@@ -208,46 +201,6 @@ public class MaintenanceController
         webMessageService.sendJson( message, response );
     }
 
-    @RequestMapping( value = "/metadataValidation", method = { RequestMethod.PUT, RequestMethod.POST } )
-    @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
-    public void runValidateMetadata( HttpServletResponse response )
-        throws InvocationTargetException, IllegalAccessException, IOException
-    {
-        Options options = new Options();
-        options.setAssumeTrue( true );
-
-        Metadata metadata = exportService.getMetaData( options );
-        Schema schema = schemaService.getDynamicSchema( Metadata.class );
-
-        Map<String, Map<String, List<ErrorReport>>> output = new HashMap<>();
-
-        for ( Property property : schema.getProperties() )
-        {
-            if ( !property.isCollection() || !property.isIdentifiableObject() )
-            {
-                continue;
-            }
-
-            output.put( property.getName(), new HashMap<>() );
-
-            Collection<?> collection = (Collection<?>) property.getGetterMethod().invoke( metadata );
-
-            for ( Object object : collection )
-            {
-                List<ErrorReport> validationViolations = schemaValidator.validate( object );
-
-                if ( !validationViolations.isEmpty() )
-                {
-                    output.get( property.getName() )
-                        .put( ((IdentifiableObject) object).getUid(), validationViolations );
-                }
-            }
-        }
-
-        response.setContentType( MediaType.APPLICATION_JSON_VALUE );
-        renderService.toJson( response.getOutputStream(), output );
-    }
-
     @RequestMapping( value = "/appReload", method = RequestMethod.GET )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
     public void appReload( HttpServletResponse response )
@@ -259,12 +212,14 @@ public class MaintenanceController
 
     @RequestMapping( method = { RequestMethod.PUT, RequestMethod.POST } )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_PERFORM_MAINTENANCE')" )
+    @ResponseStatus( HttpStatus.NO_CONTENT )
     public void performMaintenance(
         @RequestParam( required = false ) boolean analyticsTableClear,
         @RequestParam( required = false ) boolean expiredInvitationsClear,
         @RequestParam( required = false ) boolean ouPathsUpdate,
         @RequestParam( required = false ) boolean periodPruning,
         @RequestParam( required = false ) boolean zeroDataValueRemoval,
+        @RequestParam( required = false ) boolean softDeletedDataValueRemoval,
         @RequestParam( required = false ) boolean sqlViewsDrop,
         @RequestParam( required = false ) boolean sqlViewsCreate,
         @RequestParam( required = false ) boolean categoryOptionComboUpdate,
@@ -294,6 +249,11 @@ public class MaintenanceController
         if ( zeroDataValueRemoval )
         {
             deleteZeroDataValues();
+        }
+        
+        if ( softDeletedDataValueRemoval )
+        {
+            deleteSoftDeletedDataValues();
         }
 
         if ( sqlViewsDrop )

@@ -8,6 +8,11 @@ $( document ).ready( function()
 
     $( '#loginForm').bind( 'submit', function() 
     {
+		if ( window.location.hash ) 
+		{	
+			$(this).prop('action', $(this).prop('action') + window.location.hash );
+		}
+		
         $( '#submit' ).attr( 'disabled', 'disabled' );
 
         sessionStorage.removeItem( 'ouSelected' );

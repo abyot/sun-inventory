@@ -29,21 +29,21 @@ package org.hisp.dhis.webapi.controller;
  */
 
 import org.hisp.dhis.common.Grid;
-import org.hisp.dhis.system.util.CodecUtils;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
 import org.hisp.dhis.schema.descriptors.SqlViewSchemaDescriptor;
 import org.hisp.dhis.sqlview.SqlView;
 import org.hisp.dhis.sqlview.SqlViewService;
 import org.hisp.dhis.system.grid.GridUtils;
+import org.hisp.dhis.system.util.CodecUtils;
 import org.hisp.dhis.webapi.utils.ContextUtils;
 import org.hisp.dhis.webapi.utils.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,9 +65,9 @@ public class SqlViewController
     private ContextUtils contextUtils;
 
     @RequestMapping( value = "/{uid}/data", method = RequestMethod.GET, produces = ContextUtils.CONTENT_TYPE_JSON )
-    public String getViewJson( @PathVariable( "uid" ) String uid,
+    public @ResponseBody Grid getViewJson( @PathVariable( "uid" ) String uid,
         @RequestParam( required = false ) Set<String> criteria, @RequestParam( required = false ) Set<String> var,
-        Model model, HttpServletResponse response ) throws WebMessageException
+        HttpServletResponse response ) throws WebMessageException
     {
         SqlView sqlView = sqlViewService.getSqlViewByUid( uid );
 
@@ -78,12 +78,9 @@ public class SqlViewController
 
         Grid grid = sqlViewService.getSqlViewGrid( sqlView, SqlView.getCriteria( criteria ), SqlView.getCriteria( var ) );
 
-        model.addAttribute( "model", grid );
-        model.addAttribute( "viewClass", "detailed" );
-
         contextUtils.configureResponse( response, ContextUtils.CONTENT_TYPE_JSON, sqlView.getCacheStrategy() );
 
-        return grid != null ? "sqlView" : null;
+        return grid;
     }
 
     @RequestMapping( value = "/{uid}/data.xml", method = RequestMethod.GET )
@@ -227,10 +224,10 @@ public class SqlViewController
             webMessageService.send( WebMessageUtils.created( "SQL view created" ), response, request );
         }
     }
-    
+
     @RequestMapping( value = "/{uid}/refresh", method = RequestMethod.POST )
     public void refreshMaterializedView( @PathVariable( "uid" ) String uid,
-        HttpServletResponse response, HttpServletRequest request ) throws WebMessageException    
+        HttpServletResponse response, HttpServletRequest request ) throws WebMessageException
     {
         SqlView sqlView = sqlViewService.getSqlViewByUid( uid );
 
@@ -240,14 +237,14 @@ public class SqlViewController
         }
 
         boolean result = sqlViewService.refreshMaterializedView( sqlView );
-        
+
         if ( !result )
         {
             throw new WebMessageException( WebMessageUtils.conflict( "View could not be refreshed" ) );
         }
         else
         {
-            webMessageService.send( WebMessageUtils.ok( "Materalized view refreshed" ), response, request );
+            webMessageService.send( WebMessageUtils.ok( "Materialized view refreshed" ), response, request );
         }
     }
 }

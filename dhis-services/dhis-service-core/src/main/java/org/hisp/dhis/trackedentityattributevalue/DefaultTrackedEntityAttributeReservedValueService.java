@@ -148,7 +148,7 @@ public class DefaultTrackedEntityAttributeReservedValueService
     
     private String generateRandomValueInPattern( String pattern ) 
     {   
-        if ( pattern.isEmpty() || ( pattern.matches( "[0-9]+" ) && pattern.length() > 0 ) )
+        if ( pattern.isEmpty() || ( pattern.matches( " *(#+|[0-9]+) *" ) && pattern.length() > 0 ) )
         {
             // This is a simplified pattern
             long min = 1000000;

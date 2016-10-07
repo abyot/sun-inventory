@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hisp.dhis.DhisSpringTest;
+import org.hisp.dhis.dataentryform.DataEntryForm;
+import org.hisp.dhis.dataentryform.DataEntryFormService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
 import org.hisp.dhis.period.PeriodType;
@@ -56,7 +58,10 @@ public class DataSetStoreTest
 
     @Autowired
     private OrganisationUnitService organisationUnitService;
-    
+
+    @Autowired
+    private DataEntryFormService dataEntryFormService;
+
     private PeriodType periodType;
 
     @Override
@@ -226,5 +231,47 @@ public class DataSetStoreTest
         assertEquals( dataSets.size(), 2 );
         assertTrue( dataSets.contains( dataSetA ) );
         assertTrue( dataSets.contains( dataSetB ) );
+    }
+
+    @Test
+    public void testGetByDataEntryForm()
+    {
+        DataEntryForm dataEntryFormX = createDataEntryForm( 'X' );
+        DataEntryForm dataEntryFormY = createDataEntryForm( 'Y' );
+
+        dataEntryFormService.addDataEntryForm( dataEntryFormX );
+        dataEntryFormService.addDataEntryForm( dataEntryFormY );
+
+        DataSet dataSetA = createDataSet( 'A', periodType );
+        DataSet dataSetB = createDataSet( 'B', periodType );
+        DataSet dataSetC = createDataSet( 'C', periodType );
+
+        dataSetA.setDataEntryForm( dataEntryFormX );
+
+        dataSetStore.save( dataSetA );
+        dataSetStore.save( dataSetB );
+        dataSetStore.save( dataSetC );
+
+        List<DataSet> dataSetsWithForm = dataSetStore.getDataSetsByDataEntryForm( dataEntryFormX );
+
+        assertEquals( 1, dataSetsWithForm.size() );
+        assertEquals( dataSetA, dataSetsWithForm.get( 0 ) );
+
+        dataSetC.setDataEntryForm( dataEntryFormX );
+
+        dataSetStore.update( dataSetC );
+
+        dataSetsWithForm = dataSetStore.getDataSetsByDataEntryForm( dataEntryFormX );
+
+        assertEquals( 2, dataSetsWithForm.size() );
+        assertTrue( dataSetsWithForm.contains( dataSetA ) );
+        assertTrue( dataSetsWithForm.contains( dataSetC ) );
+
+        dataSetB.setDataEntryForm( dataEntryFormY );
+        dataSetStore.update( dataSetB );
+
+        dataSetsWithForm = dataSetStore.getDataSetsByDataEntryForm( dataEntryFormY );
+        assertEquals( 1, dataSetsWithForm.size() );
+        assertTrue( dataSetsWithForm.contains( dataSetB ) );
     }
 }

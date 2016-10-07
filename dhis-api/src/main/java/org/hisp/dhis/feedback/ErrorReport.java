@@ -107,7 +107,6 @@ public class ErrorReport
         return this;
     }
 
-
     @Override
     public String toString()
     {

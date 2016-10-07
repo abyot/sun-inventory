@@ -28,28 +28,23 @@ package org.hisp.dhis.trackedentity;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.ExportView;
-import org.hisp.dhis.legend.LegendSet;
-import org.hisp.dhis.program.ProgramIndicator;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-
 import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.DxfNamespaces;
+import org.hisp.dhis.legend.LegendSet;
+import org.hisp.dhis.program.ProgramIndicator;
 
 /**
-* @author Lars Helge Overland
-*/
+ * @author Lars Helge Overland
+ */
 @JacksonXmlRootElement( localName = "programIndicatorDimension", namespace = DxfNamespaces.DXF_2_0 )
 public class TrackedEntityProgramIndicatorDimension
 {
     private int id;
-    
+
     /**
      * Program indicator.
      */
@@ -59,14 +54,14 @@ public class TrackedEntityProgramIndicatorDimension
      * Legend set.
      */
     private LegendSet legendSet;
-    
+
     /**
      * Operator and filter on this format:
      * <operator>:<filter>;<operator>:<filter>
      * Operator and filter pairs can be repeated any number of times.
      */
     private String filter;
-    
+
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
@@ -74,7 +69,7 @@ public class TrackedEntityProgramIndicatorDimension
     public TrackedEntityProgramIndicatorDimension()
     {
     }
-    
+
     public TrackedEntityProgramIndicatorDimension( ProgramIndicator programIndicator, LegendSet legendSet, String filter )
     {
         this.programIndicator = programIndicator;
@@ -90,7 +85,7 @@ public class TrackedEntityProgramIndicatorDimension
     {
         return programIndicator != null ? programIndicator.getUid() : null;
     }
-    
+
     public String getDisplayName()
     {
         return programIndicator != null ? programIndicator.getDisplayName() : null;
@@ -106,9 +101,9 @@ public class TrackedEntityProgramIndicatorDimension
     public int hashCode()
     {
         int result = id;
-        result = 31 * result + ( programIndicator != null ? programIndicator.hashCode() : 0 );
-        result = 31 * result + ( legendSet != null ? legendSet.hashCode() : 0 );
-        result = 31 * result + ( filter != null ? filter.hashCode() : 0 );
+        result = 31 * result + (programIndicator != null ? programIndicator.hashCode() : 0);
+        result = 31 * result + (legendSet != null ? legendSet.hashCode() : 0);
+        result = 31 * result + (filter != null ? filter.hashCode() : 0);
 
         return result;
     }
@@ -137,17 +132,17 @@ public class TrackedEntityProgramIndicatorDimension
         {
             return false;
         }
-        
+
         if ( legendSet != null ? !legendSet.equals( other.legendSet ) : other.legendSet != null )
         {
             return false;
         }
-        
+
         if ( filter != null ? !filter.equals( other.filter ) : other.filter != null )
         {
             return false;
         }
-        
+
         return true;
     }
 
@@ -167,8 +162,7 @@ public class TrackedEntityProgramIndicatorDimension
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( {DetailedView.class, ExportView.class} )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0)
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public ProgramIndicator getProgramIndicator()
     {
         return programIndicator;
@@ -181,8 +175,7 @@ public class TrackedEntityProgramIndicatorDimension
 
     @JsonProperty
     @JsonSerialize( as = BaseIdentifiableObject.class )
-    @JsonView( {DetailedView.class, ExportView.class} )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0)
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public LegendSet getLegendSet()
     {
         return legendSet;
@@ -194,8 +187,7 @@ public class TrackedEntityProgramIndicatorDimension
     }
 
     @JsonProperty
-    @JsonView( {DetailedView.class, ExportView.class} )
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0)
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getFilter()
     {
         return filter;

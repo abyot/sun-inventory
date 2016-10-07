@@ -32,6 +32,7 @@ package org.hisp.dhis.webapi.documentation.controller.dataelement;
 
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.dataelement.DataElementCategory;
+import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.schema.Property;
 import org.hisp.dhis.schema.Schema;
 import org.hisp.dhis.schema.descriptors.CategorySchemaDescriptor;
@@ -154,15 +155,17 @@ public class DataElementCategoryControllerDocumentation
     }
 
 
-
-
     @Test
     @Override
     public void testCreate() throws Exception
     {
         MockHttpSession session = getSession( "F_CATEGORY_PUBLIC_ADD" );
 
-        DataElementCategory cat = createDataElementCategory( 'A' );
+        DataElementCategoryOption categoryOptionA = createCategoryOption( 'A' );
+        DataElementCategoryOption categoryOptionB = createCategoryOption( 'B' );
+        DataElementCategoryOption categoryOptionC = createCategoryOption( 'C' );
+
+        DataElementCategory cat = createDataElementCategory( 'A', categoryOptionA, categoryOptionB, categoryOptionC );
 
         Schema schema = schemaService.getSchema( DataElementCategory.class );
 
@@ -172,7 +175,7 @@ public class DataElementCategoryControllerDocumentation
             .session( session )
             .contentType( TestUtils.APPLICATION_JSON_UTF8 )
             .content( TestUtils.convertObjectToJsonBytes( cat ) ) )
-            .andExpect( status().isOk() )
+            .andExpect( status().is( createdStatus ) )
             .andDo( documentPrettyPrint( "categories/create",
                 requestFields( fieldDescriptors.toArray( new FieldDescriptor[fieldDescriptors.size()] ) ) )
             );
@@ -192,9 +195,7 @@ public class DataElementCategoryControllerDocumentation
         MockHttpSession session = getSession( "ALL" );
 
         mvc.perform( delete( "/" + ENDPOINT + "/{id}", cat.getUid() ).session( session ).accept( MediaType.APPLICATION_JSON ) )
-            .andExpect( status().isNoContent() )
+            .andExpect( status().is( deleteStatus ) )
             .andDo( documentPrettyPrint( "categories/delete" ) );
     }
-
-
 }

@@ -29,6 +29,8 @@ package org.hisp.dhis.expression;
  */
 
 import com.google.common.collect.Sets;
+
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,12 +47,12 @@ import org.hisp.dhis.commons.util.TextUtils;
 import org.hisp.dhis.constant.Constant;
 import org.hisp.dhis.constant.ConstantService;
 import org.hisp.dhis.dataelement.DataElement;
-import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementCategoryService;
 import org.hisp.dhis.dataelement.DataElementOperand;
 import org.hisp.dhis.dataelement.DataElementService;
 import org.hisp.dhis.indicator.Indicator;
+import org.hisp.dhis.indicator.IndicatorValue;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupService;
 import org.hisp.dhis.period.Period;
@@ -183,9 +185,19 @@ public class DefaultExpressionService
     // -------------------------------------------------------------------------
     // Business logic
     // -------------------------------------------------------------------------
-
+    
     @Override
     public Double getIndicatorValue( Indicator indicator, Period period,
+        Map<? extends DimensionalItemObject, Double> valueMap, Map<String, Double> constantMap,
+        Map<String, Integer> orgUnitCountMap )
+    {
+        IndicatorValue value = getIndicatorValueObject( indicator, period, valueMap, constantMap, orgUnitCountMap );
+        
+        return value != null ? value.getValue() : null;
+    }
+
+    @Override
+    public IndicatorValue getIndicatorValueObject( Indicator indicator, Period period,
         Map<? extends DimensionalItemObject, Double> valueMap, Map<String, Double> constantMap,
         Map<String, Integer> orgUnitCountMap )
     {
@@ -219,12 +231,15 @@ public class DefaultExpressionService
 
             final double numeratorValue = calculateExpression( numeratorExpression );
 
-            final double annualizationFactor = period != null
-                ? DateUtils.getAnnualizationFactor( indicator, period.getStartDate(), period.getEndDate() ) : 1d;
-            final double factor = indicator.getIndicatorType().getFactor();
-            final double aggregatedValue = (numeratorValue / denominatorValue) * factor * annualizationFactor;
-
-            return aggregatedValue;
+            final double annualizationFactor = period != null ?
+                DateUtils.getAnnualizationFactor( indicator, period.getStartDate(), period.getEndDate() ) : 1d;
+            final int factor = indicator.getIndicatorType().getFactor();
+            
+            return new IndicatorValue()
+                .setNumeratorValue( numeratorValue )
+                .setDenominatorValue( denominatorValue )
+                .setFactor( factor )
+                .setAnnualizationFactor( annualizationFactor );
         }
 
         return null;
@@ -250,12 +265,71 @@ public class DefaultExpressionService
         Map<String, Double> constantMap, Map<String, Integer> orgUnitCountMap, Integer days,
         Set<DataElementOperand> incompleteValues, ListMap<String, Double> aggregateMap )
     {
+        if ( aggregateMap == null )
+        {
+            Matcher simpleMatch = OPERAND_PATTERN.matcher( expression.getExpression() );
+            
+            if ( simpleMatch.matches() )
+            {
+                return getSimpleExpressionValue( expression, simpleMatch, valueMap );
+            }
+        }
+
         String expressionString = generateExpression( expression.getExplodedExpressionFallback(), valueMap, constantMap,
-            orgUnitCountMap, days, expression.getMissingValueStrategy(), incompleteValues, aggregateMap );
+            orgUnitCountMap, days, expression.getMissingValueStrategy(),
+            incompleteValues, aggregateMap );
 
-        Double result = (expressionString != null) ? calculateExpression( expressionString ) : null;
+        return expressionString != null ? calculateExpression( expressionString ) : null;
+    }
 
-        return result;
+    private Double getSimpleExpressionValue( Expression expression, Matcher expressionMatch,
+        Map<? extends DimensionalItemObject, Double> valueMap )
+    {
+        String elementId = expressionMatch.group( 1 );
+        String comboId = expressionMatch.group( 2 );
+        DataElement dataElement = dataElementService.getDataElement( elementId );
+        
+        if ( comboId != null && comboId.length() == 0 )
+        {
+            comboId = null;
+        }
+        
+        final DataElementCategoryOptionCombo defaultCombo = categoryService.getDefaultDataElementCategoryOptionCombo();
+        
+        if ( comboId == null || comboId == defaultCombo.getUid() )
+        {
+            Double value = valueMap.get( dataElement );
+            
+            if ( value != null )
+            {
+                return value;
+            }
+        }
+        
+        if ( comboId == null )
+        {
+            Double sum = 0.0;
+            final Set<DataElementCategoryOptionCombo> combos = dataElement.getCategoryOptionCombos();
+
+            for ( DataElementCategoryOptionCombo combo : combos )
+            {
+                DataElementOperand deo = new DataElementOperand( elementId, combo.getUid() );
+                Double value = valueMap.get( deo );
+
+                if ( value != null )
+                {
+                    sum = sum + value;
+                }
+            }
+            
+            return sum;
+        }
+        else
+        {
+            DataElementOperand deo = new DataElementOperand( elementId, comboId );
+
+            return valueMap.get( deo );
+        }
     }
 
     @Override
@@ -266,7 +340,7 @@ public class DefaultExpressionService
         String expressionString = generateExpression( expression.getExplodedExpressionFallback(), valueMap, constantMap,
             orgUnitCountMap, days, expression.getMissingValueStrategy(), incompleteValues, aggregateMap );
 
-        Object result = (expressionString != null) ? calculateGenericExpression( expressionString ) : null;
+        Object result = expressionString != null ? calculateGenericExpression( expressionString ) : null;
 
         return result;
     }
@@ -845,9 +919,7 @@ public class DefaultExpressionService
 
                 final DataElement dataElement = idObjectManager.getNoAcl( DataElement.class, matcher.group( 1 ) );
 
-                final DataElementCategoryCombo categoryCombo = dataElement.getCategoryCombo();
-
-                for ( DataElementCategoryOptionCombo categoryOptionCombo : categoryCombo.getOptionCombos() )
+                for ( DataElementCategoryOptionCombo categoryOptionCombo : dataElement.getCategoryOptionCombos() )
                 {
                     replace.append( EXP_OPEN ).append( dataElement.getUid() ).append( SEPARATOR ).
                         append( categoryOptionCombo.getUid() ).append( EXP_CLOSE ).append( "+" );
@@ -976,7 +1048,7 @@ public class DefaultExpressionService
         Set<String> incompleteItems = incompleteValues != null ?
             incompleteValues.stream().map( i -> i.getDimensionItem() ).collect( Collectors.toSet() ) : Sets.newHashSet();
 
-        missingValueStrategy = missingValueStrategy == null ? NEVER_SKIP : missingValueStrategy;
+        missingValueStrategy = ObjectUtils.firstNonNull( missingValueStrategy, NEVER_SKIP );
 
         // ---------------------------------------------------------------------
         // Substitute aggregates
@@ -989,7 +1061,7 @@ public class DefaultExpressionService
 
         int scan = 0, len = expression.length(), tail = 0;
 
-        while ( (scan < len) && (matcher.find( scan )) )
+        while ( scan < len && matcher.find( scan ) )
         {
             int start = matcher.end();
             int end = Expression.matchExpression( expression, start );
@@ -1008,8 +1080,8 @@ public class DefaultExpressionService
             }
             else
             {
-                String sub_expression = expression.substring( start, end );
-                List<Double> samples = aggregateMap.get( sub_expression );
+                String subExpression = expression.substring( start, end );
+                List<Double> samples = aggregateMap.get( subExpression );
 
                 if ( samples == null )
                 {

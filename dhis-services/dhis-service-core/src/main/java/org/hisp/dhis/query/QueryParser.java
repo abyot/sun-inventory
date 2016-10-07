@@ -31,8 +31,6 @@ package org.hisp.dhis.query;
 import java.util.List;
 
 /**
- * TODO add support for Order
- *
  * @author Morten Olav Hansen <mortenoh@gmail.com>
  */
 public interface QueryParser
@@ -44,10 +42,13 @@ public interface QueryParser
      * <p>
      * The general syntax is "propertyName:operatorName:<Value to check against if needed>"
      *
-     * @param klass   Class type to query for
-     * @param filters List of filters to add to Query
+     * @param klass        Class type to query for
+     * @param filters      List of filters to add to Query
+     * @param rootJunction Root junction to use (defaults to AND)
      * @return Query instance based on Schema of klass and filters list
      * @throws QueryParserException
      */
+    Query parse( Class<?> klass, List<String> filters, Junction.Type rootJunction ) throws QueryParserException;
+
     Query parse( Class<?> klass, List<String> filters ) throws QueryParserException;
 }

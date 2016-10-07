@@ -47,8 +47,6 @@ public class BulkSmsGatewayConfig
 
     private String password;
 
-    private String region;
-
     @JsonProperty( value = "urlTemplateForBatchSms" )
     public String getUrlTemplateForBatchSms()
     {
@@ -90,21 +88,10 @@ public class BulkSmsGatewayConfig
         this.password = password;
     }
 
-    @JsonProperty( value = "region" )
-    public String getRegion()
-    {
-        return region;
-    }
-
     @JsonProperty( value = "default" )
     public boolean getStatus()
     {
         return super.isDefault();
-    }
-
-    public void setRegion( String region )
-    {
-        this.region = region;
     }
 
     @Override

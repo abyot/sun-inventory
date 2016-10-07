@@ -28,8 +28,22 @@ package org.hisp.dhis.organisationunit;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import static org.hisp.dhis.common.IdentifiableObjectUtils.getUids;
-import static org.hisp.dhis.i18n.I18nUtils.i18n;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.commons.lang3.ObjectUtils;
+import org.hisp.dhis.common.OrganisationUnitSelectionMode;
+import org.hisp.dhis.commons.collection.ListUtils;
+import org.hisp.dhis.commons.filter.FilterUtils;
+import org.hisp.dhis.configuration.ConfigurationService;
+import org.hisp.dhis.hierarchy.HierarchyViolationException;
+import org.hisp.dhis.organisationunit.comparator.OrganisationUnitLevelComparator;
+import org.hisp.dhis.system.filter.OrganisationUnitPolygonCoveringCoordinateFilter;
+import org.hisp.dhis.system.util.GeoUtils;
+import org.hisp.dhis.system.util.ValidationUtils;
+import org.hisp.dhis.user.CurrentUserService;
+import org.hisp.dhis.user.User;
+import org.hisp.dhis.version.VersionService;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -42,24 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.hisp.dhis.common.OrganisationUnitSelectionMode;
-import org.hisp.dhis.commons.collection.ListUtils;
-import org.hisp.dhis.commons.filter.FilterUtils;
-import org.hisp.dhis.configuration.ConfigurationService;
-import org.hisp.dhis.hierarchy.HierarchyViolationException;
-import org.hisp.dhis.i18n.I18nService;
-import org.hisp.dhis.organisationunit.comparator.OrganisationUnitLevelComparator;
-import org.hisp.dhis.system.filter.OrganisationUnitPolygonCoveringCoordinateFilter;
-import org.hisp.dhis.system.util.GeoUtils;
-import org.hisp.dhis.system.util.ValidationUtils;
-import org.hisp.dhis.user.CurrentUserService;
-import org.hisp.dhis.user.User;
-import org.hisp.dhis.version.VersionService;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import static org.hisp.dhis.common.IdentifiableObjectUtils.getUids;
 
 /**
  * @author Torgeir Lorange Ostby
@@ -109,13 +106,6 @@ public class DefaultOrganisationUnitService
         this.configurationService = configurationService;
     }
 
-    private I18nService i18nService;
-
-    public void setI18nService( I18nService service )
-    {
-        i18nService = service;
-    }
-
     // -------------------------------------------------------------------------
     // OrganisationUnit
     // -------------------------------------------------------------------------
@@ -124,12 +114,12 @@ public class DefaultOrganisationUnitService
     public int addOrganisationUnit( OrganisationUnit organisationUnit )
     {
         int id = organisationUnitStore.save( organisationUnit );
+        User user = currentUserService.getCurrentUser();
 
-        if ( organisationUnit.getParent() == null && currentUserService.getCurrentUser() != null )
+        if ( organisationUnit.getParent() == null && user != null )
         {
             // Adding a new root node, add this node to the current user
-
-            currentUserService.getCurrentUser().getOrganisationUnits().add( organisationUnit );
+            user.getOrganisationUnits().add( organisationUnit );
         }
 
         return id;
@@ -179,31 +169,31 @@ public class DefaultOrganisationUnitService
     @Override
     public OrganisationUnit getOrganisationUnit( int id )
     {
-        return i18n( i18nService, organisationUnitStore.get( id ) );
+        return  organisationUnitStore.get( id );
     }
 
     @Override
     public List<OrganisationUnit> getAllOrganisationUnits()
     {
-        return i18n( i18nService, organisationUnitStore.getAll() );
+        return organisationUnitStore.getAll();
     }
 
     @Override
     public List<OrganisationUnit> getAllOrganisationUnitsByLastUpdated( Date lastUpdated )
     {
-        return i18n( i18nService, organisationUnitStore.getAllOrganisationUnitsByLastUpdated( lastUpdated ) );
+        return organisationUnitStore.getAllOrganisationUnitsByLastUpdated( lastUpdated );
     }
 
     @Override
     public List<OrganisationUnit> getOrganisationUnits( Collection<Integer> identifiers )
     {
-        return i18n( i18nService, organisationUnitStore.getById( identifiers ) );
+        return organisationUnitStore.getById( identifiers );
     }
 
     @Override
     public List<OrganisationUnit> getOrganisationUnitsByUid( Collection<String> uids )
     {
-        return i18n( i18nService, organisationUnitStore.getByUid( uids ) );
+        return organisationUnitStore.getByUid( uids );
     }
 
     @Override
@@ -215,25 +205,19 @@ public class DefaultOrganisationUnitService
     @Override
     public OrganisationUnit getOrganisationUnit( String uid )
     {
-        return i18n( i18nService, organisationUnitStore.getByUid( uid ) );
-    }
-
-    @Override
-    public OrganisationUnit getOrganisationUnitByUuid( String uuid )
-    {
-        return i18n( i18nService, organisationUnitStore.getByUuid( uuid ) );
+        return organisationUnitStore.getByUid( uid );
     }
 
     @Override
     public List<OrganisationUnit> getOrganisationUnitByName( String name )
     {
-        return new ArrayList<>( i18n( i18nService, organisationUnitStore.getAllEqName( name ) ) );
+        return new ArrayList<>( organisationUnitStore.getAllEqName( name ) );
     }
 
     @Override
     public OrganisationUnit getOrganisationUnitByCode( String code )
     {
-        return i18n( i18nService, organisationUnitStore.getByCode( code ) );
+        return organisationUnitStore.getByCode( code );
     }
 
     @Override
@@ -245,7 +229,7 @@ public class DefaultOrganisationUnitService
     @Override
     public List<OrganisationUnit> getRootOrganisationUnits()
     {
-        return i18n( i18nService, organisationUnitStore.getRootOrganisationUnits() );
+        return organisationUnitStore.getRootOrganisationUnits();
     }
 
     @Override
@@ -353,13 +337,13 @@ public class DefaultOrganisationUnitService
         }
 
         int rootLevel = organisationUnit.getLevel();
-        
-        Integer levels = maxLevels != null ? ( rootLevel + maxLevels - 1 ) : null;
+
+        Integer levels = maxLevels != null ? (rootLevel + maxLevels - 1) : null;
 
         OrganisationUnitQueryParams params = new OrganisationUnitQueryParams();
         params.setParents( Sets.newHashSet( organisationUnit ) );
         params.setMaxLevels( levels );
-        
+
         return organisationUnitStore.getOrganisationUnits( params );
     }
 
@@ -368,7 +352,7 @@ public class DefaultOrganisationUnitService
     {
         OrganisationUnitQueryParams params = new OrganisationUnitQueryParams();
         params.setLevels( Sets.newHashSet( level ) );
-        
+
         return organisationUnitStore.getOrganisationUnits( params );
     }
 
@@ -377,12 +361,12 @@ public class DefaultOrganisationUnitService
     {
         OrganisationUnitQueryParams params = new OrganisationUnitQueryParams();
         params.setLevels( Sets.newHashSet( level ) );
-        
+
         if ( parent != null )
         {
             params.setParents( Sets.newHashSet( parent ) );
         }
-        
+
         return organisationUnitStore.getOrganisationUnits( params );
     }
 
@@ -392,7 +376,7 @@ public class DefaultOrganisationUnitService
         OrganisationUnitQueryParams params = new OrganisationUnitQueryParams();
         params.setLevels( Sets.newHashSet( levels ) );
         params.setParents( Sets.newHashSet( parents ) );
-        
+
         return organisationUnitStore.getOrganisationUnits( params );
     }
 
@@ -405,13 +389,13 @@ public class DefaultOrganisationUnitService
     @Override
     public List<OrganisationUnit> getOrganisationUnitsWithoutGroups()
     {
-        return i18n( i18nService, organisationUnitStore.getOrganisationUnitsWithoutGroups() );
+        return organisationUnitStore.getOrganisationUnitsWithoutGroups();
     }
 
     @Override
     public List<OrganisationUnit> getOrganisationUnitsWithCategoryOptions()
     {
-        return i18n( i18nService, organisationUnitStore.getOrganisationUnitsWithCategoryOptions() );
+        return organisationUnitStore.getOrganisationUnitsWithCategoryOptions();
     }
 
     @Override
@@ -485,43 +469,16 @@ public class DefaultOrganisationUnitService
     }
 
     @Override
-    public List<OrganisationUnit> getOrganisationUnitsBetween( int first, int max )
-    {
-        return i18n( i18nService, organisationUnitStore.getAllOrderedName( first, max ) );
-    }
-
-    @Override
     public List<OrganisationUnit> getOrganisationUnitsBetweenByName( String name, int first, int max )
     {
-        return i18n( i18nService, organisationUnitStore.getAllLikeName( name, first, max ) );
-    }
-
-    @Override
-    public List<OrganisationUnit> getOrganisationUnitsBetweenByLastUpdated( Date lastUpdated, int first, int max )
-    {
-        return i18n( i18nService, organisationUnitStore.getBetweenByLastUpdated( lastUpdated, first, max ) );
-    }
-
-    @Override
-    public Map<String, OrganisationUnit> getUuidOrganisationUnitMap()
-    {
-        Map<String, OrganisationUnit> map = new HashMap<>();
-
-        List<OrganisationUnit> organisationUnits = getAllOrganisationUnits();
-
-        for ( OrganisationUnit organisationUnit : organisationUnits )
-        {
-            map.put( organisationUnit.getUuid(), organisationUnit );
-        }
-
-        return map;
+        return organisationUnitStore.getAllLikeName( name, first, max );
     }
 
     @Override
     public boolean isInUserHierarchy( OrganisationUnit organisationUnit )
     {
         User user = currentUserService.getCurrentUser();
-        
+
         if ( user == null || user.getOrganisationUnits() == null || user.getOrganisationUnits().isEmpty() )
         {
             return false;
@@ -534,7 +491,7 @@ public class DefaultOrganisationUnitService
     public boolean isInUserHierarchy( String uid, Set<OrganisationUnit> organisationUnits )
     {
         OrganisationUnit organisationUnit = organisationUnitStore.getByUid( uid );
-        
+
         return organisationUnit != null ? organisationUnit.isDescendant( organisationUnits ) : false;
     }
 
@@ -627,20 +584,20 @@ public class DefaultOrganisationUnitService
     @Override
     public List<OrganisationUnitLevel> getOrganisationUnitLevels()
     {
-        return ListUtils.sort( i18n( i18nService, organisationUnitLevelStore.getAll() ), 
+        return ListUtils.sort( organisationUnitLevelStore.getAll(),
             OrganisationUnitLevelComparator.INSTANCE );
     }
 
     @Override
     public OrganisationUnitLevel getOrganisationUnitLevelByLevel( int level )
     {
-        return i18n( i18nService, organisationUnitLevelStore.getByLevel( level ) );
+        return organisationUnitLevelStore.getByLevel( level );
     }
 
     @Override
     public List<OrganisationUnitLevel> getOrganisationUnitLevelByName( String name )
     {
-        return new ArrayList<>( i18n( i18nService, organisationUnitLevelStore.getAllEqName( name ) ) );
+        return new ArrayList<>( organisationUnitLevelStore.getAllEqName( name ) );
     }
 
     @Override
@@ -651,14 +608,14 @@ public class DefaultOrganisationUnitService
         List<OrganisationUnitLevel> levels = new ArrayList<>();
 
         int levelNo = getNumberOfOrganisationalLevels();
-        
+
         for ( int i = 0; i < levelNo; i++ )
         {
             int level = i + 1;
-            
-            OrganisationUnitLevel filledLevel = ObjectUtils.firstNonNull( 
+
+            OrganisationUnitLevel filledLevel = ObjectUtils.firstNonNull(
                 levelMap.get( level ), new OrganisationUnitLevel( level, LEVEL_PREFIX + level ) );
-            
+
             levels.add( filledLevel );
         }
 

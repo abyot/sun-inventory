@@ -30,19 +30,18 @@ package org.hisp.dhis.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.hisp.dhis.attribute.AttributeValue;
 import org.hisp.dhis.common.annotation.Description;
-import org.hisp.dhis.common.view.DetailedView;
-import org.hisp.dhis.common.view.DimensionalView;
-import org.hisp.dhis.common.view.ExportView;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
+import org.hisp.dhis.schema.annotation.Property.Value;
 import org.hisp.dhis.schema.annotation.PropertyRange;
 import org.hisp.dhis.security.acl.Access;
 import org.hisp.dhis.security.acl.AccessStringHelper;
@@ -51,12 +50,12 @@ import org.hisp.dhis.translation.TranslationProperty;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserGroupAccess;
 import org.hisp.dhis.user.UserSettingKey;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -108,7 +107,11 @@ public class BaseIdentifiableObject
      */
     protected Set<ObjectTranslation> translations = new HashSet<>();
 
-    protected Map<TranslationProperty, ObjectTranslation> translationCache = new HashMap<>();
+    /**
+     * Cache for object translations, where the cache key is a combination of
+     * locale and translation property, and value is the translated value.
+     */
+    protected Map<String, String> translationCache = new HashMap<>();
 
     /**
      * This object is available as external read-only
@@ -175,10 +178,20 @@ public class BaseIdentifiableObject
     // Comparable implementation
     // -------------------------------------------------------------------------
 
+    /**
+     * Compares objects based on display name. A null display name is ordered
+     * after a non-null display name.
+     */
     @Override
     public int compareTo( IdentifiableObject object )
     {
-        return name == null ? (object.getDisplayName() == null ? 0 : -1) : name.compareTo( object.getDisplayName() );
+        if ( this.getDisplayName() == null )
+        {
+            return object.getDisplayName() == null ? 0 : 1;
+        }
+        
+        return object.getDisplayName() == null ? -1 : 
+            this.getDisplayName().compareToIgnoreCase( object.getDisplayName() );
     }
 
     // -------------------------------------------------------------------------
@@ -201,7 +214,7 @@ public class BaseIdentifiableObject
     @JsonProperty( value = "id" )
     @JacksonXmlProperty( localName = "id", isAttribute = true )
     @Description( "The Unique Identifier for this Object." )
-    @Property( value = PropertyType.IDENTIFIER, required = Property.Required.FALSE )
+    @Property( value = PropertyType.IDENTIFIER, required = Value.FALSE )
     @PropertyRange( min = 11, max = 11 )
     public String getUid()
     {
@@ -244,7 +257,6 @@ public class BaseIdentifiableObject
     }
 
     @Override
-    @JsonView( { DetailedView.class, DimensionalView.class } )
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getDisplayName()
@@ -263,6 +275,7 @@ public class BaseIdentifiableObject
     @JsonProperty
     @JacksonXmlProperty( isAttribute = true )
     @Description( "The date this object was created." )
+    @Property( value = PropertyType.DATE, required = Value.FALSE )
     public Date getCreated()
     {
         return created;
@@ -277,6 +290,7 @@ public class BaseIdentifiableObject
     @JsonProperty
     @JacksonXmlProperty( isAttribute = true )
     @Description( "The date this object was last updated." )
+    @Property( value = PropertyType.DATE, required = Value.FALSE )
     public Date getLastUpdated()
     {
         return lastUpdated;
@@ -289,7 +303,6 @@ public class BaseIdentifiableObject
 
     @Override
     @JsonProperty( "attributeValues" )
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "attributeValues", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "attributeValue", namespace = DxfNamespaces.DXF_2_0 )
     public Set<AttributeValue> getAttributeValues()
@@ -304,7 +317,6 @@ public class BaseIdentifiableObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "translations", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "translation", namespace = DxfNamespaces.DXF_2_0 )
     public Set<ObjectTranslation> getTranslations()
@@ -312,41 +324,61 @@ public class BaseIdentifiableObject
         return translations;
     }
 
-    // automatically clear out cache on setting translations
+    /**
+     * Clears out cache when setting translations.
+     */
     public void setTranslations( Set<ObjectTranslation> translations )
     {
         this.translationCache.clear();
         this.translations = translations;
     }
 
+    /**
+     * Returns a translated value for this object for the given property. The
+     * current locale is read from the user context.
+     * 
+     * @param property the translation property.
+     * @param defaultValue the value to use if there are no translations.
+     * @return a translated value.
+     */
     protected String getTranslation( TranslationProperty property, String defaultValue )
     {
-        // if either no translations available, or user context does not have locale set, then assume unfiltered list and use default value
-        if ( translations.isEmpty() || !UserContext.haveUserSetting( UserSettingKey.DB_LOCALE ) )
+        Locale locale = UserContext.getUserSetting( UserSettingKey.DB_LOCALE, Locale.class );
+        
+        defaultValue = defaultValue != null ? defaultValue.trim() : null;
+        
+        if ( locale == null || property == null )
         {
-            return defaultValue != null ? defaultValue.trim() : null;
+            return defaultValue;
         }
-
-        if ( translationCache.containsKey( property ) )
+        
+        loadTranslationsCacheIfEmpty();
+        
+        String cacheKey = ObjectTranslation.getCacheKey( locale.toString(), property );
+        
+        return translationCache.getOrDefault( cacheKey, defaultValue );
+    }
+    
+    /**
+     * Populates the translationsCache map unless it is already populated.
+     */
+    private void loadTranslationsCacheIfEmpty()
+    {
+        if ( translationCache.isEmpty() )
         {
-            return translationCache.get( property ).getValue();
-        }
-
-        for ( ObjectTranslation translation : translations )
-        {
-            if ( property == translation.getProperty() && !StringUtils.isEmpty( translation.getValue() ) )
+            for ( ObjectTranslation translation : translations )
             {
-                translationCache.put( property, translation );
-                return translation.getValue();
+                if ( translation.getLocale() != null && translation.getProperty() != null && !StringUtils.isEmpty( translation.getValue() ) )
+                {
+                    String key = ObjectTranslation.getCacheKey( translation.getLocale(), translation.getProperty() );            
+                    translationCache.put( key, translation.getValue() );
+                }
             }
         }
-
-        return defaultValue != null ? defaultValue.trim() : null;
     }
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JsonSerialize( as = BaseIdentifiableObject.class )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public User getUser()
@@ -361,7 +393,6 @@ public class BaseIdentifiableObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     @PropertyRange( min = 8, max = 8 )
     public String getPublicAccess()
@@ -376,7 +407,6 @@ public class BaseIdentifiableObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public boolean getExternalAccess()
     {
@@ -390,7 +420,6 @@ public class BaseIdentifiableObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class, ExportView.class } )
     @JacksonXmlElementWrapper( localName = "userGroupAccesses", namespace = DxfNamespaces.DXF_2_0 )
     @JacksonXmlProperty( localName = "userGroupAccess", namespace = DxfNamespaces.DXF_2_0 )
     public Set<UserGroupAccess> getUserGroupAccesses()
@@ -405,7 +434,6 @@ public class BaseIdentifiableObject
 
     @Override
     @JsonProperty
-    @JsonView( { DetailedView.class } )
     @JacksonXmlProperty( localName = "access", namespace = DxfNamespaces.DXF_2_0 )
     public Access getAccess()
     {

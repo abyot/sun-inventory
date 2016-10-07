@@ -53,7 +53,7 @@ $( function() {
     selectionTree.clearSelectedOrganisationUnitsAndBuildTree();
 
     $.ajax({
-       url: '../api/programs.json?fields=id,displayName'
+       url: '../api/programs.json?fields=id,displayName&paging=false'
     } ).done(function(data) {
         var options = [];
 

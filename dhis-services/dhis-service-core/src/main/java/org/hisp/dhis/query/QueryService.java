@@ -69,10 +69,13 @@ public interface QueryService
      * Create a query instance from a given set of filters (property:operator:value), and
      * a list of orders.
      *
-     * @param klass   Type of object you want to query
-     * @param filters List of filters to use as basis for query instance
-     * @param orders  List of orders to use for query
+     * @param klass        Type of object you want to query
+     * @param filters      List of filters to use as basis for query instance
+     * @param orders       List of orders to use for query
+     * @param rootJunction Root junction (defaults to AND)
      * @return New query instance using provided filters/orders
      */
+    Query getQueryFromUrl( Class<?> klass, List<String> filters, List<Order> orders, Junction.Type rootJunction ) throws QueryParserException;
+
     Query getQueryFromUrl( Class<?> klass, List<String> filters, List<Order> orders ) throws QueryParserException;
 }

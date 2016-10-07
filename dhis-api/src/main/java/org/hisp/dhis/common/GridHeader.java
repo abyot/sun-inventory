@@ -28,13 +28,10 @@ package org.hisp.dhis.common;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Arrays;
 import java.util.List;
-
-import org.hisp.dhis.common.view.DetailedView;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 
 /**
  * @author Lars Helge Overland
@@ -52,9 +49,9 @@ public class GridHeader
     private boolean hidden;
 
     private boolean meta;
-    
+
     private String optionSet;
-    
+
     private String legendSet;
 
     // -------------------------------------------------------------------------
@@ -66,77 +63,77 @@ public class GridHeader
     }
 
     /**
-     * @param name name
-     * @param column column
+     * @param name   name
      */
-    public GridHeader( String name, String column )
+    public GridHeader( String name )
     {
         this.name = name;
-        this.column = column;
         this.type = String.class.getName();
         this.hidden = false;
         this.meta = false;
     }
 
     /**
-     * @param name name
+     * @param name   name
      * @param column column
-     * @param type type
+     */
+    public GridHeader( String name, String column )
+    {
+        this( name );
+        this.column = column;
+    }
+
+    /**
+     * @param name   name
+     * @param column column
+     * @param type   type
      */
     public GridHeader( String name, String column, String type )
     {
-        this.name = name;
-        this.column = column;
+        this( name, column );
         this.type = type;
     }
-    
+
     /**
      * Sets the column property to the name value. Sets the type property to String.
      *
-     * @param name name
+     * @param name   name
      * @param hidden hidden
-     * @param meta meta
+     * @param meta   meta
      */
     public GridHeader( String name, boolean hidden, boolean meta )
     {
-        this.name = name;
+        this( name );
         this.column = name;
-        this.type = String.class.getName();
         this.hidden = hidden;
         this.meta = meta;
     }
 
     /**
-     * @param name name
+     * @param name   name
      * @param column column
-     * @param type type
+     * @param type   type
      * @param hidden hidden
-     * @param meta meta
+     * @param meta   meta
      */
     public GridHeader( String name, String column, String type, boolean hidden, boolean meta )
     {
-        this.name = name;
-        this.column = column;
-        this.type = type;
+        this( name, column, type );
         this.hidden = hidden;
         this.meta = meta;
     }
 
     /**
-     * @param name name
-     * @param column column
-     * @param type type
-     * @param hidden hidden
-     * @param meta meta
+     * @param name      name
+     * @param column    column
+     * @param type      type
+     * @param hidden    hidden
+     * @param meta      meta
      * @param optionSet optionSet
      */
     public GridHeader( String name, String column, String type, boolean hidden, boolean meta, String optionSet, String legendSet )
     {
-        this.name = name;
-        this.column = column;
-        this.type = type;
-        this.hidden = hidden;
-        this.meta = meta;
+        this( name, column, type, hidden, meta );
         this.optionSet = optionSet;
         this.legendSet = legendSet;
     }
@@ -149,7 +146,7 @@ public class GridHeader
     {
         return type != null && NUMERIC_TYPES.contains( type );
     }
-    
+
     public boolean hasLegendSet()
     {
         return legendSet != null;
@@ -160,7 +157,6 @@ public class GridHeader
     // -------------------------------------------------------------------------
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public String getName()
     {
         return name;
@@ -172,7 +168,6 @@ public class GridHeader
     }
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public String getColumn()
     {
         return column;
@@ -184,7 +179,6 @@ public class GridHeader
     }
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public String getType()
     {
         return type;
@@ -196,7 +190,6 @@ public class GridHeader
     }
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public boolean isHidden()
     {
         return hidden;
@@ -208,7 +201,6 @@ public class GridHeader
     }
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public boolean isMeta()
     {
         return meta;
@@ -220,7 +212,6 @@ public class GridHeader
     }
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public String getOptionSet()
     {
         return optionSet;
@@ -232,7 +223,6 @@ public class GridHeader
     }
 
     @JsonProperty
-    @JsonView( {DetailedView.class} )
     public String getLegendSet()
     {
         return legendSet;

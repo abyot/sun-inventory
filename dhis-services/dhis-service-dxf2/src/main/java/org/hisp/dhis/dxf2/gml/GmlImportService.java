@@ -28,8 +28,7 @@ package org.hisp.dhis.dxf2.gml;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.hisp.dhis.dxf2.common.ImportOptions;
-import org.hisp.dhis.scheduling.TaskId;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
 
 import java.io.InputStream;
 
@@ -44,10 +43,10 @@ public interface GmlImportService
     /**
      * Import the geospatial data from a GML document.
      *
-     * @param inputStream the GML document.
-     * @param userUid the UID of the user performing the import.
+     * @param inputStream   the GML document.
+     * @param userUid       the UID of the user performing the import.
      * @param importOptions the ImportOptions. ImportStrategy is always overridden to UPDATE.
-     * @param taskId the TaskId of the import process.
+     * @param taskId        the TaskId of the import process.
      */
-    void importGml( InputStream inputStream, String userUid, ImportOptions importOptions, TaskId taskId );
+    void importGml( InputStream inputStream, MetadataImportParams importParams );
 }

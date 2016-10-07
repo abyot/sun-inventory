@@ -51,7 +51,6 @@ import org.hisp.dhis.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
-import org.hisp.dhis.dataelementhistory.DataElementHistoryPoint;
 
 /**
  * @author Torgeir Lorange Ostby

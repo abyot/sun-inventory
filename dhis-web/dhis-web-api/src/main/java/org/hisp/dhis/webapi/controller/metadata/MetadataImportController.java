@@ -28,18 +28,15 @@ package org.hisp.dhis.webapi.controller.metadata;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.commons.collections.map.HashedMap;
-import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.commons.util.StreamUtils;
-import org.hisp.dhis.dxf2.metadata2.Metadata;
-import org.hisp.dhis.dxf2.metadata2.MetadataImportParams;
-import org.hisp.dhis.dxf2.metadata2.MetadataImportService;
-import org.hisp.dhis.dxf2.metadata2.feedback.ImportReport;
+import org.hisp.dhis.dxf2.metadata.Metadata;
+import org.hisp.dhis.dxf2.metadata.MetadataImportParams;
+import org.hisp.dhis.dxf2.metadata.MetadataImportService;
+import org.hisp.dhis.dxf2.metadata.feedback.ImportReport;
 import org.hisp.dhis.render.RenderFormat;
 import org.hisp.dhis.render.RenderService;
-import org.hisp.dhis.schema.Schema;
 import org.hisp.dhis.schema.SchemaService;
-import org.hisp.dhis.system.util.ReflectionUtils;
+import org.hisp.dhis.security.SecurityContextRunnable;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
 import org.hisp.dhis.webapi.service.ContextService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,10 +48,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 import static org.hisp.dhis.webapi.mvc.annotation.ApiVersion.Version;
 
@@ -63,7 +56,7 @@ import static org.hisp.dhis.webapi.mvc.annotation.ApiVersion.Version;
  */
 @Controller
 @RequestMapping( "/metadata" )
-@ApiVersion( Version.ALL )
+@ApiVersion( { Version.DEFAULT, Version.ALL } )
 public class MetadataImportController
 {
     @Autowired
@@ -84,40 +77,56 @@ public class MetadataImportController
         MetadataImportParams params = metadataImportService.getParamsFromMap( contextService.getParameterValuesMap() );
         params.setObjects( renderService.fromMetadata( StreamUtils.wrapAndCheckCompressionFormat( request.getInputStream() ), RenderFormat.JSON ) );
 
-        ImportReport importReport = metadataImportService.importMetadata( params );
-        renderService.toJson( response.getOutputStream(), importReport );
+        if ( params.hasTaskId() )
+        {
+            startAsync( params );
+            response.setStatus( HttpServletResponse.SC_NO_CONTENT );
+        }
+        else
+        {
+            ImportReport importReport = metadataImportService.importMetadata( params );
+            renderService.toJson( response.getOutputStream(), importReport );
+        }
     }
 
-    @SuppressWarnings( "unchecked" )
     @RequestMapping( value = "", method = RequestMethod.POST, consumes = MediaType.APPLICATION_XML_VALUE )
     public void postXmlMetadata( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         MetadataImportParams params = metadataImportService.getParamsFromMap( contextService.getParameterValuesMap() );
         Metadata metadata = renderService.fromXml( StreamUtils.wrapAndCheckCompressionFormat( request.getInputStream() ), Metadata.class );
+        params.addMetadata( schemaService.getMetadataSchemas(), metadata );
 
-        Map<Class<? extends IdentifiableObject>, List<IdentifiableObject>> objectMap = new HashedMap();
-
-        for ( Schema schema : schemaService.getMetadataSchemas() )
+        if ( params.hasTaskId() )
         {
-            Object value = ReflectionUtils.invokeGetterMethod( schema.getPlural(), metadata );
+            startAsync( params );
+            response.setStatus( HttpServletResponse.SC_NO_CONTENT );
+        }
+        else
+        {
+            ImportReport importReport = metadataImportService.importMetadata( params );
+            renderService.toXml( response.getOutputStream(), importReport );
+        }
+    }
 
-            if ( value != null )
-            {
-                if ( Collection.class.isAssignableFrom( value.getClass() ) && schema.isIdentifiableObject() )
-                {
-                    List<IdentifiableObject> objects = new ArrayList<>( (Collection<IdentifiableObject>) value );
+    private void startAsync( MetadataImportParams params )
+    {
+        MetadataAsyncImporter asyncImporter = new MetadataAsyncImporter( params );
+        asyncImporter.run();
+    }
 
-                    if ( !objects.isEmpty() )
-                    {
-                        objectMap.put( (Class<? extends IdentifiableObject>) schema.getKlass(), objects );
-                    }
-                }
-            }
+    private class MetadataAsyncImporter extends SecurityContextRunnable
+    {
+        private final MetadataImportParams params;
+
+        MetadataAsyncImporter( MetadataImportParams params )
+        {
+            this.params = params;
         }
 
-        params.setObjects( objectMap );
-
-        ImportReport importReport = metadataImportService.importMetadata( params );
-        renderService.toXml( response.getOutputStream(), importReport );
+        @Override
+        public void call()
+        {
+            metadataImportService.importMetadata( params );
+        }
     }
 }

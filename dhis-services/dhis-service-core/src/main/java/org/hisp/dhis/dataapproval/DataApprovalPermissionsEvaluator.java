@@ -28,9 +28,8 @@ package org.hisp.dhis.dataapproval;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
@@ -40,9 +39,7 @@ import org.hisp.dhis.setting.SystemSettingManager;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This package private class holds the context for deciding on data approval permissions.
@@ -77,15 +74,16 @@ class DataApprovalPermissionsEvaluator
     {
     }
 
-    private static Cache<String, DataApprovalLevel> USER_APPROVAL_LEVEL_CACHE = CacheBuilder.newBuilder()
+    private static Cache<String, DataApprovalLevel> USER_APPROVAL_LEVEL_CACHE = Caffeine.newBuilder()
         .expireAfterAccess( 10, TimeUnit.MINUTES ).initialCapacity( 10000 )
         .maximumSize( 50000 ).build();
 
     /**
-     * Clears the user approval level cache, for unit testing when the same
-     * user ID may have different approval levels in quick succession.
+     * Clears the user approval level cache, for unit testing when the same user
+     * ID may have different approval levels in quick succession.
      */
-    public static void invalidateCache() {
+    public static void invalidateCache()
+    {
         USER_APPROVAL_LEVEL_CACHE.invalidateAll();
     }
 
@@ -236,21 +234,10 @@ class DataApprovalPermissionsEvaluator
 
         final DataApprovalWorkflow dataApprovalWorkflow = workflow;
 
-        try
-        {
-            userApprovalLevel = USER_APPROVAL_LEVEL_CACHE.get( user.getId() + "-" + organisationUnitUid,
-                () -> dataApprovalLevelService.getUserApprovalLevel( user,
-                    organisationUnitService.getOrganisationUnit( organisationUnitUid ),
-                    dataApprovalWorkflow.getSortedLevels() ) );
-        }
-        catch ( CacheLoader.InvalidCacheLoadException ex )
-        {
-            userApprovalLevel = null; // Google cache doesn't like to cache a null value.
-        }
-        catch ( ExecutionException ex )
-        {
-            throw new RuntimeException( ex );
-        }
+        userApprovalLevel = USER_APPROVAL_LEVEL_CACHE.get( user.getId() + "-" + organisationUnitUid,
+            c -> dataApprovalLevelService.getUserApprovalLevel( user,
+                organisationUnitService.getOrganisationUnit( organisationUnitUid ),
+                dataApprovalWorkflow.getSortedLevels() ) );
 
         return userApprovalLevel;
     }

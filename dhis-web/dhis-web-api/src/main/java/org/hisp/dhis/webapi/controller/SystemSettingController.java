@@ -56,6 +56,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -126,7 +127,18 @@ public class SystemSettingController
         }
         else
         {
-            Serializable setting = systemSettingManager.getSystemSetting( key );
+            Optional<SettingKey> settingKey = SettingKey.getByName( key );
+
+            Serializable setting = null;
+
+            if ( settingKey.isPresent() )
+            {
+                setting = systemSettingManager.getSystemSetting( settingKey.get() );
+            }
+            else
+            {
+                setting = systemSettingManager.getSystemSetting( key );
+            }
 
             return setting != null ? String.valueOf( setting ) : null;
         }
@@ -157,13 +169,13 @@ public class SystemSettingController
         renderService.toJsonP( response.getOutputStream(), getSystemSettings( key ), callback );
     }
 
-    private Map<String, Serializable> getSystemSettings( Set<String> key )
+    private Map<String, Serializable> getSystemSettings( Set<String> keys )
     {
         Map<String, Serializable> value;
 
-        if ( key != null && !key.isEmpty() )
+        if ( keys != null && !keys.isEmpty() )
         {
-            value = systemSettingManager.getSystemSettingsAsMap( key );
+            value = systemSettingManager.getSystemSettingsAsMap( keys );
         }
         else
         {
@@ -173,9 +185,9 @@ public class SystemSettingController
         return value;
     }
 
-    @ResponseStatus( value = HttpStatus.OK )
     @RequestMapping( value = "/{key}", method = RequestMethod.DELETE )
     @PreAuthorize( "hasRole('ALL') or hasRole('F_SYSTEM_SETTING')" )
+    @ResponseStatus( value = HttpStatus.NO_CONTENT )
     public void removeSystemSetting( @PathVariable( "key" ) String key )
     {
         systemSettingManager.deleteSystemSetting( key );

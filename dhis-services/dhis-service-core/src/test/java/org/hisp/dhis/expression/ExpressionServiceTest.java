@@ -58,6 +58,7 @@ import org.hisp.dhis.dataelement.DataElementService;
 import org.hisp.dhis.datavalue.DataValueService;
 import org.hisp.dhis.indicator.Indicator;
 import org.hisp.dhis.indicator.IndicatorType;
+import org.hisp.dhis.indicator.IndicatorValue;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroupService;
@@ -344,7 +345,7 @@ public class ExpressionServiceTest
     {
         Set<DataElement> dataElements = expressionService.getDataElementsInExpression( expressionA );
 
-        assertTrue( dataElements.size() == 2 );
+        assertEquals( 2, dataElements.size() );
         assertTrue( dataElements.contains( deA ) );
         assertTrue( dataElements.contains( deB ) );
         
@@ -360,52 +361,57 @@ public class ExpressionServiceTest
     public void testGetAggregatesInExpression()
     {
         Set<DataElement> dataElements = expressionService.getDataElementsInExpression( expressionK );
-        Set<String> aggregates=expressionService.getAggregatesInExpression(expressionK.toString());
+        Set<String> aggregates = expressionService.getAggregatesInExpression( expressionK.toString() );
 
-        assertTrue( dataElements.size() == 2 );
+        assertEquals( 2, dataElements.size() );
         assertTrue( dataElements.contains( deA ) );
         assertTrue( dataElements.contains( deB ) );
-  
+
         assertEquals( 1, aggregates.size() );
-        for (String subexp: aggregates) assertEquals(expressionJ,subexp);
-        assertTrue( aggregates.contains( expressionJ ) );
-        
-        dataElements=expressionService.getDataElementsInExpression( expressionK );
-        aggregates=expressionService.getAggregatesInExpression(expressionK.toString());
-        
-        assertTrue( dataElements.size() == 2 );
-        assertTrue( dataElements.contains( deA ) );
-        assertTrue( dataElements.contains( deB ) );
-  
-        assertEquals( 1, aggregates.size() );
-        for (String subexp: aggregates) assertEquals(expressionJ,subexp);
+
+        for ( String subexp : aggregates )
+        {
+            assertEquals( expressionJ, subexp );
+        }
+
         assertTrue( aggregates.contains( expressionJ ) );
 
-        
+        dataElements = expressionService.getDataElementsInExpression( expressionK );
+        aggregates = expressionService.getAggregatesInExpression( expressionK.toString() );
+
+        assertEquals( 2, dataElements.size() );
+        assertTrue( dataElements.contains( deA ) );
+        assertTrue( dataElements.contains( deB ) );
+
+        assertEquals( 1, aggregates.size() );
+
+        for ( String subExpression : aggregates )
+        {
+            assertEquals( expressionJ, subExpression );
+        }
+
+        assertTrue( aggregates.contains( expressionJ ) );
     }
-    
-    private Object calcExpression(String expstring)
-    {
-    	Expression expression=new Expression(expstring,"test: "+expstring,new HashSet<DataElement>());
-    	return expressionService.getExpressionValue(
-    			expression,
-    			new HashMap<DimensionalItemObject, Double>(),
-    			new HashMap<String, Double>(),
-    			new HashMap<String, Integer>(),
-    			0);
-    }
-    
+
     @Test
     public void testCustomFunctions()
     {
-        assertEquals(5.0,calcExpression("COUNT([1,2,3,4,5])"));
-        assertEquals(15.0,calcExpression("VSUM([1,2,3,4,5])"));
-        assertEquals(1.0,calcExpression("MIN([1,2,3,4,5])"));
-        assertEquals(5.0,calcExpression("MAX([1,2,3,4,5])"));
-        assertEquals(3.0,calcExpression("AVG([1,2,3,4,5])"));
-        assertEquals(Math.sqrt(2),calcExpression("STDDEV([1,2,3,4,5])"));   
+        assertEquals( 5.0, calcExpression( "COUNT([1,2,3,4,5])" ) );
+        assertEquals( 15.0, calcExpression( "VSUM([1,2,3,4,5])" ) );
+        assertEquals( 1.0, calcExpression( "MIN([1,2,3,4,5])" ) );
+        assertEquals( 5.0, calcExpression( "MAX([1,2,3,4,5])" ) );
+        assertEquals( 3.0, calcExpression( "AVG([1,2,3,4,5])" ) );
+        assertEquals( Math.sqrt( 2 ), calcExpression( "STDDEV([1,2,3,4,5])" ) );
     }
-    
+
+    private Object calcExpression( String expressionString )
+    {
+        Expression expression = new Expression( expressionString, "test: " + expressionString, new HashSet<DataElement>() );
+        
+        return expressionService.getExpressionValue( expression, new HashMap<DimensionalItemObject, Double>(),
+            new HashMap<String, Double>(), new HashMap<String, Integer>(), 0 );
+    }
+
     @Test
     public void testGetDataElementsInIndicators()
     {
@@ -489,8 +495,7 @@ public class ExpressionServiceTest
 
     @Test
     public void testExpressionIsValid()
-    {
-        
+    {        
     	assertTrue( expressionService.expressionIsValid( expressionA ).isValid() );
         assertTrue( expressionService.expressionIsValid( expressionB ).isValid() );
         assertTrue( expressionService.expressionIsValid( expressionC ).isValid() );
@@ -621,6 +626,29 @@ public class ExpressionServiceTest
         constantMap.put( constantA.getUid(), 2.0 );
         
         assertEquals( 200d, expressionService.getIndicatorValue( indicatorA, period, valueMap, constantMap, null ), DELTA );        
+    }
+
+    @Test
+    public void testGetIndicatorValueObject()
+    {
+        IndicatorType indicatorType = new IndicatorType( "A", 100, false );
+        Indicator indicatorA = createIndicator( 'A', indicatorType );
+        indicatorA.setNumerator( expressionE );
+        indicatorA.setDenominator( expressionF );
+
+        Map<DataElementOperand, Double> valueMap = new HashMap<>();
+        valueMap.put( new DataElementOperand( deA.getUid(), coc.getUid() ), 12d );
+        valueMap.put( new DataElementOperand( deB.getUid(), coc.getUid() ), 34d );
+        
+        Map<String, Double> constantMap = new HashMap<>();
+        constantMap.put( constantA.getUid(), 2.0 );
+        
+        IndicatorValue value = expressionService.getIndicatorValueObject( indicatorA, period, valueMap, constantMap, null );
+        
+        assertEquals( 24d, value.getNumeratorValue(), DELTA );
+        assertEquals( 12d, value.getDenominatorValue(), DELTA );
+        assertEquals( 100, value.getFactor() );
+        assertEquals( 200d, value.getValue(), DELTA );
     }
     
     // -------------------------------------------------------------------------

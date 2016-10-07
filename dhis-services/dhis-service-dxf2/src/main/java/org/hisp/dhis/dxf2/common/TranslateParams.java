@@ -45,6 +45,17 @@ public class TranslateParams
     {
     }
 
+    public TranslateParams( boolean translate )
+    {
+        this.translate = translate;
+    }
+
+    public TranslateParams( boolean translate, String locale )
+    {
+        this.translate = translate;
+        this.locale = locale;
+    }
+
     public boolean isTranslate()
     {
         return translate || !StringUtils.isEmpty( locale );

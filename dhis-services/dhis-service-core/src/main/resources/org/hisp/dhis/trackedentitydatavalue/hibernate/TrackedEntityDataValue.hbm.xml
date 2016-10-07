@@ -15,9 +15,9 @@
 
     <property name="value" length="50000" />
 
-    <property name="created" type="timestamp" />
+    <property name="created" type="timestamp" not-null="true" />
 
-    <property name="lastUpdated" type="timestamp" />
+    <property name="lastUpdated" type="timestamp" not-null="true" />
 
     <property name="providedElsewhere" />
 

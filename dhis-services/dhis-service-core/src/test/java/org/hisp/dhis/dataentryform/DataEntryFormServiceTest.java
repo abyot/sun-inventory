@@ -111,52 +111,52 @@ public class DataEntryFormServiceTest
     @Test
     public void testAddDataEntryForm()
     {
-        DataSet dataSetA = new DataSet( "DataSet-A", periodType );
+        DataSet dataSetA = createDataSet( 'A', periodType );
 
         dataSetService.addDataSet( dataSetA );
 
-        DataEntryForm dataEntryFormA = new DataEntryForm( "DataEntryForm-A");
+        DataEntryForm dataEntryFormA = createDataEntryForm( 'A' );
 
         int dataEntryFormAid = dataEntryFormService.addDataEntryForm( dataEntryFormA );
 
         dataEntryFormA = dataEntryFormService.getDataEntryForm( dataEntryFormAid );
 
         assertEquals( dataEntryFormAid, dataEntryFormA.getId() );
-        assertEquals( "DataEntryForm-A", dataEntryFormA.getName() );
+        assertEquals( "DataEntryFormA", dataEntryFormA.getName() );
     }
 
     @Test
     public void testUpdateDataEntryForm()
     {
-        DataSet dataSetA = new DataSet( "DataSet-A", periodType );
+        DataSet dataSetA = createDataSet( 'A', periodType );
 
         dataSetService.addDataSet( dataSetA );
 
-        DataEntryForm dataEntryForm = new DataEntryForm( "DataEntryForm-A" );
+        DataEntryForm dataEntryForm = createDataEntryForm( 'A' );
 
         int id = dataEntryFormService.addDataEntryForm( dataEntryForm );
 
         dataEntryForm = dataEntryFormService.getDataEntryForm( id );
 
-        assertEquals( "DataEntryForm-A", dataEntryForm.getName() );
+        assertEquals( "DataEntryFormA", dataEntryForm.getName() );
 
-        dataEntryForm.setName( "DataEntryForm-X" );
+        dataEntryForm.setName( "DataEntryFormX" );
 
         dataEntryFormService.updateDataEntryForm( dataEntryForm );
 
         dataEntryForm = dataEntryFormService.getDataEntryForm( id );
 
-        assertEquals( dataEntryForm.getName(), "DataEntryForm-X" );
+        assertEquals( dataEntryForm.getName(), "DataEntryFormX" );
     }
 
     @Test
     public void testDeleteAndGetDataEntryForm()
     {
-        DataSet dataSetA = new DataSet( "DataSet-A", periodType );
+        DataSet dataSetA = createDataSet( 'A', periodType );
 
         dataSetService.addDataSet( dataSetA );
 
-        DataEntryForm dataEntryForm = new DataEntryForm( "DataEntryForm-A" );
+        DataEntryForm dataEntryForm = createDataEntryForm( 'A' );
 
         int id = dataEntryFormService.addDataEntryForm( dataEntryForm );
 
@@ -172,31 +172,31 @@ public class DataEntryFormServiceTest
     @Test
     public void testGetDataEntryFormByName()
     {
-        DataSet dataSetA = new DataSet( "DataSet-A", periodType );
+        DataSet dataSetA = createDataSet( 'A', periodType );
 
         dataSetService.addDataSet( dataSetA );
 
-        DataEntryForm dataEntryForm = new DataEntryForm( "DataEntryForm-A" );
+        DataEntryForm dataEntryForm = createDataEntryForm( 'A' );
 
         int id = dataEntryFormService.addDataEntryForm( dataEntryForm );
 
         dataEntryForm = dataEntryFormService.getDataEntryForm( id );
 
-        assertEquals( dataEntryFormService.getDataEntryFormByName( "DataEntryForm-A" ), dataEntryForm );
-        assertNull( dataEntryFormService.getDataEntryFormByName( "DataEntryForm-X" ) );
+        assertEquals( dataEntryFormService.getDataEntryFormByName( "DataEntryFormA" ), dataEntryForm );
+        assertNull( dataEntryFormService.getDataEntryFormByName( "DataEntryFormX" ) );
     }
 
     @Test
     public void testGetAllDataEntryForms()
     {
-        DataSet dataSetA = new DataSet( "DataSet-A", periodType );
-        DataSet dataSetB = new DataSet( "DataSet-B", periodType );
+        DataSet dataSetA = createDataSet( 'A', periodType );
+        DataSet dataSetB = createDataSet( 'B', periodType );
 
         dataSetService.addDataSet( dataSetA );
         dataSetService.addDataSet( dataSetB );
 
-        DataEntryForm dataEntryFormA = new DataEntryForm( "DataEntryForm-A" );
-        DataEntryForm dataEntryFormB = new DataEntryForm( "DataEntryForm-B" );
+        DataEntryForm dataEntryFormA = createDataEntryForm( 'A' );
+        DataEntryForm dataEntryFormB = createDataEntryForm( 'B' );
         
         dataEntryFormService.addDataEntryForm( dataEntryFormA );
         dataEntryFormService.addDataEntryForm( dataEntryFormB );
@@ -243,7 +243,7 @@ public class DataEntryFormServiceTest
         String expected = "<table><tr><td><input id=\"" + dataElementUid + "-" + categoryOptionComboUid + "-val\" style=\"width:4em;text-align:center\" title=\"" + title + "\" value=\"" + value + "\" /></td></tr></table>";
         
         DataSet dsA = createDataSet( 'A', null );
-        DataEntryForm dfA = new DataEntryForm( "A", html );
+        DataEntryForm dfA = createDataEntryForm( 'A', html );
         
         String actual = dataEntryFormService.prepareDataEntryFormForEdit( dfA, dsA, i18n );
 
