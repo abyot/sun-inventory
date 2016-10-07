@@ -152,13 +152,13 @@
                     class="btn btn-primary" 
                     ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]" 
                     ng-click="saveCompletness()">
-                {{'save_completeness'| translate}}
+                {{'report_complete'| translate}}
             </button>
             <button type="button" 
                     class="btn btn-danger small-horizontal-spacing" 
                     ng-disabled="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
                     ng-click="deleteCompletness()">
-                {{'delete_completeness'| translate}}
+                {{'report_not_complete'| translate}}
             </button>
         </div>
     </div>
