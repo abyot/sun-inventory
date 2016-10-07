@@ -34,19 +34,13 @@ sunSurvey.controller('dataEntryController',
                     categoryOptionsReady: false,
                     allowMultiOrgUnitEntry: false,
                     selectedOptions: [],
-                    stakeholderRoles: {},
                     dataValues: {},
-                    roleValues: {},
                     orgUnitsWithValues: [],
                     selectedProgram: null,
                     selectedAttributeOptionCombos: {},
                     selectedAttributeOptionCombo: null,
-                    selectedEvent: {},
                     stakeholderCategory: null,
                     attributeCategoryUrl: null,
-                    valueExists: false,
-                    rolesAreDifferent: false,
-                    overrideRoles: false,
                     dataElementGroupSets: [],
                     mappedCategoryCombos: [],
                     mappedOptionCombos: []};
@@ -62,13 +56,10 @@ sunSurvey.controller('dataEntryController',
         $scope.model.selectedAttributeOptionCombos = {};
         $scope.model.selectedAttributeOptionCombo = null;
         $scope.model.selectedProgram = null;
-        $scope.model.stakeholderRoles = {};
         $scope.dataValues = {};
         $scope.model.basicAuditInfo = {};
-        $scope.model.selectedEvent = {};
         $scope.model.orgUnitsWithValues = [];
         $scope.model.categoryOptionsReady = false;
-        $scope.model.valueExists = false;
         if( angular.isObject($scope.selectedOrgUnit)){
             SessionStorageService.set('SELECTED_OU', $scope.selectedOrgUnit); 
             var systemSetting = storage.get('SYSTEM_SETTING');
@@ -128,12 +119,9 @@ sunSurvey.controller('dataEntryController',
         $scope.model.selectedAttributeOptionCombos = {};
         $scope.model.selectedAttributeOptionCombo = null;
         $scope.model.selectedProgram = null;
-        $scope.model.selectedPeriod = null;  
-        $scope.model.stakeholderRoles = {};
+        $scope.model.selectedPeriod = null;
         $scope.model.orgUnitsWithValues = [];
-        $scope.model.selectedEvent = {};
         $scope.dataValues = {};
-        $scope.model.valueExists = false;
         if (angular.isObject($scope.selectedOrgUnit)) {
             //get survey data sets
             DataSetFactory.getDataSetsByProperty( $scope.selectedOrgUnit, 'dataSetDomain', 'SURVEY' ).then(function(dataSets){                
@@ -149,6 +137,7 @@ sunSurvey.controller('dataEntryController',
                                 deg = dhis2.metadata.processMetaDataAttribute( deg );
                                 if( deg.survey ){                                    
                                     if( deg.survey && $scope.model.dataElementGroupSets.indexOf( degs ) === -1 ){
+                                        degs.active = false;
                                         $scope.model.dataElementGroupSets.push( degs );
                                     }
                                     
@@ -162,7 +151,7 @@ sunSurvey.controller('dataEntryController',
                                 }
                                 $scope.model.dataElementGroupsById[deg.id] = deg;
                             });
-                        });                        
+                        });
                     });
                 }
             });
@@ -174,20 +163,15 @@ sunSurvey.controller('dataEntryController',
         $scope.model.periods = [];
         $scope.model.selectedPeriod = null;
         $scope.model.categoryOptionsReady = false;
-        $scope.model.stakeholderRoles = {};
         $scope.dataValues = {};
         $scope.model.selectedProgram = null;
-        $scope.model.selectedEvent = {};
         $scope.model.orgUnitsWithValues = [];
-        $scope.model.valueExists = false;
         if( angular.isObject($scope.model.selectedDataSet) && $scope.model.selectedDataSet.id){
             $scope.loadDataSetDetails();
         }
     });
     
-    $scope.$watch('model.selectedPeriod', function(){        
-        $scope.dataValues = {};
-        $scope.model.valueExists = false;
+    $scope.$watch('model.selectedPeriod', function(){
         $scope.loadDataEntryForm();
     });
     
@@ -239,14 +223,8 @@ sunSurvey.controller('dataEntryController',
     var resetParams = function(){
         $scope.dataValues = {};
         $scope.dataValuesCopy = {};
-        $scope.model.roleValues = {};
-        $scope.model.orgUnitsWithValues = [];
-        $scope.model.selectedEvent = {};
-        $scope.model.valueExists = false;
-        $scope.model.stakeholderRoles = {};
         $scope.model.basicAuditInfo = {};
         $scope.model.basicAuditInfo.exists = false;
-        $scope.model.rolesAreDifferent = false;
         $scope.saveStatus = {};
         $scope.dataSetCompletness = {};
     };
@@ -364,7 +342,6 @@ sunSurvey.controller('dataEntryController',
                 if( response && response.dataValues && response.dataValues.length > 0 ){                    
                     response.dataValues = $filter('filter')(response.dataValues, {attributeOptionCombo: $scope.model.selectedAttributeOptionCombo});
                     if( response.dataValues.length > 0 ){
-                        $scope.model.valueExists = true;
                         angular.forEach(response.dataValues, function(dv){
                             if( dv && dv.value ){
                                 dv.value = ActionMappingUtils.formatDataValue( dv, $scope.desById[dv.dataElement], $scope.model.mappedCategoryCombos );
@@ -425,9 +402,13 @@ sunSurvey.controller('dataEntryController',
             angular.forEach($scope.model.selectedDataSet.dataElements, function(de){
                 de.dataElementGroupSet = $scope.model.degs[de.id];
                 de.dataElementGroup = $scope.model.deg[de.id];
-            });
+            });            
             
-            if( $scope.model.dataElementGroupSets.length > 0 ){
+            if( $scope.model.dataElementGroupSets.length > 0 ){                
+                angular.forEach($scope.model.dataElementGroupSets, function(degs){
+                    degs.active = false;
+                });
+                $scope.model.dataElementGroupSets[0].active = true;
                 $scope.setCurrentDataElementGroupSet( $scope.model.dataElementGroupSets[0] );
             }            
         }
@@ -755,7 +736,6 @@ sunSurvey.controller('dataEntryController',
         $scope.currentDataElement = de;
     };
     
-    $scope.getOptionComboByName = function(){
-        
+    $scope.getOptionComboByName = function(){        
     };
 });
