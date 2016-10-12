@@ -1,8 +1,8 @@
-package org.hisp.dhis.schema.descriptors;
+package org.hisp.dhis.trackedentity;
 
 /*
  * Copyright (c) 2004-2016, University of Oslo
- * All rights reserved.
+ *  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,36 +28,43 @@ package org.hisp.dhis.schema.descriptors;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.common.collect.Lists;
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.hisp.dhis.legend.LegendSet;
-import org.hisp.dhis.schema.Schema;
-import org.hisp.dhis.schema.SchemaDescriptor;
-import org.hisp.dhis.security.Authority;
-import org.hisp.dhis.security.AuthorityType;
+import org.hisp.dhis.system.deletion.DeletionHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 /**
  * @author Morten Olav Hansen <mortenoh@gmail.com>
  */
-public class LegendSetSchemaDescriptor implements SchemaDescriptor
+public class TrackedEntityDataElementDimensionDeletionHandler
+    extends DeletionHandler
 {
-    public static final String SINGULAR = "legendSet";
-
-    public static final String PLURAL = "legendSets";
-
-    public static final String API_ENDPOINT = "/" + PLURAL;
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @Override
-    public Schema getSchema()
+    protected String getClassName()
     {
-        Schema schema = new Schema( LegendSet.class, SINGULAR, PLURAL );
-        schema.setRelativeApiEndpoint( API_ENDPOINT );
-        schema.setShareable( true );
-        schema.setOrder( 1080 );
+        return TrackedEntityDataElementDimension.class.getSimpleName();
+    }
 
-        schema.getAuthorities().add( new Authority( AuthorityType.CREATE_PUBLIC, Lists.newArrayList( "F_LEGEND_SET_PUBLIC_ADD", "F_GIS_ADMIN" ) ) );
-        schema.getAuthorities().add( new Authority( AuthorityType.CREATE_PRIVATE, Lists.newArrayList( "F_LEGEND_SET_PRIVATE_ADD", "F_GIS_ADMIN" ) ) );
-        schema.getAuthorities().add( new Authority( AuthorityType.DELETE, Lists.newArrayList( "F_LEGEND_SET_DELETE", "F_GIS_ADMIN" ) ) );
+    @Override
+    @SuppressWarnings( "unchecked" )
+    public void deleteLegendSet( LegendSet legendSet )
+    {
+        Query query = sessionFactory.getCurrentSession()
+            .createQuery( "FROM TrackedEntityDataElementDimension WHERE legendSet=:legendSet" );
+        query.setEntity( "legendSet", legendSet );
 
-        return schema;
+        List<TrackedEntityDataElementDimension> dataElementDimensions = query.list();
+
+        for ( TrackedEntityDataElementDimension dataElementDimension : dataElementDimensions )
+        {
+            dataElementDimension.setLegendSet( null );
+            sessionFactory.getCurrentSession().update( dataElementDimension );
+        }
     }
 }

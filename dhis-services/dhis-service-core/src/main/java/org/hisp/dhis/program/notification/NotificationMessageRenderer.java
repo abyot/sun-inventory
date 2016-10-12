@@ -31,6 +31,7 @@ package org.hisp.dhis.program.notification;
 import com.google.api.client.util.Sets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.common.RegexUtils;
@@ -75,9 +76,10 @@ public class NotificationMessageRenderer
 
     private static final int SMS_CHAR_LIMIT = 160 * 4;  // Four concatenated SMS messages
     private static final int EMAIL_CHAR_LIMIT = 10000;  // Somewhat arbitrarily chosen limits
-    private static final int SUBJECT_CHAR_LIMIT = 60;   //
+    private static final int SUBJECT_CHAR_LIMIT = 100;   //
 
     private static final String CONFIDENTIAL_VALUE_REPLACEMENT = "[CONFIDENTIAL]"; // TODO reconsider this...
+    private static final String MISSING_VALUE_REPLACEMENT = "[N/A]";
 
     private static final Pattern VARIABLE_PATTERN  = Pattern.compile( "V\\{([a-z_]*)\\}" ); // Matches the variable in group 1
     private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile( "A\\{([A-Za-z][A-Za-z0-9]{10})}" ); // Matches the uid in group 1
@@ -159,7 +161,9 @@ public class NotificationMessageRenderer
         while ( matcher.find() )
         {
             String uid = matcher.group( 1 );
-            String value = identifierToValueMap.get( uid );
+
+            String value = identifierToValueMap.getOrDefault( uid, MISSING_VALUE_REPLACEMENT );
+
             matcher.appendReplacement( sb, value );
         }
 
@@ -238,9 +242,15 @@ public class NotificationMessageRenderer
 
     private static String replaceExpressions( String input, Map<String, String> variableMap, Map<String, String> teiAttributeValueMap )
     {
-        String output = replaceWithValues( input, VARIABLE_PATTERN, variableMap );
+        if ( StringUtils.isEmpty( input ) )
+        {
+            return "";
+        }
 
-        return replaceWithValues( output, ATTRIBUTE_PATTERN, teiAttributeValueMap );
+        String substitutedVariables = replaceWithValues( input, VARIABLE_PATTERN, variableMap );
+        String substitutedAttributes = replaceWithValues( substitutedVariables, ATTRIBUTE_PATTERN, teiAttributeValueMap );
+
+        return substitutedAttributes;
     }
 
     private static NotificationMessage createNotificationMessage( ProgramNotificationTemplate template, Map<String, String> variableToValueMap,

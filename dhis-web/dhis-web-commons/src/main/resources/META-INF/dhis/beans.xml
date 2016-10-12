@@ -25,10 +25,12 @@
         <value>dhis-web-visualizer</value>
         <value>dhis-web-mapping</value>
         <value>dhis-web-sun-survey</value>
-        <value>dhis-web-action-inventory</value>        
+        <value>dhis-web-action-inventory</value>
+        <value>dhis-web-maintenance</value>
         <value>dhis-web-dataentry</value>
+        <value>dhis-web-reporting</value>
         <value>dhis-web-event-reports</value>
-        <value>dhis-web-event-visualizer</value>
+        <value>dhis-web-event-visualizer</value>        
         <value>dhis-web-event-capture</value>
         <value>dhis-web-tracker-capture</value>
         <value>dhis-web-maintenance-dataadmin</value>
@@ -41,8 +43,7 @@
         <value>dhis-web-maintenance-user</value>
         <value>dhis-web-validationrule</value>
         <value>dhis-web-light</value>
-        <value>dhis-web-mobile</value>
-        <value>dhis-web-reporting</value>
+        <value>dhis-web-mobile</value>        
         <value>dhis-web-sms</value>
       </list>
     </property>
