@@ -586,10 +586,10 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             return headers;
         },
-        getOptionComboIdFromOptionNames: function(optionComboMap, options, categoryCombo){
+        getOptionComboIdFromOptionNames: function(optionComboMap, options, categoryCombo){            
             if( categoryCombo && categoryCombo.isDefault ){
                 return categoryCombo.categoryOptionCombos[0].id;
-            }
+            }            
             
             var optionNames = [];
             angular.forEach(options, function(op){
@@ -597,13 +597,16 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });
             
             var selectedOptionComboName = optionNames.toString();
-            selectedOptionComboName = selectedOptionComboName.replace(",", ", ");
-            var selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
+            selectedOptionComboName = selectedOptionComboName.replace(",", ", ");            
+            
+            //var selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
+            var selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
             
             if( !selectedAttributeOptionCombo || angular.isUndefined( selectedAttributeOptionCombo ) ){
                 selectedOptionComboName = optionNames.reverse().toString();
                 selectedOptionComboName = selectedOptionComboName.replace(",", ", ");
-                selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
+                //selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
+                selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
             }
             
             return selectedAttributeOptionCombo;

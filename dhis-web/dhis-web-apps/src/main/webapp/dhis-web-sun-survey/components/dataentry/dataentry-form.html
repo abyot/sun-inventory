@@ -26,7 +26,7 @@
                                                 <th ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
                                                     {{oco.displayName}}
                                                 </th>
-                                            </tr>
+                                            </tr>                                            
                                             <tr>                                          
                                                 <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" ng-click="de.showDescription = !de.showDescription">
                                                     {{de.displayName}}<span class="required">*</span>
@@ -85,11 +85,11 @@
                                                 </td>
                                             </tr>
                                         </table>
-
-                                        <table class="table table-bordered table-condensed"                                                
-                                               ng-if="!de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                            
+                                        
+                                        <table class="table table-bordered table-condensed" 
+                                               ng-if="de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                            
                                             <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
-                                                <td class="vertical-center mouse-pointer"
+                                                <td class="mouse-pointer"
                                                     ng-class="getMainQuestionTableStyle(de)" 
                                                     rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
                                                     ng-if="$index===0"
@@ -131,8 +131,48 @@
                                                     </div>
                                                 </td>
                                             </tr>
-                                        </table>
-                                        
+                                        </table>                                            
+
+                                        <table class="table table-bordered table-condensed"                                                
+                                               ng-if="de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                            
+                                            <tr>
+                                                <td class="mouse-pointer"                                                    
+                                                    colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
+                                                    ng-class="getMainQuestionTableStyle(de)"                                                     
+                                                    ng-click="de.showDescription = !de.showDescription">
+                                                    {{de.displayName}}<span class="required">*</span>
+                                                </td>
+                                            </tr>
+                                            <tr ng-if="de.showDescription">
+                                                <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                    <div class="alert alert-info">
+                                                        {{de.description ? de.description : 'missing_definition' | translate}}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                </td>                                                
+                                                <td class="pull-center" 
+                                                    ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'">
+                                                    {{option2.name}}
+                                                </td>
+                                            </tr>    
+                                            <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
+                                                <td>
+                                                    {{option1.name}}
+                                                </td>                                                
+                                                <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'"
+                                                    ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">                                                    
+                                                    <input type="number"   
+                                                            ng-model="dataValues[de.id][oco.id].value"
+                                                            class="form-control" 
+                                                            ng-class="getInputNotifcationClass(de.id, oco.id)"
+                                                            ng-dblclick="getAuditInfo(de, oco)"
+                                                            d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                </td>
+                                            </tr>
+                                        </table>                                        
                                     </div>                                    
                                 </div>
                             </div>                        

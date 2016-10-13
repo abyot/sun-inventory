@@ -736,6 +736,7 @@ sunSurvey.controller('dataEntryController',
         $scope.currentDataElement = de;
     };
     
-    $scope.getOptionComboByName = function(){        
+    $scope.getOptionComboByName = function(option1, option2, cc){        
+        return ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.mappedOptionCombos, [option1, option2], cc);
     };
 });
