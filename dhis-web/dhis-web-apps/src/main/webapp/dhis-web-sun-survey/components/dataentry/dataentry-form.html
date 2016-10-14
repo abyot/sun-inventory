@@ -19,7 +19,8 @@
                                     </div>
                                     <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">
                                         
-                                        <table class="table table-bordered table-condensed" ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">
+                                        <table class="table table-bordered table-condensed" 
+                                               ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">
                                             <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
                                                 <th>                                                
                                                 </th>

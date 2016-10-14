@@ -85,9 +85,20 @@ sunSurvey.controller('dataEntryController',
                         $scope.model.defaultOptionCombo = cc.categoryOptionCombos[0];
                     }
                     $scope.pushedOptions[cc.id] = [];
-                    cc.categoryOptionCombos = orderByFilter(cc.categoryOptionCombos, '-displayName').reverse();                        
+                    
+                    if( cc.categories && cc.categories.length === 1 && cc.categories[0].categoryOptions ){
+                        var sortArray = [];                        
+                        angular.forEach(cc.categories[0].categoryOptions, function(co){
+                            sortArray.push( co.displayName );
+                        });
+                        
+                        var sortArray = _.invert(_.object(_.pairs(sortArray)));                        
+                        cc.categoryOptionCombos = _.sortBy(cc.categoryOptionCombos, function(coc){
+                            return sortArray[coc.displayName];
+                        });
+                    }
+                    
                     angular.forEach(cc.categoryOptionCombos, function(oco){
-                        //$scope.model.mappedOptionCombos['"' + oco.displayName + '"'] = oco;
                         $scope.model.mappedOptionCombos[oco.displayName] = oco;
                     });
                     $scope.model.mappedCategoryCombos[cc.id] = cc;                    
