@@ -4,7 +4,6 @@
 <div class="modal-body">
 
     <div class="scroll">
-
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -19,21 +18,12 @@
                     </th>
                 </tr>
             </thead>
-            <tbody ng-repeat="degs in dataElementGroupSets" ng-if="(invalidFields | filter: {dataElementGroupSet: {id: degs.id}}).length > 0" ng-init="groupSetSpan = (invalidFields | filter: {dataElementGroupSet: {id: degs.id}}).length; groupSetIndex = $index">                
-                <tr ng-repeat="invalidField in invalidFields | filter: {dataElementGroupSet:{id: degs.id}}" ng-init="deIndex = $index">
-                    <td class="col-sm-1 vertical-center" ng-if="$index === 0" rowspan="{{groupSetSpan}}">
-                        {{invalidField.dataElementGroupSet.code}}
-                    </td>
-                    <td class="col-sm-1 vertical-center">
-                        {{invalidField.dataElementGroup.code}}                    
-                    </td>
-                    <td class="col-sm-10 vertical-center">
-                        {{invalidField.displayName}}
-                    </td>
-                </tr>
-            </tbody>                                                    
-        </table>
-
+            <tr ng-repeat="row in invalidDataElements">
+                <td ng-repeat="col in row" rowspan="{{col.span}}">
+                    {{ col.val}}
+                </td>
+            </tr>
+        </table>        
     </div>
 
 </div>

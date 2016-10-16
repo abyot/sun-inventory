@@ -245,6 +245,10 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
     background-color: #dfe9f4;
 }
 
+.no-wrap {
+    white-space:nowrap;
+}
+
 #contextMenu {
     position: absolute;
     display:none;

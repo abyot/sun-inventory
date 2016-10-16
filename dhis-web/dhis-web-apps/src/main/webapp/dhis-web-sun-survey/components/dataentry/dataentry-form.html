@@ -158,9 +158,25 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td></td>
+                                                <td ng-if="de.description"
+                                                    colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
+                                                    class="mouse-pointer" 
+                                                    ng-class="getMainQuestionTableStyle(de)"
+                                                    ng-click="de.showDescription = !de.showDescription">
+                                                    {{de.displayName}}
+                                                    <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                </td>
+                                                <td ng-if="!de.description"
+                                                    colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
+                                                    class="mouse-pointer" 
+                                                    ng-class="getMainQuestionTableStyle(de)">
+                                                    {{de.displayName}}
+                                                </td>
+                                            </tr>
+                                            <tr>                                                
                                                 <td class="crossed">
                                                     <span class="pull-right">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].name}}</span>
+                                                    <br><br>
                                                     <span class="pull-left">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].name}}</span>
                                                 </td>                                                
                                                 <td class="pull-center" 
@@ -168,21 +184,7 @@
                                                     {{option2.name}}
                                                 </td>
                                             </tr>    
-                                            <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                 
-                                                <td ng-if="$index === 0 && de.description"
-                                                    rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions.length}}"
-                                                    class="mouse-pointer" 
-                                                    ng-class="getMainQuestionTableStyle(de)"
-                                                    ng-click="de.showDescription = !de.showDescription">
-                                                    {{de.displayName}}
-                                                    <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                                </td>
-                                                <td ng-if="$index === 0 && !de.description"
-                                                    rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions.length}}"
-                                                    class="mouse-pointer" 
-                                                    ng-class="getMainQuestionTableStyle(de)">
-                                                    {{de.displayName}}
-                                                </td>
+                                            <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
                                                 <td>
                                                     {{option1.name}}
                                                 </td>                                                
