@@ -648,7 +648,9 @@ sunSurvey.controller('dataEntryController',
         //check for form validity
         var invalidFields = [];
         angular.forEach($scope.model.selectedDataSet.dataElements, function(dataElement){            
-            if( !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
+            if( dataElement.dataElementGroup && 
+                    $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] &&
+                    !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
                 if( !$scope.dataValues[dataElement.id] || $scope.dataValues[dataElement.id] === ''){
                     invalidFields.push( $scope.desById[dataElement.id] );
                 }
@@ -678,8 +680,8 @@ sunSurvey.controller('dataEntryController',
             var modalOptions = {
                 closeButtonText: 'no',
                 actionButtonText: 'yes',
-                headerText: 'save_completeness',
-                bodyText: 'are_you_sure_to_save_completeness'
+                headerText: 'mark_complete',
+                bodyText: 'are_you_sure_to_mark_complete'
             };
 
             ModalService.showModal({}, modalOptions).then(function(result){
@@ -702,15 +704,15 @@ sunSurvey.controller('dataEntryController',
                     ActionMappingUtils.errorNotifier( response );
                 });
             });
-        }      
+        }
     };
     
     $scope.deleteCompletness = function(){
         var modalOptions = {
             closeButtonText: 'no',
             actionButtonText: 'yes',
-            headerText: 'delete_completeness',
-            bodyText: 'are_you_sure_to_delete_completeness'
+            headerText: 'mark_not_complete',
+            bodyText: 'are_you_sure_to_mark_not_complete'
         };
 
         ModalService.showModal({}, modalOptions).then(function(result){

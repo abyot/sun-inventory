@@ -841,6 +841,10 @@ div#orgUnitTree {
     overflow: auto;
 }
 
+.large-table {    
+    overflow: auto;
+}
+
 .main-question {    
     /*color: #1f3bb7 !important;*/
     font-weight: bold !important;
@@ -884,4 +888,23 @@ div#orgUnitTree {
 .scroll {
     height: 500px;
     overflow: auto;
+}
+
+table {
+    min-width: 100%;
+}
+
+table td {
+    border: 1px solid silver;
+    position: relative;
+}
+
+table td.crossed::after {    
+    position: absolute;
+    content: "";
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;    
+    background-image: linear-gradient(to top right,  transparent calc(50% - 1px), #ddd, transparent calc(50% + 1px)); 
 }

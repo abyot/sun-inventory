@@ -21,6 +21,13 @@
                                         
                                         <table class="table table-bordered table-condensed" 
                                                ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">
+                                            <tr ng-if="de.showDescription">
+                                                <td colspan="2">
+                                                    <div class="alert alert-info">
+                                                        {{de.description ? de.description : 'missing_definition' | translate}}
+                                                    </div>
+                                                </td>
+                                            </tr>
                                             <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
                                                 <th>                                                
                                                 </th>
@@ -29,8 +36,15 @@
                                                 </th>
                                             </tr>                                            
                                             <tr>                                          
-                                                <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" ng-click="de.showDescription = !de.showDescription">
-                                                    {{de.displayName}}<span class="required">*</span>
+                                                <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" 
+                                                    ng-if="de.description" 
+                                                    ng-click="de.showDescription = !de.showDescription">
+                                                    {{de.displayName}}
+                                                    <i class="fa fa-info-circle" aria-hidden="true"></i>                                                    
+                                                </td>
+                                                <td ng-class="getMainQuestionTableStyle(de)"
+                                                    ng-if="!de.description">
+                                                    {{de.displayName}}
                                                 </td>
                                                 <td>
                                                     <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">                                                        
@@ -78,24 +92,31 @@
                                                     </div>                                                    
                                                 </td>                                                
                                             </tr>
-                                            <tr ng-if="de.showDescription">
-                                                <td colspan="2">
-                                                    <div class="alert alert-info">
-                                                        {{de.description ? de.description : 'missing_definition' | translate}}
-                                                    </div>
-                                                </td>
-                                            </tr>
                                         </table>
                                         
                                         <table class="table table-bordered table-condensed" 
                                                ng-if="de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                            
+                                            <tr ng-if="de.showDescription">
+                                                <td colspan="4">
+                                                    <div class="alert alert-info">
+                                                        {{de.description}}
+                                                    </div>
+                                                </td>
+                                            </tr>
                                             <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
                                                 <td class="mouse-pointer"
                                                     ng-class="getMainQuestionTableStyle(de)" 
                                                     rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
-                                                    ng-if="$index===0"
+                                                    ng-if="$index===0 && !de.description">
+                                                    {{de.displayName}}
+                                                </td>
+                                                <td class="mouse-pointer"
+                                                    ng-class="getMainQuestionTableStyle(de)" 
+                                                    rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
+                                                    ng-if="$index===0 && de.description"
                                                     ng-click="de.showDescription = !de.showDescription">
-                                                    {{de.displayName}}<span class="required">*</span>
+                                                    {{de.displayName}}
+                                                    <i class="fa fa-info-circle" aria-hidden="true"></i>
                                                 </td>
                                                 <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
                                                     rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
@@ -124,42 +145,44 @@
                                                                d2-blur="saveDataValue(de.id, oco.id, false)">
                                                     </span>
                                                 </td>
-                                            </tr>
-                                            <tr ng-if="de.showDescription">
-                                                <td colspan="4">
-                                                    <div class="alert alert-info">
-                                                        {{de.description ? de.description : 'missing_definition' | translate}}
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            </tr>                                            
                                         </table>                                            
 
-                                        <table class="table table-bordered table-condensed"                                                
-                                               ng-if="de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                            
-                                            <tr>
-                                                <td class="mouse-pointer"                                                    
-                                                    colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
-                                                    ng-class="getMainQuestionTableStyle(de)"                                                     
-                                                    ng-click="de.showDescription = !de.showDescription">
-                                                    {{de.displayName}}<span class="required">*</span>
-                                                </td>
-                                            </tr>
+                                        <table class="table table-bordered table-condensed large-table"                                                
+                                               ng-if="de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">
                                             <tr ng-if="de.showDescription">
-                                                <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                <td colspan="{{2 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
                                                     <div class="alert alert-info">
-                                                        {{de.description ? de.description : 'missing_definition' | translate}}
+                                                        {{de.description}}
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>
+                                                <td></td>
+                                                <td class="crossed">
+                                                    <span class="pull-right">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].name}}</span>
+                                                    <span class="pull-left">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].name}}</span>
                                                 </td>                                                
                                                 <td class="pull-center" 
                                                     ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'">
                                                     {{option2.name}}
                                                 </td>
                                             </tr>    
-                                            <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
+                                            <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                 
+                                                <td ng-if="$index === 0 && de.description"
+                                                    rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions.length}}"
+                                                    class="mouse-pointer" 
+                                                    ng-class="getMainQuestionTableStyle(de)"
+                                                    ng-click="de.showDescription = !de.showDescription">
+                                                    {{de.displayName}}
+                                                    <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                </td>
+                                                <td ng-if="$index === 0 && !de.description"
+                                                    rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions.length}}"
+                                                    class="mouse-pointer" 
+                                                    ng-class="getMainQuestionTableStyle(de)">
+                                                    {{de.displayName}}
+                                                </td>
                                                 <td>
                                                     {{option1.name}}
                                                 </td>                                                
@@ -193,13 +216,13 @@
                     class="btn btn-primary" 
                     ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]" 
                     ng-click="saveCompletness()">
-                {{'report_complete'| translate}}
+                {{'mark_complete'| translate}}
             </button>
             <button type="button" 
                     class="btn btn-danger small-horizontal-spacing" 
                     ng-disabled="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
                     ng-click="deleteCompletness()">
-                {{'report_not_complete'| translate}}
+                {{'mark_not_complete'| translate}}
             </button>
         </div>
     </div>
