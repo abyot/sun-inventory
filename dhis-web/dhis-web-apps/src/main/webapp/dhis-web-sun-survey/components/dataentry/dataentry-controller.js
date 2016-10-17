@@ -764,4 +764,12 @@ sunSurvey.controller('dataEntryController',
         });
         return result.join(', ');
     };
+    
+    $scope.exportData = function () {
+        var blob = new Blob([document.getElementById('exportTable').innerHTML], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8"
+        });
+        var reportName = $scope.selectedOrgUnit.n + '-' + $scope.model.selectedPeriod.name + '.xls';
+        saveAs(blob, reportName);
+    };
 });

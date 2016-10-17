@@ -15,20 +15,13 @@
                                         </a>
                                     </div>
                                     <div class="col-sm-9">
-                                        <div class="alert selectionArea label-10 bold">
+                                        <div class="alert redInfoArea label-10 bold">
                                             {{'show_definition_info' | translate}}
                                         </div>
                                         <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">
 
                                             <table class="table table-bordered table-condensed" 
-                                                   ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">
-                                                <tr ng-if="de.showDescription">
-                                                    <td colspan="2">
-                                                        <div class="alert alert-info">
-                                                            {{de.description ? de.description : 'missing_definition' | translate}}
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                   ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">                                                
                                                 <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
                                                     <th>                                                
                                                     </th>
@@ -93,17 +86,17 @@
                                                         </div>                                                    
                                                     </td>                                                
                                                 </tr>
-                                            </table>
-
-                                            <table class="table table-bordered table-condensed" 
-                                                   ng-if="de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                            
                                                 <tr ng-if="de.showDescription">
-                                                    <td colspan="4">
+                                                    <td colspan="2">
                                                         <div class="alert alert-info">
-                                                            {{de.description}}
+                                                            {{de.description ? de.description : 'missing_definition' | translate}}
                                                         </div>
                                                     </td>
                                                 </tr>
+                                            </table>
+
+                                            <table class="table table-bordered table-condensed" 
+                                                   ng-if="de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">
                                                 <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
                                                     <td class="mouse-pointer"
                                                         ng-class="getMainQuestionTableStyle(de)" 
@@ -146,18 +139,18 @@
                                                                    d2-blur="saveDataValue(de.id, oco.id, false)">
                                                         </span>
                                                     </td>
-                                                </tr>                                            
-                                            </table>                                            
-
-                                            <table class="table table-bordered table-condensed large-table"                                                
-                                                   ng-if="de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">
+                                                </tr>
                                                 <tr ng-if="de.showDescription">
-                                                    <td colspan="{{2 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                    <td colspan="4">
                                                         <div class="alert alert-info">
                                                             {{de.description}}
                                                         </div>
                                                     </td>
                                                 </tr>
+                                            </table>                                            
+
+                                            <table class="table table-bordered table-condensed large-table"                                                
+                                                   ng-if="de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                                
                                                 <tr>
                                                     <td ng-if="de.description"
                                                         colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
@@ -174,20 +167,35 @@
                                                         {{de.displayName}}
                                                     </td>
                                                 </tr>
-                                                <tr>                                                
-                                                    <td class="crossed">
+                                                <tr ng-if="de.showDescription">
+                                                    <td colspan="{{2 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                        <div class="alert alert-info">
+                                                            {{de.description}}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th></td>
+                                                    <th class="active pull-center" colspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                        {{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].name}}
+                                                    </th>
+                                                </tr>
+                                                <tr>    
+                                                    <td>                                                        
+                                                    </td>
+                                                    <!--<td class="crossed">
                                                         <span class="pull-right">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].name}}</span>
                                                         <br><br>
                                                         <span class="pull-left">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].name}}</span>
-                                                    </td>                                                
-                                                    <td class="pull-center" 
+                                                    </td>-->
+                                                    <td class="active pull-center" 
                                                         ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'">
                                                         {{option2.name}}
                                                     </td>
                                                 </tr>    
                                                 <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
-                                                    <td>
-                                                        {{option1.name}}
+                                                    <td class="active">
+                                                        <span class="pull-right">{{option1.name}}</span>
                                                     </td>                                                
                                                     <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'"
                                                         ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">                                                    
@@ -230,105 +238,107 @@
             </div>
         </div>
         
-        <div ng-if="model.showReportDiv">
-            <div class="remove-left-padding">
-                <div class="col-sm-12" equal-height-nav-tabs>
-
-                    <tabset justified="true">
-                        <tab heading="{{dataElementGroupSet.name}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets" ng-click="setCurrentDataElementGroupSet( dataElementGroupSet )" active="dataElementGroupSet.active">
-                            <div class="row vertical-spacing">
-                                <div class="col-sm-12">
-                                    <div class="list-group col-sm-3">
-                                        <a ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups" class="list-group-item cursor-pointer" ng-class="{true: 'active'} [dataElementGroup.id === currentDataElementGroup.id]" ng-click="setCurrentDataElementGroup(dataElementGroup)">
-                                            {{dataElementGroup.name}}
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-9">
-                                        <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">
-
-                                            <table class="table table-bordered table-condensed" 
-                                                   ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">                                                
-                                                <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
-                                                    <th>                                                
-                                                    </th>
-                                                    <th ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
-                                                        {{oco.displayName}}
-                                                    </th>
-                                                </tr>                                            
-                                                <tr>                                          
-                                                    <td>
-                                                        {{de.displayName}}
-                                                    </td>
-                                                    <td>
-                                                        <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">                                                        
-                                                            {{dataValues[de.id][oco.id].value}}
-                                                        </div>
-                                                        <div ng-if="de.dimensionAsOptionSet">
-                                                            {{dataValues[de.id].displayName}}
-                                                        </div>
-                                                        <div ng-if="de.dimensionAsMultiOptionSet">
-                                                            {{joinOnProperty(dataValues[de.id], 'displayName')}}                                                            
-                                                        </div>                                                    
-                                                    </td>                                                
-                                                </tr>
-                                            </table>
-
-                                            <table class="table table-bordered table-condensed" 
-                                                   ng-if="de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                                
-                                                <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
-                                                    <td rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
-                                                        ng-if="$index===0">
-                                                        {{de.displayName}}
-                                                    </td>
-                                                    <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
-                                                        rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
-                                                        ng-if="$index === 0 && (mainIndex % getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName) === 0)">
-                                                        {{optionName}}
-                                                    </td>
-                                                    <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
-                                                        {{optionName}}
-                                                    </td>
-                                                    <td>
-                                                        {{dataValues[de.id][oco.id].value}}
-                                                    </td>
-                                                </tr>                                            
-                                            </table>
-
-                                            <table class="table table-bordered table-condensed large-table"                                                
-                                                   ng-if="de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                                
-                                                <tr>
-                                                    <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                        {{de.displayName}}
-                                                    </td>
-                                                </tr>
-                                                <tr>                                                
-                                                    <td class="crossed">
-                                                        <span class="pull-right">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].name}}</span>
-                                                        <br><br>
-                                                        <span class="pull-left">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].name}}</span>
-                                                    </td>                                                
-                                                    <td class="pull-center" 
-                                                        ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'">
-                                                        {{option2.name}}
-                                                    </td>
-                                                </tr>    
-                                                <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
-                                                    <td>
-                                                        {{option1.name}}
-                                                    </td>                                                
-                                                    <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'"
-                                                        ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">
-                                                        {{dataValues[de.id][oco.id].value}}
-                                                    </td>
-                                                </tr>
-                                            </table>                                        
-                                        </div>                                    
-                                    </div>
-                                </div>                        
+        <div ng-if="model.showReportDiv">            
+            <div class="remove-left-padding" id="exportTable">
+                <div class="col-sm-12 hideInPrint">                    
+                    <button type="button" 
+                            class="btn btn-default"
+                            title="{{'export_excel' | translate}}"
+                            ng-click="exportData()">
+                        <i class="fa fa-file-excel-o" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" 
+                            class="btn btn-default horizontal-spacing" 
+                            title="{{'export_pdf' | translate}}"
+                            onclick="javascript:window.print()">
+                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="col-sm-12" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
+                    <div class="alert alert-info">
+                        <h1>{{dataElementGroupSet.name}}</h1>
+                    </div>
+                    <div class="row vertical-spacing">
+                        <div class="col-sm-12" ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups">
+                            <div class="alert alert-warning remove-default-padding">
+                                <h3>{{dataElementGroup.name}}</h3>
                             </div>
-                        </tab>                    
-                    </tabset>
-                    
+
+                            <div ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">
+
+                                <table border="1" class="table table-condensed report-table" 
+                                       ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">                                                
+                                    <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
+                                        <th>                                                
+                                        </th>
+                                        <th ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
+                                            {{oco.displayName}}
+                                        </th>
+                                    </tr>                                            
+                                    <tr>                                          
+                                        <td>
+                                            {{de.displayName}}
+                                        </td>
+                                        <td>
+                                            <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">                                                        
+                                                {{dataValues[de.id][oco.id].value}}
+                                            </div>
+                                            <div ng-if="de.dimensionAsOptionSet">
+                                                {{dataValues[de.id].displayName}}
+                                            </div>
+                                            <div ng-if="de.dimensionAsMultiOptionSet">
+                                                {{joinOnProperty(dataValues[de.id], 'displayName')}}                                                            
+                                            </div>                                                    
+                                        </td>                                                
+                                    </tr>
+                                </table>
+
+                                <table border="1" class="table table-condensed report-table" 
+                                       ng-if="de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                                
+                                    <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
+                                        <td rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
+                                            ng-if="$index===0">
+                                            {{de.displayName}}
+                                        </td>
+                                        <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
+                                            rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
+                                            ng-if="$index === 0 && (mainIndex % getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName) === 0)">
+                                            {{optionName}}
+                                        </td>
+                                        <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
+                                            {{optionName}}
+                                        </td>
+                                        <td>
+                                            {{dataValues[de.id][oco.id].value}}
+                                        </td>
+                                    </tr>                                            
+                                </table>
+
+                                <table border="1" class="table-condensed report-table"                                                
+                                       ng-if="de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1 ">                                                
+                                    <tr>
+                                        <th colspan="2"></th>                                        
+                                        <th class="active pull-center" 
+                                            ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'">
+                                            {{option2.name}}
+                                        </th>
+                                    </tr>
+                                    <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
+                                        <td rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions.length}}" ng-if="$index === 0">
+                                            {{de.displayName}}
+                                        </td>
+                                        <th class="active">
+                                            {{option1.name}}
+                                        </th>                                                
+                                        <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'"
+                                            ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">
+                                            {{dataValues[de.id][oco.id].value}}
+                                        </td>
+                                    </tr>
+                                </table>                                        
+                            </div>
+                        </div>                        
+                    </div>                    
                 </div>
             </div>
         </div>

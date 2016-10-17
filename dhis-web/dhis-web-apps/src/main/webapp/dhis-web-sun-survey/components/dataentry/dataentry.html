@@ -28,7 +28,7 @@
     </div>
 
     <div ng-show="selectedOrgUnit">
-        <h2>
+        <h2 class="hideInPrint">
             {{'data_entry'| translate}}
         </h2>
 
@@ -78,20 +78,18 @@
                             <div class="col-sm-4">
                                 <div class="pull-right">                                    
                                     <button type="button" 
-                                            class="btn btn-default" 
+                                            class="btn btn-default hideInPrint" 
                                             ng-click="getPeriods('PRV')" 
                                             title="{{'previous_periods'| translate}}">
                                         <i class="fa fa-caret-left"></i>
-                                        <!--{{'prev'| translate}}-->
                                     </button>
 
                                     <button type="button" 
-                                            class="btn btn-default" 
+                                            class="btn btn-default hideInPrint" 
                                             ng-disabled="periodOffset > -1" 
                                             ng-click="getPeriods('NXT')" 
                                             title="{{'next_periods'| translate}}">
                                         <i class="fa fa-caret-right"></i>
-                                        <!--{{'next'| translate}}-->
                                     </button>                                    
                                 </div>                                
                             </div>

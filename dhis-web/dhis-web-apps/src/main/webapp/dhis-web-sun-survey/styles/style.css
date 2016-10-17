@@ -434,6 +434,15 @@ div#orgUnitTree {
     background-color: #d0eBd0;
 }
 
+.redInfoArea {
+    border: 1px solid #8e0000;
+    background-color: #b20000;
+    color: #fff;
+    padding-top: 10px;
+    padding-bottom: 10px;    
+    border-radius: 3px;
+}
+
 .div-bottom {
     position: absolute;
     bottom: 0;
@@ -720,6 +729,10 @@ div#orgUnitTree {
 
 .add-default-right-padding {
     margin-right: 15px !important;
+}
+
+.remove-default-padding {
+    padding: 0 12px !important;
 }
 
 .remove-left-padding {
