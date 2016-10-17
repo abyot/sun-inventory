@@ -633,6 +633,10 @@ sunSurvey.controller('dataEntryController',
         modalInstance.result.then(function () {
         });
     };
+    
+    $scope.displayReport = function(){
+        console.log('need to display country report');
+    };
         
     function processCompletness( isSave ){
         if( isSave ){
@@ -751,5 +755,13 @@ sunSurvey.controller('dataEntryController',
     
     $scope.getOptionComboByName = function(option1, option2, cc){        
         return ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.mappedOptionCombos, [option1, option2], cc);
+    };
+    
+    $scope.joinOnProperty = function( objs, prop){
+        var result = [];
+        angular.forEach(objs, function(obj){
+            result.push( obj[prop] );
+        });
+        return result.join(', ');
     };
 });
