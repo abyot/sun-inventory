@@ -46,14 +46,29 @@ function fetchPublicDashboard() {
         
     console.log('Fetching dasboard items...');
     
-    $.getJSON( base + "api/dashboards/Ejvo84X8gfA.json?fields=id,name,dashboardItems[:all]", function (dashboard) {
+    $.getJSON( base + "api/dashboards/wfiYRHbSvWk.json?fields=id,name,dashboardItems[:all]", function (dashboard) {
         
         var $div = $("#dashboardItemContainer");
         
         var chartItems = [];
         $.each(dashboard.dashboardItems, function (i, item) {            
             
-            $div.append('<div class="col-xs-12 col-sm-6 col-md-4"><div class="bordered-div"><div id=' + item.id + ' class="dashboard-object-size"></div></div></div>');
+            var size = "col-xs-12 col-sm-6 col-md-4";
+            
+            if( item.shape ) {
+                switch (item.shape ){
+                    case 'DOUBLE_WIDTH':
+                        size = 'col-xs-12 col-sm-6 col-md-6';
+                        break;
+                    case 'FULL_WIDTH':
+                        size = 'col-xs-12 col-sm-12 col-md-12';
+                        break;
+                    default:
+                        "col-xs-12 col-sm-6 col-md-4";
+                }                
+            }            
+            
+            $div.append('<div class="' + size + '"><div class="bordered-div"><div id=' + item.id + ' class="dashboard-object-size"></div></div></div>');
                         
             chartItems.push( {url: base, el: item.id, id: item.chart.id} );            
             
