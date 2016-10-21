@@ -36,7 +36,8 @@
         <div class="selectionGroup">
             <div class="col-sm-6 selectionArea">
                 <div class="row">
-                    <div class="col-sm-4">                        
+                    <div class="col-sm-4">
+                        <i class="fa fa-question-circle superscript" tooltip="{{'org_unit_dashboard_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'org_unit'| translate}}
                     </div>
                     <div class="col-sm-8">
@@ -121,7 +122,7 @@
                     <button class="btn btn-success hideInPrint small-horizontal-spacing small-vertical-spacing"
                             type="button"
                             ng-click="model.showReportDiv = !model.showReportDiv">
-                        {{model.showReportDiv ? 'data_entry' : 'country_report' | translate}}
+                        {{model.showReportDiv ? 'data_entry' : 'view_data_as_table' | translate}}
                     </button>
                 </div>
             </div>
