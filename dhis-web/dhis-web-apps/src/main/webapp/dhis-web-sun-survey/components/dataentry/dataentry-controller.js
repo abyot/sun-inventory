@@ -136,7 +136,6 @@ sunSurvey.controller('dataEntryController',
         if (angular.isObject($scope.selectedOrgUnit)) {
             //get survey data sets
             DataSetFactory.getDataSetsByProperty( $scope.selectedOrgUnit, 'dataSetDomain', 'SURVEY' ).then(function(dataSets){
-                console.log('dataSets:  ', dataSets);
                 $scope.model.dataSets = dataSets;                
                 if($scope.model.dataElementGroupSets.length === 0){
                     $scope.model.degs = {};
