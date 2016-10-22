@@ -34,19 +34,37 @@ $(document).ready(function ()
     
     console.log("Loading public dashboard...");  
         
-    $.ajax({ 
+    /*$.ajax({ 
         url: base + "dhis-web-commons-security/login.action?authOnly=true",
         type: 'POST',
         data: "j_username=publicdashboard&j_password=Public123",
-        success: fetchPublicDashboard
+        success: function( data ){
+        	console.log('data is:  ', data);
+        	fetchPublicDashboard();
+        }
+    });*/
+    
+    $.ajax({
+        xhrFields: {
+            withCredentials: true
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Basic ' + btoa('publicdashboard:Public123'));
+        },
+        url: base + "api/dashboards.json?filter=publicAccess:eq:r-------&paging=false&fields=id,name,dashboardItems[:all]",
+        type: 'GET',
+        success: function( data ){
+        	fetchPublicDashboard( data );
+        }
     });
 });
 
-function fetchPublicDashboard() {
+function fetchPublicDashboard( data ) {
         
-    console.log('Fetching dasboard items...');
+    console.log('Fetching dasboard items...', data );
     
-    $.getJSON( base + "api/dashboards/wfiYRHbSvWk.json?fields=id,name,dashboardItems[:all]", function (dashboard) {
+    //$.getJSON( base + "api/dashboards/wfiYRHbSvWk.json?fields=id,name,dashboardItems[:all]", function (dashboard) {
+    /*$.getJSON( base + "api/dashboards.json?filter=publicAccess:eq:r-------&paging=false&fields=id,name,dashboardItems[:all]", function (dashboards) {
         
         var $div = $("#dashboardItemContainer");
         
@@ -78,7 +96,7 @@ function fetchPublicDashboard() {
         chartPlugin.showTitles = true;
         chartPlugin.load( chartItems );
         
-    });    
+    });  */  
 }
 
 login.localeChanged = function ()

@@ -40,11 +40,18 @@
     <script type="text/javascript" src="../dhis-web-commons/javascripts/ext/ext-all.js"></script>
 
     <script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/jquery.min.js?_rev=$!{buildRevision}"></script>
+    
     <!-- Menu dependencies -->
-    <script type="text/javascript" src="../dhis-web-core-resource/react-15/react-15.min.js"></script>
+    <!--<script type="text/javascript" src="../dhis-web-core-resource/react-15/react-15.min.js"></script>
     <script type="text/javascript" src="../dhis-web-core-resource/rxjs/4.1.0/rx.lite.min.js"></script>
     <script type="text/javascript" src="../dhis-web-core-resource/lodash/4.15.0/lodash.min.js"></script>
-    <script type="text/javascript" src="../dhis-web-core-resource/lodash-functional/lodash-functional.js"></script>
+    <script type="text/javascript" src="../dhis-web-core-resource/lodash-functional/lodash-functional.js"></script>-->
+    
+    <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/react-15.min.js"></script>
+    <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/rx.lite.min.js"></script>
+    <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/lodash.min.js"></script>
+    <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/lodash-functional.js"></script>
+    
     <!-- Menu script is up here due to perceived loading time increase -->
     <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/babel-polyfill.js?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/header-bar.js?_rev=$!{buildRevision}"></script>
@@ -55,6 +62,7 @@
         });
     </script>
     <!-- // End menu -->
+    
     <!--[if lte IE 8]><script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/placeholders.jquery.min.js?_rev=$!{buildRevision}"></script><![endif]-->
     <script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/jquery.utils.js?_rev=$!{buildRevision}"></script>
     <script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/jquery.ext.js?_rev=$!{buildRevision}"></script>

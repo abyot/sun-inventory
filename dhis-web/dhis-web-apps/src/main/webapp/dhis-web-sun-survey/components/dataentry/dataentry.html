@@ -118,17 +118,44 @@
                 </div>
             </div>
             <div class="col-sm-6 div-bottom-container" ng-if="model.selectedDataSet && model.selectedPeriod">                
-                <div class="div-bottom">
-                    <button class="btn btn-success hideInPrint small-horizontal-spacing small-vertical-spacing"
+                <div class="div-bottom">                    
+                    <button class="btn btn-success hideInPrint small-vertical-spacing"
                             type="button"
                             ng-click="model.showReportDiv = !model.showReportDiv">
                         {{model.showReportDiv ? 'data_entry' : 'view_data_as_table' | translate}}
                     </button>
+                    <button type="button" 
+                            class="btn btn-primary small-horizontal-spacing small-vertical-spacing" 
+                            ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                            ng-click="saveCompletness()">
+                        {{'mark_complete'| translate}}
+                    </button>
+                    <button type="button" 
+                            class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
+                            ng-disabled="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                            ng-click="deleteCompletness()">
+                        {{'mark_not_complete'| translate}}
+                    </button>                        
+                    
+                    <a class="cursor-pointer small-horizontal-spacing small-vertical-spacing" ng-click="model.showButtonInfo = !model.showButtonInfo">
+                        <i class="fa fa-2x fa-info-circle" aria-hidden="true"></i>
+                    </a>
                 </div>
             </div>
         </div>        
         <!-- selection ends -->        
 
+        <div class="alert alert-info vertical-spacing" ng-if="model.showButtonInfo">
+            <p>
+                view data as tables
+            </p>
+            <p>
+                mark report complete
+            </p>
+            <p>
+                mark report not-complete
+            </p>
+        </div>
         <div class="alert alert-danger vertical-spacing" ng-if="model.invalidDimensions && model.selectedDataSet">
             {{'data_set_have_invalid_dimension'| translate}}
         </div>

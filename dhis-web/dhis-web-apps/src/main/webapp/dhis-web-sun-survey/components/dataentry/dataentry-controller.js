@@ -25,6 +25,7 @@ sunSurvey.controller('dataEntryController',
     $scope.dataValues = {};
     
     $scope.model = {invalidDimensions: false,
+                    showButtonInfo: false,
                     selectedAttributeCategoryCombo: null,
                     standardDataSets: [],
                     multiDataSets: [],
@@ -87,15 +88,15 @@ sunSurvey.controller('dataEntryController',
                     $scope.pushedOptions[cc.id] = [];
                     
                     if( cc.categories && cc.categories.length === 1 && cc.categories[0].categoryOptions ){
-                        var sortArray = [];                        
+                        
+                        var sortedOptions = [];
                         angular.forEach(cc.categories[0].categoryOptions, function(co){
-                            sortArray.push( co.displayName );
+                            sortedOptions.push( co.displayName );
                         });
                         
-                        var sortArray = _.invert(_.object(_.pairs(sortArray)));                        
-                        cc.categoryOptionCombos = _.sortBy(cc.categoryOptionCombos, function(coc){
-                            return sortArray[coc.displayName];
-                        });
+                        cc.categoryOptionCombos = _.sortBy( cc.categoryOptionCombos, function(coc){
+                            return sortedOptions.indexOf( coc.displayName );
+                        });                        
                     }
                     
                     angular.forEach(cc.categoryOptionCombos, function(oco){

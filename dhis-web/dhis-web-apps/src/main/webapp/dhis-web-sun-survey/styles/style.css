@@ -4,6 +4,7 @@ html, body {
     padding: 0;
     background-color: white;
     overflow: auto;
+    font-size: 100% !important;
 }
 
 .not-for-screen {

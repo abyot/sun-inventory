@@ -175,7 +175,7 @@
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <th></td>
+                                                    <th></th>
                                                     <th class="active pull-center" colspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
                                                         {{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].name}}
                                                     </th>
@@ -218,44 +218,26 @@
                     
                 </div>
             </div>
-
-            <hr>
-
-            <div class="clear vertical-spacing" ng-if="!model.showReportDiv">
-                <div class="col-sm-6 selectionArea vertical-spacing">
-                    <button type="button" 
-                            class="btn btn-primary" 
-                            ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                            ng-click="saveCompletness()">
-                        {{'mark_complete'| translate}}
-                    </button>
-                    <button type="button" 
-                            class="btn btn-danger small-horizontal-spacing" 
-                            ng-disabled="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                            ng-click="deleteCompletness()">
-                        {{'mark_not_complete'| translate}}
-                    </button>
-                </div>
-            </div>
+            
         </div>
         
         <div ng-if="model.showReportDiv">            
             <div class="remove-left-padding" id="exportTable">
                 <div class="col-sm-12 hideInPrint">                    
                     <button type="button" 
-                            class="btn btn-default"
+                            class="btn btn-success"
                             title="{{'export_excel' | translate}}"
                             ng-click="exportData()">
-                        <i class="fa fa-file-excel-o" aria-hidden="true"></i>
+                        <i class="fa fa-file-excel-o fa-2x" aria-hidden="true"></i>
                     </button>
                     <button type="button" 
-                            class="btn btn-default horizontal-spacing" 
+                            class="btn btn-primary horizontal-spacing" 
                             title="{{'export_pdf' | translate}}"
                             onclick="javascript:window.print()">
-                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i>
+                        <i class="fa fa-file-pdf-o fa-2x" aria-hidden="true"></i>
                     </button>
                 </div>
-                <div class="col-sm-12" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
+                <div class="col-sm-12 small-vertical-spacing" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
                     <div class="alert alert-info">
                         <h1>{{dataElementGroupSet.name}}</h1>
                     </div>
