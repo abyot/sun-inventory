@@ -78,12 +78,6 @@ var d2Directives = angular.module('d2Directives', [])
         restrict: 'E',
         templateUrl: 'views/left-bar.html',
         link: function (scope, element, attrs) {
-
-            $("#searchIcon").click(function () {
-                $("#searchSpan").toggle();
-                $("#searchField").focus();
-            });
-
             $("#searchField").autocomplete({
                 source: "../dhis-web-commons/ouwt/getOrganisationUnitsByName.action",
                 select: function (event, ui) {

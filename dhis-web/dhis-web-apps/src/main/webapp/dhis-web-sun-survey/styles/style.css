@@ -926,3 +926,8 @@ table td.crossed::after {
     bottom:0;    
     background-image: linear-gradient(to top right,  transparent calc(50% - 1px), #ddd, transparent calc(50% + 1px)); 
 }
+
+.ou-search-left-bar {
+    margin-top: 30px; 
+    padding: 5px;
+}
