@@ -4,6 +4,8 @@ login.localeKey = "dhis2.locale.ui";
 
 var base = "../../";
 
+var mappedDashboard = {};
+
 $(document).ready(function ()
 {
     $('#j_username').focus();
@@ -30,21 +32,16 @@ $(document).ready(function ()
     {
         login.changeLocale(locale);
         $('#localeSelect option[value="' + locale + '"]').attr('selected', 'selected');
-    }
-    
-    console.log("Loading public dashboard...");  
-        
-    /*$.ajax({ 
-        url: base + "dhis-web-commons-security/login.action?authOnly=true",
-        type: 'POST',
-        data: "j_username=publicdashboard&j_password=Public123",
-        success: function( data ){
-        	console.log('data is:  ', data);
-        	fetchPublicDashboard();
-        }
-    });*/
-    
-    $.ajax({
+    } 
+  
+});
+
+
+$(window).load(function() {
+	
+	console.log("Loading public dashboard...");
+	
+	$.ajax({
         xhrFields: {
             withCredentials: true
         },
@@ -60,19 +57,52 @@ $(document).ready(function ()
 });
 
 function fetchPublicDashboard( data ) {
-        
-    console.log('Fetching dasboard items...', data );
-    
-    //$.getJSON( base + "api/dashboards/wfiYRHbSvWk.json?fields=id,name,dashboardItems[:all]", function (dashboard) {
-    /*$.getJSON( base + "api/dashboards.json?filter=publicAccess:eq:r-------&paging=false&fields=id,name,dashboardItems[:all]", function (dashboards) {
-        
-        var $div = $("#dashboardItemContainer");
-        
+	
+    if( data && data.dashboards ){
+    	
+    	var dashboardForm = '<form class="form-horizontal"> ' +
+							'   <div class="form-group"> ' +
+							'    	<label class="control-label col-sm-4" for="dashboardList"> ' + i18n_please_select_area_for_dashboard + '</label> ' +
+							'      	<div class="col-sm-4"> ' +
+							'       	<select class="form-control" id="dashboardList" onchange="displaySelectedDashboard();"> ' + 
+							'            	<option value=""> ' + i18n_please_select + '</option> ' +
+							'        	</select> ' +
+							'      	</div> ' +
+							'    </div> ' + 
+							'</form>'; 
+    		
+    	$( "#dashboardListForm" ).append( dashboardForm );
+    	
+    	$.each( data.dashboards, function(i, dashboard) {
+    		mappedDashboard[dashboard.id] = dashboard;
+    		$('#dashboardList').append($('<option>', { 
+    	        value: dashboard.id,
+    	        text: dashboard.name,
+    	        selected: dashboard.name === 'Dashboard: Global'
+    	    }));
+    	});
+    	
+    	displaySelectedDashboard();
+    }
+}
+
+
+displaySelectedDashboard = function() {
+	
+	var dashboardId = $( "#dashboardList" ).val();	
+	
+	var $div = $("#dashboardItemContainer");	
+	
+	$div.empty();
+	
+	if( dashboardId && mappedDashboard[dashboardId] && 
+			mappedDashboard[dashboardId].dashboardItems &&
+			mappedDashboard[dashboardId].dashboardItems.length > 0 ){		
+				        
         var chartItems = [];
-        $.each(dashboard.dashboardItems, function (i, item) {            
-            
-            var size = "col-xs-12 col-sm-6 col-md-4";
-            
+        
+        $.each(mappedDashboard[dashboardId].dashboardItems, function (i, item) {            
+            var size = "col-xs-12 col-sm-6 col-md-4";            
             if( item.shape ) {
                 switch (item.shape ){
                     case 'DOUBLE_WIDTH':
@@ -83,20 +113,20 @@ function fetchPublicDashboard( data ) {
                         break;
                     default:
                         "col-xs-12 col-sm-6 col-md-4";
-                }                
+                }
             }            
-            
-            $div.append('<div class="' + size + '"><div class="bordered-div"><div id=' + item.id + ' class="dashboard-object-size"></div></div></div>');
-                        
+            $div.append('<div class="' + size + '"><div class="bordered-div"><div id=' + item.id + ' class="dashboard-object-size"></div></div></div>');                        
             chartItems.push( {url: base, el: item.id, id: item.chart.id} );            
-            
         });        
         
         chartPlugin.url = base;  
         chartPlugin.showTitles = true;
         chartPlugin.load( chartItems );
-        
-    });  */  
+	}
+	else{		
+		$div.append('<div style="padding:50px;"><div class="alert alert-info">' + $( "#dashboardList option:selected" ).text() + ' ' + i18n_country_dashboard_not_ready + '</div></div>');
+	}
+	
 }
 
 login.localeChanged = function ()

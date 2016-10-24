@@ -442,6 +442,12 @@ div#orgUnitTree {
     padding-top: 10px;
     padding-bottom: 10px;    
     border-radius: 3px;
+    font-size: 11pt;
+}
+
+.important-label {
+    font-size: 12pt;
+    text-transform: uppercase;
 }
 
 .div-bottom {
@@ -850,10 +856,6 @@ div#orgUnitTree {
     cursor: pointer;
 }
 
-.label-10 {
-    font-size: 10pt;
-}
-
 .report-table {
     border-collapse: collapse !important;
     overflow: auto;
@@ -929,5 +931,5 @@ table td.crossed::after {
 
 .ou-search-left-bar {
     margin-top: 30px; 
-    padding: 5px;
+    padding: 2px;
 }

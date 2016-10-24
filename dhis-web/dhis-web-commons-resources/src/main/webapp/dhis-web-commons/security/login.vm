@@ -10,8 +10,6 @@
         <script type="text/javascript" src="../javascripts/plugins/reporttable.js"></script>
         <script type="text/javascript" src="../javascripts/plugins/chart.js"></script>
         
-        <link type="text/css" rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
-
         <script type="text/javascript" src="login.js"></script>
         <link type="text/css" rel="stylesheet" href="../css/widgets.css">
         <link type="text/css" rel="stylesheet" href="../css/login.css">
@@ -97,7 +95,12 @@
                 <![endif]-->
             </div>
         </div>
+        
         <div class="clear"></div>
+        
+        <div id="dashboardListForm"></div> 
+        
+        
         <div id="contentArea" class="container">
             <div class="row" id="dashboardItemContainer">
             </div>
@@ -117,5 +120,10 @@
                 </select>
             </div>
         </div>
+        <script type="text/javascript">
+			var i18n_please_select = '$encoder.jsEscape( $i18n.getString( "please_select" ) , "'" )';
+			var i18n_country_dashboard_not_ready = '$encoder.jsEscape( $i18n.getString( "country_dashboard_not_ready" ) , "'" )';
+			var i18n_please_select_area_for_dashboard = '$encoder.jsEscape( $i18n.getString( "please_select_area_for_dashboard" ) , "'" )';
+		</script>
     </body>
 </html>
