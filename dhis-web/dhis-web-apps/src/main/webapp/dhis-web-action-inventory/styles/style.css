@@ -855,7 +855,20 @@ div#orgUnitTree {
     color: #767676 !important;
 }
 
-
+.nav-tabs.nav-justified > li {
+    padding-bottom: 0 !important;
+}
+.nav-tabs.nav-justified > li > a {
+    margin-left: 2px ;
+    top: 1px;
+    border: none;
+}
+.nav-tabs.nav-justified > li:first-child > a {
+    margin-left: 0;
+}
+.nav-tabs.nav-justified > li > a:link {
+    background: #eee;
+}
 
 /* vertical tabs */
 .tabs-left > .nav-tabs > li,

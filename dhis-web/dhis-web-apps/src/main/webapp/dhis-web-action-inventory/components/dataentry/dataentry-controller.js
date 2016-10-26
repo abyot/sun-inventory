@@ -120,15 +120,18 @@ sunPMT.controller('dataEntryController',
                 if(!$scope.model.dataElementGroupSets){
                     $scope.model.degs = {};
                     $scope.model.deg = {};
-                    MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                        
-                        $scope.model.dataElementGroupSets = dataElementGroupSets;                        
+                    MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                                                                        
+                        $scope.model.dataElementGroupSets = [];
                         angular.forEach(dataElementGroupSets, function(degs){
-                            angular.forEach(degs.dataElementGroups, function(deg){
-                                angular.forEach(deg.dataElements, function(de){
-                                    $scope.model.degs[de.id] = degs.name;
-                                    $scope.model.deg[de.id] = deg.name;
+                            if( degs.name.indexOf("Outcome") === -1 ){
+                                $scope.model.dataElementGroupSets.push( degs );
+                                angular.forEach(degs.dataElementGroups, function(deg){
+                                    angular.forEach(deg.dataElements, function(de){
+                                        $scope.model.degs[de.id] = degs.name;
+                                        $scope.model.deg[de.id] = deg.name;
+                                    });
                                 });
-                            });
+                            }                            
                         });
                     });
                 }
