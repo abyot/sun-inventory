@@ -208,9 +208,9 @@ sunSurvey.controller('dataEntryController',
     };
         
     $scope.loadDataSetDetails = function(){
-        if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType){ 
+        if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType){
             
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.model.periodOffset);
+            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
             
             if(!$scope.model.selectedDataSet.dataElements || $scope.model.selectedDataSet.dataElements.length < 1){                
                 $scope.invalidCategoryDimensionConfiguration('error', 'missing_data_elements_indicators');
@@ -461,12 +461,12 @@ sunSurvey.controller('dataEntryController',
         if( mode === 'NXT'){
             $scope.periodOffset = $scope.periodOffset + 1;
             $scope.model.selectedPeriod = null;
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset);
+            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
         }
         else{
             $scope.periodOffset = $scope.periodOffset - 1;
             $scope.model.selectedPeriod = null;
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset);
+            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
         }
     };
     

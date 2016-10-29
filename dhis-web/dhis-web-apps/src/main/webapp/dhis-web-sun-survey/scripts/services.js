@@ -20,22 +20,51 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
 /* current selections */
 .service('PeriodService', function(DateUtils){
     
-    this.getPeriods = function(periodType, periodOffset){
+    this.getPeriods = function(periodType, periodOffset, futurePeriod){
         periodOffset = angular.isUndefined(periodOffset) ? 0 : periodOffset;
+        periodOffset += futurePeriod;
+        
         var availablePeriods = [];
         if(!periodType){
             return availablePeriods;
         }        
 
         var pt = new PeriodType();
-        var d2Periods = pt.get(periodType).generatePeriods({offset: periodOffset, filterFuturePeriods: false, reversePeriods: false});
+        var d2Periods = pt.get(periodType).generatePeriods({offset: periodOffset, filterFuturePeriods: false, reversePeriods: true});
+        
+        if( !d2Periods || d2Periods.length && d2Periods.length < 1 ){
+            return availablePeriods;
+        }
+        
+        var currentPeriod = null, lastPeriod = {};
+        for( var i=0; i<d2Periods.length; i++){            
+            d2Periods[i].endDate = DateUtils.formatFromApiToUser(d2Periods[i].endDate);
+            d2Periods[i].startDate = DateUtils.formatFromApiToUser(d2Periods[i].startDate);
+            
+            if( moment(DateUtils.getToday()).isAfter(d2Periods[i].endDate) ){                    
+                currentPeriod = d2Periods[i];
+                break;
+            }
+        }        
+        
+        if( currentPeriod ){            
+            lastPeriod.startDate = DateUtils.formatFromApiToUser( moment(currentPeriod.startDate).add(futurePeriod, 'years') );
+            lastPeriod.endDate = DateUtils.formatFromApiToUser( moment(currentPeriod.endDate).add(futurePeriod, 'years') );
+        }
+        
+        var startingDate = DateUtils.formatFromApiToUser( moment('2015-01-01') );        
+            
         angular.forEach(d2Periods, function(p){
+            
             p.endDate = DateUtils.formatFromApiToUser(p.endDate);
             p.startDate = DateUtils.formatFromApiToUser(p.startDate);
-            if(moment(DateUtils.getToday()).isAfter(p.endDate)){                    
+            
+            if( !moment(p.startDate).isAfter(lastPeriod.startDate) &&
+                moment(p.endDate).isAfter(startingDate) ){
                 availablePeriods.push( p );
             }
         });        
+        
         return availablePeriods;
     };
 })
