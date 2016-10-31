@@ -14,13 +14,13 @@
     </id>
     &identifiableProperties;
 
-    <property name="name" column="name" not-null="true" unique="true" length="230" />
+    <property name="name" column="name" not-null="true" unique="true" length="500" />
 
     <property name="shortName" column="shortname" not-null="true" unique="true" length="50" />
 
     <property name="description" type="text" />
 
-    <property name="formName" length="230" />
+    <property name="formName" length="500" />
 
     <property name="valueType" length="50" not-null="true">
       <type name="org.hibernate.type.EnumType">

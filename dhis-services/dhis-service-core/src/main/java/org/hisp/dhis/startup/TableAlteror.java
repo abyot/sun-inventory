@@ -1143,7 +1143,7 @@ public class TableAlteror
 
         for ( String table : tables )
         {
-            executeSql( "alter table " + table + " alter column name type character varying(230)" );
+            executeSql( "alter table " + table + " alter column name type character varying(500)" );
         }
     }
 

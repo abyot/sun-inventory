@@ -35,16 +35,39 @@
                                                         ng-if="de.description" 
                                                         ng-click="de.showDescription = !de.showDescription">
                                                         {{de.displayName}}
-                                                        <i class="fa fa-info-circle" aria-hidden="true"></i>                                                    
+                                                        <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                        <div ng-if="de.questionWarning" class="alert alert-warning">
+                                                            {{de.questionWarning}}
+                                                        </div>
+                                                        <div ng-if="de.url" class="alert alert-success">
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                     <td ng-class="getMainQuestionTableStyle(de)"
                                                         ng-if="!de.description">
                                                         {{de.displayName}}
+                                                        <div ng-if="de.questionWarning" class="alert alert-warning">
+                                                            {{de.questionWarning}}
+                                                        </div>
+                                                        <div ng-if="de.url" class="alert alert-success">                                                            
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                     <td>
                                                         <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">                                                        
-                                                            <span ng-if="de.valueType === 'TEXT' || de.valueType === 'LONG_TEXT'">
-                                                                <textarea rows="3"  
+                                                            <span ng-if="de.valueType === 'TEXT'">
+                                                                <input type="text"   
+                                                                       ng-model="dataValues[de.id][oco.id].value"
+                                                                       class="form-control" 
+                                                                       ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                       
+                                                                       d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                            </span>
+                                                            <span ng-if="de.valueType === 'LONG_TEXT'">
+                                                                <textarea rows="5"  
                                                                        ng-model="dataValues[de.id][oco.id].value"
                                                                        class="form-control" 
                                                                        ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                       
@@ -102,6 +125,14 @@
                                                         rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
                                                         ng-if="$index===0 && !de.description">
                                                         {{de.displayName}}
+                                                        <div ng-if="de.questionWarning" class="alert alert-warning">
+                                                            {{de.questionWarning}}
+                                                        </div>
+                                                        <div ng-if="de.url" class="alert alert-success">
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                     <td class="mouse-pointer"
                                                         ng-class="getMainQuestionTableStyle(de)" 
@@ -110,6 +141,12 @@
                                                         ng-click="de.showDescription = !de.showDescription">
                                                         {{de.displayName}}
                                                         <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                        <div ng-if="de.questionWarning" class="alert alert-warning">
+                                                            {{de.questionWarning}}
+                                                        </div>
+                                                        <div ng-if="de.url" class="alert alert-success">
+                                                            {{de.url}}
+                                                        </div>
                                                     </td>
                                                     <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
                                                         rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
@@ -156,12 +193,28 @@
                                                         ng-click="de.showDescription = !de.showDescription">
                                                         {{de.displayName}}
                                                         <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                        <div ng-if="de.questionWarning" class="alert alert-warning">
+                                                            {{de.questionWarning}}
+                                                        </div>
+                                                        <div ng-if="de.url" class="alert alert-success">
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                     <td ng-if="!de.description"
                                                         colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
                                                         class="mouse-pointer" 
                                                         ng-class="getMainQuestionTableStyle(de)">
                                                         {{de.displayName}}
+                                                        <div ng-if="de.questionWarning" class="alert alert-warning">
+                                                            {{de.questionWarning}}
+                                                        </div>
+                                                        <div ng-if="de.url" class="alert alert-success">
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                                 <tr ng-if="de.showDescription">

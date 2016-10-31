@@ -15,6 +15,8 @@ var optionSetsInPromise = [];
 var attributesInPromise = [];
 var batchSize = 50;
 
+var APIURL = '../api/';
+
 dhis2.sunSurvey.store = null;
 dhis2.tc.metaDataCached = dhis2.sunSurvey.metaDataCached || false;
 dhis2.sunSurvey.memoryOnly = $('html').hasClass('ie7') || $('html').hasClass('ie8');
@@ -169,25 +171,25 @@ function getUserRoles(){
     if( SessionStorageService.get('USER_ROLES') ){
        return; 
     }    
-    return dhis2.metadata.getMetaObject(null, 'USER_ROLES', '../api/me.json', 'fields=id,displayName,userCredentials[userRoles[id,authorities,dataSets]]', 'sessionStorage', dhis2.sunSurvey.store);
+    return dhis2.metadata.getMetaObject(null, 'USER_ROLES', APIURL + 'me.json', 'fields=id,displayName,userCredentials[userRoles[id,authorities,dataSets]]', 'sessionStorage', dhis2.sunSurvey.store);
 }
 
 function getSystemSetting(){   
     if(localStorage['SYSTEM_SETTING']){
        return; 
     }    
-    return dhis2.metadata.getMetaObject(null, 'SYSTEM_SETTING', '../api/systemSettings', '', 'localStorage', dhis2.sunSurvey.store);
+    return dhis2.metadata.getMetaObject(null, 'SYSTEM_SETTING', APIURL + 'systemSettings', '', 'localStorage', dhis2.sunSurvey.store);
 }
 
 function getCalendarSetting(){   
     if(localStorage['CALENDAR_SETTING']){
        return; 
     }    
-    return dhis2.metadata.getMetaObject(null, 'CALENDAR_SETTING', '../api/systemSettings', 'key=keyCalendar&key=keyDateFormat', 'localStorage', dhis2.sunSurvey.store);
+    return dhis2.metadata.getMetaObject(null, 'CALENDAR_SETTING', APIURL + 'systemSettings', 'key=keyCalendar&key=keyDateFormat', 'localStorage', dhis2.sunSurvey.store);
 }
 
 function getMetaCategoryCombos(){
-    return dhis2.metadata.getMetaObjectIds('categoryCombos', '../api/categoryCombos.json', 'paging=false&fields=id,version');
+    return dhis2.metadata.getMetaObjectIds('categoryCombos', APIURL + 'categoryCombos.json', 'paging=false&fields=id,version');
 }
 
 function filterMissingCategoryCombos( objs ){
@@ -195,11 +197,11 @@ function filterMissingCategoryCombos( objs ){
 }
 
 function getCategoryCombos( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'categoryCombos', 'categoryCombos', '../api/categoryCombos.json', 'paging=false&fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,attributeValues[value,attribute[id,name,valueType,code]],categoryOptions[id,name,displayName,code]]', 'idb', dhis2.sunSurvey.store);
+    return dhis2.metadata.getBatches( ids, batchSize, 'categoryCombos', 'categoryCombos', APIURL + 'categoryCombos.json', 'paging=false&fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,attributeValues[value,attribute[id,name,valueType,code]],categoryOptions[id,name,displayName,code]]', 'idb', dhis2.sunSurvey.store);
 }
 
 function getMetaDataSets(){
-    return dhis2.metadata.getMetaObjectIds('dataSets', '../api/dataSets.json', 'paging=false&fields=id,version');
+    return dhis2.metadata.getMetaObjectIds('dataSets', APIURL + 'dataSets.json', 'paging=false&fields=id,version');
 }
 
 function filterMissingDataSets( objs ){
@@ -207,11 +209,11 @@ function filterMissingDataSets( objs ){
 }
 
 function getDataSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', '../api/dataSets.json', 'paging=false&fields=id,periodType,openFuturePeriods,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,description,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', APIURL + 'dataSets.json', 'paging=false&fields=id,periodType,openFuturePeriods,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,description,url,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
 }
 
 function getMetaDataElementGroupSets(){
-    return dhis2.metadata.getMetaObjectIds('dataElementGroupSets', '../api/dataElementGroupSets.json', 'paging=false&fields=id,version');
+    return dhis2.metadata.getMetaObjectIds('dataElementGroupSets', APIURL + 'dataElementGroupSets.json', 'paging=false&fields=id,version');
 }
 
 function filterMissingDataElementGroupSets( objs ){
@@ -219,11 +221,11 @@ function filterMissingDataElementGroupSets( objs ){
 }
 
 function getDataElementGroupSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'dataElementGroupSets', 'dataElementGroupSets', '../api/dataElementGroupSets.json', 'paging=false&fields=id,name,code,shortName,dataElementGroups[id,name,code,shortName,attributeValues[value,attribute[id,name,valueType,code]],dataElements[id,attributeValues[value,attribute[id,name,valueType,code]]]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'dataElementGroupSets', 'dataElementGroupSets', APIURL + 'dataElementGroupSets.json', 'paging=false&fields=id,name,code,shortName,dataElementGroups[id,name,code,shortName,attributeValues[value,attribute[id,name,valueType,code]],dataElements[id,attributeValues[value,attribute[id,name,valueType,code]]]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
 }
 
 function getMetaOptionSets(){
-    return dhis2.metadata.getMetaObjectIds('optionSets', '../api/optionSets.json', 'paging=false&fields=id,version');
+    return dhis2.metadata.getMetaObjectIds('optionSets', APIURL + 'optionSets.json', 'paging=false&fields=id,version');
 }
 
 function filterMissingOptionSets( objs ){
@@ -231,5 +233,5 @@ function filterMissingOptionSets( objs ){
 }
 
 function getOptionSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'optionSets', 'optionSets', '../api/optionSets.json', 'paging=false&fields=id,name,displayName,version,attributeValues[value,attribute[id,name,valueType,code]],options[id,name,displayName,code]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'optionSets', 'optionSets', APIURL + 'optionSets.json', 'paging=false&fields=id,name,displayName,version,attributeValues[value,attribute[id,name,valueType,code]],options[id,name,displayName,code]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
 }

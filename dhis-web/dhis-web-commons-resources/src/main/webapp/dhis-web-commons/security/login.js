@@ -78,7 +78,7 @@ function fetchPublicDashboard( data ) {
     		$('#dashboardList').append($('<option>', { 
     	        value: dashboard.id,
     	        text: dashboard.name,
-    	        selected: dashboard.name === 'Dashboard: Global'
+    	        selected: dashboard.name === 'Global Dashboard (public)'
     	    }));
     	});
     	

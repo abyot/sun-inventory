@@ -6,6 +6,15 @@ html, body {
     overflow: auto;
 }
 
+.page {
+    font-size: 10pt !important;
+}
+
+.page p,.page td,.page th,.page input,.page select,.page textarea 
+{
+    font-size: 10pt !important;
+}
+
 .not-for-screen {
     display: none;
 }
