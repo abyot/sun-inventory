@@ -2,7 +2,7 @@
 
 /* App Module */
 
-var sunPMT = angular.module('sunPMT',
+var sunInventory = angular.module('sunInventory',
         ['ui.bootstrap', 
          'ngRoute', 
          'ngCookies',

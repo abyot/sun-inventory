@@ -10,7 +10,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     var store = new dhis2.storage.Store({
         name: "dhis2sunpmt",
         adapters: [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter],
-        objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos', 'programs', 'ouLevels', 'indicatorGroups']
+        objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryOptionGroups', 'categoryCombos', 'programs', 'ouLevels', 'indicatorGroups']
     });
     return{
         currentStore: store
@@ -137,48 +137,23 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
 })
 
 /* Factory to fetch programs */
-.factory('DataSetFactory', function($q, $rootScope, SessionStorageService, storage, PMTStorageService, orderByFilter, CommonUtils, ActionMappingUtils) { 
-  
-    return {        
-        getDataSets: function( ou ){            
-            var systemSetting = storage.get('SYSTEM_SETTING');
-            var allowMultiOrgUnitEntry = systemSetting && systemSetting.multiOrganisationUnitForms ? systemSetting.multiOrganisationUnitForms : false;
+.factory('DataSetFactory', function($q, $rootScope, SessionStorageService, ActionMappingUtils, PMTStorageService, orderByFilter, CommonUtils) { 
     
+    return {        
+        getDataSets: function( ou ){                
             var roles = SessionStorageService.get('USER_ROLES');
             var userRoles = roles && roles.userCredentials && roles.userCredentials.userRoles ? roles.userCredentials.userRoles : [];
             var def = $q.defer();
             
             PMTStorageService.currentStore.open().done(function(){
                 PMTStorageService.currentStore.getAll('dataSets').done(function(dss){
-                    var multiDs = angular.copy(dss);
-                    var dataSets = [];
-                    var pushedDss = [];
-                    
+                    var dataSets = [];                    
                     angular.forEach(dss, function(ds){
-                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds.organisationUnits.hasOwnProperty( ou.id ) ){
-                            ds.entryMode = 'Single Entry';
+                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds.organisationUnits.hasOwnProperty( ou.id ) ){                                                    
                             ds = ActionMappingUtils.processDataSet( ds );
                             dataSets.push(ds);
                         }
                     });
-                    
-                    if( allowMultiOrgUnitEntry && ou.c && ou.c.length > 0 ){
-                        
-                        angular.forEach(multiDs, function(ds){  
-                            
-                            if( CommonUtils.userHasValidRole( ds, 'dataSets', userRoles ) ){
-
-                                angular.forEach(ou.c, function(c){                                    
-                                    if( ds.organisationUnits.hasOwnProperty( c ) && pushedDss.indexOf( ds.id ) === -1 ){
-                                        ds.entryMode = 'Multiple Entry';
-                                        ds = ActionMappingUtils.processDataSet( ds );
-                                        dataSets.push(ds);
-                                        pushedDss.push( ds.id );                                            
-                                    }
-                                });                               
-                            }
-                        });
-                    }
                     
                     $rootScope.$apply(function(){
                         def.resolve(dataSets);
@@ -187,56 +162,31 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });            
             return def.promise;            
         },
-        getTargetDataSets: function(){
-            
+        getDataSetsByProperty: function( ou, property, value ){
             var roles = SessionStorageService.get('USER_ROLES');
             var userRoles = roles && roles.userCredentials && roles.userCredentials.userRoles ? roles.userCredentials.userRoles : [];
+            
             var def = $q.defer();
             
             PMTStorageService.currentStore.open().done(function(){
                 PMTStorageService.currentStore.getAll('dataSets').done(function(dss){
                     var dataSets = [];                    
                     angular.forEach(dss, function(ds){
-                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds.dataSetType && ds.dataSetType === 'targetGroup'){                       
+                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds.organisationUnits.hasOwnProperty( ou.id ) && ds[property] && ds[property] === value ){                            
                             ds = ActionMappingUtils.processDataSet( ds );
                             dataSets.push(ds);
                         }
-                    });
+                    });                    
                     
                     $rootScope.$apply(function(){
                         def.resolve(dataSets);
                     });
                 });
-            });
-            return def.promise;
+            });            
+            return def.promise;            
         },
-        getActionAndTargetDataSets: function(){
-            
-            var roles = SessionStorageService.get('USER_ROLES');
-            var userRoles = roles && roles.userCredentials && roles.userCredentials.userRoles ? roles.userCredentials.userRoles : [];
-            var def = $q.defer();
-            
-            PMTStorageService.currentStore.open().done(function(){
-                PMTStorageService.currentStore.getAll('dataSets').done(function(dss){
-                    var dataSets = [];                    
-                    angular.forEach(dss, function(ds){
-                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds.dataSetType && ( ds.dataSetType === 'targetGroup' || ds.dataSetType === 'action') ){                        
-                            ds = ActionMappingUtils.processDataSet( ds );
-                            dataSets.push(ds);
-                        }
-                    });
-                    
-                    $rootScope.$apply(function(){
-                        def.resolve(dataSets);
-                    });
-                });
-            });
-            return def.promise;
-        },
-        get: function(uid){
-            
-            var def = $q.defer();
-            
+        get: function(uid){            
+            var def = $q.defer();            
             PMTStorageService.currentStore.open().done(function(){
                 PMTStorageService.currentStore.get('dataSets', uid).done(function(ds){                    
                     $rootScope.$apply(function(){
@@ -526,24 +476,30 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             return headers;
         },
-        getOptionComboIdFromOptionNames: function(optionComboMap, options){
+        getOptionComboIdFromOptionNames: function(optionComboMap, options, categoryCombo){            
+            if( categoryCombo && categoryCombo.isDefault ){
+                return categoryCombo.categoryOptionCombos[0].id;
+            }            
             
             var optionNames = [];
             angular.forEach(options, function(op){
                 optionNames.push(op.displayName);
             });
             
-            var selectedAttributeOcboName = optionNames.toString();
-            selectedAttributeOcboName = selectedAttributeOcboName.replace(",", ", ");
-            var selectedAttributeOcobo = optionComboMap['"' + selectedAttributeOcboName + '"'];
+            var selectedOptionComboName = optionNames.toString();
+            selectedOptionComboName = selectedOptionComboName.replace(",", ", ");            
             
-            if( !selectedAttributeOcobo || angular.isUndefined( selectedAttributeOcobo ) ){
-                selectedAttributeOcboName = optionNames.reverse().toString();
-                selectedAttributeOcboName = selectedAttributeOcboName.replace(",", ", ");
-                selectedAttributeOcobo = optionComboMap['"' + selectedAttributeOcboName + '"'];
+            //var selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
+            var selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
+            
+            if( !selectedAttributeOptionCombo || angular.isUndefined( selectedAttributeOptionCombo ) ){
+                selectedOptionComboName = optionNames.reverse().toString();
+                selectedOptionComboName = selectedOptionComboName.replace(",", ", ");
+                //selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
+                selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
             }
             
-            return selectedAttributeOcobo;
+            return selectedAttributeOptionCombo;
         },
         splitRoles: function( roles ){
             return roles.split(","); 
@@ -656,6 +612,33 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });
             
             return def.promise;
+        },
+        formatDataValue: function(dv, de, ccs){
+            
+            if(!dv || !dv.value || !de || !de.valueType){
+                return;
+            }            
+            
+            if( de.dimensionAsOptionSet ){                
+                for( var i=0; i<ccs[de.categoryCombo.id].categoryOptionCombos.length; i++ ){
+                    if( dv.categoryOptionCombo === ccs[de.categoryCombo.id].categoryOptionCombos[i].id ){
+                        dv.value = ccs[de.categoryCombo.id].categoryOptionCombos[i];
+                    }
+                }                
+            }            
+            else{
+                if( de.valueType === 'NUMBER' ){
+                    dv.value = parseFloat( dv.value );
+                }
+                else if(de.valueType === 'INTEGER' ||
+                        de.valueType === 'INTEGER_POSITIVE' ||
+                        de.valueType === 'INTEGER_NEGATIVE' ||
+                        de.valueType === 'INTEGER_ZERO_OR_POSITIVE' ){
+                    dv.value = parseInt( dv.value );
+                }
+            }
+                        
+            return dv.value;
         },
         processDataSet: function( ds ){
             var dataElements = [];

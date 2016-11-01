@@ -2,10 +2,10 @@
 
 'use strict';
 
-var sunPMT = angular.module('sunPMT');
+var sunInventory = angular.module('sunInventory');
 
 //Controller for settings page
-sunPMT.controller('DataEntryHistoryController',
+sunInventory.controller('DataEntryHistoryController',
         function($scope,
                 $modalInstance,
                 $translate,

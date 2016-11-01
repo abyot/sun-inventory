@@ -4,15 +4,7 @@ html, body {
     padding: 0;
     background-color: white;
     overflow: auto;
-}
-
-.page {
-    font-size: 10pt !important;
-}
-
-.page p,.page td,.page th,.page input,.page select,.page textarea 
-{
-    font-size: 10pt !important;
+    font-size: 100% !important;
 }
 
 .not-for-screen {
@@ -254,6 +246,10 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
     background-color: #dfe9f4;
 }
 
+.no-wrap {
+    white-space:nowrap;
+}
+
 #contextMenu {
     position: absolute;
     display:none;
@@ -342,7 +338,7 @@ select {
     clear: both
 }
 
-.horizontal-spacing{
+.horizontal-spacing {
     margin-right: 20px;    
 }
 
@@ -439,15 +435,28 @@ div#orgUnitTree {
     background-color: #d0eBd0;
 }
 
+.redInfoArea {
+    border: 1px solid #8e0000;
+    background-color: #b20000;
+    color: #fff;
+    padding-top: 10px;
+    padding-bottom: 10px;    
+    border-radius: 3px;
+    font-size: 11pt;
+}
+
+.important-label {
+    font-size: 12pt;
+    text-transform: uppercase;
+}
+
 .div-bottom {
     position: absolute;
     bottom: 0;
 }
 
 .form-control-ui-select {
-    width:100%; 
-    height:34px; 
-    line-height:1.0; 
+    width:100%;     
     padding: 20px 6px;
     border-radius: 4px;
 }
@@ -460,6 +469,7 @@ div#orgUnitTree {
 .form-control{
     color: black;
     padding: 5px !important;
+    color: #555 !important;
 }
 
 .bold {
@@ -728,6 +738,10 @@ div#orgUnitTree {
     margin-right: 15px !important;
 }
 
+.remove-default-padding {
+    padding: 0 12px !important;
+}
+
 .remove-left-padding {
     margin-left: -15px !important;
 }
@@ -842,12 +856,23 @@ div#orgUnitTree {
     cursor: pointer;
 }
 
-.basic-audit-info {
-    font-size: 12pt;
-}
-
 .report-table {
     border-collapse: collapse !important;
+    overflow: auto;
+}
+
+.large-table {    
+    overflow: auto;
+}
+
+.main-question {    
+    /*color: #1f3bb7 !important;*/
+    font-weight: bold !important;
+    font-size: 11pt !important;
+}
+
+.sub-question {
+    /*margin-left: 20px;*/
 }
 
 .report-table>thead>tr>th, 
@@ -856,8 +881,9 @@ div#orgUnitTree {
 .report-table>thead>tr>td, 
 .report-table>tbody>tr>td, 
 .report-table>tfoot>tr>td {
-    border: 1px solid black !important;
-    color: #000;
+    border: 1px solid #ddd;
+    padding: 0 10px;
+    font-weight: bold;
 }
 
 .empty-data-row {
@@ -879,68 +905,31 @@ div#orgUnitTree {
     background: #eee;
 }
 
-/* vertical tabs */
-.tabs-left > .nav-tabs > li,
-.tabs-right > .nav-tabs > li {
-    float: none;
-    height: 100%;
+.scroll {
+    height: 500px;
+    overflow: auto;
 }
 
-.tabs-left > .nav-tabs > li > a,
-.tabs-right > .nav-tabs > li > a {
-    min-width: 74px;
-    margin-right: 0;
-    margin-bottom: 3px;
-    height: 100%;
+table {
+    min-width: 100%;
 }
 
-.tabs-left > .nav-tabs {
-    float: left;
-    margin-right: 19px;
-    border-right: 1px solid #ddd;
-    height: 100%;
+table td {
+    border: 1px solid silver;
+    position: relative;
 }
 
-.tabs-left > .nav-tabs > li > a {
-    margin-right: -1px;
-    -webkit-border-radius: 4px 0 0 4px;
-    -moz-border-radius: 4px 0 0 4px;
-    border-radius: 4px 0 0 4px;
+table td.crossed::after {    
+    position: absolute;
+    content: "";
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;    
+    background-image: linear-gradient(to top right,  transparent calc(50% - 1px), #ddd, transparent calc(50% + 1px)); 
 }
 
-.tabs-left > .nav-tabs > li > a:hover,
-.tabs-left > .nav-tabs > li > a:focus {
-    border-color: #eeeeee #dddddd #eeeeee #eeeeee;
-}
-
-.tabs-left > .nav-tabs .active > a,
-.tabs-left > .nav-tabs .active > a:hover,
-.tabs-left > .nav-tabs .active > a:focus {
-    border-color: #ddd transparent #ddd #ddd;
-    *border-right-color: #ffffff;
-}
-
-.tabs-right > .nav-tabs {
-    float: right;
-    margin-left: 19px;
-    border-left: 1px solid #ddd;
-}
-
-.tabs-right > .nav-tabs > li > a {
-    margin-left: -1px;
-    -webkit-border-radius: 0 4px 4px 0;
-    -moz-border-radius: 0 4px 4px 0;
-    border-radius: 0 4px 4px 0;
-}
-
-.tabs-right > .nav-tabs > li > a:hover,
-.tabs-right > .nav-tabs > li > a:focus {
-    border-color: #eeeeee #eeeeee #eeeeee #dddddd;
-}
-
-.tabs-right > .nav-tabs .active > a,
-.tabs-right > .nav-tabs .active > a:hover,
-.tabs-right > .nav-tabs .active > a:focus {
-    border-color: #ddd #ddd #ddd transparent;
-    *border-left-color: #ffffff;
+.ou-search-left-bar {
+    margin-top: 30px; 
+    padding: 2px;
 }

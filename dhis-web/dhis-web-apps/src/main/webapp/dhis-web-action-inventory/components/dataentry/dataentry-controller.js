@@ -2,10 +2,10 @@
 
 'use strict';
 
-var sunPMT = angular.module('sunPMT');
+var sunInventory = angular.module('sunInventory');
 
 //Controller for settings page
-sunPMT.controller('dataEntryController',
+sunInventory.controller('dataEntryController',
         function($scope,
                 $filter,
                 $modal,
@@ -22,8 +22,10 @@ sunPMT.controller('dataEntryController',
                 DialogService) {
     $scope.periodOffset = 0;
     $scope.saveStatus = {};
-    var addNewOption = {code: 'ADD_NEW_OPTION', id: 'ADD_NEW_OPTION', displayName: '[Add New Stakeholder]'};
+    $scope.dataValues = {};
+    
     $scope.model = {invalidDimensions: false,
+                    showButtonInfo: false,
                     selectedAttributeCategoryCombo: null,
                     standardDataSets: [],
                     multiDataSets: [],
@@ -33,37 +35,32 @@ sunPMT.controller('dataEntryController',
                     categoryOptionsReady: false,
                     allowMultiOrgUnitEntry: false,
                     selectedOptions: [],
-                    stakeholderRoles: {},
                     dataValues: {},
-                    roleValues: {},
                     orgUnitsWithValues: [],
                     selectedProgram: null,
                     selectedAttributeOptionCombos: {},
                     selectedAttributeOptionCombo: null,
-                    selectedEvent: {},
                     stakeholderCategory: null,
                     attributeCategoryUrl: null,
-                    valueExists: false,
-                    rolesAreDifferent: false,
-                    overrideRoles: false};
+                    dataElementGroupSets: [],
+                    mappedCategoryCombos: [],
+                    mappedOptionCombos: []};
     
     //watch for selection of org unit from tree
     $scope.$watch('selectedOrgUnit', function() {
         $scope.model.periods = [];
         $scope.model.dataSets = [];
+        $scope.pushedOptions = {};
         $scope.model.selectedDataSet = null;
         $scope.model.selectedPeriod = null;
         $scope.model.selectedAttributeCategoryCombo = null;
         $scope.model.selectedAttributeOptionCombos = {};
         $scope.model.selectedAttributeOptionCombo = null;
         $scope.model.selectedProgram = null;
-        $scope.model.stakeholderRoles = {};
-        $scope.model.dataValues = {};
+        $scope.dataValues = {};
         $scope.model.basicAuditInfo = {};
-        $scope.model.selectedEvent = {};
         $scope.model.orgUnitsWithValues = [];
         $scope.model.categoryOptionsReady = false;
-        $scope.model.valueExists = false;
         if( angular.isObject($scope.selectedOrgUnit)){
             SessionStorageService.set('SELECTED_OU', $scope.selectedOrgUnit); 
             var systemSetting = storage.get('SYSTEM_SETTING');
@@ -79,6 +76,60 @@ sunPMT.controller('dataEntryController',
             MetaDataFactory.getAll('optionSets').then(function(optionSets){
                 angular.forEach(optionSets, function(optionSet){
                     $scope.model.optionSets[optionSet.id] = optionSet;
+                });
+            });
+            
+            var optionGroupByMembers = [];
+            MetaDataFactory.getAll('categoryOptionGroups').then(function(categoryOptionGroups){
+                $scope.model.categoryOptionGroups = categoryOptionGroups;
+                
+                angular.forEach(categoryOptionGroups, function(cog){
+                   angular.forEach(cog.categoryOptions, function(co){
+                       optionGroupByMembers[co.name] = cog;
+                   }); 
+                });
+                
+                var orderedOptionGroup = {};                            
+                MetaDataFactory.getAll('categoryCombos').then(function(ccs){
+                    angular.forEach(ccs, function(cc){
+                        if( cc.isDefault ){
+                            $scope.model.defaultCategoryCombo = cc;
+                            $scope.model.defaultOptionCombo = cc.categoryOptionCombos[0];
+                        }
+                        $scope.pushedOptions[cc.id] = [];
+
+                        if( cc.categories && cc.categories.length === 1 && cc.categories[0].categoryOptions ){
+
+                            var sortedOptions = [];
+                            angular.forEach(cc.categories[0].categoryOptions, function(co){
+                                sortedOptions.push( co.displayName );
+                            });
+
+                            cc.categoryOptionCombos = _.sortBy( cc.categoryOptionCombos, function(coc){
+                                return sortedOptions.indexOf( coc.displayName );
+                            });
+                            
+                            if( cc.displayName === 'Action inventory dimensions' ){
+                                for(var i=0; i< cc.categoryOptionCombos.length; i++){
+                                    $scope.model.mappedOptionCombos[cc.categoryOptionCombos[i].displayName] = cc.categoryOptionCombos[i];
+                                    var og = optionGroupByMembers[cc.categoryOptionCombos[i].displayName];
+                                    if( og ){                                    
+                                        cc.categoryOptionCombos[i].categoryOptionGroup = og;
+                                        if( !orderedOptionGroup[og.id] ){
+                                            orderedOptionGroup[og.id] = i;
+                                        }
+                                    }
+                                }                            
+
+                                angular.forEach($scope.model.categoryOptionGroups, function(cog){
+                                    cog.order = orderedOptionGroup[cog.id];
+                                });
+                            }
+                            
+                        }                        
+                        
+                        $scope.model.mappedCategoryCombos[cc.id] = cc;
+                    });
                 });
             });
         }
@@ -107,64 +158,86 @@ sunPMT.controller('dataEntryController',
         $scope.model.selectedAttributeOptionCombos = {};
         $scope.model.selectedAttributeOptionCombo = null;
         $scope.model.selectedProgram = null;
-        $scope.model.selectedPeriod = null;  
-        $scope.model.stakeholderRoles = {};
+        $scope.model.selectedPeriod = null;
         $scope.model.orgUnitsWithValues = [];
-        $scope.model.selectedEvent = {};
-        $scope.model.dataValues = {};
-        $scope.model.valueExists = false;
-        if (angular.isObject($scope.selectedOrgUnit)) {            
-            DataSetFactory.getDataSets( $scope.selectedOrgUnit ).then(function(dataSets){
-                $scope.model.dataSets = $filter('filter')(dataSets, {entryMode: 'Multiple Entry'});
-                $scope.model.dataSets = orderByFilter($scope.model.dataSets, '-displayName').reverse();
-                if(!$scope.model.dataElementGroupSets){
+        $scope.dataValues = {};
+        if (angular.isObject($scope.selectedOrgUnit)) {
+            //get survey data sets
+            DataSetFactory.getDataSetsByProperty( $scope.selectedOrgUnit, 'dataSetDomain', 'INVENTORY' ).then(function(dataSets){
+                $scope.model.dataSets = dataSets;                
+                if($scope.model.dataElementGroupSets.length === 0){
                     $scope.model.degs = {};
-                    $scope.model.deg = {};
-                    MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                                                                        
-                        $scope.model.dataElementGroupSets = [];
+                    $scope.model.deg = {}; 
+                    $scope.model.dataElementGroupsById = {};
+                    MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                        
+                        $scope.model.dataElementGroupSets = [];                        
                         angular.forEach(dataElementGroupSets, function(degs){
-                            if( degs.name.indexOf("Outcome") === -1 ){
-                                $scope.model.dataElementGroupSets.push( degs );
-                                angular.forEach(degs.dataElementGroups, function(deg){
+                            angular.forEach(degs.dataElementGroups, function(deg){
+                                deg = dhis2.metadata.processMetaDataAttribute( deg );
+                                if( deg.survey ){                                    
+                                    if( deg.survey && $scope.model.dataElementGroupSets.indexOf( degs ) === -1 ){
+                                        degs.active = false;
+                                        $scope.model.dataElementGroupSets.push( degs );
+                                    }
+                                    
                                     angular.forEach(deg.dataElements, function(de){
-                                        $scope.model.degs[de.id] = degs.name;
-                                        $scope.model.deg[de.id] = deg.name;
+                                        de = dhis2.metadata.processMetaDataAttribute( de );
+                                        $scope.model.degs[de.id] = {name: degs.name, id: degs.id, code: degs.code};
+                                        $scope.model.deg[de.id] = {name: deg.name, id: deg.id, code: deg.shortName};
                                     });
-                                });
-                            }                            
+                                    
+                                    deg.dataElements = orderByFilter(deg.dataElements, '-order').reverse(); 
+                                }
+                                $scope.model.dataElementGroupsById[deg.id] = deg;
+                            });
                         });
                     });
                 }
             });
         }
-    }; 
+    };
     
     //watch for selection of data set
     $scope.$watch('model.selectedDataSet', function() {        
         $scope.model.periods = [];
         $scope.model.selectedPeriod = null;
         $scope.model.categoryOptionsReady = false;
-        $scope.model.stakeholderRoles = {};
-        $scope.model.dataValues = {};
+        $scope.dataValues = {};
         $scope.model.selectedProgram = null;
-        $scope.model.selectedEvent = {};
         $scope.model.orgUnitsWithValues = [];
-        $scope.model.valueExists = false;
         if( angular.isObject($scope.model.selectedDataSet) && $scope.model.selectedDataSet.id){
             $scope.loadDataSetDetails();
         }
     });
     
-    $scope.$watch('model.selectedPeriod', function(){        
-        $scope.model.dataValues = {};
-        $scope.model.valueExists = false;
+    $scope.$watch('model.selectedPeriod', function(){
         $scope.loadDataEntryForm();
-    });    
+    });
+    
+    $scope.pushOption = function(categoryComboId, optionName){
+        if( !$scope.pushedOptions[categoryComboId] ){
+            $scope.pushedOptions[categoryComboId] = [];
+            $scope.pushedOptions[categoryComboId].push( optionName );
+        }
+        if( $scope.pushedOptions[categoryComboId].indexOf( optionName ) === -1 ){
+            $scope.pushedOptions[categoryComboId].push( optionName );
+        }
+    };
+    
+    $scope.getRowSpan = function( optionCombos, optionName ){
+        var occurance = 0;        
+        angular.forEach(optionCombos, function(oc){
+            if( oc.displayName.startsWith(optionName, 0) ){
+                occurance++;
+            }
+        });
+        return occurance;
+    };
         
     $scope.loadDataSetDetails = function(){
-        if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType){ 
+        if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType){
             
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.model.periodOffset);
+            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
             
             if(!$scope.model.selectedDataSet.dataElements || $scope.model.selectedDataSet.dataElements.length < 1){                
                 $scope.invalidCategoryDimensionConfiguration('error', 'missing_data_elements_indicators');
@@ -172,32 +245,123 @@ sunPMT.controller('dataEntryController',
             }            
             
             loadOptionCombos();            
-            
-            $scope.model.selectedCategoryCombos = {};
+                        
             $scope.model.dataElements = [];
+            $scope.dataValues = {};
+            $scope.desById = {};
             angular.forEach($scope.model.selectedDataSet.dataElements, function(de){
-                MetaDataFactory.get('categoryCombos', de.categoryCombo.id).then(function(coc){
-                    if( coc.isDefault ){
-                        $scope.model.defaultCategoryCombo = coc;
-                    }
-                    $scope.model.selectedCategoryCombos[de.categoryCombo.id] = coc;
-                });                
+                $scope.desById[de.id] = de;
+                if( de.order ){
+                    de.order = parseInt(de.order);
+                }                                
             });
         }
     };
     
     var resetParams = function(){
-        $scope.model.dataValues = {};
-        $scope.model.roleValues = {};
-        $scope.model.orgUnitsWithValues = [];
-        $scope.model.selectedEvent = {};
-        $scope.model.valueExists = false;
-        $scope.model.stakeholderRoles = {};
+        $scope.dataValues = {};
+        $scope.dataValuesCopy = {};
         $scope.model.basicAuditInfo = {};
         $scope.model.basicAuditInfo.exists = false;
-        $scope.model.rolesAreDifferent = false;
         $scope.saveStatus = {};
+        $scope.dataSetCompletness = {};
     };
+    
+    $scope.isHidden = function( dataElement, dataElementGroup ){
+        
+        if( dataElement.skipLogicParentId && 
+                dataElementGroup && 
+                dataElementGroup.dataElements &&
+                dataElementGroup.dataElements[dataElement.skipLogicParentId] ){
+            
+            var index = dataElement.skipLogicParentId - 1;
+            
+            if( index >= 0 ){
+                var skipParent = dataElementGroup.dataElements[index];
+                
+                if( skipParent && skipParent.id && $scope.desById[skipParent.id] ) {
+                    
+                    var de = $scope.desById[skipParent.id];
+                    
+                    if( de ){
+                        var value = '';
+                        if( de.dimensionAsOptionSet ){
+                            value = $scope.dataValues[skipParent.id];
+                            if( value ){
+                                if( dataElement.skipValue && dataElement.skipValue !== ''){
+                                    if( value && value.displayName === dataElement.skipValue ){                                    
+                                        return false;
+                                    }
+                                }
+                                else{
+                                    if( value.displayName === 'Yes' ){
+                                        return false;
+                                    }
+                                }
+                            }                            
+                        }
+                        else if( de.dimensionAsMultiOptionSet ){
+                            value = $scope.dataValues[skipParent.id];
+                            if( value && value.length > 1 ){
+                                return false;
+                            }
+                        }
+                        else{                            
+                            if( $scope.model.defaultCategoryCombo && de.categoryCombo &&
+                                $scope.model.defaultOptionCombo && $scope.model.defaultOptionCombo.id &&
+                                de.categoryCombo.id === $scope.model.defaultCategoryCombo.id && 
+                                $scope.dataValues[skipParent.id] ){ 
+
+                                value = $scope.dataValues[skipParent.id][$scope.model.defaultOptionCombo.id];
+                                
+                                if( de.valueType === 'NUMBER' ){
+                                    if( dataElement.skipValue === 0 || (dataElement.skipValue && dataElement.skipValue !== '')){                                        
+                                        dataElement.skipValue = parseInt( dataElement.skipValue );                                        
+                                        if( value.value === dataElement.skipValue ){
+                                            return false;
+                                        }
+                                    }
+                                    else{
+                                        if( value.value > 0 ){
+                                            return false;
+                                        }
+                                    }
+                                }
+                                else{
+                                    if( !value || value.value !== 'undefined' || value.value !== ''){
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // need to hide / remove exsiting value
+            if( $scope.dataValues[dataElement.id] ){                
+                if( dataElement.dimensionAsOptionSet ){                    
+                    var oldValue = angular.copy($scope.dataValues[dataElement.id]);                    
+                    delete $scope.dataValues[dataElement.id];
+                    $scope.saveDataValue(dataElement.id, oldValue.id, true);
+                }
+                else if( dataElement.dimensionAsMultiOptionSet ){
+                    delete $scope.dataValues[dataElement.id];
+                    $scope.saveDataValue(dataElement.id);
+                }
+                else{
+                    var props = Object.getOwnPropertyNames($scope.dataValues[dataElement.id]);
+                    
+                    if( props[0] && $scope.dataValues[dataElement.id][props[0]] ){
+                        delete $scope.dataValues[dataElement.id][props[0]];
+                        $scope.saveDataValue(dataElement.id, props[0], false);
+                    }
+                }
+            }            
+            return true;
+        }
+        return false;
+    };    
     
     $scope.loadDataEntryForm = function(){
         
@@ -207,47 +371,56 @@ sunPMT.controller('dataEntryController',
                 angular.isObject( $scope.model.selectedPeriod) && $scope.model.selectedPeriod.id &&                
                 $scope.model.categoryOptionsReady ){
             
-            var dataValueSetUrl = 'dataSet=' + $scope.model.selectedDataSet.id + '&period=' + $scope.model.selectedPeriod.id;
-
-            if( $scope.model.allowMultiOrgUnitEntry && $scope.model.selectedDataSet.entryMode === 'Multiple Entry'){
-                angular.forEach($scope.selectedOrgUnit.c, function(c){
-                    dataValueSetUrl += '&orgUnit=' + c;
-                });
-            }
-            else{
-                dataValueSetUrl += '&orgUnit=' + $scope.selectedOrgUnit.id;                
-            }
+            var dataValueSetUrl = 'dataSet=' + $scope.model.selectedDataSet.id + '&period=' + $scope.model.selectedPeriod.id + '&orgUnit=' + $scope.selectedOrgUnit.id;            
             
-            $scope.model.selectedAttributeOptionCombo = ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.selectedAttributeOptionCombos, $scope.model.selectedOptions);
+            $scope.model.selectedAttributeOptionCombo = ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.selectedAttributeOptionCombos, $scope.model.selectedOptions, $scope.model.selectedAttributeCategoryCombo);
 
             //fetch data values...
             DataValueService.getDataValueSet( dataValueSetUrl ).then(function(response){
                 if( response && response.dataValues && response.dataValues.length > 0 ){                    
-                    response.dataValues = $filter('filter')(response.dataValues, {attributeOptionCombo: $scope.model.selectedAttributeOptionCombo});                    
+                    response.dataValues = $filter('filter')(response.dataValues, {attributeOptionCombo: $scope.model.selectedAttributeOptionCombo});
                     if( response.dataValues.length > 0 ){
-                        $scope.model.valueExists = true;
                         angular.forEach(response.dataValues, function(dv){
-                            if(!$scope.model.dataValues[dv.orgUnit]){
-                                $scope.model.dataValues[dv.orgUnit] = {};
-                                $scope.model.dataValues[dv.orgUnit][dv.dataElement] = {};
-                                $scope.model.dataValues[dv.orgUnit][dv.dataElement][dv.categoryOptionCombo] = dv;
-                            }
-                            else{
-                                if(!$scope.model.dataValues[dv.orgUnit][dv.dataElement]){
-                                    $scope.model.dataValues[dv.orgUnit][dv.dataElement] = {};
+                            if( dv && dv.value ){
+                                dv.value = ActionMappingUtils.formatDataValue( dv, $scope.desById[dv.dataElement], $scope.model.mappedCategoryCombos );
+                            
+                                if( $scope.desById[dv.dataElement].dimensionAsMultiOptionSet ){
+                                    if( !$scope.dataValues[dv.dataElement] ){
+                                        $scope.dataValues[dv.dataElement] = [];
+                                    }
+
+                                    for(var i=0; i<$scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos.length;i++){
+                                        if( $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].id === dv.categoryOptionCombo ){
+                                            $scope.dataValues[dv.dataElement].push({id: dv.categoryOptionCombo, displayName: $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].displayName});
+                                            break;
+                                        }
+                                    }
                                 }
-                                $scope.model.dataValues[dv.orgUnit][dv.dataElement][dv.categoryOptionCombo] = dv;
-                            }                 
+
+                                if( $scope.desById[dv.dataElement].dimensionAsOptionSet){
+                                    $scope.dataValues[dv.dataElement] = dv.value;
+                                }
+                                else{
+                                    if(!$scope.dataValues[dv.dataElement]){
+                                        $scope.dataValues[dv.dataElement] = {};
+                                        $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
+                                    }
+                                    else{                                
+                                        $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
+                                    }
+                                }
+                            }                                                                         
                         });
+                        
                         response.dataValues = orderByFilter(response.dataValues, '-created').reverse();                    
                         $scope.model.basicAuditInfo.created = $filter('date')(response.dataValues[0].created, 'dd MMM yyyy');
                         $scope.model.basicAuditInfo.storedBy = response.dataValues[0].storedBy;
                         $scope.model.basicAuditInfo.exists = true;
                     }
                 }                
+                $scope.dataValuesCopy = angular.copy($scope.dataValues);
             });
-            
-            $scope.model.dataSetCompleted = false; 
+
             CompletenessService.get( $scope.model.selectedDataSet.id, 
                                     $scope.selectedOrgUnit.id,
                                     $scope.model.selectedPeriod.startDate,
@@ -257,13 +430,9 @@ sunPMT.controller('dataEntryController',
                         response.completeDataSetRegistrations && 
                         response.completeDataSetRegistrations.length &&
                         response.completeDataSetRegistrations.length > 0){
-                    $scope.model.dataSetCompleted = true;
                     
-                    $scope.model.dataSetCompletness = {};
                     angular.forEach(response.completeDataSetRegistrations, function(cdr){
-                        if( cdr.attributeOptionCombo.id === $scope.model.selectedAttributeOptionCombo ){
-                            $scope.model.dataSetCompletness[cdr.organisationUnit.id] = true;
-                        }                        
+                        $scope.dataSetCompletness[cdr.attributeOptionCombo.id] = true;
                     });
                 }
             });
@@ -271,8 +440,15 @@ sunPMT.controller('dataEntryController',
             angular.forEach($scope.model.selectedDataSet.dataElements, function(de){
                 de.dataElementGroupSet = $scope.model.degs[de.id];
                 de.dataElementGroup = $scope.model.deg[de.id];
-            });
+            });            
             
+            if( $scope.model.dataElementGroupSets.length > 0 ){                
+                angular.forEach($scope.model.dataElementGroupSets, function(degs){
+                    degs.active = false;
+                });
+                $scope.model.dataElementGroupSets[0].active = true;
+                $scope.setCurrentDataElementGroupSet( $scope.model.dataElementGroupSets[0] );
+            }            
         }
     };
     
@@ -311,60 +487,138 @@ sunPMT.controller('dataEntryController',
         if( mode === 'NXT'){
             $scope.periodOffset = $scope.periodOffset + 1;
             $scope.model.selectedPeriod = null;
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset);
+            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
         }
         else{
             $scope.periodOffset = $scope.periodOffset - 1;
             $scope.model.selectedPeriod = null;
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset);
+            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
         }
     };
     
-    $scope.saveDataValue = function( ouId, deId, ocId ){
+    $scope.saveDataValue = function( deId, ocId, dimensionAsOptionSet ){
         
-        $scope.saveStatus[ouId + '-' + deId + '-' + ocId] = {saved: false, pending: true, error: false};
+        var dataElement = $scope.desById[deId];
         
-        var dataValue = {ou: ouId,
-                    pe: $scope.model.selectedPeriod.id,
-                    de: deId,
-                    co: ocId,
-                    cc: $scope.model.selectedAttributeCategoryCombo.id,
-                    cp: ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                    value: $scope.model.dataValues[ouId][deId][ocId].value
-                };
+        if( !dataElement ){
+            return;
+        }
+            
+        var dataValue = {ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};
+        var status = {saved: false, pending: true, error: false};
+        
+        if( $scope.model.selectedAttributeCategoryCombo && !$scope.model.selectedAttributeCategoryCombo.isDefault ){
+            dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
+            dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
+        }
+        
+        if( ocId ){
+            $scope.saveStatus[deId + '-' + ocId ] = status;
+        }
+        
+        if( $scope.desById[deId].dimensionAsMultiOptionSet ){ 
+            var dataValueSet = {
+                                dataSet: $scope.model.selectedDataSet.id,
+                                period: $scope.model.selectedPeriod.id,
+                                orgUnit: $scope.selectedOrgUnit.id,
+                                dataValues: []
+                              };
+            
+            angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
+                var val = {dataElement: deId, categoryOptionCombo: oco.id, value: ''};
+                if( $scope.dataValues[deId] && $scope.dataValues[deId].length ){
+                    for( var i=0; i<$scope.dataValues[deId].length; i++){
+                        if( $scope.dataValues[deId][i] && $scope.dataValues[deId][i].id === oco.id ){
+                            val.value = 1;
+                            break;
+                        }
+                    }
+                }
                 
-        DataValueService.saveDataValue( dataValue ).then(function(response){
-           $scope.saveStatus[ouId + '-' + deId + '-' + ocId].saved = true;
-           $scope.saveStatus[ouId + '-' + deId + '-' + ocId].pending = false;
-           $scope.saveStatus[ouId + '-' + deId + '-' + ocId].error = false;
-        }, function(){
-            $scope.saveStatus[ouId + '-' + deId + '-' + ocId].saved = false;
-            $scope.saveStatus[ouId + '-' + deId + '-' + ocId].pending = false;
-            $scope.saveStatus[ouId + '-' + deId + '-' + ocId].error = true;
-        });
-    };    
-    
-    $scope.getInputNotifcationClass = function(ouId, deId, ocId){
+                dataValueSet.dataValues.push( val );
+            });            
+            
+            DataValueService.saveDataValueSet( dataValueSet ).then(function(){                
+            });
+        }
+        else{
+            if( !dimensionAsOptionSet ){
+                dataValue.co = ocId;
+                dataValue.value = '';            
+                if( $scope.dataValues[deId][ocId] ){
+                    dataValue.value = $scope.dataValues[deId][ocId].value === 0 ? 0 : $scope.dataValues[deId][ocId].value === '' ? '' : $scope.dataValues[deId][ocId].value;
+                }
+            }
+            else{
+                if( $scope.dataValues[deId] ){                
+                    dataValue.value = 1;                
+                    dataValue.co = ocId;                
+                    var oldValue = $scope.dataValuesCopy[deId];
+                    if( oldValue && oldValue.id ){
+                        var _dataValue = {value: '', co: oldValue.id, ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};                    
+                        if( $scope.model.selectedAttributeCategoryCombo && !$scope.model.selectedAttributeCategoryCombo.isDefault ){
+                            _dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
+                            _dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
+                        }                    
+                        DataValueService.saveDataValue( _dataValue );
+                    }                
+                }
+                else{                
+                    dataValue.co = $scope.dataValuesCopy[deId].id;
+                    dataValue.value = '';
+                }
+            }
 
-        var currentElement = $scope.saveStatus[ouId + '-' + deId + '-' + ocId];        
+            DataValueService.saveDataValue( dataValue ).then(function(response){
+                if( ocId ){
+                    $scope.saveStatus[deId + '-' + ocId].saved = true;
+                    $scope.saveStatus[deId + '-' + ocId].pending = false;
+                    $scope.saveStatus[deId + '-' + ocId].error = false;            
+                    if( dimensionAsOptionSet ){
+                        $scope.dataValuesCopy[deId] = $scope.dataValues[deId] ? $scope.dataValues[deId] : '';
+                    }
+                }
+                
+            }, function(){
+                if( ocId ){
+                    $scope.saveStatus[deId + '-' + ocId].saved = false;
+                    $scope.saveStatus[deId + '-' + ocId].pending = false;
+                    $scope.saveStatus[deId + '-' + ocId].error = true;
+                }                
+            });
+        }
+    };
+    
+    $scope.getInputNotifcationClass = function(deId, ocId){        
+
+        var currentElement = $scope.saveStatus[deId + '-' + ocId];
+        
+        var style = 'form-control';
         
         if( currentElement ){
             if(currentElement.pending){
-                return 'form-control input-pending';
+                style = 'form-control input-pending';
             }
 
             if(currentElement.saved){
-                return 'form-control input-success';
+                style = 'form-control input-success';
             }            
             else{
-                return 'form-control input-error';
+                style = 'form-control input-error';
             }
-        }    
+        }
         
-        return 'form-control';
-    };    
+        return style;
+    };
     
-    $scope.getAuditInfo = function(de, ouId, oco, value, comment){        
+    $scope.getMainQuestionTableStyle = function( de ){
+        if( !de.skipLogicParentId || de.skipLogicParentId === ""){
+            return "main-question";
+        }        
+        return "sub-question";
+    };
+    
+    $scope.getAuditInfo = function(de, oco){        
         var modalInstance = $modal.open({
             templateUrl: 'components/dataentry/history.html',
             controller: 'DataEntryHistoryController',
@@ -377,16 +631,16 @@ sunPMT.controller('dataEntryController',
                     return de;
                 },
                 value: function(){
-                    return value;
+                    return $scope.dataValues[de.id] && $scope.dataValues[de.id][oco.id] && $scope.dataValues[de.id][oco.id].value ? $scope.dataValues[de.id][oco.id].value : '';
                 },
                 comment: function(){
-                    return comment;
+                    return $scope.dataValues[de.id] && $scope.dataValues[de.id][oco.id] && $scope.dataValues[de.id][oco.id].comment ? $scope.dataValues[de.id][oco.id].comment : '';
                 },
                 program: function () {
                     return $scope.model.selectedProgram;
                 },
                 orgUnitId: function(){
-                    return  ouId;
+                    return  $scope.selectedOrgUnit.id;
                 },
                 attributeCategoryCombo: function(){
                     return $scope.model.selectedAttributeCategoryCombo;
@@ -399,101 +653,123 @@ sunPMT.controller('dataEntryController',
                 },
                 optionCombo: function(){
                     return oco;
-                },
-                currentEvent: function(){
-                    return $scope.model.selectedEvent[ouId];
+                }
+            }
+        });
+
+        modalInstance.result.then(function () {
+        });
+    };
+    
+    $scope.displayReport = function(){
+        console.log('need to display country report');
+    };
+        
+    function processCompletness( isSave ){
+        if( isSave ){
+            $scope.dataSetCompletness[$scope.model.selectedAttributeOptionCombo] = true;
+        }
+        else{
+            delete $scope.dataSetCompletness[$scope.model.selectedAttributeOptionCombo];
+        }
+    };
+    
+    $scope.saveCompletness = function(){
+        
+        //check for form validity
+        var invalidFields = [];
+        angular.forEach($scope.model.selectedDataSet.dataElements, function(dataElement){            
+            if( dataElement.dataElementGroup && 
+                    $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] &&
+                    !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
+                if( !$scope.dataValues[dataElement.id] || $scope.dataValues[dataElement.id] === ''){
+                    invalidFields.push( $scope.desById[dataElement.id] );
                 }
             }
         });
         
-        modalInstance.result.then(function () {
-        }); 
-    };
-        
-    function processCompletness( orgUnit, multiOrgUnit, isSave ){
-        if( multiOrgUnit ){
-            angular.forEach($scope.selectedOrgUnit.c, function(ou){                
-                if( isSave ){
-                    if( angular.isUndefined( $scope.model.dataSetCompletness) ){
-                        $scope.model.dataSetCompletness = {};
+        if( invalidFields.length > 0 ){
+            
+            var modalInstance = $modal.open({
+                templateUrl: 'components/dataentry/validation-dialog.html',
+                controller: 'ValidationDialogController',
+                windowClass: 'modal-full-window',
+                resolve: {
+                    invalidFields: function(){
+                        return invalidFields;
+                    },
+                    dataElementGroupSets: function(){
+                        return $scope.model.dataElementGroupSets;
                     }
-                    $scope.model.dataSetCompletness[ou] = true;
-                }
-                else{
-                    delete $scope.model.dataSetCompletness[ou];
                 }
             });
+
+            modalInstance.result.then(function () {
+            });            
         }
         else{
-            if( isSave ){
-                $scope.model.dataSetCompletness[orgUnit] = true;
-            }
-            else{
-                delete $scope.model.dataSetCompletness[orgUnit];
-            }
+            var modalOptions = {
+                closeButtonText: 'no',
+                actionButtonText: 'yes',
+                headerText: 'mark_complete',
+                bodyText: 'are_you_sure_to_mark_complete'
+            };
+
+            ModalService.showModal({}, modalOptions).then(function(result){
+
+                CompletenessService.save($scope.model.selectedDataSet.id, 
+                    $scope.model.selectedPeriod.id, 
+                    $scope.selectedOrgUnit.id,
+                    $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
+                    $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
+                    false).then(function(response){
+
+                    var dialogOptions = {
+                        headerText: 'success',
+                        bodyText: 'marked_complete'
+                    };
+                    DialogService.showDialog({}, dialogOptions);
+                    processCompletness(true);
+
+                }, function(response){
+                    ActionMappingUtils.errorNotifier( response );
+                });
+            });
         }
     };
     
-    $scope.saveCompletness = function(orgUnit, multiOrgUnit){
+    $scope.deleteCompletness = function(){
         var modalOptions = {
             closeButtonText: 'no',
             actionButtonText: 'yes',
-            headerText: 'save_completeness',
-            bodyText: 'are_you_sure_to_save_completeness'
-        };
-
-        ModalService.showModal({}, modalOptions).then(function(result){
-            
-            CompletenessService.save($scope.model.selectedDataSet.id, 
-                $scope.model.selectedPeriod.id, 
-                orgUnit,
-                $scope.model.selectedAttributeCategoryCombo.id,
-                ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                multiOrgUnit).then(function(response){
-                    
-                var dialogOptions = {
-                    headerText: 'success',
-                    bodyText: 'marked_complete'
-                };
-                DialogService.showDialog({}, dialogOptions);
-                processCompletness(orgUnit, multiOrgUnit, true);
-                $scope.model.dataSetCompleted = angular.equals({}, $scope.model.dataSetCompletness);
-                
-            }, function(response){
-                ActionMappingUtils.errorNotifier( response );
-            });
-        });        
-    };
-    
-    $scope.deleteCompletness = function( orgUnit, multiOrgUnit){
-        var modalOptions = {
-            closeButtonText: 'no',
-            actionButtonText: 'yes',
-            headerText: 'delete_completeness',
-            bodyText: 'are_you_sure_to_delete_completeness'
+            headerText: 'mark_not_complete',
+            bodyText: 'are_you_sure_to_mark_not_complete'
         };
 
         ModalService.showModal({}, modalOptions).then(function(result){
             
             CompletenessService.delete($scope.model.selectedDataSet.id, 
                 $scope.model.selectedPeriod.id, 
-                orgUnit,
-                $scope.model.selectedAttributeCategoryCombo.id,
-                ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                multiOrgUnit).then(function(response){
+                $scope.selectedOrgUnit.id,
+                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
+                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
+                false).then(function(response){
                 
                 var dialogOptions = {
                     headerText: 'success',
                     bodyText: 'marked_not_complete'
                 };
                 DialogService.showDialog({}, dialogOptions);
-                processCompletness(orgUnit, multiOrgUnit, false);
-                $scope.model.dataSetCompleted = !angular.equals({}, $scope.model.dataSetCompletness);
+                processCompletness(false);
                 
             }, function(response){
                 ActionMappingUtils.errorNotifier( response );
             });
         });        
+    };
+    
+    $scope.setCurrentDataElementGroupSet = function( degs ){
+        $scope.setCurrentDataElementGroup( degs.dataElementGroups[0] );
     };
     
     $scope.setCurrentDataElementGroup = function(deg){
@@ -502,5 +778,25 @@ sunPMT.controller('dataEntryController',
     
     $scope.setCurrentDataElement = function(de){
         $scope.currentDataElement = de;
+    };
+    
+    $scope.getOptionComboByName = function(option1, option2, cc){        
+        return ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.mappedOptionCombos, [option1, option2], cc);
+    };
+    
+    $scope.joinOnProperty = function( objs, prop){
+        var result = [];
+        angular.forEach(objs, function(obj){
+            result.push( obj[prop] );
+        });
+        return result.join(', ');
+    };
+    
+    $scope.exportData = function () {
+        var blob = new Blob([document.getElementById('exportTable').innerHTML], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8"
+        });
+        var reportName = $scope.selectedOrgUnit.n + '-' + $scope.model.selectedPeriod.name + '.xls';
+        saveAs(blob, reportName);
     };
 });

@@ -28,7 +28,7 @@ if( dhis2.sunpmt.memoryOnly ) {
 dhis2.sunpmt.store = new dhis2.storage.Store({
     name: 'dhis2sunpmt',
     adapters: [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter],
-    objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos', 'programs', 'ouLevels', 'indicatorGroups']
+    objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos', 'categoryOptionGroups', 'programs', 'ouLevels', 'indicatorGroups']
 });
 
 (function($) {
@@ -138,6 +138,11 @@ function downloadMetaData()
     promise = promise.then( getMetaCategoryCombos );
     promise = promise.then( filterMissingCategoryCombos );
     promise = promise.then( getCategoryCombos );
+    
+    //fetch category option groups
+    promise = promise.then( getMetaCategoryOptionGroups );
+    promise = promise.then( filterMissingCategoryOptionGroups );
+    promise = promise.then( getCategoryOptionGroups );
         
     //fetch data sets
     promise = promise.then( getMetaDataSets );
@@ -217,6 +222,18 @@ function filterMissingCategoryCombos( objs ){
 
 function getCategoryCombos( ids ){    
     return dhis2.metadata.getBatches( ids, batchSize, 'categoryCombos', 'categoryCombos', '../api/categoryCombos.json', 'paging=false&fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,attributeValues[value,attribute[id,name,code]],categoryOptions[id,name,displayName,code]]', 'idb', dhis2.sunpmt.store);
+}
+
+function getMetaCategoryOptionGroups(){
+    return dhis2.metadata.getMetaObjectIds('categoryOptionGroups', '../api/categoryOptionGroups.json', 'paging=false&fields=id,version');
+}
+
+function filterMissingCategoryOptionGroups( objs ){
+    return dhis2.metadata.filterMissingObjIds('categoryOptionGroups', dhis2.sunpmt.store, objs);
+}
+
+function getCategoryOptionGroups( ids ){    
+    return dhis2.metadata.getBatches( ids, batchSize, 'categoryOptionGroups', 'categoryOptionGroups', '../api/categoryOptionGroups.json', 'paging=false&fields=id,name,attributeValues[value,attribute[id,name,code,valueType]],categoryOptions[id,name]', 'idb', dhis2.sunpmt.store);
 }
 
 function getMetaDataSets(){

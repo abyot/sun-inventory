@@ -1,7 +1,7 @@
-/* global sunPMT, selection */
+/* global sunInventory, selection */
 
 //Controller for column show/hide
-sunPMT.controller('LeftBarMenuController',
+sunInventory.controller('LeftBarMenuController',
         function($scope, $location) {
     $scope.showDataEntry = function(){
         selection.load();
