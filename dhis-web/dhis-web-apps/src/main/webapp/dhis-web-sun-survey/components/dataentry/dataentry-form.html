@@ -110,8 +110,7 @@
                                                 </tr>
                                                 <tr ng-if="de.showDescription">
                                                     <td colspan="2">
-                                                        <div class="alert alert-info">
-                                                            {{de.description ? de.description : 'missing_definition' | translate}}
+                                                        <div class="alert alert-info" ng-bind-html="de.description">
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -176,8 +175,7 @@
                                                 </tr>
                                                 <tr ng-if="de.showDescription">
                                                     <td colspan="4">
-                                                        <div class="alert alert-info">
-                                                            {{de.description}}
+                                                        <div class="alert alert-info" ng-bind-html="de.description">                                                            
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -219,8 +217,7 @@
                                                 </tr>
                                                 <tr ng-if="de.showDescription">
                                                     <td colspan="{{2 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                        <div class="alert alert-info">
-                                                            {{de.description}}
+                                                        <div class="alert alert-info" ng-bind-html="de.description">
                                                         </div>
                                                     </td>
                                                 </tr>

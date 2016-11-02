@@ -164,6 +164,17 @@ sunSurvey.controller('dataEntryController',
                                 $scope.model.dataElementGroupsById[deg.id] = deg;
                             });
                         });
+                        
+                        for(var i=0; i<$scope.model.dataElementGroupSets.length; i++){
+                            if( i=== 0 ){
+                                $scope.model.dataElementGroupSets[i].order = $scope.model.dataElementGroupSets.length;
+                            }
+                            else{
+                                $scope.model.dataElementGroupSets[i].order = i-1;
+                            }
+                        }
+                        
+                        $scope.model.dataElementGroupSets = orderByFilter($scope.model.dataElementGroupSets, '-order').reverse(); 
                     });
                 }
             });
@@ -520,7 +531,7 @@ sunSurvey.controller('dataEntryController',
                 dataValue.co = ocId;
                 dataValue.value = '';            
                 if( $scope.dataValues[deId][ocId] ){
-                    dataValue.value = $scope.dataValues[deId][ocId].value === 0 ? 0 : $scope.dataValues[deId][ocId].value === '' ? '' : $scope.dataValues[deId][ocId].value;
+                    dataValue.value = $scope.dataValues[deId][ocId].value === 0 ? 0 : $scope.dataValues[deId][ocId].value === '' ? '' : $scope.dataValues[deId][ocId].value === null ? '' : $scope.dataValues[deId][ocId].value;
                 }
             }
             else{
