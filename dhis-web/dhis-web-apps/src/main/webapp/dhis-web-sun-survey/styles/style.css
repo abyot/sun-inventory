@@ -933,3 +933,8 @@ table td.crossed::after {
     margin-top: 30px; 
     padding: 2px;
 }
+
+.btn-description {
+    line-height: 150%;
+    font-size: 10pt !important;
+}

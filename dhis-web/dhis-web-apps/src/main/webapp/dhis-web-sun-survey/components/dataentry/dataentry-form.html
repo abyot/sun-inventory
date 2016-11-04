@@ -39,22 +39,12 @@
                                                         <div ng-if="de.questionWarning" class="alert alert-warning">
                                                             {{de.questionWarning}}
                                                         </div>
-                                                        <div ng-if="de.url" class="alert alert-success">
-                                                            <a href="{{de.url}}" target="_blank">
-                                                                {{de.url}}
-                                                            </a>
-                                                        </div>
                                                     </td>
                                                     <td ng-class="getMainQuestionTableStyle(de)"
                                                         ng-if="!de.description">
                                                         {{de.displayName}}
                                                         <div ng-if="de.questionWarning" class="alert alert-warning">
                                                             {{de.questionWarning}}
-                                                        </div>
-                                                        <div ng-if="de.url" class="alert alert-success">                                                            
-                                                            <a href="{{de.url}}" target="_blank">
-                                                                {{de.url}}
-                                                            </a>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -114,6 +104,15 @@
                                                         </div>
                                                     </td>
                                                 </tr>
+                                                <tr ng-if="de.url">
+                                                    <td colspan="2">
+                                                        <div class="alert alert-success">
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             </table>
 
                                             <table class="table table-bordered table-condensed" 
@@ -127,11 +126,6 @@
                                                         <div ng-if="de.questionWarning" class="alert alert-warning">
                                                             {{de.questionWarning}}
                                                         </div>
-                                                        <div ng-if="de.url" class="alert alert-success">
-                                                            <a href="{{de.url}}" target="_blank">
-                                                                {{de.url}}
-                                                            </a>
-                                                        </div>
                                                     </td>
                                                     <td class="mouse-pointer"
                                                         ng-class="getMainQuestionTableStyle(de)" 
@@ -142,9 +136,6 @@
                                                         <i class="fa fa-info-circle" aria-hidden="true"></i>
                                                         <div ng-if="de.questionWarning" class="alert alert-warning">
                                                             {{de.questionWarning}}
-                                                        </div>
-                                                        <div ng-if="de.url" class="alert alert-success">
-                                                            {{de.url}}
                                                         </div>
                                                     </td>
                                                     <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
@@ -179,6 +170,15 @@
                                                         </div>
                                                     </td>
                                                 </tr>
+                                                <tr ng-if="de.url">
+                                                    <td colspan="4">
+                                                        <div class="alert alert-success">
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             </table>                                            
 
                                             <table class="table table-bordered table-condensed large-table"                                                
@@ -194,11 +194,6 @@
                                                         <div ng-if="de.questionWarning" class="alert alert-warning">
                                                             {{de.questionWarning}}
                                                         </div>
-                                                        <div ng-if="de.url" class="alert alert-success">
-                                                            <a href="{{de.url}}" target="_blank">
-                                                                {{de.url}}
-                                                            </a>
-                                                        </div>
                                                     </td>
                                                     <td ng-if="!de.description"
                                                         colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
@@ -208,16 +203,20 @@
                                                         <div ng-if="de.questionWarning" class="alert alert-warning">
                                                             {{de.questionWarning}}
                                                         </div>
-                                                        <div ng-if="de.url" class="alert alert-success">
-                                                            <a href="{{de.url}}" target="_blank">
-                                                                {{de.url}}
-                                                            </a>
-                                                        </div>
                                                     </td>
                                                 </tr>
                                                 <tr ng-if="de.showDescription">
-                                                    <td colspan="{{2 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                    <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
                                                         <div class="alert alert-info" ng-bind-html="de.description">
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="de.url">
+                                                    <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                        <div class="alert alert-success">
+                                                            <a href="{{de.url}}" target="_blank">
+                                                                {{de.url}}
+                                                            </a>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -231,11 +230,6 @@
                                                     <th class="active pull-center">
                                                         {{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].name}}
                                                     </th>
-                                                    <!--<td class="crossed">
-                                                        <span class="pull-right">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].name}}</span>
-                                                        <br><br>
-                                                        <span class="pull-left">{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].name}}</span>
-                                                    </td>-->
                                                     <td class="active pull-center" 
                                                         ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions | orderBy: 'name'">
                                                         {{option2.name}}

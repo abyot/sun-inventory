@@ -119,25 +119,26 @@
             </div>
             <div class="col-sm-6 div-bottom-container" ng-if="model.selectedDataSet && model.selectedPeriod">                
                 <div class="div-bottom">                    
-                    <button class="btn btn-success hideInPrint small-vertical-spacing"
+                    <button class="btn btn-success hideInPrint small-vertical-spacing small-horizontal-spacing "
                             type="button"
                             ng-click="model.showReportDiv = !model.showReportDiv">
-                        {{model.showReportDiv ? 'data_entry' : 'view_data_as_table' | translate}}
+                        {{model.showReportDiv ? 'back_to_data_entry' : 'view_data_as_table' | translate}}
                     </button>
                     <button type="button" 
                             class="btn btn-primary small-horizontal-spacing small-vertical-spacing" 
-                            ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                            ng-if="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
                             ng-click="saveCompletness()">
                         {{'mark_complete'| translate}}
                     </button>
                     <button type="button" 
                             class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
-                            ng-disabled="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                            ng-if="dataSetCompletness[model.selectedAttributeOptionCombo]" 
                             ng-click="deleteCompletness()">
                         {{'mark_not_complete'| translate}}
                     </button>                        
                     
-                    <a class="cursor-pointer small-horizontal-spacing small-vertical-spacing" ng-click="model.showButtonInfo = !model.showButtonInfo">
+                    <a class="cursor-pointer small-horizontal-spacing small-vertical-spacing"                        
+                       ng-click="model.showButtonInfo = !model.showButtonInfo">
                         <i class="fa fa-2x fa-info-circle" aria-hidden="true"></i>
                     </a>
                 </div>
@@ -145,17 +146,18 @@
         </div>        
         <!-- selection ends -->        
 
-        <div class="alert alert-info vertical-spacing" ng-if="model.showButtonInfo">
-            <p>
-                view data as tables
+        <div class="vertical-spacing selectionArea alert" ng-if="model.showButtonInfo">
+            <p ng-if="!model.showReportDiv" class="btn-description">
+                <span class="bold">{{'view_data_as_table' | translate}}:</span>  {{'view_data_as_table_desc' | translate}}
             </p>
-            <p>
-                mark report complete
+            <p ng-if="!dataSetCompletness[model.selectedAttributeOptionCombo]" class="btn-description">
+                <span class="bold">{{'mark_complete' | translate}}:</span>  {{'mark_complete_desc' | translate}}
             </p>
-            <p>
-                mark report not-complete
+            <p ng-if="dataSetCompletness[model.selectedAttributeOptionCombo]" class="btn-description">
+                <span class="bold">{{'mark_not_complete' | translate}}:</span>  {{'mark_not_complete_desc' | translate}}
             </p>
         </div>
+        
         <div class="alert alert-danger vertical-spacing" ng-if="model.invalidDimensions && model.selectedDataSet">
             {{'data_set_have_invalid_dimension'| translate}}
         </div>

@@ -35,6 +35,19 @@
                         </span>                        
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        {{'short_proj_desc' | translate}}
+                    </td>
+                    <td>
+                        <textarea rows="5"  
+                                ng-model="dataValues[de.id]"
+                                class="form-control" 
+                                ng-class="getInputNotifcationClass(de.id)"                                                                       
+                                d2-blur="saveDataValue(de.id, oco.id)">
+                        </textarea>
+                    </td>
+                </tr>
             </table>
         </div>
     </div>
