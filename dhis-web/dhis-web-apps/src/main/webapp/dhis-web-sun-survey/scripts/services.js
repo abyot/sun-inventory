@@ -10,7 +10,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     var store = new dhis2.storage.Store({
         name: "dhis2sunSurvey",
         adapters: [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter],
-        objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos']
+        objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryOptionGroups', 'categoryCombos']
     });
     return{
         currentStore: store
@@ -538,7 +538,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });
             
             var selectedOptionComboName = optionNames.toString();
-            selectedOptionComboName = selectedOptionComboName.replace(",", ", ");            
+            selectedOptionComboName =  selectedOptionComboName.replace(/\,/g, ', ');
             
             //var selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
             var selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
@@ -702,126 +702,15 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             delete ds.dataSetElements;
             
             return ds;
-        }
-    };
-})
-
-.service('ReportService', function($q, $filter, orderByFilter, EventService, DataValueService, ActionMappingUtils){
-    return {        
-        getReportData: function(reportParams, reportData){            
-            var def = $q.defer();
-            var pushedHeaders = [];
-            
-            EventService.getForMultiplePrograms(reportParams.orgUnit, 'DESCENDANTS', reportParams.programs, null, reportParams.period.startDate, reportParams.period.endDate).then(function(events){
-                if( !events || !events.length || events.length === 0 ){
-                    reportData.noDataExists = true;
-                    reportData.reportReady = true;
-                    reportData.reportStarted = false;
-                    reportData.showReportFilters = false;
-                    
-                    def.resolve(reportData);
-                }
-                else{
-                    angular.forEach(events, function(ev){
-                        var _ev = {event: ev.event, orgUnit: ev.orgUnit};
-                        if( !reportData.mappedRoles[reportData.programCodesById[ev.program]][ev.orgUnit] ){
-                            reportData.mappedRoles[reportData.programCodesById[ev.program]][ev.orgUnit] = {};
-                            reportData.mappedRoles[reportData.programCodesById[ev.program]][ev.orgUnit][ev.categoryOptionCombo] = {};
-                        }
-                        else{
-                            if( reportData.mappedRoles[reportData.programCodesById[ev.program]][ev.orgUnit] && !reportData.mappedRoles[reportData.programCodesById[ev.program]][ev.orgUnit][ev.categoryOptionCombo] ){
-                                reportData.mappedRoles[reportData.programCodesById[ev.program]][ev.orgUnit][ev.categoryOptionCombo] = {};
-                            }
-                        }                
-
-                        if( ev.dataValues ){
-                            angular.forEach(ev.dataValues, function(dv){                        
-                                if( dv.dataElement && reportData.roleDataElementsById[dv.dataElement] ){
-                                    _ev[dv.dataElement] = dv.value.split(",");
-                                    if( pushedHeaders.indexOf(dv.dataElement) === -1 ){
-                                        var rde = reportData.roleDataElementsById[dv.dataElement];
-                                        reportData.whoDoesWhatCols.push({id: dv.dataElement, name: rde.name, sortOrder: rde.sortOrder, domain: 'DE'});
-                                        pushedHeaders.push( dv.dataElement );                                
-                                    }
-
-                                    if( !reportData.availableRoles[dv.dataElement] ){
-                                        reportData.availableRoles[dv.dataElement] = {};
-                                        reportData.availableRoles[dv.dataElement][ev.categoryOptionCombo] = [];
-                                    }
-                                    if( !reportData.availableRoles[dv.dataElement][ev.categoryOptionCombo] ){
-                                        reportData.availableRoles[dv.dataElement][ev.categoryOptionCombo] = [];
-                                    }   
-
-                                    reportData.availableRoles[dv.dataElement][ev.categoryOptionCombo] = ActionMappingUtils.pushRoles( reportData.availableRoles[dv.dataElement][ev.categoryOptionCombo], dv.value );
-                                }
-                            });                    
-                            reportData.mappedRoles[reportData.programCodesById[ev.program]][ev.orgUnit][ev.categoryOptionCombo][ev.attributeOptionCombo] = _ev;
-                        }
+        },
+        cartesianProduct: function(){
+            return _.reduce(arguments, function(a, b) {
+                return _.flatten(_.map(a, function(x) {
+                    return _.map(b, function(y) {
+                        return x.concat([y]);
                     });
-                    
-                    reportData.mappedValues = [];
-                    reportData.mappedTargetValues = {};
-                    DataValueService.getDataValueSet( reportParams.dataValueSetUrl ).then(function( response ){                
-                        if( response && response.dataValues ){
-                            angular.forEach(response.dataValues, function(dv){
-                                var oco = reportData.mappedOptionCombos[dv.attributeOptionCombo];
-                                oco.optionNames = oco.displayName.split(", ");
-                                for(var i=0; i<oco.categories.length; i++){                        
-                                    dv[oco.categories[i].id] = [oco.optionNames[i]];
-                                    if( pushedHeaders.indexOf( oco.categories[i].id ) === -1 ){
-                                        reportData.whoDoesWhatCols.push({id: oco.categories[i].id, name: oco.categories[i].name, sortOrder: i, domain: 'CA'});
-                                        pushedHeaders.push( oco.categories[i].id );
-                                    }
-                                    if( !reportData.availableRoles[oco.categories[i].id] ){
-                                        reportData.availableRoles[oco.categories[i].id] = {};
-                                        reportData.availableRoles[oco.categories[i].id][dv.categoryOptionCombo] = [];
-                                    }
-                                    if( !reportData.availableRoles[oco.categories[i].id][dv.categoryOptionCombo] ){
-                                        reportData.availableRoles[oco.categories[i].id][dv.categoryOptionCombo] = [];
-                                    }
-
-                                    reportData.availableRoles[oco.categories[i].id][dv.categoryOptionCombo] = ActionMappingUtils.pushRoles( reportData.availableRoles[oco.categories[i].id][dv.categoryOptionCombo], oco.displayName );
-                                }
-
-                                if( reportData.mappedRoles[reportData.dataElementCodesById[dv.dataElement]] &&
-                                    reportData.mappedRoles[reportData.dataElementCodesById[dv.dataElement]][dv.orgUnit] &&
-                                    reportData.mappedRoles[reportData.dataElementCodesById[dv.dataElement]][dv.orgUnit][dv.categoryOptionCombo]){                            
-                                    var r = reportData.mappedRoles[reportData.dataElementCodesById[dv.dataElement]][dv.orgUnit][dv.categoryOptionCombo][dv.attributeOptionCombo];
-                                    if( r && angular.isObject( r ) ){
-                                        angular.extend(dv, r);
-                                    }
-                                }
-                                else{ // target values (denominators)
-                                    if( !reportData.mappedTargetValues[dv.dataElement] ){
-                                        reportData.mappedTargetValues[dv.dataElement] = {};
-                                        reportData.mappedTargetValues[dv.dataElement][dv.orgUnit] = {};
-                                    }
-                                    if( !reportData.mappedTargetValues[dv.dataElement][dv.orgUnit] ){
-                                        reportData.mappedTargetValues[dv.dataElement][dv.orgUnit] = {};
-                                    }
-                                    reportData.mappedTargetValues[dv.dataElement][dv.orgUnit][dv.categoryOptionCombo] = dv.value;
-                                }
-
-                            });                    
-                            reportData.mappedValues = response;
-                            reportData.noDataExists = false;
-                        }
-                        else{                    
-                            reportData.showReportFilters = false;
-                            reportData.noDataExists = true;
-                        }  
-
-                        var cols = orderByFilter($filter('filter')(reportData.whoDoesWhatCols, {domain: 'CA'}), '-name').reverse();                
-                        cols = cols.concat(orderByFilter($filter('filter')(reportData.whoDoesWhatCols, {domain: 'DE'}), '-name').reverse());
-                        reportData.whoDoesWhatCols = cols;                
-                        reportData.reportReady = true;
-                        reportData.reportStarted = false;
-
-                        def.resolve(reportData);
-                    });                    
-                }                
-            });
-            return def.promise;
+                }), true);
+            }, [ [] ]);
         }
     };
 })
@@ -872,100 +761,4 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
         open: open,
         get: get
     };
-})
-
-/* service for handling events */
-.service('EventService', function($http, $q, DHIS2URL, ActionMappingUtils) {   
-    
-    var skipPaging = "&skipPaging=true";
-    
-    var getByOrgUnitAndProgram = function(orgUnit, ouMode, program, attributeCategoryUrl, categoryOptionCombo, startDate, endDate){
-        var url = DHIS2URL + '/events.json?' + 'orgUnit=' + orgUnit + '&ouMode='+ ouMode + '&program=' + program + skipPaging;
-
-        if( startDate && endDate ){
-            url += '&startDate=' + startDate + '&endDate=' + endDate;
-        }
-
-        if( attributeCategoryUrl && !attributeCategoryUrl.default ){
-            url += '&attributeCc=' + attributeCategoryUrl.cc + '&attributeCos=' + attributeCategoryUrl.cp;
-        }
-        
-        if( categoryOptionCombo ){
-            url += '&coc=' + categoryOptionCombo;
-        }
-
-        var promise = $http.get( url ).then(function(response){
-            return response.data.events;
-        }, function(response){
-            ActionMappingUtils.errorNotifier(response);
-        });            
-        return promise;
-    };
-    
-    var get = function(eventUid){            
-        var promise = $http.get(DHIS2URL + '/events/' + eventUid + '.json').then(function(response){               
-            return response.data;
-        });            
-        return promise;
-    };
-    
-    var create = function(dhis2Event){    
-        var promise = $http.post(DHIS2URL + '/events.json', dhis2Event).then(function(response){
-            return response.data;           
-        });
-        return promise;            
-    };
-    
-    var deleteEvent = function(dhis2Event){
-        var promise = $http.delete(DHIS2URL + '/events/' + dhis2Event.event).then(function(response){
-            return response.data;               
-        });
-        return promise;           
-    };
-    
-    var update = function(dhis2Event){   
-        var promise = $http.put(DHIS2URL + '/events/' + dhis2Event.event, dhis2Event).then(function(response){
-            return response.data;         
-        });
-        return promise;
-    };
-    return {        
-        get: get,        
-        create: create,
-        deleteEvent: deleteEvent,
-        update: update,
-        getByOrgUnitAndProgram: getByOrgUnitAndProgram,
-        getForMultipleOptionCombos: function( orgUnit, mode, pr, attributeCategoryUrl, optionCombos, startDate, endDate ){
-            var def = $q.defer();            
-            var promises = [], events = [];            
-            angular.forEach(optionCombos, function(oco){
-                promises.push( getByOrgUnitAndProgram( orgUnit, mode, pr, attributeCategoryUrl, oco.id, startDate, endDate) );
-            });
-            
-            $q.all(promises).then(function( _events ){
-                angular.forEach(_events, function(evs){
-                    events = events.concat( evs );
-                });
-                
-                def.resolve(events);
-            });
-            return def.promise;
-        },
-        getForMultiplePrograms: function( orgUnit, mode, programs, attributeCategoryUrl, startDate, endDate ){
-            var def = $q.defer();            
-            var promises = [], events = [];            
-            angular.forEach(programs, function(pr){
-                promises.push( getByOrgUnitAndProgram( orgUnit, mode, pr.id, attributeCategoryUrl, null, startDate, endDate) );                
-            });
-            
-            $q.all(promises).then(function( _events ){
-                angular.forEach(_events, function(evs){
-                    events = events.concat( evs );
-                });
-                
-                def.resolve(events);
-            });
-            return def.promise;
-        }
-    };    
 });

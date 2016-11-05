@@ -938,3 +938,11 @@ table td.crossed::after {
     line-height: 150%;
     font-size: 10pt !important;
 }
+
+.ui-select-bootstrap .ui-select-choices-row > a{
+    white-space: normal;
+}
+
+.ui-select-multiple .ui-select-match-item {
+    white-space: normal;
+}

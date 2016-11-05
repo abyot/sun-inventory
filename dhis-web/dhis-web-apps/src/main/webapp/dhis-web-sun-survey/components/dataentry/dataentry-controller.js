@@ -79,7 +79,66 @@ sunSurvey.controller('dataEntryController',
                 });
             });
             
-            MetaDataFactory.getAll('categoryCombos').then(function(ccs){
+            var optionGroupByMembers = [];
+            MetaDataFactory.getAll('categoryOptionGroups').then(function(categoryOptionGroups){
+                $scope.model.categoryOptionGroups = [];
+                angular.forEach(categoryOptionGroups, function(cog){
+                    if( cog.dataSetDomain === 'SURVEY' ){
+                        angular.forEach(cog.categoryOptions, function(co){
+                            optionGroupByMembers[co.name] = cog;
+                        });                        
+                        $scope.model.categoryOptionGroups.push(cog);
+                    }                    
+                });
+                
+                var orderedOptionGroup = {};                            
+                MetaDataFactory.getAll('categoryCombos').then(function(ccs){
+                    angular.forEach(ccs, function(cc){
+                        if( cc.isDefault ){
+                            $scope.model.defaultCategoryCombo = cc;
+                            $scope.model.defaultOptionCombo = cc.categoryOptionCombos[0];
+                        }
+                        $scope.pushedOptions[cc.id] = [];
+
+                        if( cc.categories && cc.categories.length === 1 && cc.categories[0].categoryOptions ){
+
+                            var sortedOptions = [];
+                            angular.forEach(cc.categories[0].categoryOptions, function(co){
+                                sortedOptions.push( co.displayName );
+                            });
+
+                            cc.categoryOptionCombos = _.sortBy( cc.categoryOptionCombos, function(coc){
+                                return sortedOptions.indexOf( coc.displayName );
+                            });                            
+                        }
+                        
+                        if( cc.displayName === 'Joint Programme Dimensions' ){
+                            for(var i=0; i< cc.categoryOptionCombos.length; i++){
+                                $scope.model.mappedOptionCombos[cc.categoryOptionCombos[i].displayName] = cc.categoryOptionCombos[i];
+                                var og = optionGroupByMembers[cc.categoryOptionCombos[i].displayName];
+                                if( og ){                                    
+                                    cc.categoryOptionCombos[i].categoryOptionGroup = og;
+                                    if( !orderedOptionGroup[og.id] ){
+                                        orderedOptionGroup[og.id] = i;
+                                    }
+                                }
+                            }                            
+
+                            angular.forEach($scope.model.categoryOptionGroups, function(cog){
+                                cog.order = orderedOptionGroup[cog.id];
+                            });
+                        }
+                        
+                        angular.forEach(cc.categoryOptionCombos, function(oco){
+                            $scope.model.mappedOptionCombos[oco.displayName] = oco;
+                        });
+                        
+                        $scope.model.mappedCategoryCombos[cc.id] = cc;
+                    });
+                });
+            });
+            
+            /*MetaDataFactory.getAll('categoryCombos').then(function(ccs){
                 angular.forEach(ccs, function(cc){
                     if( cc.isDefault ){
                         $scope.model.defaultCategoryCombo = cc;
@@ -104,7 +163,7 @@ sunSurvey.controller('dataEntryController',
                     });
                     $scope.model.mappedCategoryCombos[cc.id] = cc;                    
                 });
-            });
+            });*/
         }
     }
     
@@ -238,7 +297,14 @@ sunSurvey.controller('dataEntryController',
                 $scope.desById[de.id] = de;
                 if( de.order ){
                     de.order = parseInt(de.order);
-                }                                
+                }
+                
+                if( de.displayMode === 'TABULAR' ){
+                    $scope.dataValues[de.id] = {};
+                    angular.forEach($scope.model.categoryOptionGroups, function(cog){
+                        $scope.dataValues[de.id][cog.id] = [];
+                    });
+                }
             });
         }
     };
@@ -270,78 +336,91 @@ sunSurvey.controller('dataEntryController',
                     
                     if( de ){
                         var value = '';
-                        if( de.dimensionAsOptionSet ){
-                            value = $scope.dataValues[skipParent.id];
-                            if( value ){
-                                if( dataElement.skipValue && dataElement.skipValue !== ''){
-                                    if( value && value.displayName === dataElement.skipValue ){                                    
-                                        return false;
-                                    }
-                                }
-                                else{
-                                    if( value.displayName === 'Yes' ){
-                                        return false;
-                                    }
-                                }
-                            }                            
-                        }
-                        else if( de.dimensionAsMultiOptionSet ){
-                            value = $scope.dataValues[skipParent.id];
-                            if( value && value.length > 1 ){
-                                return false;
-                            }
-                        }
-                        else{                            
-                            if( $scope.model.defaultCategoryCombo && de.categoryCombo &&
-                                $scope.model.defaultOptionCombo && $scope.model.defaultOptionCombo.id &&
-                                de.categoryCombo.id === $scope.model.defaultCategoryCombo.id && 
-                                $scope.dataValues[skipParent.id] ){ 
-
-                                value = $scope.dataValues[skipParent.id][$scope.model.defaultOptionCombo.id];
-                                
-                                if( de.valueType === 'NUMBER' ){
-                                    if( dataElement.skipValue === 0 || (dataElement.skipValue && dataElement.skipValue !== '')){                                        
-                                        dataElement.skipValue = parseInt( dataElement.skipValue );                                        
-                                        if( value.value === dataElement.skipValue ){
+                        
+                        if( de.displayMode === 'TABULAR' ){
+                            
+                        }                        
+                        else{
+                            if( de.dimensionAsOptionSet ){
+                                value = $scope.dataValues[skipParent.id];
+                                if( value ){
+                                    if( dataElement.skipValue && dataElement.skipValue !== ''){
+                                        if( value && value.displayName === dataElement.skipValue ){                                    
                                             return false;
                                         }
                                     }
                                     else{
-                                        if( value.value > 0 ){
+                                        if( value.displayName === 'Yes' ){
+                                            return false;
+                                        }
+                                    }
+                                }                            
+                            }
+                            else if( de.dimensionAsMultiOptionSet ){
+                                value = $scope.dataValues[skipParent.id];
+                                if( value && value.length > 1 ){
+                                    return false;
+                                }
+                            }
+                            else{                            
+                                if( $scope.model.defaultCategoryCombo && de.categoryCombo &&
+                                    $scope.model.defaultOptionCombo && $scope.model.defaultOptionCombo.id &&
+                                    de.categoryCombo.id === $scope.model.defaultCategoryCombo.id && 
+                                    $scope.dataValues[skipParent.id] ){ 
+
+                                    value = $scope.dataValues[skipParent.id][$scope.model.defaultOptionCombo.id];
+
+                                    if( de.valueType === 'NUMBER' ){
+                                        if( dataElement.skipValue === 0 || (dataElement.skipValue && dataElement.skipValue !== '')){                                        
+                                            dataElement.skipValue = parseInt( dataElement.skipValue );                                        
+                                            if( value.value === dataElement.skipValue ){
+                                                return false;
+                                            }
+                                        }
+                                        else{
+                                            if( value.value > 0 ){
+                                                return false;
+                                            }
+                                        }
+                                    }
+                                    else{
+                                        if( !value || value.value !== 'undefined' || value.value !== ''){
                                             return false;
                                         }
                                     }
                                 }
-                                else{
-                                    if( !value || value.value !== 'undefined' || value.value !== ''){
-                                        return false;
-                                    }
-                                }
                             }
-                        }
+                        }                        
                     }
                 }
             }
             
             // need to hide / remove exsiting value
-            if( $scope.dataValues[dataElement.id] ){                
-                if( dataElement.dimensionAsOptionSet ){                    
-                    var oldValue = angular.copy($scope.dataValues[dataElement.id]);                    
-                    delete $scope.dataValues[dataElement.id];
-                    $scope.saveDataValue(dataElement.id, oldValue.id, true);
-                }
-                else if( dataElement.dimensionAsMultiOptionSet ){
-                    delete $scope.dataValues[dataElement.id];
-                    $scope.saveDataValue(dataElement.id);
-                }
+            if( $scope.dataValues[dataElement.id] ){
+                
+                if( dataElement.displayMode === 'TABULAR'){
+                    //delete $scope.dataValues[dataElement.id];
+                    //$scope.saveDataValue(dataElement.id);
+                }                
                 else{
-                    var props = Object.getOwnPropertyNames($scope.dataValues[dataElement.id]);
-                    
-                    if( props[0] && $scope.dataValues[dataElement.id][props[0]] ){
-                        delete $scope.dataValues[dataElement.id][props[0]];
-                        $scope.saveDataValue(dataElement.id, props[0], false);
+                    if( dataElement.dimensionAsOptionSet ){                    
+                        var oldValue = angular.copy($scope.dataValues[dataElement.id]);                    
+                        delete $scope.dataValues[dataElement.id];
+                        $scope.saveDataValue(dataElement.id, oldValue.id, true);
                     }
-                }
+                    else if( dataElement.dimensionAsMultiOptionSet ){
+                        delete $scope.dataValues[dataElement.id];
+                        $scope.saveDataValue(dataElement.id);
+                    }
+                    else{
+                        var props = Object.getOwnPropertyNames($scope.dataValues[dataElement.id]);
+
+                        if( props[0] && $scope.dataValues[dataElement.id][props[0]] ){
+                            delete $scope.dataValues[dataElement.id][props[0]];
+                            $scope.saveDataValue(dataElement.id, props[0], false);
+                        }
+                    }
+                }                
             }            
             return true;
         }
@@ -368,32 +447,62 @@ sunSurvey.controller('dataEntryController',
                         angular.forEach(response.dataValues, function(dv){
                             if( dv && dv.value ){
                                 dv.value = ActionMappingUtils.formatDataValue( dv, $scope.desById[dv.dataElement], $scope.model.mappedCategoryCombos );
-                            
-                                if( $scope.desById[dv.dataElement].dimensionAsMultiOptionSet ){
+                                
+                                if($scope.desById[dv.dataElement].displayMode === 'TABULAR'){
                                     if( !$scope.dataValues[dv.dataElement] ){
-                                        $scope.dataValues[dv.dataElement] = [];
+                                        $scope.dataValues[dv.dataElement] = {};
                                     }
-
+                                    
                                     for(var i=0; i<$scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos.length;i++){
                                         if( $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].id === dv.categoryOptionCombo ){
-                                            $scope.dataValues[dv.dataElement].push({id: dv.categoryOptionCombo, displayName: $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].displayName});
+                                            var cog = $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].categoryOptionGroup;
+                                            if( cog && cog.id ){
+                                                if( !$scope.dataValues[dv.dataElement][cog.id] ){
+                                                    $scope.dataValues[dv.dataElement][cog.id] = [];
+                                                }
+                                                
+                                                for( var j=0; j<cog.categoryOptions.length; j++){                                                    
+                                                    if( cog.categoryOptions[j].name === $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].displayName ){
+                                                        $scope.dataValues[dv.dataElement][cog.id].push( $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i] );
+                                                        break;
+                                                    }
+                                                }                                                
+                                            }
+                                            
+                                            //$scope.dataValues[dv.dataElement].push({id: dv.categoryOptionCombo, displayName: $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].displayName});
+                                            //console.log('the oco:  ', $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i]);
                                             break;
                                         }
                                     }
-                                }
-
-                                if( $scope.desById[dv.dataElement].dimensionAsOptionSet){
-                                    $scope.dataValues[dv.dataElement] = dv.value;
+                                    
                                 }
                                 else{
-                                    if(!$scope.dataValues[dv.dataElement]){
-                                        $scope.dataValues[dv.dataElement] = {};
-                                        $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
+                                    if( $scope.desById[dv.dataElement].dimensionAsMultiOptionSet ){
+                                        if( !$scope.dataValues[dv.dataElement] ){
+                                            $scope.dataValues[dv.dataElement] = [];
+                                        }
+
+                                        for(var i=0; i<$scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos.length;i++){
+                                            if( $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].id === dv.categoryOptionCombo ){
+                                                $scope.dataValues[dv.dataElement].push({id: dv.categoryOptionCombo, displayName: $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].displayName});
+                                                break;
+                                            }
+                                        }
                                     }
-                                    else{                                
-                                        $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
+
+                                    if( $scope.desById[dv.dataElement].dimensionAsOptionSet ){
+                                        $scope.dataValues[dv.dataElement] = dv.value;
                                     }
-                                }
+                                    else{
+                                        if(!$scope.dataValues[dv.dataElement]){
+                                            $scope.dataValues[dv.dataElement] = {};
+                                            $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
+                                        }
+                                        else{                                
+                                            $scope.dataValues[dv.dataElement][dv.categoryOptionCombo] = dv;
+                                        }
+                                    }
+                                }                                
                             }                                                                         
                         });
                         
@@ -402,7 +511,9 @@ sunSurvey.controller('dataEntryController',
                         $scope.model.basicAuditInfo.storedBy = response.dataValues[0].storedBy;
                         $scope.model.basicAuditInfo.exists = true;
                     }
-                }                
+                }
+                
+                
                 $scope.dataValuesCopy = angular.copy($scope.dataValues);
             });
 
@@ -481,7 +592,7 @@ sunSurvey.controller('dataEntryController',
         }
     };
     
-    $scope.saveDataValue = function( deId, ocId, dimensionAsOptionSet ){
+    $scope.saveDataValue = function( deId, ocId, dimensionAsOptionSet, cogId ){
         
         var dataElement = $scope.desById[deId];
         
@@ -501,77 +612,104 @@ sunSurvey.controller('dataEntryController',
             $scope.saveStatus[deId + '-' + ocId ] = status;
         }
         
-        if( $scope.desById[deId].dimensionAsMultiOptionSet ){ 
+        if( $scope.desById[deId].displayMode === 'TABULAR' ){
             var dataValueSet = {
                                 dataSet: $scope.model.selectedDataSet.id,
                                 period: $scope.model.selectedPeriod.id,
                                 orgUnit: $scope.selectedOrgUnit.id,
                                 dataValues: []
                               };
-            
+
             angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
                 var val = {dataElement: deId, categoryOptionCombo: oco.id, value: ''};
-                if( $scope.dataValues[deId] && $scope.dataValues[deId].length ){
-                    for( var i=0; i<$scope.dataValues[deId].length; i++){
-                        if( $scope.dataValues[deId][i] && $scope.dataValues[deId][i].id === oco.id ){
+                if( $scope.dataValues[deId][cogId] && $scope.dataValues[deId][cogId].length ){
+                    for( var i=0; i<$scope.dataValues[deId][cogId].length; i++){
+                        if( $scope.dataValues[deId][cogId][i] && $scope.dataValues[deId][cogId][i].id === oco.id ){
                             val.value = 1;
                             break;
                         }
                     }
                 }
-                
+
                 dataValueSet.dataValues.push( val );
             });            
-            
+
             DataValueService.saveDataValueSet( dataValueSet ).then(function(){                
             });
         }
         else{
-            if( !dimensionAsOptionSet ){
-                dataValue.co = ocId;
-                dataValue.value = '';            
-                if( $scope.dataValues[deId][ocId] ){
-                    dataValue.value = $scope.dataValues[deId][ocId].value === 0 ? 0 : $scope.dataValues[deId][ocId].value === '' ? '' : $scope.dataValues[deId][ocId].value === null ? '' : $scope.dataValues[deId][ocId].value;
-                }
+            if( $scope.desById[deId].dimensionAsMultiOptionSet ){ 
+                var dataValueSet = {
+                                    dataSet: $scope.model.selectedDataSet.id,
+                                    period: $scope.model.selectedPeriod.id,
+                                    orgUnit: $scope.selectedOrgUnit.id,
+                                    dataValues: []
+                                  };
+
+                angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
+                    var val = {dataElement: deId, categoryOptionCombo: oco.id, value: ''};
+                    if( $scope.dataValues[deId] && $scope.dataValues[deId].length ){
+                        for( var i=0; i<$scope.dataValues[deId].length; i++){
+                            if( $scope.dataValues[deId][i] && $scope.dataValues[deId][i].id === oco.id ){
+                                val.value = 1;
+                                break;
+                            }
+                        }
+                    }
+
+                    dataValueSet.dataValues.push( val );
+                });            
+
+                DataValueService.saveDataValueSet( dataValueSet ).then(function(){                
+                });
             }
             else{
-                if( $scope.dataValues[deId] ){                
-                    dataValue.value = 1;                
-                    dataValue.co = ocId;                
-                    var oldValue = $scope.dataValuesCopy[deId];
-                    if( oldValue && oldValue.id ){
-                        var _dataValue = {value: '', co: oldValue.id, ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};                    
-                        if( $scope.model.selectedAttributeCategoryCombo && !$scope.model.selectedAttributeCategoryCombo.isDefault ){
-                            _dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
-                            _dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
-                        }                    
-                        DataValueService.saveDataValue( _dataValue );
-                    }                
-                }
-                else{                
-                    dataValue.co = $scope.dataValuesCopy[deId].id;
-                    dataValue.value = '';
-                }
-            }
-
-            DataValueService.saveDataValue( dataValue ).then(function(response){
-                if( ocId ){
-                    $scope.saveStatus[deId + '-' + ocId].saved = true;
-                    $scope.saveStatus[deId + '-' + ocId].pending = false;
-                    $scope.saveStatus[deId + '-' + ocId].error = false;            
-                    if( dimensionAsOptionSet ){
-                        $scope.dataValuesCopy[deId] = $scope.dataValues[deId] ? $scope.dataValues[deId] : '';
+                if( !dimensionAsOptionSet ){
+                    dataValue.co = ocId;
+                    dataValue.value = '';            
+                    if( $scope.dataValues[deId][ocId] ){
+                        dataValue.value = $scope.dataValues[deId][ocId].value === 0 ? 0 : $scope.dataValues[deId][ocId].value === '' ? '' : $scope.dataValues[deId][ocId].value === null ? '' : $scope.dataValues[deId][ocId].value;
                     }
                 }
-                
-            }, function(){
-                if( ocId ){
-                    $scope.saveStatus[deId + '-' + ocId].saved = false;
-                    $scope.saveStatus[deId + '-' + ocId].pending = false;
-                    $scope.saveStatus[deId + '-' + ocId].error = true;
-                }                
-            });
-        }
+                else{
+                    if( $scope.dataValues[deId] ){                
+                        dataValue.value = 1;                
+                        dataValue.co = ocId;                
+                        var oldValue = $scope.dataValuesCopy[deId];
+                        if( oldValue && oldValue.id ){
+                            var _dataValue = {value: '', co: oldValue.id, ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};                    
+                            if( $scope.model.selectedAttributeCategoryCombo && !$scope.model.selectedAttributeCategoryCombo.isDefault ){
+                                _dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
+                                _dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
+                            }                    
+                            DataValueService.saveDataValue( _dataValue );
+                        }                
+                    }
+                    else{                
+                        dataValue.co = $scope.dataValuesCopy[deId].id;
+                        dataValue.value = '';
+                    }
+                }
+
+                DataValueService.saveDataValue( dataValue ).then(function(response){
+                    if( ocId ){
+                        $scope.saveStatus[deId + '-' + ocId].saved = true;
+                        $scope.saveStatus[deId + '-' + ocId].pending = false;
+                        $scope.saveStatus[deId + '-' + ocId].error = false;            
+                        if( dimensionAsOptionSet ){
+                            $scope.dataValuesCopy[deId] = $scope.dataValues[deId] ? $scope.dataValues[deId] : '';
+                        }
+                    }
+
+                }, function(){
+                    if( ocId ){
+                        $scope.saveStatus[deId + '-' + ocId].saved = false;
+                        $scope.saveStatus[deId + '-' + ocId].pending = false;
+                        $scope.saveStatus[deId + '-' + ocId].error = true;
+                    }                
+                });
+            }
+        }        
     };
     
     $scope.getInputNotifcationClass = function(deId, ocId){        
