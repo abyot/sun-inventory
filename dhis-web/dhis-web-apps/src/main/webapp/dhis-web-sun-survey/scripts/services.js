@@ -319,36 +319,15 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     };        
 })
 
-.service('DataValueService', function($http, ActionMappingUtils) {   
+.service('DataValueService', function($q, $http, ActionMappingUtils) {   
     
-    return {        
-        saveDataValue: function( dv ){
-            var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co + '&value='+dv.value;            
-            
-            if( dv.cc && dv.cp ){
-                url += '&cc='+dv.cc + '&cp='+dv.cp;
-            }
-            
-            if( dv.comment ){
-                url += '&comment=' + dv.comment; 
-            }            
-            var promise = $http.post('../api/dataValues.json' + url).then(function(response){
-                return response.data;
-            });
-            return promise;
-        },
+    return {
         getDataValue: function( dv ){
             var promise = $http.get('../api/dataValues.json?de='+dv.de+'&ou='+dv.ou+'&pe='+dv.pe).then(function(response){
                 return response.data;
             });
             return promise;
-        },
-        saveDataValueSet: function(dvs){
-            var promise = $http.post('../api/dataValueSets.json', dvs).then(function(response){
-                return response.data;
-            });
-            return promise;
-        },
+        },        
         getDataValueSet: function( params ){            
             var promise = $http.get('../api/dataValueSets.json?' + params ).then(function(response){               
                 return response.data;
@@ -356,6 +335,136 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 ActionMappingUtils.errorNotifier(response);
             });            
             return promise;
+        },
+        saveDataValue: function( dv, oldValues, dataElement, optionCombos ){
+            var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co + '&value='+dv.value;
+            var promise;
+            if( dv.cc && dv.cp ){
+                url += '&cc='+dv.cc + '&cp='+dv.cp;
+            }            
+            if( dv.comment ){
+                url += '&comment=' + dv.comment; 
+            }
+            
+            if( dv.value === '' || dv.value === null ){
+                if( oldValues[dv.de] ){
+                    if( dataElement ){
+                        if( dataElement.displayMode === 'TABULAR' ){                            
+                            var oco = optionCombos[dv.co];
+                        }
+                        else{
+                            if( dataElement.dimensionAsMultiOptionSet && oldValues[dv.dataElement].length ){
+                                var deleteMe = false;
+                                for( var i=0; i<oldValues[dv.de].length && !deleteMe; i++ ){
+                                    if( oldValues[dv.de][i].id === dv.co ){
+                                        deleteMe = true;
+                                    }
+                                }                                
+                                if( deleteMe ){
+                                    promise = $http.delete('../api/dataValues.json' + url).then(function(){
+                                        return [{de: dv.de, co: dv.co, dm: 'MULTIOPTIONSET'}];
+                                    });
+                                }
+                            }
+                            else{
+                                if( !dataElement.dimensionAsOptionSet ){
+                                    if( oldValues[dv.de][dv.co] ){
+                                        promise = $http.delete('../api/dataValues.json' + url).then(function(){
+                                            return [{de: dv.de, co: dv.co, dm: 'DEFAULT'}];
+                                        });
+                                    }
+                                }
+                                else{
+                                    promise = $http.delete('../api/dataValues.json' + url).then(function(){
+                                        return [{de: dv.de, co: dv.co, dm: 'OPTIONSET'}];
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                else{                    
+                    promise = $q.when(function(){
+                        return; 
+                    });
+                }
+            }            
+            else{
+                promise = $http.post('../api/dataValues.json' + url).then(function(){
+                    return [];
+                });
+            }            
+            return promise;
+        },        
+        saveDataValueSet: function(dvs, oldValues, dataElement, optionCombos){
+            var def = $q.defer();            
+            var promises = [], toBeSaved = [], removed = [];
+            angular.forEach(dvs.dataValues, function(dv){
+                var oco = optionCombos[dv.categoryOptionCombo];
+                if( dv.value === '' || dv.value === null ){                    
+                    if( oldValues[dv.dataElement] ){
+                        if( dataElement ){
+                            if( dataElement.displayMode === 'TABULAR' ){
+                                if( oldValues[dv.dataElement][oco.categoryOptionGroup.id] && oldValues[dv.dataElement][oco.categoryOptionGroup.id].length ){
+                                    var deleteMe = false;
+                                    for( var i=0; i<oldValues[dv.dataElement][oco.categoryOptionGroup.id].length && !deleteMe; i++ ){
+                                        if( oldValues[dv.dataElement][oco.categoryOptionGroup.id][i].id === dv.categoryOptionCombo ){
+                                            deleteMe = true;
+                                        }
+                                    }
+                                    if( deleteMe ){
+                                        var url = '?de='+dv.dataElement + '&ou='+dvs.orgUnit + '&pe='+dvs.period + '&co='+dv.categoryOptionCombo;
+                                        removed.push( {de: dv.dataElement, co: dv.categoryOptionCombo, dm: 'TABULAR'} );
+                                        promises.push( $http.delete('../api/dataValues.json' + url) );
+                                    }
+                                }
+                            }
+                            else{                                
+                                if( dataElement.dimensionAsMultiOptionSet && oldValues[dv.dataElement].length ){
+                                    var deleteMe = false;
+                                    for( var i=0; i<oldValues[dv.dataElement].length && !deleteMe; i++ ){
+                                        if( oldValues[dv.dataElement][i].id === dv.categoryOptionCombo ){
+                                            deleteMe = true;
+                                        }
+                                    }                                
+                                    if( deleteMe ){
+                                        var url = '?de='+dv.dataElement + '&ou='+dvs.orgUnit + '&pe='+dvs.period + '&co='+dv.categoryOptionCombo;
+                                        removed.push( {de: dv.dataElement, co: dv.categoryOptionCombo, dm: 'MULTIOPTIONSET'} );
+                                        promises.push( $http.delete('../api/dataValues.json' + url) );
+                                    }
+                                }
+                                else{
+                                    if( !dataElement.dimensionAsOptionSet ){
+                                        if( oldValues[dv.dataElement][dv.categoryOptionCombo] ){
+                                            var url = '?de='+dv.dataElement + '&ou='+dvs.orgUnit + '&pe='+dvs.period + '&co='+dv.categoryOptionCombo;
+                                            removed.push( {de: dv.dataElement, co: dv.categoryOptionCombo, dm: 'DEFAULT'} );
+                                            promises.push( $http.delete('../api/dataValues.json' + url) );
+                                        }
+                                    }
+                                    else{
+                                        var url = '?de='+dv.dataElement + '&ou='+dvs.orgUnit + '&pe='+dvs.period + '&co='+dv.categoryOptionCombo;
+                                        removed.push( {de: dv.dataElement, co: dv.categoryOptionCombo, dm: 'OPTIONSET'} );
+                                        promises.push( $http.delete('../api/dataValues.json' + url) );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else{                    
+                    toBeSaved.push( dv );
+                }                
+            });
+            
+            if( toBeSaved.length > 0 ){
+                dvs.dataValues = toBeSaved;                
+                promises.push( $http.post('../api/dataValueSets.json', dvs) );
+            }
+            
+            $q.all(promises).then(function(){                
+                def.resolve();
+            });
+            return def.promise;
         }
     };    
 })
