@@ -595,7 +595,7 @@ sunSurvey.controller('dataEntryController',
                 }
                     
                 if( processedCos.indexOf( oco.id) === -1 ){
-                    if( oldValues[cogId] && oldValues[cogId].length ){                        
+                    if( oldValues && oldValues[cogId] && oldValues[cogId].length ){                        
                         for( var i=0; i<oldValues[cogId].length; i++){                            
                             if( oldValues[cogId][i] && oldValues[cogId][i].id === oco.id ){                                    
                                 dataValueSet.dataValues.push( val );
