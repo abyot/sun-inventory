@@ -84,10 +84,24 @@
         <script type="text/javascript" src="components/dataentry/dataentry-controller.js"></script>
         <script type="text/javascript" src="components/dataentry/dataentry-history-controller.js"></script>
         
-        <!-- Menu scripts -->
-        <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.translate.js"></script>
-        <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.menu.js"></script>
-        <script type="text/javascript" src="../dhis-web-commons/javascripts/dhis2/dhis2.menu.ui.js"></script>
+        <!-- default style for page -->
+        <link type="text/css" rel="stylesheet" href="../dhis-web-commons/css/light_blue/light_blue.css" />
+        
+        <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/react-15.min.js"></script>
+        <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/rx.lite.min.js"></script>
+        <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/lodash.min.js"></script>
+        <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/lodash-functional.js"></script>
+
+        <!-- Menu script is up here due to perceived loading time increase -->
+        <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/babel-polyfill.js"></script>
+        <script type="text/javascript" src="../dhis-web-commons/javascripts/header-bar/header-bar.js"></script>
+        <script>
+            // Needs to be wrapped in jQuery to be sure the DOM is parsed as the script is not at the bottom.
+            jQuery(function () {
+                Dhis2HeaderBar.initHeaderBar(document.querySelector('#header'), undefined, { noLoadingIndicator: true });
+            });
+        </script>
+        <!-- // End menu -->
         
         <script src="scripts/file-saver.js" type="text/javascript"></script>
 
@@ -98,13 +112,13 @@
         <link type="text/css" rel="stylesheet" href="../dhis-web-commons/javascripts/angular/plugins/select.css">
         <link type="text/css" rel="stylesheet" href="../dhis-web-commons/javascripts/angular/plugins/select2.css">
 
-        <link type="text/css" rel="stylesheet" href="styles/style.css">
+        <link type="text/css" rel="stylesheet" media="screen" href="styles/style.css">
         <link type="text/css" rel="stylesheet" media="print" href="styles/print.css">
-        <script type="text/javascript" src="../main.js"></script>
 
     </head>
     <body>
-        <d2-header-bar></d2-header-bar>
+        <div id="header"></div>
+        <div id="headerMessage"></div>
 
         <div ng-view></div>
 

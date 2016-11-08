@@ -15,9 +15,11 @@
                     <td>
                         <span ng-if="categoryOptionGroup.dimensionEntryMode === 'SINGLE'">
                             <ui-select ng-model="dataValues[de.id][categoryOptionGroup.id]" 
+                                    on-select="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, false)"
+                                    on-remove="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, false)"
                                     theme="select2"                                 
                                     style="width:100%;">
-                                <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, $select.selected.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName || $select.selected}}</ui-select-match>
+                                <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, categoryOptionGroup.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName || $select.selected}}</ui-select-match>
                                 <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
                                     <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                 </ui-select-choices>
@@ -25,9 +27,11 @@
                         </span>
                         <span ng-if="categoryOptionGroup.dimensionEntryMode === 'MULTIPLE'">
                             <ui-select multiple
-                                    ng-model="dataValues[de.id][categoryOptionGroup.id]" 
+                                    ng-model="dataValues[de.id][categoryOptionGroup.id]"
+                                    on-select="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, true)"
+                                    on-remove="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, true)"
                                     theme="bootstrap">
-                                <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass1(de.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
+                                <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass(de.id, categoryOptionGroup.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
                                 <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
                                     <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                 </ui-select-choices>
@@ -41,10 +45,10 @@
                     </td>
                     <td>
                         <textarea rows="5"  
-                                ng-model="dataValues[de.id]"
+                                ng-model="dataValues[de.id].comment"
                                 class="form-control" 
                                 ng-class="getInputNotifcationClass(de.id)"                                                                       
-                                d2-blur="saveDataValue(de.id, oco.id)">
+                                d2-blur="saveComment(de.id)">
                         </textarea>
                     </td>
                 </tr>

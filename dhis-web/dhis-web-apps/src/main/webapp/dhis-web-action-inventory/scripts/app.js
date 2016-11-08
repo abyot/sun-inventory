@@ -18,7 +18,6 @@ var sunInventory = angular.module('sunInventory',
          'angularLocalStorage',
          'ui.select',
          'ui.select2',
-         'd2HeaderBar',
          'pascalprecht.translate'])
               
 .value('DHIS2URL', '../api')

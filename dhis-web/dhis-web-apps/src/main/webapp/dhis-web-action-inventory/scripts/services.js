@@ -290,30 +290,71 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     };        
 })
 
-.service('DataValueService', function($http, ActionMappingUtils) {   
+.service('DataValueService', function($q, $http, ActionMappingUtils) {   
     
     return {        
-        saveDataValue: function( dv ){
-            var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co + '&cc='+dv.cc + '&cp='+dv.cp + '&value='+dv.value;            
-            if( dv.comment ){
-                url += '&comment=' + dv.comment; 
-            }            
-            var promise = $http.post('../api/dataValues.json' + url).then(function(response){
+        deleteDataValue: function( dv ){            
+            var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co;
+            
+            if( dv.cc && dv.cp ){
+                url += '&cc='+dv.cc + '&cp='+dv.cp;
+            }
+            
+            var promise = $http.delete('../api/dataValues.json' + url).then(function(response){
                 return response.data;
             });
             return promise;
-        },
+        },        
         getDataValue: function( dv ){
             var promise = $http.get('../api/dataValues.json?de='+dv.de+'&ou='+dv.ou+'&pe='+dv.pe).then(function(response){
                 return response.data;
             });
             return promise;
         },
-        saveDataValueSet: function(dvs){
-            var promise = $http.post('../api/dataValueSets.json', dvs).then(function(response){
+        saveDataValue: function( dv ){            
+            var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co + '&value='+dv.value;
+            
+            if( dv.cc && dv.cp ){
+                url += '&cc='+dv.cc + '&cp='+dv.cp;
+            }            
+            if( dv.comment ){
+                url += '&comment=' + dv.comment; 
+            }
+            
+            var promise = $http.post('../api/dataValues.json' + url).then(function(response){
                 return response.data;
             });
             return promise;
+        },
+        saveDataValueSet: function(dvs, cc, cp){
+            var def = $q.defer();            
+            var promises = [], toBeSaved = [];
+            
+            angular.forEach(dvs.dataValues, function(dv){                
+                if( dv.value === '' || dv.value === null ){
+                    //deleting...
+                    var url = '?de='+dv.dataElement + '&ou='+dvs.orgUnit + '&pe='+dvs.period + '&co='+dv.categoryOptionCombo;
+                    
+                    if( cc && cp ){
+                        url += '&cc='+cc + '&cp='+cp;
+                    }                    
+                    promises.push( $http.delete('../api/dataValues.json' + url) );
+                }
+                else{
+                    //saving...
+                    toBeSaved.push( dv );
+                }                
+            });
+            
+            if( toBeSaved.length > 0 ){
+                dvs.dataValues = toBeSaved;
+                promises.push( $http.post('../api/dataValueSets.json', dvs) );
+            }
+            
+            $q.all(promises).then(function(){                
+                def.resolve();
+            });
+            return def.promise;
         },
         getDataValueSet: function( params ){            
             var promise = $http.get('../api/dataValueSets.json?' + params ).then(function(response){               
@@ -476,7 +517,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             return headers;
         },
-        getOptionComboIdFromOptionNames: function(optionComboMap, options, categoryCombo){            
+        getOptionComboIdFromOptionNames: function(optionComboMap, options, categoryCombo){
             if( categoryCombo && categoryCombo.isDefault ){
                 return categoryCombo.categoryOptionCombos[0].id;
             }            
@@ -487,15 +528,13 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });
             
             var selectedOptionComboName = optionNames.toString();
-            selectedOptionComboName = selectedOptionComboName.replace(",", ", ");            
+            selectedOptionComboName =  selectedOptionComboName.replace(/\,/g, ', ');
             
-            //var selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
             var selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
             
             if( !selectedAttributeOptionCombo || angular.isUndefined( selectedAttributeOptionCombo ) ){
                 selectedOptionComboName = optionNames.reverse().toString();
                 selectedOptionComboName = selectedOptionComboName.replace(",", ", ");
-                //selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
                 selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
             }
             
