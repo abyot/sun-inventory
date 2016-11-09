@@ -52,7 +52,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             lastPeriod.endDate = DateUtils.formatFromApiToUser( moment(currentPeriod.endDate).add(futurePeriod, 'years') );
         }
         
-        var startingDate = DateUtils.formatFromApiToUser( moment('2015-01-01') );        
+        var startingDate = DateUtils.formatFromApiToUser( moment('2016-01-01') );        
             
         angular.forEach(d2Periods, function(p){
             
