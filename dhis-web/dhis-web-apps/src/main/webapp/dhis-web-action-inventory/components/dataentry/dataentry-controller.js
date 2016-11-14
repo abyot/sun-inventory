@@ -160,8 +160,25 @@ sunInventory.controller('dataEntryController',
         if (angular.isObject($scope.selectedOrgUnit)) {
             //get survey data sets
             DataSetFactory.getDataSetsByProperty( $scope.selectedOrgUnit, 'dataSetDomain', 'INVENTORY' ).then(function(dataSets){
-                $scope.model.dataSets = dataSets;                
-                if($scope.model.dataElementGroupSets.length === 0){
+                $scope.model.dataSets = dataSets;
+                
+                angular.forEach($scope.model.dataSets, function(ds){
+                    if( ds.dataElements && ds.dataElements.length === 1 ){
+                        if( ds.dataElements[0] ){
+                            if( ds.dataElements[0].dataElementGroups && ds.dataElements[0].dataElementGroups.length ){
+                                angular.forEach(ds.dataElements[0].dataElementGroups, function(deg){
+                                    deg = dhis2.metadata.processMetaDataAttribute( deg );
+                                    var groupNames = deg.name.split(" - ");                                        
+                                    if( groupNames[1] && groupNames[1] !== "" ){
+                                        ds.groupType = groupNames[1];
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+                
+                /*if($scope.model.dataElementGroupSets.length === 0){
                     $scope.model.degs = {};
                     $scope.model.deg = {}; 
                     $scope.model.dataElementGroupsById = {};
@@ -188,7 +205,7 @@ sunInventory.controller('dataEntryController',
                             });
                         });
                     });
-                }
+                }*/
             });
         }
     };
@@ -235,8 +252,8 @@ sunInventory.controller('dataEntryController',
             
             $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
             
-            if(!$scope.model.selectedDataSet.dataElements || $scope.model.selectedDataSet.dataElements.length < 1){                
-                $scope.invalidCategoryDimensionConfiguration('error', 'missing_data_elements_indicators');
+            if(!$scope.model.selectedDataSet.dataElements || $scope.model.selectedDataSet.dataElements.length < 1){
+                ActionMappingUtils.notificationDialog('error', 'missing_data_elements');
                 return;
             }            
                         
@@ -493,6 +510,36 @@ sunInventory.controller('dataEntryController',
                 });
             }
         }
+    };
+    
+    $scope.showDataCopyDialog = function(){        
+        var modalInstance = $modal.open({
+            templateUrl: 'components/copydata/copy-data.html',
+            controller: 'CopyDataController',
+            resolve: {
+                dataValues: function(){
+                    return $scope.dataValues;
+                },
+                dataElementsById: function () {
+                    return $scope.desById;
+                },
+                attributeCategoryCombo: function(){
+                    return $scope.model.selectedAttributeCategoryCombo;
+                },
+                selectedOptions: function(){
+                    return $scope.model.selectedOptions;
+                },
+                mappedCategoryCombos: function(){
+                    return $scope.model.mappedCategoryCombos;
+                },
+                mappedOptionCombos: function(){
+                    return $scope.model.mappedOptionCombosById;
+                }
+            }
+        });
+
+        modalInstance.result.then(function () {
+        });
     };
     
     $scope.getInputNotifcationClass = function(deId, cogId){        

@@ -123,10 +123,11 @@ displaySelectedDashboard = function() {
         chartPlugin.showTitles = true;
         chartPlugin.load( chartItems );
 	}
-	else{		
-		$div.append('<div style="padding:50px;"><div class="alert alert-info">' + $( "#dashboardList option:selected" ).text() + ' ' + i18n_country_dashboard_not_ready + '</div></div>');
+	else{
+		if( dashboardId && dashboardId !== "" ){
+			$div.append('<div style="padding:50px;"><div class="alert alert-info">' + $( "#dashboardList option:selected" ).text() + ' ' + i18n_country_dashboard_not_ready + '</div></div>');
+		}
 	}
-	
 }
 
 login.localeChanged = function ()

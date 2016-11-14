@@ -146,13 +146,9 @@ div.paging a.active
     display: block;
 }
 
-.bordered-div
-{
-    border: 1px solid #c2c2c2;
-    border-radius: 5px;
-    padding: 12px;
-    margin-left: -15px;
-    margin-bottom: 20px;
+.bordered-div {
+    border-top: 1px solid #c2c2c2;
+    border-bottom: 1px solid #c2c2c2;
 }
 
 .nav, .pagination, .carousel, .panel-title a, .mouse-pointer{ 
@@ -932,4 +928,82 @@ table td.crossed::after {
 .ou-search-left-bar {
     margin-top: 30px; 
     padding: 2px;
+}
+
+#searchOuTree {
+    max-height: 400px;
+    overflow: auto;
+    padding: 10px 0;
+}
+
+.org-unit-tree {
+    margin-left: -5px;
+    color: #000;
+    text-decoration: none;
+    font-size: 9pt;
+    background-color: white;
+    overflow: auto;
+    width: 100%;
+    height: 500px;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+ul.tree, ul.tree ul {
+    list-style:none;
+    margin:0;
+    padding:0;
+}
+
+ul.tree ul {
+    margin-left:10px; /* indentation */
+    position:relative;
+}
+
+ul.tree ul:before {
+    content:"";
+    display:block;
+    width:0;
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    border-left:1px dotted;
+}
+
+ul.tree li {
+    margin:0;
+    padding:0 12px; /* indentation + 2 */
+    line-height:20px; /* default list item `line-height` */
+    position:relative;
+}
+
+ul.tree ul li:before {
+    content:"";
+    display:block;
+    width:10px; /* same with indentation */
+    height:0;
+    border-top:1px dotted;
+    position:absolute;
+    top:10px;
+    left:0;
+}
+
+ul.tree ul li:last-child:before {
+    background:white; /* same with body background */
+    height:auto;
+    top:10px; /* (line-height/2) */
+    bottom:0;
+}
+
+.org-unit-tree-button {
+    background:transparent;
+    border:none;
+    outline:none;
+    cursor:pointer;
+}
+
+.selected-org-unit {
+    font-weight: bold;
+    color: #FF8000;
 }

@@ -401,10 +401,11 @@
                                         </tr>
                                     </tbody>                                    
                                 </table>
+                                
                                 <div ng-if="mainIndex === 1 && de.displayMode === 'TABULAR' && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
                                      ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">                                            
                                    <table class="table table-bordered table-condensed">
-                                        <thead ng-if="$index === 0" ng-repeat="tde in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
+                                        <thead ng-if="$index === 0" ng-repeat="tde in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
                                             <tr>
                                                 <th class="active">
                                                     {{'joint_program' | translate}}

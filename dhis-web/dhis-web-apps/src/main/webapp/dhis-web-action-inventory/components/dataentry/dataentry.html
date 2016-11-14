@@ -54,7 +54,7 @@
                                    theme="select2"                                 
                                    style="width:100%;">
                             <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                            <ui-select-choices repeat="dataSet in model.dataSets | filter: $select.search | limitTo:maxOptionSize">
+                            <ui-select-choices group-by="'groupType'" repeat="dataSet in model.dataSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
                                 <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
                             </ui-select-choices>
                         </ui-select>
@@ -122,7 +122,7 @@
                 <div class="div-bottom">
                     <button type="button" 
                             class="btn btn-primary small-horizontal-spacing small-vertical-spacing" 
-                            ng-click="copyData()">
+                            ng-click="showDataCopyDialog()">
                         {{'copy_data'| translate}}
                     </button>
                     <button type="button" 

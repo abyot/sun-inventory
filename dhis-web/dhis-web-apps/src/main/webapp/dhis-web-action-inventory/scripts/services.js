@@ -8,7 +8,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
 
 .factory('PMTStorageService', function(){
     var store = new dhis2.storage.Store({
-        name: "dhis2sunpmt",
+        name: "dhis2suninventory",
         adapters: [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter],
         objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryOptionGroups', 'categoryCombos', 'programs', 'ouLevels', 'indicatorGroups']
     });
@@ -568,6 +568,13 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 };		
                 DialogService.showDialog({}, dialogOptions);
             }
+        },
+        notificationDialog: function(headerText, bodyText){
+            var dialogOptions = {
+                headerText: headerText,
+                bodyText: bodyText
+            };		
+            DialogService.showDialog({}, dialogOptions);
         },
         getNumeratorAndDenominatorIds: function( ind ){            
             var num = ind.numerator.substring(2,ind.numerator.length-1);

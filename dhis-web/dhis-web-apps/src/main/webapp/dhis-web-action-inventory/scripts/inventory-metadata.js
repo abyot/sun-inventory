@@ -26,7 +26,7 @@ if( dhis2.sunpmt.memoryOnly ) {
 }
 
 dhis2.sunpmt.store = new dhis2.storage.Store({
-    name: 'dhis2sunpmt',
+    name: 'dhis2suninventory',
     adapters: [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter],
     objectStores: ['dataSets', 'dataElementGroupSets', 'optionSets', 'categoryCombos', 'categoryOptionGroups', 'programs', 'ouLevels', 'indicatorGroups']
 });
@@ -245,7 +245,7 @@ function filterMissingDataSets( objs ){
 }
 
 function getDataSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', '../api/dataSets.json', 'paging=false&fields=id,periodType,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,description,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', '../api/dataSets.json', 'paging=false&fields=id,periodType,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,description,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]],dataElementGroups[id,name,attributeValues[value,attribute[id,name,valueType,code]]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
 }
 
 function getMetaDataElementGroupSets(){
