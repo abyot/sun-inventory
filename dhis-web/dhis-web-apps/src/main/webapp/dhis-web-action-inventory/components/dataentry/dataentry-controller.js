@@ -258,7 +258,7 @@ sunInventory.controller('dataEntryController',
             }            
                         
             if( $scope.model.selectedDataSet.categoryCombo && $scope.model.selectedDataSet.categoryCombo.id ){
-                $scope.model.selectedAttributeCategoryCombo = $scope.model.mappedCategoryCombos[$scope.model.selectedDataSet.categoryCombo.id];
+                $scope.model.selectedAttributeCategoryCombo = angular.copy( $scope.model.mappedCategoryCombos[$scope.model.selectedDataSet.categoryCombo.id] );
             }
                         
             $scope.model.dataElements = [];
@@ -512,28 +512,38 @@ sunInventory.controller('dataEntryController',
         }
     };
     
-    $scope.showDataCopyDialog = function(){        
+    $scope.dataValueExists = function(){
+        return !angular.equals( {}, $scope.dataValues );
+    };
+    
+    $scope.showDataCopyDialog = function(){
+        
+        var selectedDataElement = $scope.model.selectedDataSet.dataElements[0];
+        
         var modalInstance = $modal.open({
             templateUrl: 'components/copydata/copy-data.html',
             controller: 'CopyDataController',
             resolve: {
                 dataValues: function(){
-                    return $scope.dataValues;
+                    return angular.copy( $scope.dataValues[selectedDataElement.id] ) ;
                 },
-                dataElementsById: function () {
-                    return $scope.desById;
+                selectedOrgUnitId: function(){
+                    return $scope.selectedOrgUnit.id;
                 },
-                attributeCategoryCombo: function(){
-                    return $scope.model.selectedAttributeCategoryCombo;
+                selectedDataSet: function(){
+                    return $scope.model.selectedDataSet;
                 },
-                selectedOptions: function(){
-                    return $scope.model.selectedOptions;
+                selectedDataElement: function () {
+                    return selectedDataElement;
                 },
-                mappedCategoryCombos: function(){
-                    return $scope.model.mappedCategoryCombos;
+                selectedPeriod: function(){
+                    return $scope.model.selectedPeriod;
                 },
-                mappedOptionCombos: function(){
-                    return $scope.model.mappedOptionCombosById;
+                attributeOptionCombo: function(){
+                    return $scope.model.selectedAttributeOptionCombo;
+                },
+                selectedCategoryCombo: function(){
+                    return $scope.model.mappedCategoryCombos[selectedDataElement.categoryCombo.id];
                 }
             }
         });

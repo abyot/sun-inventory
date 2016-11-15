@@ -326,6 +326,12 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });
             return promise;
         },
+        saveDataValueSets: function(dvs){
+            var promise = $http.post('../api/dataValueSets.json?', dvs ).then(function(response){               
+                return response.data;
+            });            
+            return promise;            
+        },
         saveDataValueSet: function(dvs, cc, cp){
             var def = $q.defer();            
             var promises = [], toBeSaved = [];

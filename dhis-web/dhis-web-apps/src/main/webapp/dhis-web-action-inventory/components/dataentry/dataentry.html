@@ -122,11 +122,13 @@
                 <div class="div-bottom">
                     <button type="button" 
                             class="btn btn-primary small-horizontal-spacing small-vertical-spacing" 
+                            ng-disabled="!dataValueExists()"
                             ng-click="showDataCopyDialog()">
                         {{'copy_data'| translate}}
                     </button>
                     <button type="button" 
                             class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
+                            ng-disabled="!dataValueExists()"
                             ng-click="deleteData()">
                         {{'delete_data'| translate}}
                     </button>
