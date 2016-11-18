@@ -113,7 +113,7 @@ div.paging a.active
 }
 
 .black {
-    color: black;
+    color: black !important;
 }
 
 .bold {
@@ -176,7 +176,7 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
 .table-borderless>thead>tr>td, 
 .table-borderless>tbody>tr>td, 
 .table-borderless>tfoot>tr>td {
-    border-top: none;     
+    border: none;
     white-space:nowrap;
 }
 
@@ -409,14 +409,18 @@ div#orgUnitTree {
 .selectionGroup{
     margin: 0 auto;
     display: flex;
+    color: #000;
 }
 
 .selectionArea {
     border: 1px solid #a4d2a3;
     background-color: #d0eBd0;
-    padding-top: 10px;
-    padding-bottom: 10px;    
+    padding-top: 10px;    
     border-radius: 3px;
+}
+
+.padding-bottom {
+    padding-bottom: 15px;
 }
 
 .rolesArea {
@@ -439,6 +443,25 @@ div#orgUnitTree {
     padding-bottom: 10px;    
     border-radius: 3px;
     font-size: 11pt;
+}
+
+.selectionAreaNoColor {
+    border-radius: 3px;
+}
+
+.blueInfoArea {
+    border: 1px solid #729fcf;
+    background-color: #BBD1EE;
+    padding: 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+}
+
+.yellowInfoArea {
+    border: 1px solid #ad892e;
+    background-color: #F4CD6C;
+    padding: 10px;
+    border-radius: 3px;
 }
 
 .important-label {
@@ -654,76 +677,16 @@ div#orgUnitTree {
     font-weight: bold;
 }
 
-.impact-row {
-    font-weight: bold;
-    font-size: 16px !important;
-    color: #fff;
-    background-color: #337ab7;
-}
-
-.impact-indicator-row {
-    font-size: 14px !important;
-    padding-left: 10px;
-}
-
-.outcome-row {
-    font-weight: bold;
-    font-size: 16px !important;
-    color: #fff;
-    background-color: #5cb85c;
-}
-
-.outcome-indicator-row {
-    font-size: 14px !important;
-    padding-left: 10px;
-}
-
-.output-row {
-    font-weight: bold;
+.font-16 {    
     font-size: 16px !important;
 }
 
-.output-indicator-row {
+.font-14 {    
     font-size: 14px !important;
 }
 
-.program-row {
-    font-weight: bold;
-    font-size: 16px !important;
-    color: #fff;
-    background-color: #5bc0de;
-}
-
-.program-outcome-row {
-    font-weight: bold;
-    font-size: 14px !important;
-    color: #000;/*#fff; */
-    background-color: #ccc;/*#5cb85c; */
-    padding-left: 20px;
-}
-
-.program-outcome-indicator-row {
+.font-12 {    
     font-size: 12px !important;
-    padding-left: 40px;
-}
-
-.subprogram-row {
-    font-size: 14px !important;
-    font-weight: bold;
-    color: #000;/*#fff;*/
-    background-color: #ccc;/*#f0ad4e;*/
-    padding-left: 20px;
-}
-
-.subprogram-output-row {
-    font-weight: bold;
-    color: #000;/*#fff;*/
-    background-color: #ccc;/*#d9534f;*/
-    padding-left: 40px;
-}
-
-.subprogram-output-indicator-row {
-    padding-left: 60px;
 }
 
 .add-default-padding {
@@ -1006,4 +969,23 @@ ul.tree ul li:last-child:before {
 .selected-org-unit {
     font-weight: bold;
     color: #FF8000;
+}
+
+.thumbnail {
+    display: inline-block;
+    display: block;
+    height: auto;
+    max-width: 100%;
+    padding: 4px;
+    margin: 0 !important;
+    line-height: 1.428571429;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 4px;
+    -webkit-transition: all .2s ease-in-out;
+    transition: all .2s ease-in-out;
+}
+
+.centered-div{
+    margin: auto;
 }
