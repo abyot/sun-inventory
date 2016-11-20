@@ -703,6 +703,19 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             delete ds.dataSetElements;
             
             return ds;
+        },
+        exists: function( objs, obj, prop ){
+            if( !objs || !objs.length || objs.length === 0 || !obj || !prop ){
+                return false;
+            }
+            
+            for( var i=0; i< objs.length; i++ ){
+                if( objs[i][prop] === obj[prop] ){
+                    return true;
+                }
+            }
+            
+            return false;
         }
     };
 })

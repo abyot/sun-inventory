@@ -50,12 +50,12 @@
                         {{'category'| translate}}                        
                     </div>
                     <div class="col-sm-8">
-                        <ui-select ng-model="model.selectedDataSet" 
+                        <ui-select ng-model="model.selectedDataElementGroupSet" 
                                    theme="select2"                                 
                                    style="width:100%;">
-                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                            <ui-select-choices group-by="'groupType'" repeat="dataSet in model.dataSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
-                                <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
+                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataElementGroupSets && model.dataElementGroupSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                            <ui-select-choices repeat="dataElementGroupSet in model.dataElementGroupSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                                <span ng-bind-html="dataElementGroupSet.displayName | highlight: $select.search"></span>
                             </ui-select-choices>
                         </ui-select>
                     </div>
@@ -66,12 +66,12 @@
                         {{'thematic_area'| translate}}                        
                     </div>
                     <div class="col-sm-8">
-                        <ui-select ng-model="model.selectedDataSet" 
+                        <ui-select ng-model="model.selectedThematicArea" 
                                    theme="select2"                                 
                                    style="width:100%;">
-                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                            <ui-select-choices group-by="'groupType'" repeat="dataSet in model.dataSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
-                                <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
+                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.thematicAreas && model.thematicAreas.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                            <ui-select-choices repeat="thematicArea in model.thematicAreas | thematicAreaFilter:model.selectedDataElementGroupSet | filter: {'displayName': $select.search, 'category': model.dataElementGroupSet.displayName} | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                                <span ng-bind-html="thematicArea.displayName | highlight: $select.search"></span>
                             </ui-select-choices>
                         </ui-select>
                     </div>
@@ -82,12 +82,12 @@
                         {{'support_type'| translate}}                        
                     </div>
                     <div class="col-sm-8">
-                        <ui-select ng-model="model.selectedDataSet" 
+                        <ui-select ng-model="model.selectedSupportType" 
                                    theme="select2"                                 
                                    style="width:100%;">
-                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                            <ui-select-choices group-by="'groupType'" repeat="dataSet in model.dataSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
-                                <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
+                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.supportTypes && model.supportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                            <ui-select-choices repeat="supportType in model.supportTypes | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                                <span ng-bind-html="supportType.displayName | highlight: $select.search"></span>
                             </ui-select-choices>
                         </ui-select>
                     </div>
@@ -102,7 +102,7 @@
                                    theme="select2"                                 
                                    style="width:100%;">
                             <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                            <ui-select-choices group-by="'groupType'" repeat="dataSet in model.dataSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                            <ui-select-choices group-by="'thematicArea'" repeat="dataSet in model.dataSets | actionFilter:model.selectedDataElementGroupSet:model.selectedThematicArea:model.selectedSupportType | filter: $select.search | limitTo:maxOptionSize | orderBy: ['supportType','displayName'] ">
                                 <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
                             </ui-select-choices>
                         </ui-select>
@@ -191,13 +191,11 @@
                     </div>
                 </div>
 
-                <div class="yellowInfoArea">                    
-
+                <div class="yellowInfoArea">
                     <p class='bold font-16'>
                         <a href=""><span class="black underline">{{'click_here'| translate}}</span></a>  {{'to_view_full_compendium'| translate}}
                     </p>
                     <p class="font-14">{{'view_list_of_actions_each'| translate}}</p>
-
                     <div class="row">
                         <div class="center-block">
                             <div class="col-sm-2 cursor-pointer" ng-click="showNutritionActions()">
