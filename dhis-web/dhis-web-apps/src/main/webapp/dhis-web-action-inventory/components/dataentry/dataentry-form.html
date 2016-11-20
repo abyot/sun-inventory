@@ -2,7 +2,7 @@
 
     <div class="remove-left-padding">
         <div class="col-sm-12" ng-repeat="de in model.selectedDataSet.dataElements">
-            <div class="alert alert-info">
+            <div class="greenInfoArea">
                 {{de.displayName}}
             </div>
 
@@ -12,7 +12,7 @@
                     <td>
                         {{categoryOptionGroup.name}}
                     </td>
-                    <td>                        
+                    <td  ng-if="!model.showReportDiv">                        
                         <span ng-if="categoryOptionGroup.dimensionEntryMode === 'SINGLE'">
                             <ui-select ng-model="dataValues[de.id][categoryOptionGroup.id]" 
                                        on-select="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, false)"
@@ -38,18 +38,29 @@
                             </ui-select>
                         </span>                        
                     </td>
+                    <td ng-if="model.showReportDiv">
+                        <span ng-if="categoryOptionGroup.dimensionEntryMode === 'SINGLE'">
+                            {{dataValues[de.id][categoryOptionGroup.id].displayName}}
+                        </span>
+                        <span ng-if="categoryOptionGroup.dimensionEntryMode === 'MULTIPLE'">
+                            {{joinOnProperty(dataValues[de.id][categoryOptionGroup.id], 'displayName')}}
+                        </span>
+                    </td>
                 </tr>
                 <tr>
                     <td>
                         {{'short_proj_desc'| translate}}
                     </td>
-                    <td>                        
+                    <td ng-if="!model.showReportDiv">                        
                         <textarea rows="5"  
                                 ng-model="dataValues[de.id].comment"
                                 class="form-control" 
                                 ng-class="getInputNotifcationClass(de.id)"                                                                       
                                 d2-blur="saveComment(de.id)">
                         </textarea>                        
+                    </td>
+                    <td ng-if="model.showReportDiv">
+                        {{dataValues[de.id].comment}}
                     </td>
                 </tr>
             </table>
@@ -79,8 +90,8 @@
                 <button type="button" 
                         class="btn btn-info small-horizontal-spacing small-vertical-spacing" 
                         ng-disabled="!dataValueExists()"
-                        ng-click="showDataCopyDialog()">
-                    {{'view_data_as_table'| translate}}
+                        ng-click="model.showReportDiv = !model.showReportDiv">
+                    {{model.showReportDiv ? 'back_to_data_entry' : 'view_data_as_table' | translate}}
                 </button>                
                 <button type="button" 
                         class="btn btn-success small-horizontal-spacing small-vertical-spacing" 

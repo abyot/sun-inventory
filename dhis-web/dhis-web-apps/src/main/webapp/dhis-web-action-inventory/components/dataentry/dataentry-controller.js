@@ -50,7 +50,8 @@ sunInventory.controller('dataEntryController',
                     mappedCategoryCombos: [],
                     mappedOptionCombos: [],
                     mappedOptionCombosById: [],
-                    mappedOptionComboIds: []};
+                    mappedOptionComboIds: [],
+                    showReportDiv: false};
     
     //watch for selection of org unit from tree
     $scope.$watch('selectedOrgUnit', function() {
@@ -761,6 +762,6 @@ sunInventory.controller('dataEntryController',
         });
         var reportName = $scope.selectedOrgUnit.n + '-' + $scope.model.selectedPeriod.name + '.xls';
         saveAs(blob, reportName);
-    };    
+    };
     
 });
