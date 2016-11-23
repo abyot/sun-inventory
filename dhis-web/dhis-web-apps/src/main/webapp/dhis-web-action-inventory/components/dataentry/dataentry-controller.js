@@ -278,6 +278,21 @@ sunInventory.controller('dataEntryController',
             if( $scope.model.selectedDataSet.categoryCombo && $scope.model.selectedDataSet.categoryCombo.id ){
                 //$scope.model.selectedAttributeCategoryCombo = angular.copy( $scope.model.mappedCategoryCombos[$scope.model.selectedDataSet.categoryCombo.id] );
                 $scope.model.selectedAttributeCategoryCombo = $scope.model.mappedCategoryCombos[$scope.model.selectedDataSet.categoryCombo.id];
+                if( $scope.model.selectedAttributeCategoryCombo.categories && 
+                        $scope.model.selectedAttributeCategoryCombo.categories.length && 
+                        $scope.model.selectedAttributeCategoryCombo.categories.length > 0 ){                
+                    for( var i=0; i<$scope.model.selectedAttributeCategoryCombo.categories.length; i++){
+                        if( $scope.model.selectedAttributeCategoryCombo.categories[i].displayName === 'Action Instance' ){
+                            if( $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions &&
+                                    $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions.length && 
+                                    $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions.length > 0){
+                                
+                                $scope.model.selectedAttributeCategoryCombo.categories[i].selectedOption = $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions[0];
+                            }                            
+                            break;
+                        }
+                    }
+                }
             }
                         
             $scope.model.dataElements = [];
