@@ -10,11 +10,11 @@ var actionMappingFilters = angular.module('actionMappingFilters', [])
         
         if(!actions ){
             return;
-        }
+        }        
         
         var filteredActions = actions;
         if( degs && degs.displayName ){
-            filteredActions = $filter('filter')(filteredActions, {category: degs.displayName});
+            filteredActions = $filter('filter')(filteredActions, {category: degs.displayName}, true);
         }
         
         return filteredActions;         
