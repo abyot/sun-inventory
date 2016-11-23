@@ -111,7 +111,10 @@
 
                 <div ng-repeat="category in model.selectedAttributeCategoryCombo.categories" ng-if="category.displayName !== 'Agency' && model.selectedAttributeCategoryCombo && !model.selectedAttributeCategoryCombo.isDefault && !model.invalidDimensions">                
                     <div class="row small-vertical-spacing">
-                        <div class="col-sm-4">                            
+                        <div class="col-sm-4">
+                            <span ng-if="category.displayName === 'Action Instance'">
+                                <i class="fa fa-question-circle superscript" tooltip="{{'action_instance_definition'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                            </span>                            
                             {{category.displayName}}
                         </div>
                         <div class="col-sm-8">

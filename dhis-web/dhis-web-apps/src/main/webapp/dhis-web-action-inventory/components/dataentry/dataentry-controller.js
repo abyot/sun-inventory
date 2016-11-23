@@ -440,6 +440,10 @@ sunInventory.controller('dataEntryController',
         $scope.saveStatus[deId + '-' + cogId].error = !success;
     };
     
+    $scope.saveComment = function( deId ){        
+        console.log('comment:  ', $scope.dataValues[deId].comment);
+    };
+    
     $scope.saveDataValue = function( deId, ocId, cog, saveMultiple ){
         
         var dataElement = $scope.desById[deId];

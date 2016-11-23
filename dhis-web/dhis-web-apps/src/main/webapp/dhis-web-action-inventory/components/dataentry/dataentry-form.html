@@ -2,10 +2,15 @@
 
     <div class="remove-left-padding">
         <div class="col-sm-12" ng-repeat="de in model.selectedDataSet.dataElements">
+            
             <div class="greenInfoArea">
                 <p class="bold font-16 pull-center">{{de.displayName}}</p>
             </div>
-
+            
+            <div class="redInfoArea">
+                <p class="bold font-14 pull-center">{{'data_entry_saving_info' | translate}}</p>
+            </div>
+            
             <table class="table table-bordered">
                 <tr ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
                     ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">
@@ -30,8 +35,9 @@
                                        ng-model="dataValues[de.id][categoryOptionGroup.id]"
                                        on-select="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, true)"
                                        on-remove="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, true)"
-                                       theme="bootstrap">
-                                <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass(de.id, categoryOptionGroup.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
+                                       theme="bootstrap"
+                                       ng-style="getInputNotifcationClass(de.id, categoryOptionGroup.id) === 'input-pending' ? {'background-color': '#fffe8c !important'} : getInputNotifcationClass(de.id, categoryOptionGroup.id) === 'input-success' ? {'background-color': '#b9ffb9 !important'} : getInputNotifcationClass(de.id, categoryOptionGroup.id) === 'input-error' ? {'background-color': '#ff8a8a !important'} : {}">
+                                <ui-select-match allow-clear="true" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
                                 <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
                                     <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                 </ui-select-choices>
