@@ -124,61 +124,34 @@ function ajax_login()
 
 function downloadMetaData()
 {
-    console.log('Loading required meta-data');
-    var def = $.Deferred();
-    var promise = def.promise();
-
-    promise = promise.then( dhis2.sunpmt.store.open );
-    promise = promise.then( getUserRoles );
-    promise = promise.then( getOrgUnitLevels );
-    promise = promise.then( getSystemSetting );
-    promise = promise.then( getCalendarSetting );
+    console.log('Downloading required meta-data');
     
-    //fetch category combos
-    promise = promise.then( getMetaCategoryCombos );
-    promise = promise.then( filterMissingCategoryCombos );
-    promise = promise.then( getCategoryCombos );
+    return dhis2.sunpmt.store.open()
+            .then( getUserRoles )
+            .then( getOrgUnitLevels )
+            .then( getOrgUnitLevels )
+            .then( getSystemSetting )
+            .then( getCalendarSetting )
     
-    //fetch category option groups
-    promise = promise.then( getMetaCategoryOptionGroups );
-    promise = promise.then( filterMissingCategoryOptionGroups );
-    promise = promise.then( getCategoryOptionGroups );
-        
-    //fetch data sets
-    promise = promise.then( getMetaDataSets );
-    promise = promise.then( filterMissingDataSets );
-    promise = promise.then( getDataSets );
+            .then( getMetaCategoryCombos )
+            .then( filterMissingCategoryCombos )
+            .then( getCategoryCombos )
     
-    //fetch data element group sets
-    promise = promise.then( getMetaDataElementGroupSets );
-    promise = promise.then( filterMissingDataElementGroupSets );
-    promise = promise.then( getDataElementGroupSets );
+            .then( getMetaCategoryOptionGroups )
+            .then( filterMissingCategoryOptionGroups )
+            .then( getCategoryOptionGroups )
     
-    //fetch option sets
-    promise = promise.then( getMetaOptionSets );
-    promise = promise.then( filterMissingOptionSets );
-    promise = promise.then( getOptionSets );
+            .then( getMetaDataSets )
+            .then( filterMissingDataSets )
+            .then( getDataSets )
     
-    //fetch programs
-    promise = promise.then( getMetaPrograms );
-    promise = promise.then( filterMissingPrograms );
-    promise = promise.then( getPrograms );
+            .then( getMetaDataElementGroupSets )
+            .then( filterMissingDataElementGroupSets )
+            .then( getDataElementGroupSets )
     
-    //fetch indicator groups
-    promise = promise.then( getMetaIndicatorGroups );
-    promise = promise.then( filterMissingIndicatorGroups );
-    promise = promise.then( getIndicatorGroups );
-    
-    promise.done(function() {        
-        //Enable ou selection after meta-data has downloaded
-        $( "#orgUnitTree" ).removeClass( "disable-clicks" );
-        dhis2.tc.metaDataCached = true;
-        dhis2.availability.startAvailabilityCheck();
-        console.log( 'Finished loading meta-data' );        
-        selection.responseReceived(); 
-    });
-
-    def.resolve();    
+            .then( getMetaOptionSets )
+            .then( filterMissingOptionSets )
+            .then( getOptionSets );
 }
 function getUserRoles(){
     var SessionStorageService = angular.element('body').injector().get('SessionStorageService');    
@@ -245,7 +218,7 @@ function filterMissingDataSets( objs ){
 }
 
 function getDataSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', '../api/dataSets.json', 'paging=false&fields=id,periodType,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,description,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', '../api/dataSets.json', 'paging=false&fields=id,periodType,openFuturePeriods,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,description,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
 }
 
 function getMetaDataElementGroupSets(){

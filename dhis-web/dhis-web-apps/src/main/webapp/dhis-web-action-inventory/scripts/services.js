@@ -17,26 +17,55 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     };
 })
 
-/* current selections */
+/* Period generator */
 .service('PeriodService', function(DateUtils){
     
-    this.getPeriods = function(periodType, periodOffset){
+    this.getPeriods = function(periodType, periodOffset, futurePeriod){
         periodOffset = angular.isUndefined(periodOffset) ? 0 : periodOffset;
+        periodOffset += futurePeriod;
+        
         var availablePeriods = [];
         if(!periodType){
             return availablePeriods;
         }        
 
         var pt = new PeriodType();
-        var d2Periods = pt.get(periodType).generatePeriods({offset: periodOffset, filterFuturePeriods: false, reversePeriods: false});
+        var d2Periods = pt.get(periodType).generatePeriods({offset: periodOffset, filterFuturePeriods: false, reversePeriods: true});
+        
+        if( !d2Periods || d2Periods.length && d2Periods.length < 1 ){
+            return availablePeriods;
+        }
+        
+        var currentPeriod = null, lastPeriod = {};
+        for( var i=0; i<d2Periods.length; i++){            
+            d2Periods[i].endDate = DateUtils.formatFromApiToUser(d2Periods[i].endDate);
+            d2Periods[i].startDate = DateUtils.formatFromApiToUser(d2Periods[i].startDate);
+            
+            if( moment(DateUtils.getToday()).isAfter(d2Periods[i].endDate) ){                    
+                currentPeriod = d2Periods[i];
+                break;
+            }
+        }        
+        
+        if( currentPeriod ){            
+            lastPeriod.startDate = DateUtils.formatFromApiToUser( moment(currentPeriod.startDate).add(futurePeriod, 'years') );
+            lastPeriod.endDate = DateUtils.formatFromApiToUser( moment(currentPeriod.endDate).add(futurePeriod, 'years') );
+        }
+        
+        var startingDate = DateUtils.formatFromApiToUser( moment('2016-01-01') );        
+            
         angular.forEach(d2Periods, function(p){
+            
             p.endDate = DateUtils.formatFromApiToUser(p.endDate);
             p.startDate = DateUtils.formatFromApiToUser(p.startDate);
-            if(moment(DateUtils.getToday()).isAfter(p.endDate)){                    
+            
+            if( !moment(p.startDate).isAfter(lastPeriod.startDate) &&
+                moment(p.endDate).isAfter(startingDate) ){
                 availablePeriods.push( p );
             }
         });        
-        return availablePeriods;
+        
+        return availablePeriods.reverse();
     };
 })
 
@@ -162,7 +191,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });            
             return def.promise;            
         },
-        getDataSetsByProperty: function( ou, property, value ){
+        getDataSetsByProperty: function( property, value ){
             var roles = SessionStorageService.get('USER_ROLES');
             var userRoles = roles && roles.userCredentials && roles.userCredentials.userRoles ? roles.userCredentials.userRoles : [];
             
@@ -172,7 +201,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 PMTStorageService.currentStore.getAll('dataSets').done(function(dss){
                     var dataSets = [];                    
                     angular.forEach(dss, function(ds){
-                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds.organisationUnits.hasOwnProperty( ou.id ) && ds[property] && ds[property] === value ){                            
+                        if( CommonUtils.userHasValidRole(ds, 'dataSets', userRoles ) && ds[property] && ds[property] === value ){                            
                             ds = ActionMappingUtils.processDataSet( ds );
                             dataSets.push(ds);
                         }
@@ -704,18 +733,25 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             return ds;
         },
-        exists: function( objs, obj, prop ){
+        indexOf: function( objs, obj, prop ){
             if( !objs || !objs.length || objs.length === 0 || !obj || !prop ){
-                return false;
+                return -1;
             }
             
             for( var i=0; i< objs.length; i++ ){
                 if( objs[i][prop] === obj[prop] ){
-                    return true;
+                    return i;
                 }
             }
             
-            return false;
+            return -1;
+        },
+        joinOnProperty: function( objs, prop){
+            var result = [];
+            angular.forEach(objs, function(obj){
+                result.push( obj[prop] );
+            });
+            return result.join(', ');
         }
     };
 })

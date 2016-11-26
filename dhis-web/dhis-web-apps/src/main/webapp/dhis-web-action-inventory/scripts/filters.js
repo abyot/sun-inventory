@@ -6,18 +6,37 @@ var actionMappingFilters = angular.module('actionMappingFilters', [])
 
 .filter('thematicAreaFilter', function( $filter ){    
     
-    return function(actions, degs){
+    return function(thematicAreas, degs){
         
-        if(!actions ){
+        if(!thematicAreas ){
             return;
-        }        
-        
-        var filteredActions = actions;
-        if( degs && degs.displayName ){
-            filteredActions = $filter('filter')(filteredActions, {category: degs.displayName}, true);
         }
         
-        return filteredActions;         
+        if( degs && degs.displayName ){
+            thematicAreas = $filter('filter')(thematicAreas, {category: degs.displayName}, true);
+        }
+        
+        return thematicAreas;         
+    };
+})
+
+.filter('supportTypeFilter', function( $filter ){    
+    
+    return function(supportTypes, degs, ta){
+        
+        if(!supportTypes ){
+            return;
+        }
+        
+        if( supportTypes && degs && degs.displayName ){
+            supportTypes = $filter('filter')(supportTypes, {category: degs.displayName},true);
+        }
+        
+        if( ta && ta.displayName ){
+            supportTypes = $filter('filter')(supportTypes, {thematicArea: ta.displayName},true);
+        }
+        
+        return supportTypes;
     };
 })
 

@@ -1,29 +1,23 @@
-<div class="vertical-spacing" ng-if="model.selectedDataSet && model.selectedPeriod && model.categoryOptionsReady">
+<div class="vertical-spacing" ng-if="paramsReady()">
 
     <div class="remove-left-padding">
         <div class="col-sm-12" ng-repeat="de in model.selectedDataSet.dataElements">
             
-            <div class="greenInfoArea">
-                <p class="bold font-16 pull-center">{{de.displayName}}</p>
-            </div>
-            
-            <div class="redInfoArea">
-                <p class="bold font-14 pull-center">{{'data_entry_saving_info' | translate}}</p>
-            </div>
-            
             <table class="table table-bordered">
-                <tr ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
+                <tr ng-repeat="categoryOptionGroup in model.categoryOptionGroups | orderBy: 'order'" 
                     ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">
-                    <td>
+                    <td class="cursor-pointer" ng-if="categoryOptionGroup.description" ng-click="categoryOptionGroup.showDescription = !categoryOptionGroup.showDescription">
+                        {{categoryOptionGroup.name}}
+                        <div class="alert alert-info" ng-if="categoryOptionGroup.description && categoryOptionGroup.showDescription">
+                            {{categoryOptionGroup.description}}
+                        </div>
+                    </td>
+                    <td ng-if="!categoryOptionGroup.description">
                         {{categoryOptionGroup.name}}
                     </td>
                     <td  ng-if="!model.showReportDiv">                        
                         <span ng-if="categoryOptionGroup.dimensionEntryMode === 'SINGLE'">
-                            <ui-select ng-model="dataValues[de.id][categoryOptionGroup.id]" 
-                                       on-select="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, false)"
-                                       on-remove="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, false)"
-                                       theme="select2"                                 
-                                       style="width:100%;">
+                            <ui-select ng-model="dataValues[de.id][categoryOptionGroup.id]" theme="select2" style="width:100%;">
                                 <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, categoryOptionGroup.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
                                 <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
                                     <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
@@ -31,12 +25,7 @@
                             </ui-select>
                         </span>
                         <span ng-if="categoryOptionGroup.dimensionEntryMode === 'MULTIPLE'">
-                            <ui-select multiple
-                                       ng-model="dataValues[de.id][categoryOptionGroup.id]"
-                                       on-select="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, true)"
-                                       on-remove="saveDataValue(de.id, $select.selected.id, categoryOptionGroup, true)"
-                                       theme="bootstrap"
-                                       ng-style="getInputNotifcationClass(de.id, categoryOptionGroup.id) === 'input-pending' ? {'background-color': '#fffe8c !important'} : getInputNotifcationClass(de.id, categoryOptionGroup.id) === 'input-success' ? {'background-color': '#b9ffb9 !important'} : getInputNotifcationClass(de.id, categoryOptionGroup.id) === 'input-error' ? {'background-color': '#ff8a8a !important'} : {}">
+                            <ui-select multiple ng-model="dataValues[de.id][categoryOptionGroup.id]" theme="bootstrap">
                                 <ui-select-match allow-clear="true" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
                                 <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
                                     <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
@@ -75,44 +64,48 @@
 
     <div class="clear selectionGroup">
         <div class="col-sm-6 selectionArea">
-            <div class="row padding-bottom">
+            <div class="row padding-bottom">                
                 <button type="button" 
-                        class="btn btn-primary small-horizontal-spacing small-vertical-spacing" 
+                        class="btn btn-primary small-horizontal-spacing small-vertical-spacing"  
                         ng-disabled="!dataValueExists()"
-                        ng-click="showDataCopyDialog()">
-                    {{'copy_data'| translate}}
+                        ng-click="saveData()">
+                    {{'save'| translate}}
                 </button>
+
                 <button type="button" 
-                        class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
+                        class="btn btn-danger small-vertical-spacing pull-right add-default-right-padding"  
                         ng-disabled="!dataValueExists()"
                         ng-click="deleteData()">
-                    {{'delete_data'| translate}}
+                    {{'delete'| translate}}
                 </button>
             </div>          
         </div>
 
-        <div class="col-sm-6 selectionArea add-default-padding">
-            <div class="row padding-bottom">
-                <button type="button" 
-                        class="btn btn-info small-horizontal-spacing small-vertical-spacing" 
-                        ng-disabled="!dataValueExists()"
-                        ng-click="model.showReportDiv = !model.showReportDiv">
-                    {{model.showReportDiv ? 'back_to_data_entry' : 'view_data_as_table' | translate}}
-                </button>                
-                <button type="button" 
-                        class="btn btn-success small-horizontal-spacing small-vertical-spacing" 
-                        ng-if="!model.dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                        ng-click="saveCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
-                    {{'mark_complete'| translate}}
-                </button>
-                <button type="button" 
-                        class="btn btn-warning small-horizontal-spacing small-vertical-spacing" 
-                        ng-if="model.dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                        ng-click="deleteCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
-                    {{'mark_not_complete'| translate}}
-                </button>
+        <div class="col-sm-6 selectionAreaNoColor">
+            <div class="selectionArea">
+                <div class="padding-bottom">                
+                    <button type="button" 
+                            class="btn btn-success small-horizontal-spacing small-vertical-spacing" 
+                            ng-if="!model.dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                            ng-click="saveCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
+                        {{'mark_complete'| translate}}
+                    </button>
+                    <button type="button" 
+                            class="btn btn-warning small-horizontal-spacing small-vertical-spacing" 
+                            ng-if="model.dataSetCompletness[model.selectedAttributeOptionCombo]" 
+                            ng-click="deleteCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
+                        {{'mark_not_complete'| translate}}
+                    </button>
+                    <button type="button" 
+                            class="btn btn-info small-vertical-spacing pull-right add-default-right-padding" 
+                            ng-disabled="!dataValueExists()"
+                            ng-click="model.showReportDiv = !model.showReportDiv">
+                        {{model.showReportDiv ? 'back_to_data_entry' : 'view_data_as_table'| translate}}
+                    </button>
+                </div>
             </div>
         </div>
+
     </div>
 
 </div>

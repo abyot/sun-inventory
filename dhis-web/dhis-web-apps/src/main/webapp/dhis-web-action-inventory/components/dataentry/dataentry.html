@@ -6,15 +6,8 @@
 
     <d2-left-bar></d2-left-bar>
 
-    <div id="orgUnitTree">
-        <ul>
-        </ul>
-    </div>
-
-    <img id="ouwt_loader" src="../images/ajax-loader-bar.gif" alt="{{'in_progress'| translate}}"/>
-
-    <div class="small-horizontal-spacing" ng-if="!treeLoaded">
-        {{'loading_tree'| translate}}
+    <div class="yellowInfoArea">
+        
     </div>
 
 </div>
@@ -22,12 +15,12 @@
 
 <div class="page" id="mainPage">
 
-    <div ng-if="!selectedOrgUnit">
-        <img src="../images/ajax-loader-bar.gif" alt="{{'in_progress'| translate}}" ng-if="!selectedOrgUnit"/><br>
+    <div ng-if="!model.metaDataCached">
+        <img src="../images/ajax-loader-bar.gif" alt="{{'in_progress'| translate}}"/><br>
         {{'loading_metadata'| translate}}
     </div>
 
-    <div ng-show="selectedOrgUnit">
+    <div ng-show="model.metaDataCached">
         <h2>
             {{'data_entry'| translate}}
         </h2>
@@ -35,18 +28,10 @@
         <!-- selection begins-->
         <div class="selectionGroup">
             <div class="col-sm-6 selectionArea">
-                <div class="row">
-                    <div class="col-sm-4">
-                        <i class="fa fa-question-circle superscript" tooltip="{{'org_unit_action_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
-                        {{'org_unit'| translate}}
-                    </div>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" selected-org-unit ng-model="selectedOrgUnit.displayName"
-                               value="{{selectedOrgUnit.displayName|| pleaseSelectLabel}}" disabled="">
-                    </div>
-                </div>
+                
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
+                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'category'| translate}}                        
                     </div>
                     <div class="col-sm-8">
@@ -63,6 +48,7 @@
 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
+                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'thematic_area'| translate}}                        
                     </div>
                     <div class="col-sm-8">
@@ -79,6 +65,7 @@
 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
+                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'support_type'| translate}}                        
                     </div>
                     <div class="col-sm-8">
@@ -86,7 +73,7 @@
                                    theme="select2"                                 
                                    style="width:100%;">
                             <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.supportTypes && model.supportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                            <ui-select-choices repeat="supportType in model.supportTypes | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                            <ui-select-choices repeat="supportType in model.supportTypes | supportTypeFilter:model.selectedDataElementGroupSet:model.selectedThematicArea | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
                                 <span ng-bind-html="supportType.displayName | highlight: $select.search"></span>
                             </ui-select-choices>
                         </ui-select>
@@ -95,6 +82,7 @@
 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
+                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'action'| translate}}
                     </div>
                     <div class="col-sm-8">
@@ -128,6 +116,22 @@
                                 </ui-select-choices>
                             </ui-select>
                         </div>
+                    </div>
+                </div>
+                
+                <div class="row small-vertical-spacing">
+                    <div class="col-sm-4">
+                        <i class="fa fa-question-circle superscript" tooltip="{{'org_unit_action_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                        {{'org_unit'| translate}}
+                    </div>
+                    <div class="col-sm-8">
+                        <d2-org-unit-tree                                
+                                id="{{prStDe.dataElement.id}}"
+                                d2-multi-select="false"
+                                d2-value="currentEvent[prStDe.dataElement.id]"
+                                d2-object="selectedOrgUnit"
+                                d2-function="saveDatavalue(prStDe, innerForm.foo)">
+                        </d2-org-unit-tree>
                     </div>
                 </div>
 
