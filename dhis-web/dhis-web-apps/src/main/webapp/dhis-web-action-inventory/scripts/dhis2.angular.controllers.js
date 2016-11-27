@@ -535,6 +535,10 @@ var d2Controllers = angular.module('d2Controllers', [])
                 }
             });
         });
+        
+        if( !orgUnit ){
+            console.log('first:  ', $scope.orgUnits[0]);
+        }
 
         levelsFetched = levelsFetched > 0 ? levelsFetched - 1 : levelsFetched;
 
@@ -566,7 +570,8 @@ var d2Controllers = angular.module('d2Controllers', [])
                     }
                 }
             });
-        }
+        }        
+        
     });
 
 

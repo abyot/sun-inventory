@@ -31,7 +31,7 @@
                 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
-                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                        <i class="fa fa-question-circle fa-2x reset-color" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'category'| translate}}                        
                     </div>
                     <div class="col-sm-8">
@@ -48,7 +48,7 @@
 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
-                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                        <i class="fa fa-question-circle fa-2x reset-color" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'thematic_area'| translate}}                        
                     </div>
                     <div class="col-sm-8">
@@ -65,7 +65,7 @@
 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
-                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                        <i class="fa fa-question-circle fa-2x reset-color" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'support_type'| translate}}                        
                     </div>
                     <div class="col-sm-8">
@@ -82,7 +82,7 @@
 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
-                        <i class="fa fa-question-circle superscript" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                        <i class="fa fa-question-circle fa-2x reset-color" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'action'| translate}}
                     </div>
                     <div class="col-sm-8">
@@ -90,7 +90,7 @@
                                    theme="select2"                                 
                                    style="width:100%;">
                             <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                            <ui-select-choices group-by="'thematicArea'" repeat="dataSet in model.dataSets | actionFilter:model.selectedDataElementGroupSet:model.selectedThematicArea:model.selectedSupportType | filter: $select.search | limitTo:maxOptionSize | orderBy: ['supportType','displayName'] ">
+                            <ui-select-choices group-by="'thematicArea'" repeat="dataSet in model.dataSets | actionFilter:model.selectedDataElementGroupSet:model.selectedThematicArea:model.selectedSupportType | filter: $select.search | limitTo:maxOptionSize | orderBy: ['supportType','order'] ">
                                 <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
                             </ui-select-choices>
                         </ui-select>
@@ -101,7 +101,7 @@
                     <div class="row small-vertical-spacing">
                         <div class="col-sm-4">
                             <span ng-if="category.displayName === 'Action Instance'">
-                                <i class="fa fa-question-circle superscript" tooltip="{{'action_instance_definition'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                                <i class="fa fa-question-circle fa-2x reset-color" tooltip="{{'action_instance_definition'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                             </span>                            
                             {{category.displayName}}
                         </div>
@@ -121,7 +121,7 @@
                 
                 <div class="row small-vertical-spacing">
                     <div class="col-sm-4">
-                        <i class="fa fa-question-circle superscript" tooltip="{{'org_unit_action_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
+                        <i class="fa fa-question-circle fa-2x reset-color" tooltip="{{'org_unit_action_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                         {{'org_unit'| translate}}
                     </div>
                     <div class="col-sm-8">
@@ -144,7 +144,34 @@
                             {{'inventory_year'| translate}}                        
                         </div>
                         <div class="col-sm-8">
-                            <div class="row">
+                            <div class="input-group">
+                                <ui-select ng-model="model.selectedPeriod" 
+                                           theme="select2"                                 
+                                           style="width:100%;">
+                                     <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                     <ui-select-choices  repeat="period in model.periods | filter: $select.search | limitTo:maxOptionSize">
+                                         <span ng-bind-html="period.name | highlight: $select.search"></span>
+                                     </ui-select-choices>
+                                 </ui-select>
+                                <span class="input-group-btn">        
+                                    <button type="button" 
+                                            class="btn btn-default" 
+                                            ng-disabled="!model.selectedDataSet"
+                                            ng-click="getPeriods('PRV')" 
+                                            title="{{'previous_periods'| translate}}">
+                                        <i class="fa fa-backward"></i>
+                                    </button>
+
+                                    <button type="button" 
+                                            class="btn btn-default" 
+                                            ng-disabled="!model.selectedDataSet || periodOffset > -1" 
+                                            ng-click="getPeriods('NXT')" 
+                                            title="{{'next_periods'| translate}}">
+                                        <i class="fa fa-forward"></i>
+                                    </button>                                    
+                                </span>
+                            </div>
+                            <!--<div class="row">
                                 <div class="col-sm-8">
                                     <ui-select ng-model="model.selectedPeriod" 
                                                theme="select2"                                 
@@ -162,7 +189,6 @@
                                                 ng-click="getPeriods('PRV')" 
                                                 title="{{'previous_periods'| translate}}">
                                             <i class="fa fa-caret-left"></i>
-                                            <!--{{'prev'| translate}}-->
                                         </button>
 
                                         <button type="button" 
@@ -171,11 +197,10 @@
                                                 ng-click="getPeriods('NXT')" 
                                                 title="{{'next_periods'| translate}}">
                                             <i class="fa fa-caret-right"></i>
-                                            <!--{{'next'| translate}}-->
                                         </button>                                    
                                     </div>                                
                                 </div>
-                            </div>
+                            </div>-->
                         </div>
                     </div>
                     <div ng-repeat="category in model.selectedAttributeCategoryCombo.categories" ng-if="category.displayName === 'Agency' && model.selectedAttributeCategoryCombo && !model.selectedAttributeCategoryCombo.isDefault && !model.invalidDimensions">                
@@ -258,7 +283,9 @@
         </div>
 
         <!-- form begins -->
-        <div ng-include="'components/dataentry/dataentry-form.html'"></div>
+        <form name="outerForm" novalidate>
+            <div ng-include="'components/dataentry/dataentry-form.html'"></div>
+        </form>
         <!-- form ends -->
 
     </div>

@@ -14,6 +14,18 @@ var actionMappingDirectives = angular.module('actionMappingDirectives', [])
     };
 })
 
+.directive('arrayRequired',function(){
+    return {
+        restrict:'A',
+        require:'ngModel',
+        link:function(scope, elem, attrs, ngModel){
+            ngModel.$validators.required = function(modelValue){                
+                return (modelValue && modelValue.length > 0 ? true : false);
+            };
+        }
+    };
+})
+
 .directive('equalHeightNavTabs', function ($timeout) {
     return function (scope, element, attrs) {        
         $timeout(function () {

@@ -366,8 +366,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             var promises = [], toBeSaved = [];
             
             angular.forEach(dvs.dataValues, function(dv){                
-                if( dv.value === '' || dv.value === null ){
-                    //deleting...
+                if( dv.value === "" || dv.value === null ){
+                    //deleting...                    
                     var url = '?de='+dv.dataElement + '&ou='+dvs.orgUnit + '&pe='+dvs.period + '&co='+dv.categoryOptionCombo;
                     
                     if( cc && cp ){

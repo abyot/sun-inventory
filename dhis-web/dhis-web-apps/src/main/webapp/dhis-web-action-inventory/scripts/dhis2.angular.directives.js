@@ -652,8 +652,7 @@ var d2Directives = angular.module('d2Directives', [])
         scope: {            
             selectedOrgUnit: '=',
             id: '@',
-            d2Object: '=',
-            d2Disabled: '=',
+            d2Object: '=',            
             d2Required: '=',
             d2MultiSelect: '@',
             d2CallbackFunction: '&d2Function'

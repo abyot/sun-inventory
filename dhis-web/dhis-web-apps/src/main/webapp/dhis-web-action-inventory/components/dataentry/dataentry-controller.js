@@ -24,25 +24,17 @@ sunInventory.controller('dataEntryController',
     $scope.selectedOrgUnit = {};
     
     $scope.model = {invalidDimensions: false,
-                    showButtonInfo: false,
                     selectedAttributeCategoryCombo: null,
-                    standardDataSets: [],
                     multiDataSets: [],
                     dataSets: [],
-                    programs: null,
                     categoryOptionsReady: false,
-                    allowMultiOrgUnitEntry: false,
                     selectedOptions: [],
                     dataValues: {},
-                    orgUnitsWithValues: [],
-                    selectedProgram: null,
-                    selectedDataSet: null,
-                    selectedAttributeOptionCombos: {},
+                    selectedDataSet: null,                    
                     selectedAttributeOptionCombo: null,
                     selectedDataElementGroupSet: null,
                     selectedThematicArea: null,
                     selectedSupportType: null,
-                    stakeholderCategory: null,
                     attributeCategoryUrl: null,
                     dataElementGroupSets: [],
                     mappedCategoryCombos: [],
@@ -50,17 +42,16 @@ sunInventory.controller('dataEntryController',
                     mappedOptionCombosById: [],
                     mappedOptionComboIds: [],
                     showReportDiv: false,
-                    metaDataCached: false};
+                    metaDataCached: false,
+                    actionConductedKey: null};
     
     //Download metadata
     downloadMetaData().then(function(){
         $scope.model.periods = [];
         $scope.model.dataSets = [];
-        $scope.pushedOptions = {};
         $scope.model.selectedDataSet = null;
         $scope.model.selectedPeriod = null;
-        $scope.model.selectedAttributeCategoryCombo = null;
-        $scope.model.selectedAttributeOptionCombos = {};
+        $scope.model.selectedAttributeCategoryCombo = null;        
         $scope.model.selectedAttributeOptionCombo = null;
         $scope.dataValues = {};
         $scope.model.basicAuditInfo = {};        
@@ -68,9 +59,11 @@ sunInventory.controller('dataEntryController',
         $scope.dataElementLocation = {};
         
         MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                        
+            
             $scope.model.dataElementGroupSets = [];
             $scope.model.supportTypes = [];
             $scope.model.thematicAreas = [];
+            
             angular.forEach(dataElementGroupSets, function(degs){
                 angular.forEach(degs.dataElementGroups, function(deg){
                     deg = dhis2.metadata.processMetaDataAttribute( deg );                                
@@ -118,13 +111,16 @@ sunInventory.controller('dataEntryController',
             var optionGroupByMembers = [];
             MetaDataFactory.getAll('categoryOptionGroups').then(function(categoryOptionGroups){
                 $scope.model.categoryOptionGroups = [];
-                angular.forEach(categoryOptionGroups, function(cog){
-
-                    if( cog.dataSetDomain === 'INVENTORY' ){
+                angular.forEach(categoryOptionGroups, function(cog){                    
+                    if( cog.dataSetDomain === 'INVENTORY' ){                        
                         angular.forEach(cog.categoryOptions, function(co){
                             optionGroupByMembers[co.name] = cog;
                         });
                         $scope.model.categoryOptionGroups.push(cog);
+                        
+                        if( cog.actionConducted ){
+                            $scope.model.actionConductedKey = cog;
+                        }
                     }                     
                 });
 
@@ -135,7 +131,7 @@ sunInventory.controller('dataEntryController',
                             $scope.model.defaultCategoryCombo = cc;
                             $scope.model.defaultOptionCombo = cc.categoryOptionCombos[0];
                         }
-                        $scope.pushedOptions[cc.id] = [];
+                        //$scope.pushedOptions[cc.id] = [];
 
                         if( cc.categories && cc.categories.length === 1 && cc.categories[0].categoryOptions ){
 
@@ -148,7 +144,7 @@ sunInventory.controller('dataEntryController',
                                 return sortedOptions.indexOf( coc.displayName );
                             });
 
-                            if( cc.displayName === 'Action inventory dimensions' ){
+                            if( cc.code && cc.code === 'ActionInventoryDimensions' ){
                                 for(var i=0; i< cc.categoryOptionCombos.length; i++){
                                     $scope.model.mappedOptionCombos[cc.categoryOptionCombos[i].displayName] = cc.categoryOptionCombos[i];
                                     $scope.model.mappedOptionCombosById[cc.categoryOptionCombos[i].id] = cc.categoryOptionCombos[i];
@@ -159,11 +155,11 @@ sunInventory.controller('dataEntryController',
                                             orderedOptionGroup[og.id] = i;
                                         }
                                     }
-                                }                            
+                                }
 
-                                angular.forEach($scope.model.categoryOptionGroups, function(cog){
+                                /*angular.forEach($scope.model.categoryOptionGroups, function(cog){
                                     cog.order = orderedOptionGroup[cog.id];
-                                });
+                                });*/
                             }                            
                         }
 
@@ -206,14 +202,12 @@ sunInventory.controller('dataEntryController',
     $scope.$watch('model.selectedDataSet', function() {        
         $scope.model.periods = [];
         $scope.dataValues = {};
-        $scope.model.selectedProgram = null;
-        $scope.model.orgUnitsWithValues = [];
         if( angular.isObject($scope.model.selectedDataSet) && $scope.model.selectedDataSet.id){
             $scope.loadDataSetDetails();
         }
     });
     
-    $scope.$watch('model.selectedPeriod', function(){
+    $scope.$watchGroup(['model.selectedPeriod', 'selectedOrgUnit'], function(){
         $scope.loadDataEntryForm();
     });
     
@@ -226,13 +220,17 @@ sunInventory.controller('dataEntryController',
             $scope.pushedOptions[categoryComboId].push( optionName );
         }
     };
+    
+    $scope.getInputNotifcationClass = function( field ){
+        return field.$dirty ? 'input-pending' : '';
+    };
         
     $scope.loadDataSetDetails = function(){
-        if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType){
+        if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType ){            
             
             $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
         
-            if(!$scope.model.selectedDataSet.dataElements || $scope.model.selectedDataSet.dataElements.length < 1){
+            if(!$scope.model.selectedDataSet.dataElements || $scope.model.selectedDataSet.dataElements.length !== 1){
                 ActionMappingUtils.notificationDialog('error', 'missing_data_elements');
                 return;
             }            
@@ -256,7 +254,8 @@ sunInventory.controller('dataEntryController',
                     }
                 }
             }
-                        
+            
+            $scope.model.selectedDataElement = $scope.model.selectedDataSet.dataElements[0];
             $scope.model.dataElements = [];
             $scope.dataValues = {};
             $scope.desById = {};
@@ -270,6 +269,23 @@ sunInventory.controller('dataEntryController',
             if( $scope.model.selectedPeriod !== null && ActionMappingUtils.indexOf( $scope.model.periods, $scope.model.selectedPeriod, 'id' ) !== -1 ) {                
                 $scope.loadDataEntryForm();
             }
+            
+            if( !$scope.model.actionConductedKey 
+                    || !$scope.model.mappedCategoryCombos[$scope.model.selectedDataElement.categoryCombo.id] 
+                    || !$scope.model.mappedCategoryCombos[$scope.model.selectedDataElement.categoryCombo.id].categoryOptionCombos 
+                    || $scope.model.mappedCategoryCombos[$scope.model.selectedDataElement.categoryCombo.id].categoryOptionCombos.length === 0){
+                ActionMappingUtils.notificationDialog('error', 'missing_action_conduted_key');
+                return;
+            }
+            
+            var keys = $filter('filter')($scope.model.mappedCategoryCombos[$scope.model.selectedDataElement.categoryCombo.id].categoryOptionCombos, {categoryOptionGroup: {id: $scope.model.actionConductedKey.id}});
+            if( !keys || keys.length !== 1 ){
+                ActionMappingUtils.notificationDialog('error', 'missing_action_conduted_dimension_key');
+                return;
+            }
+            
+            $scope.model.actionConductedDimensionKey = keys[0];
+            
         }
     };
     
@@ -329,7 +345,13 @@ sunInventory.controller('dataEntryController',
                                         default:                                                
                                     }                                                                        
                                 }
-                            }                                                                         
+                            }
+                            
+                            if( dv.categoryOptionCombo === $scope.model.actionConductedDimensionKey.id ){
+                                if( dv.comment && dv.comment !== "" ){
+                                    $scope.dataValues[dv.dataElement].comment = dv.comment;
+                                }
+                            }
                         });
                         
                         response.dataValues = orderByFilter(response.dataValues, '-created').reverse();
@@ -345,7 +367,7 @@ sunInventory.controller('dataEntryController',
                                     $scope.selectedOrgUnit.id,
                                     $scope.model.selectedPeriod.startDate,
                                     $scope.model.selectedPeriod.endDate,
-                                    $scope.model.allowMultiOrgUnitEntry).then(function(response){                
+                                    false).then(function(response){                
                 if( response && 
                         response.completeDataSetRegistrations && 
                         response.completeDataSetRegistrations.length &&
@@ -382,135 +404,138 @@ sunInventory.controller('dataEntryController',
         checkOptions();       
     };
     
-    $scope.getPeriods = function(mode){
-        
-        if( mode === 'NXT'){
-            $scope.periodOffset = $scope.periodOffset + 1;
-            $scope.model.selectedPeriod = null;
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
-        }
-        else{
-            $scope.periodOffset = $scope.periodOffset - 1;
-            $scope.model.selectedPeriod = null;
-            $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
-        }
+    $scope.getPeriods = function(mode){        
+        if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.periodType ){
+            if( mode === 'NXT'){
+                $scope.periodOffset = $scope.periodOffset + 1;
+                $scope.model.selectedPeriod = null;
+                $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
+            }
+            else{
+                $scope.periodOffset = $scope.periodOffset - 1;
+                $scope.model.selectedPeriod = null;
+                $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
+            }
+        }        
     };
     
-    $scope.saveComment = function( deId ){        
-        console.log('comment:  ', $scope.dataValues[deId].comment);
-    };
-    
-    $scope.saveDataValue = function( deId, ocId, cog, saveMultiple ){
+    $scope.saveData = function(){
         
-        var dataElement = $scope.desById[deId];
-        
-        if( !dataElement || !$scope.dataValues[deId] ){
-            return;
+        //check for form validity
+        $scope.outerForm.submitted = true;        
+        if( $scope.outerForm.$invalid ){
+            return false;
         }
+        
+        //form is valid
+        var dataValueSet = {
+                            dataSet: $scope.model.selectedDataSet.id,
+                            period: $scope.model.selectedPeriod.id,
+                            orgUnit: $scope.selectedOrgUnit.id,
+                            dataValues: []
+                          };
+        var dataElement = $scope.model.selectedDataElement;
+        var oldValues = angular.copy( $scope.dataValuesCopy[dataElement.id] );
+        var processedCos = [];
+        angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
+
+            var cog = oco.categoryOptionGroup;
+            var val = {dataElement: dataElement.id, categoryOptionCombo: oco.id, attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, value: ''};
             
-        var dataValue = {ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};
-        var status = {saved: false, pending: true, error: false};
+            if( oco.id === $scope.model.actionConductedDimensionKey.id ){
+                val.value = 1;
+                val.comment = $scope.dataValues[dataElement.id].comment ? $scope.dataValues[dataElement.id].comment : "";
+                dataValueSet.dataValues.push( val );
+                processedCos.push( oco.id );
+            }            
+            else{
+                if( cog.dimensionEntryMode === 'MULTIPLE' ){                
+                    if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] && $scope.dataValues[dataElement.id][cog.id].length ){
+                        for( var i=0; i<$scope.dataValues[dataElement.id][cog.id].length; i++){
+                            if( $scope.dataValues[dataElement.id][cog.id][i] && $scope.dataValues[dataElement.id][cog.id][i].id === oco.id ){
+                                val.value = 1;
+                                dataValueSet.dataValues.push( val );
+                                processedCos.push( oco.id );
+                                break;
+                            }
+                        }
+                    }
+
+                    if( processedCos.indexOf( oco.id) === -1 ){
+                        if( oldValues && oldValues[cog.id] && oldValues[cog.id].length ){                        
+                            for( var i=0; i<oldValues[cog.id].length; i++){                            
+                                if( oldValues[cog.id][i] && oldValues[cog.id][i].id === oco.id ){                                    
+                                    dataValueSet.dataValues.push( val );
+                                    processedCos.push( oco.id );                                
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else{
+                    if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] ){
+                        if( $scope.dataValues[dataElement.id][cog.id].id === oco.id ){                    
+                            val.value = 1;                            
+                            dataValueSet.dataValues.push( val );
+                            processedCos.push( oco.id );                            
+                        }                        
+                    }
+                    
+                    if( oldValues && oldValues[cog.id] && oldValues[cog.id].id !== oco.id && processedCos.indexOf(oldValues[cog.id].id) === -1){                        
+                        val.categoryOptionCombo = oldValues[cog.id].id;
+                        dataValueSet.dataValues.push( val );
+                        processedCos.push(oldValues[cog.id].id );
+                    }                    
+                }
+            }
+        });
         
-        if( $scope.model.selectedAttributeCategoryCombo && !$scope.model.selectedAttributeCategoryCombo.isDefault ){
-            dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
-            dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
-        }
+        DataValueService.saveDataValueSet( dataValueSet, $scope.model.selectedAttributeCategoryCombo.id, ActionMappingUtils.getOptionIds($scope.model.selectedOptions) ).then(function(){
+            $scope.dataValuesCopy[dataElement.id] = angular.copy( $scope.dataValues[dataElement.id] );
+            ActionMappingUtils.notificationDialog('success', 'data_saved');
+            
+            console.log('the form:  ', $scope.outerForm);
+        });
+    };
+    
+    $scope.deleteData = function(){
         
-        $scope.saveStatus[deId + '-' + cog.id ] = status;
-        
-        if( saveMultiple ){
+        var modalOptions = {
+            closeButtonText: 'no',
+            actionButtonText: 'yes',
+            headerText: 'delete',
+            bodyText: 'are_you_sure_to_delete'
+        };
+
+        ModalService.showModal({}, modalOptions).then(function(result){
+
             var dataValueSet = {
                                 dataSet: $scope.model.selectedDataSet.id,
                                 period: $scope.model.selectedPeriod.id,
                                 orgUnit: $scope.selectedOrgUnit.id,
                                 dataValues: []
                               };
-            
-            var oldValues = angular.copy( $scope.dataValuesCopy[deId] );
-            var processedCos = [];
-            angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
-                
-                var val = {dataElement: deId, categoryOptionCombo: oco.id, attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, value: ''};
-                
-                if( $scope.dataValues[deId] && $scope.dataValues[deId][cog.id] && $scope.dataValues[deId][cog.id].length ){
-                    
-                    for( var i=0; i<$scope.dataValues[deId][cog.id].length; i++){
-                        if( $scope.dataValues[deId][cog.id][i] && $scope.dataValues[deId][cog.id][i].id === oco.id ){
-                            val.value = 1;
-                            dataValueSet.dataValues.push( val );
-                            processedCos.push( oco.id );
-                            break;
-                        }
+
+            var dataElement = $scope.model.selectedDataElement;        
+            angular.forEach($scope.model.categoryOptionGroups, function(deg){            
+                if( $scope.dataValuesCopy[dataElement.id][deg.id] ){
+                    if( deg.dimensionEntryMode === 'MULTIPLE'){
+                        angular.forEach($scope.dataValuesCopy[dataElement.id][deg.id], function(dv){                        
+                            dataValueSet.dataValues.push( {dataElement: dataElement.id, categoryOptionCombo: dv.id, attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, value: ''} ); 
+                        });
+                    }
+                    else{
+                        dataValueSet.dataValues.push( {dataElement: dataElement.id, categoryOptionCombo: $scope.dataValuesCopy[dataElement.id][deg.id].id, attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, value: ''} ); 
                     }
                 }
-                    
-                if( processedCos.indexOf( oco.id) === -1 ){
-                    if( oldValues && oldValues[cog.id] && oldValues[cog.id].length ){                        
-                        for( var i=0; i<oldValues[cog.id].length; i++){                            
-                            if( oldValues[cog.id][i] && oldValues[cog.id][i].id === oco.id ){                                    
-                                dataValueSet.dataValues.push( val );
-                                processedCos.push( oco.id );                                
-                                break;
-                            }
-                        }
-                    }
-                }
-            });            
-            
-            DataValueService.saveDataValueSet( dataValueSet, $scope.model.selectedAttributeCategoryCombo.id, ActionMappingUtils.getOptionIds($scope.model.selectedOptions) ).then(function(){
-                $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
-                statusNotifier( deId, cog.id, true );
-            }, function(){
-                statusNotifier( deId, cog.id, false );
             });
-        }
-        else{            
-            if( $scope.dataValues[deId] && $scope.dataValues[deId][cog.id] ){                
-                dataValue.value = 1;                
-                dataValue.co = ocId;                
-                var oldValue = $scope.dataValuesCopy[deId] && $scope.dataValuesCopy[deId][cog.id] ? $scope.dataValuesCopy[deId][cog.id] : null;
-                if( oldValue && oldValue.id ){
-                    var _dataValue = {value: '', co: oldValue.id, ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};                    
-                    if( dataValue.cc && dataValue.cp ){
-                        _dataValue.cc = dataValue.cc;
-                        _dataValue.cp = dataValue.cp;
-                    }
-                    
-                    DataValueService.deleteDataValue( _dataValue ).then(function(){
-                        $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
-                        statusNotifier( deId, cog.id, true );
-                    }, function(){
-                        statusNotifier( deId, cog.id, false );
-                    });
-                }                
-            }
-            else{
-                if( $scope.dataValuesCopy[deId] && $scope.dataValuesCopy[deId][cog.id] ){
-                    dataValue.co = $scope.dataValuesCopy[deId][cog.id].id;
-                    DataValueService.deleteDataValue( dataValue ).then(function(){
-                        $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
-                        statusNotifier( deId, cog.id, true );
-                    }, function(){
-                        statusNotifier( deId, cog.id, false );
-                    });
-                }                
-            }
-            
-            if( $scope.dataValues[deId] && $scope.dataValues[deId][cog.id] ){                
-                dataValue.value = 1;
-                dataValue.co = ocId;
-                DataValueService.saveDataValue( dataValue, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById ).then(function(){
-                    $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );                    
-                    statusNotifier( deId, cog.id, true );
-                }, function(){
-                    statusNotifier( deId, cog.id, false );
-                });
-            }
-        }
-    };
-    
-    $scope.dataValueExists = function(){
-        return !angular.equals( {}, $scope.dataValues );
+
+            DataValueService.saveDataValueSet( dataValueSet, $scope.model.selectedAttributeCategoryCombo.id, ActionMappingUtils.getOptionIds($scope.model.selectedOptions) ).then(function(){
+                $scope.dataValues[dataElement.id] = {};
+                $scope.dataValuesCopy[dataElement.id] = angular.copy( $scope.dataValues[dataElement.id] );
+            });
+        });
     };
     
     $scope.displayReport = function(){
@@ -646,4 +671,32 @@ sunInventory.controller('dataEntryController',
         saveAs(blob, reportName);
     };
     
+    var checkForEmpty = function( obj ){
+        if( !obj || angular.equals({}, obj) || angular.equals([], obj)){
+            return true;
+        }        
+        return false;
+    };
+    
+    $scope.isEmpty = function(){
+        if( angular.equals({}, $scope.dataValues) ){
+            return true;
+        }      
+        
+        var empty = true;
+        for( var i=0; i< $scope.model.categoryOptionGroups.length; i++ ){            
+            if( !checkForEmpty( $scope.dataValues[$scope.model.selectedDataElement.id][$scope.model.categoryOptionGroups[i].id] ) ){                
+                empty = false;
+            }
+        }        
+        return empty;
+    }; 
+    
+    $scope.interacted = function(field) {
+        var status = false;
+        if(field){            
+            status = $scope.outerForm.submitted || field.$dirty;
+        }
+        return status;
+    };
 });
