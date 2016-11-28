@@ -2935,6 +2935,15 @@ var d2Services = angular.module('d2Services', ['ngResource'])
             }
             return orgUnitPromise;
         },
+        getCaptureTreeRoot: function(){
+            if(!rootOrgUnitPromise){
+                var url = DHIS2URL + '/me.json?fields=organisationUnits[id,displayName,level,path,children[id,displayName,level,children[id]]]&paging=false';
+                rootOrgUnitPromise = $http.get( url ).then(function(response){                    
+                    return response.data;
+                });
+            }
+            return rootOrgUnitPromise;
+        },
         getViewTreeRoot: function(){
             if(!rootOrgUnitPromise){
                 var url = DHIS2URL + '/me.json?fields=organisationUnits[id,displayName,level,path,children[id,displayName,level,children[id]]],dataViewOrganisationUnits[id,displayName,level,path,children[id,displayName,level,children[id]]]&paging=false';

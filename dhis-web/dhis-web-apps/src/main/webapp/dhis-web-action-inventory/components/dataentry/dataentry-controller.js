@@ -16,12 +16,14 @@ sunInventory.controller('dataEntryController',
                 ActionMappingUtils,
                 DataValueService,
                 CompletenessService,
+                OrgUnitFactory,
                 ModalService,
                 DialogService) {
     $scope.periodOffset = 0;
     $scope.saveStatus = {};
     $scope.dataValues = {};
     $scope.selectedOrgUnit = {};
+    $scope.searchOuTree = {open: false};
     
     $scope.model = {invalidDimensions: false,
                     selectedAttributeCategoryCombo: null,
@@ -44,6 +46,59 @@ sunInventory.controller('dataEntryController',
                     showReportDiv: false,
                     metaDataCached: false,
                     actionConductedKey: null};
+    
+    //Get orgunits for the logged in user
+    //Get orgunits for the logged in user
+    OrgUnitFactory.getCaptureTreeRoot().then(function(response) {
+        $scope.orgUnits = response.organisationUnits;
+        angular.forEach($scope.orgUnits, function(ou){
+            ou.show = true;
+            angular.forEach(ou.children, function(o){
+                o.hasChildren = o.children && o.children.length > 0 ? true : false;
+            });
+        });
+        $scope.selectedOrgUnit = $scope.orgUnits[0] ? $scope.orgUnits[0] : null;
+    });
+    
+    
+    //expand/collapse of search orgunit tree
+    $scope.expandCollapse = function(orgUnit) {
+        if( orgUnit.hasChildren ){
+            //Get children for the selected orgUnit
+            OrgUnitFactory.getChildren(orgUnit.id).then(function(ou) {
+                orgUnit.show = !orgUnit.show;
+                orgUnit.hasChildren = false;
+                orgUnit.children = ou.children;
+                angular.forEach(orgUnit.children, function(ou){
+                    ou.hasChildren = ou.children && ou.children.length > 0 ? true : false;
+                });
+            });
+        }
+        else{
+            orgUnit.show = !orgUnit.show;
+        }
+    };
+    
+    $scope.showOrgUnitTree = function(){
+        var modalInstance = $modal.open({
+            templateUrl: 'components/outree/orgunit-tree.html',
+            controller: 'OuTreeController',
+            resolve: {
+                orgUnits: function(){
+                    return $scope.orgUnits;
+                },
+                selectedOrgUnit: function(){
+                    return $scope.selectedOrgUnit;
+                }
+            }
+        });
+
+        modalInstance.result.then(function ( selectedOu ) {
+            if( selectedOu && selectedOu.id ){
+                $scope.selectedOrgUnit = selectedOu;
+            }
+        }); 
+    };
     
     //Download metadata
     downloadMetaData().then(function(){
@@ -224,7 +279,7 @@ sunInventory.controller('dataEntryController',
     $scope.getInputNotifcationClass = function( field ){
         return field.$dirty ? 'input-pending' : '';
     };
-        
+    
     $scope.loadDataSetDetails = function(){
         if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType ){            
             
@@ -699,4 +754,6 @@ sunInventory.controller('dataEntryController',
         }
         return status;
     };
-});
+})
+
+;
