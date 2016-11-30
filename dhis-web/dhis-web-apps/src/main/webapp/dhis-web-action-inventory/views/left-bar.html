@@ -6,6 +6,10 @@
 <div class="leftBarArea yellowInfoArea">
     <div ng-if="model.selectedDataSet">
         <p class="bold font-16">{{model.selectedDataSet.dataElements[0].displayName}}</p>
-        
+        <ul class="list-group" ng-if="model.selectedDataSet.code && model.mappedOptionSets[model.selectedDataSet.code]">
+            <li class="list-group-item" ng-repeat="option in model.mappedOptionSets[model.selectedDataSet.code].options | orderBy: 'displayName' ">
+                {{option.displayName}}
+            </li>            
+        </ul>
     </div>    
 </div>

@@ -94,6 +94,7 @@ div.paging a.active
 
 .input-pending {
     background-color: #fffe8c !important;
+    color: #000 !important;
 }
 
 .input-error {
@@ -502,8 +503,7 @@ div#orgUnitTree {
     color: #555 !important;
 }
 
-.form-control{
-    color: black;
+.form-control{    
     padding: 5px !important;
     color: #555 !important;
 }

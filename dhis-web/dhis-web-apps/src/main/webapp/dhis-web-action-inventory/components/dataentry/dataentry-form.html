@@ -67,7 +67,8 @@
                                   name="comment"
                                   ng-required="true"
                                   ng-model="dataValues[de.id].comment"
-                                  class="form-control">
+                                  class="form-control"
+                                  ng-style="getInputNotifcationClass(outerForm.comment) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
                         </textarea>
                         <div ng-messages="outerForm.comment.$error" ng-if="interacted(outerForm.comment)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
                         </div>
