@@ -783,6 +783,35 @@ public abstract class AbstractEventService
             dataValueService.getTrackedEntityDataValues( programStageInstance ) );
         Map<String, TrackedEntityDataValue> existingDataValues = getDataElementDataValueMap( dataValues );
 
+        if ( programStageInstance.getProgramStage().getCaptureCoordinates() )
+        {
+            Coordinate coordinate = null;
+
+            if ( programStageInstance.getLongitude() != null && programStageInstance.getLatitude() != null )
+            {
+                coordinate = new Coordinate( programStageInstance.getLongitude(), programStageInstance.getLatitude() );
+
+                try
+                {
+                    List<Double> list = OBJECT_MAPPER.readValue( coordinate.getCoordinateString(),
+                        new TypeReference<List<Double>>()
+                        {
+                        } );
+
+                    coordinate.setLongitude( list.get( 0 ) );
+                    coordinate.setLatitude( list.get( 1 ) );
+                }
+                catch ( IOException ignored )
+                {
+                }
+            }
+
+            if ( coordinate != null && coordinate.isValid() )
+            {
+                event.setCoordinate( coordinate );
+            }
+        }
+
         for ( DataValue value : event.getDataValues() )
         {
             DataElement dataElement = getDataElement( importOptions.getIdSchemes().getDataElementIdScheme(),
@@ -947,13 +976,13 @@ public abstract class AbstractEventService
         event.setEnrollmentStatus(
             EnrollmentStatus.fromProgramStatus( programStageInstance.getProgramInstance().getStatus() ) );
         event.setStatus( programStageInstance.getStatus() );
-        event.setEventDate( DateUtils.getLongDateString( programStageInstance.getExecutionDate() ) );
-        event.setDueDate( DateUtils.getLongDateString( programStageInstance.getDueDate() ) );
+        event.setEventDate( DateUtils.getIso8601NoTz( programStageInstance.getExecutionDate() ) );
+        event.setDueDate( DateUtils.getIso8601NoTz( programStageInstance.getDueDate() ) );
         event.setStoredBy( programStageInstance.getStoredBy() );
         event.setCompletedBy( programStageInstance.getCompletedBy() );
-        event.setCompletedDate( DateUtils.getLongDateString( programStageInstance.getCompletedDate() ) );
-        event.setCreated( DateUtils.getLongDateString( programStageInstance.getCreated() ) );
-        event.setLastUpdated( DateUtils.getLongDateString( programStageInstance.getLastUpdated() ) );
+        event.setCompletedDate( DateUtils.getIso8601NoTz( programStageInstance.getCompletedDate() ) );
+        event.setCreated( DateUtils.getIso8601NoTz( programStageInstance.getCreated() ) );
+        event.setLastUpdated( DateUtils.getIso8601NoTz( programStageInstance.getLastUpdated() ) );
 
         UserCredentials userCredentials = currentUserService.getCurrentUser().getUserCredentials();
 
@@ -1024,8 +1053,8 @@ public abstract class AbstractEventService
         for ( TrackedEntityDataValue dataValue : dataValues )
         {
             DataValue value = new DataValue();
-            value.setCreated( DateUtils.getLongGmtDateString( dataValue.getCreated() ) );
-            value.setLastUpdated( DateUtils.getLongGmtDateString( dataValue.getLastUpdated() ) );
+            value.setCreated( DateUtils.getIso8601NoTz( dataValue.getCreated() ) );
+            value.setLastUpdated( DateUtils.getIso8601NoTz( dataValue.getLastUpdated() ) );
             value.setDataElement( dataValue.getDataElement().getUid() );
             value.setValue( dataValue.getValue() );
             value.setProvidedElsewhere( dataValue.getProvidedElsewhere() );
@@ -1045,7 +1074,7 @@ public abstract class AbstractEventService
 
             if ( comment.getCreatedDate() != null )
             {
-                note.setStoredDate( comment.getCreatedDate().toString() );
+                note.setStoredDate( DateUtils.getIso8601NoTz( comment.getCreatedDate() ) );
             }
 
             event.getNotes().add( note );

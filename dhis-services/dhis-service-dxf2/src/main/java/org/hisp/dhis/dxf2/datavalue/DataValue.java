@@ -28,12 +28,14 @@ package org.hisp.dhis.dxf2.datavalue;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.StringUtils;
+import org.hisp.dhis.common.DimensionalObject;
 import org.hisp.dhis.common.DxfNamespaces;
 
 /**
@@ -92,6 +94,13 @@ public class DataValue
     {
         String creat = getCreated();
         return creat != null && !creat.isEmpty();
+    }
+
+    public String getPrimaryKey()
+    {        
+        return StringUtils.join( 
+            Lists.newArrayList( dataElement, period, orgUnit, categoryOptionCombo, attributeOptionCombo )
+            .toArray(), DimensionalObject.DIMENSION_SEP );
     }
     
     @Override

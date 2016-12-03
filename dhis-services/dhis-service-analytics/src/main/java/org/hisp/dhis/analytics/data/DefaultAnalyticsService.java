@@ -182,14 +182,13 @@ public class DefaultAnalyticsService
         DataQueryParams query = DataQueryParams.newBuilder( params )
             .withSkipMeta( false )
             .withSkipData( false )
-            .withDimensionItemMeta( true )
             .withIncludeNumDen( false )
             .withOutputFormat( OutputFormat.DATA_VALUE_SET )
             .build();
         
         Grid grid = getAggregatedDataValueGridInternal( query );
                 
-        return AnalyticsUtils.getDataValueSetFromGrid( grid );
+        return AnalyticsUtils.getDataValueSetFromGrid( params, grid );
     }
     
     @Override
@@ -260,6 +259,8 @@ public class DefaultAnalyticsService
         // ---------------------------------------------------------------------
 
         addMetaData( params, grid );
+        
+        handleDataValueSet( params, grid );
 
         applyIdScheme( params, grid );
 
@@ -641,7 +642,7 @@ public class DefaultAnalyticsService
      */
     private void addProgramDataElementAttributeIndicatorValues( DataQueryParams params, Grid grid )
     {
-        if ( (!params.getAllProgramDataElementsAndAttributes().isEmpty() || !params.getProgramIndicators().isEmpty()) && !params.isSkipData() )
+        if ( ( !params.getAllProgramDataElementsAndAttributes().isEmpty() || !params.getProgramIndicators().isEmpty() ) && !params.isSkipData() )
         {
             DataQueryParams dataSourceParams = DataQueryParams.newBuilder( params )
                 .retainDataDimensions( PROGRAM_DATA_ELEMENT, PROGRAM_ATTRIBUTE, PROGRAM_INDICATOR ).build();
@@ -703,7 +704,7 @@ public class DefaultAnalyticsService
             // Names element
             // -----------------------------------------------------------------
 
-            Map<String, String> uidNameMap = AnalyticsUtils.getUidNameMap( params );
+            Map<String, String> uidNameMap = AnalyticsUtils.getDimensionItemNameMap( params );
             Map<String, String> cocNameMap = AnalyticsUtils.getCocNameMap( params );
             uidNameMap.putAll( cocNameMap );
             uidNameMap.put( DATA_X_DIM_ID, DISPLAY_NAME_DATA_X );
@@ -749,13 +750,23 @@ public class DefaultAnalyticsService
             {
                 metaData.put( AnalyticsMetaDataKey.ORG_UNIT_NAME_HIERARCHY.getKey(), getParentNameGraphMap( organisationUnits, roots, true ) );
             }
-            
-            if ( params.isDimensionItemMeta() )
-            {
-                metaData.put( AnalyticsMetaDataKey.DIMENSION_ITEMS.getKey(), AnalyticsUtils.getUidDimensionalItemMap( params ) );
-            }
 
             grid.setMetaData( metaData );
+        }
+    }
+
+    /**
+     * Prepares the given grid to be converted to a data value set, given
+     * that the output format is of type DATA_VALUE_SET.
+     * 
+     * @param params the data query parameters.
+     * @param grid   the grid.
+     */
+    private void handleDataValueSet( DataQueryParams params, Grid grid )
+    {
+        if ( params.isOutputFormat( OutputFormat.DATA_VALUE_SET ) && !params.isSkipHeaders() )
+        {
+            AnalyticsUtils.handleGridForDataValueSet( params, grid );
         }
     }
 
@@ -772,7 +783,7 @@ public class DefaultAnalyticsService
         {
             List<DimensionalItemObject> items = params.getAllDimensionItems();
 
-            Map<String, String> map = IdentifiableObjectUtils.getUidPropertyMap( items, params.getOutputIdScheme() );
+            Map<String, String> map = DimensionalObjectUtils.getDimensionItemIdSchemeMap( items, params.getOutputIdScheme() );
 
             grid.substituteMetaData( map );
         }

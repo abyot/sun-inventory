@@ -489,6 +489,7 @@ public class TableAlteror
         executeSql( "update reporttable set sortorder = 0 where sortorder is null" );
         executeSql( "update reporttable set toplimit = 0 where toplimit is null" );
         executeSql( "update reporttable set showhierarchy = false where showhierarchy is null" );
+        executeSql( "update reporttable set legenddisplaystyle = 'FILL' where legenddisplaystyle is null" );
 
         // reporttable col/row totals = keep existing || copy from totals || true
         executeSql( "update reporttable set totals = true where totals is null" );
@@ -780,6 +781,7 @@ public class TableAlteror
         executeSql( "UPDATE attribute SET programIndicatorAttribute=false WHERE programIndicatorAttribute IS NULL" );
         executeSql( "UPDATE attribute SET sqlViewAttribute=false WHERE sqlViewAttribute IS NULL" );
         executeSql( "UPDATE attribute SET sectionAttribute=false WHERE sectionAttribute IS NULL" );
+        executeSql( "UPDATE attribute SET categoryoptioncomboattribute=false WHERE categoryoptioncomboattribute IS NULL" );
 
         executeSql( "update attribute set isunique=false where isunique is null" );
 

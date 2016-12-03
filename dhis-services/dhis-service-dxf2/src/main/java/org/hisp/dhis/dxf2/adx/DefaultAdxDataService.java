@@ -37,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xerces.util.XMLChar;
+import org.hibernate.SessionFactory;
 import org.hisp.dhis.common.IdentifiableObjectManager;
 import org.hisp.dhis.common.IdentifiableProperty;
 import org.hisp.dhis.dataelement.CategoryComboMap;
@@ -109,6 +110,9 @@ public class DefaultAdxDataService
 
     @Autowired
     private IdentifiableObjectManager identifiableObjectManager;
+    
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @Autowired
     private Notifier notifier;
@@ -119,7 +123,7 @@ public class DefaultAdxDataService
 
     @Override
     public DataExportParams getFromUrl( Set<String> dataSets, Set<String> periods, Date startDate, Date endDate, 
-        Set<String> organisationUnits, boolean includeChildren, boolean includeDeleted, Date lastUpdated, Integer limit, IdSchemes idSchemes ) 
+        Set<String> organisationUnits, boolean includeChildren, boolean includeDeleted, Date lastUpdated, Integer limit, IdSchemes outputIdSchemes ) 
     {
         DataExportParams params = new DataExportParams();
 
@@ -147,7 +151,7 @@ public class DefaultAdxDataService
         params.setIncludeDeleted( includeDeleted );
         params.setLastUpdated( lastUpdated );
         params.setLimit( limit );
-        params.setIdSchemes( idSchemes );
+        params.setOutputIdSchemes( outputIdSchemes );
 
         return params;
     }
@@ -246,10 +250,10 @@ public class DefaultAdxDataService
         // submit each ADX group to DXF importer as a datavalueSet
         while ( adxReader.moveToStartElement( AdxDataService.GROUP, AdxDataService.NAMESPACE ) )
         {
-            try (PipedOutputStream pipeOut = new PipedOutputStream())
+            try ( PipedOutputStream pipeOut = new PipedOutputStream() )
             {
                 Future<ImportSummary> futureImportSummary;
-                futureImportSummary = executor.submit( new AdxPipedImporter( dataValueSetService, importOptions, id, pipeOut ) );
+                futureImportSummary = executor.submit( new AdxPipedImporter( dataValueSetService, importOptions, id, pipeOut, sessionFactory ) );
                 XMLOutputFactory factory = XMLOutputFactory.newInstance();
                 XMLStreamWriter dxfWriter = factory.createXMLStreamWriter( pipeOut );
 
