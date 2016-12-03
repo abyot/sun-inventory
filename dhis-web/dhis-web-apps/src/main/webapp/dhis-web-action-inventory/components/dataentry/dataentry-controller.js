@@ -120,10 +120,7 @@ sunInventory.controller('dataEntryController',
                 if( ops.optionType === 'SUBACTION' && ops.code !== "" ){
                     $scope.model.mappedOptionSets[ops.code] = ops;
                 }
-            });
-            
-            console.log('mapped optionss:  ', $scope.model.mappedOptionSets);
-            
+            });            
         
             MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                        
 
@@ -132,49 +129,54 @@ sunInventory.controller('dataEntryController',
                 $scope.model.thematicAreas = [];
 
                 angular.forEach(dataElementGroupSets, function(degs){
-                    angular.forEach(degs.dataElementGroups, function(deg){
-                        deg = dhis2.metadata.processMetaDataAttribute( deg );                                
-                        if( deg.groupType && ( deg.groupType === 'thematicArea' || deg.groupType === 'enablingEnvironment' || deg.groupType === 'procurementLogisticsSupply') ){
-                            if( $scope.model.dataElementGroupSets.indexOf( degs ) === -1 ){
-                                $scope.model.dataElementGroupSets.push( degs );
+                    var idx = degs.displayName.indexOf(' - Category');
+                    if( idx !== -1 ){                    
+                        angular.forEach(degs.dataElementGroups, function(deg){
+                            deg = dhis2.metadata.processMetaDataAttribute( deg );                                
+                            if( deg.groupType && ( deg.groupType === 'thematicArea' || deg.groupType === 'enablingEnvironment' || deg.groupType === 'procurementLogisticsSupply') ){
+                                if( $scope.model.dataElementGroupSets.indexOf( degs ) === -1 ){
+                                    degs.displayName = degs.displayName.split(' - ')[0];
+                                    $scope.model.dataElementGroupSets.push( degs );
+                                }
+
+                                angular.forEach(deg.dataElements, function(de){
+                                    if( !$scope.dataElementLocation[de.id] ){
+                                        $scope.dataElementLocation[de.id] = {};
+                                    }
+
+                                    if( deg.groupType === "thematicArea" ){
+                                        var ta = {id: deg.id, displayName: deg.displayName, category: degs.displayName};
+                                        if( ActionMappingUtils.indexOf( $scope.model.thematicAreas, ta, 'id') === -1){
+                                            $scope.model.thematicAreas.push( ta );
+                                        }
+                                        angular.extend($scope.dataElementLocation[de.id], {thematicArea: deg.displayName, category: degs.displayName});
+                                    }
+                                    else{
+                                        var names = deg.displayName && deg.displayName.split(' - ') ? deg.displayName.split(' - ') : [];                                     
+                                        if( names.length === 2 ){                                    
+                                            var st = {id: deg.groupType, displayName: names[1], thematicArea: [names[0]], category: [degs.displayName]};
+                                            var index = ActionMappingUtils.indexOf( $scope.model.supportTypes, st, 'id');
+                                            if( index === -1 ){
+                                                $scope.model.supportTypes.push( st );
+                                            }
+                                            else{
+                                                if( $scope.model.supportTypes[index].thematicArea.indexOf( names[0] ) === -1 ){
+                                                    $scope.model.supportTypes[index].thematicArea.push( names[0] );
+                                                }
+                                                if( $scope.model.supportTypes[index].category.indexOf( degs.displayName ) === -1 ){
+                                                    $scope.model.supportTypes[index].category.push( degs.displayName );
+                                                }
+                                            }
+                                            angular.extend($scope.dataElementLocation[de.id], {supportType: deg.groupType, thematicArea: names[0], category: degs.displayName});
+                                        }
+                                    }
+                                });
                             }
-
-                            angular.forEach(deg.dataElements, function(de){
-                                if( !$scope.dataElementLocation[de.id] ){
-                                    $scope.dataElementLocation[de.id] = {};
-                                }
-
-                                if( deg.groupType === "thematicArea" ){
-                                    var ta = {id: deg.id, displayName: deg.displayName, category: degs.displayName};
-                                    if( ActionMappingUtils.indexOf( $scope.model.thematicAreas, ta, 'id') === -1){
-                                        $scope.model.thematicAreas.push( ta );
-                                    }
-                                    angular.extend($scope.dataElementLocation[de.id], {thematicArea: deg.displayName, category: degs.displayName});
-                                }
-                                else{
-                                    var names = deg.displayName && deg.displayName.split(' - ') ? deg.displayName.split(' - ') : []; 
-                                    if( names.length === 2 ){                                    
-                                        var st = {id: deg.groupType, displayName: names[1], thematicArea: [names[0]], category: [degs.displayName]};
-                                        var index = ActionMappingUtils.indexOf( $scope.model.supportTypes, st, 'id');
-                                        if( index === -1 ){
-                                            $scope.model.supportTypes.push( st );
-                                        }
-                                        else{
-                                            if( $scope.model.supportTypes[index].thematicArea.indexOf( names[0] ) === -1 ){
-                                                $scope.model.supportTypes[index].thematicArea.push( names[0] );
-                                            }
-                                            if( $scope.model.supportTypes[index].category.indexOf( degs.displayName ) === -1 ){
-                                                $scope.model.supportTypes[index].category.push( degs.displayName );
-                                            }
-                                        }
-                                        angular.extend($scope.dataElementLocation[de.id], {supportType: deg.groupType, thematicArea: names[0], category: degs.displayName});
-                                    }
-                                }
-                            });
-                        }
-                    });
-                });
-
+                        });
+                    }
+                });                
+                
+                
                 var optionGroupByMembers = [];
                 MetaDataFactory.getAll('categoryOptionGroups').then(function(categoryOptionGroups){
                     $scope.model.categoryOptionGroups = [];
@@ -266,18 +268,105 @@ sunInventory.controller('dataEntryController',
         });
     });
     
+    $scope.$watchGroup(['model.selectedPeriod', 'selectedOrgUnit'], function(){
+        $scope.loadDataEntryForm();
+    });
+    
     //watch for selection of data set
     $scope.$watch('model.selectedDataSet', function() {        
         $scope.model.periods = [];
         $scope.dataValues = {};
-        if( angular.isObject($scope.model.selectedDataSet) && $scope.model.selectedDataSet.id){
+        if( angular.isObject($scope.model.selectedDataSet) && $scope.model.selectedDataSet.id ){
+            
+            if( $scope.model.selectedDataSet.category ){
+                if( !$scope.model.selectedDataElementGroupSet || angular.isUndefined( $scope.model.selectedDataElementGroupSet ) ){
+                    var degs = $filter('filter')($scope.model.dataElementGroupSets, {displayName: $scope.model.selectedDataSet.category}, true);
+                    if( degs && degs.length ){
+                        $scope.model.selectedDataElementGroupSet = degs[0];
+                    }
+                }
+            }
+            
+            if( $scope.model.selectedDataSet.thematicArea ){
+                if( !$scope.model.selectedThematicArea || angular.isUndefined( $scope.model.selectedThematicArea ) ){
+                    var tas = $filter('filter')($scope.model.thematicAreas, {displayName: $scope.model.selectedDataSet.thematicArea}, true);
+                    if( tas && tas.length ){
+                        $scope.model.selectedThematicArea = tas[0];
+                    }
+                }
+            }
+            
+            if( $scope.model.selectedDataSet.supportType ){
+                if( !$scope.model.selectedSupportType || angular.isUndefined( $scope.model.selectedSupportType ) ){
+                    var sts = $filter('filter')($scope.model.supportTypes, {id: $scope.model.selectedDataSet.supportType}, true);
+                    if( sts && sts.length ){
+                        $scope.model.selectedSupportType = sts[0];
+                    }
+                }
+            }
+            
             $scope.loadDataSetDetails();
         }
     });
     
-    $scope.$watchGroup(['model.selectedPeriod', 'selectedOrgUnit'], function(){
-        $scope.loadDataEntryForm();
-    });
+    //make sure CAN is classification is respected
+    $scope.$watchGroup(['model.selectedDataElementGroupSet', 'model.selectedThematicArea', 'model.selectedSupportType'], function(){
+        
+        if( $scope.model.selectedDataElementGroupSet && 
+                $scope.model.selectedDataElementGroupSet.displayName ){
+            
+            if( $scope.model.selectedThematicArea && 
+                    $scope.model.selectedThematicArea.category ){
+                if( $scope.model.selectedDataElementGroupSet.displayName !== $scope.model.selectedThematicArea.category ){
+                    $scope.model.selectedThematicArea = null;
+                }
+            }
+            
+            if( $scope.model.selectedSupportType ){
+                if( $scope.model.selectedSupportType.category && 
+                        $scope.model.selectedSupportType.category.length && 
+                        $scope.model.selectedSupportType.category.indexOf( $scope.model.selectedDataElementGroupSet.displayName ) === -1 ){
+                    $scope.model.selectedSupportType = null;
+                }                
+            }
+            
+            if( $scope.model.selectedDataSet && 
+                    $scope.model.selectedDataSet.category ){
+                if( $scope.model.selectedDataElementGroupSet.displayName !== $scope.model.selectedDataSet.category ){
+                    $scope.model.selectedDataSet = null;
+                }
+            }
+        }
+        
+        if( $scope.model.selectedThematicArea && 
+                $scope.model.selectedThematicArea.displayName ){
+            
+            if( $scope.model.selectedSupportType ){
+                if( $scope.model.selectedSupportType.category && 
+                        $scope.model.selectedSupportType.thematicArea.length && 
+                        $scope.model.selectedSupportType.thematicArea.indexOf( $scope.model.selectedThematicArea.displayName ) === -1 ){
+                    $scope.model.selectedSupportType = null;
+                }
+            }
+            
+            if( $scope.model.selectedDataSet && 
+                    $scope.model.selectedDataSet.thematicArea ){
+                if( $scope.model.selectedThematicArea.displayName !== $scope.model.selectedDataSet.thematicArea ){
+                    $scope.model.selectedDataSet = null;
+                }
+            }
+        }
+        
+        if( $scope.model.selectedSupportType && 
+                $scope.model.selectedSupportType.id ){            
+            if( $scope.model.selectedDataSet && 
+                    $scope.model.selectedDataSet.supportType ){
+                if( $scope.model.selectedSupportType.id !== $scope.model.selectedDataSet.supportType ){
+                    $scope.model.selectedDataSet = null;
+                }
+            }
+        }        
+    });    
     
     $scope.pushOption = function(categoryComboId, optionName){
         if( !$scope.pushedOptions[categoryComboId] ){

@@ -1010,3 +1010,7 @@ ul.tree ul li:last-child:before {
 .reset-color {
     color: #000 !important;
 }
+
+/*.leftBarArea li:nth-child(even) {
+    background-color: #faebc4;
+}*/

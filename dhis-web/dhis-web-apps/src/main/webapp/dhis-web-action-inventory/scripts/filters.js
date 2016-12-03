@@ -6,7 +6,7 @@ var actionMappingFilters = angular.module('actionMappingFilters', [])
 
 .filter('thematicAreaFilter', function( $filter ){    
     
-    return function(thematicAreas, degs){
+    return function(thematicAreas, degs, ta, ac){
         
         if(!thematicAreas ){
             return;
@@ -22,13 +22,13 @@ var actionMappingFilters = angular.module('actionMappingFilters', [])
 
 .filter('supportTypeFilter', function( $filter ){    
     
-    return function(supportTypes, degs, ta){
+    return function(supportTypes, degs, ta, ac){
         
         if(!supportTypes ){
             return;
         }
         
-        if( supportTypes && degs && degs.displayName ){
+        if( degs && degs.displayName ){
             supportTypes = $filter('filter')(supportTypes, {category: degs.displayName},true);
         }
         
