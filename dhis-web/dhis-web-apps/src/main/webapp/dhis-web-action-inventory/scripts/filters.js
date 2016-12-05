@@ -56,8 +56,8 @@ var actionMappingFilters = angular.module('actionMappingFilters', [])
             actions = $filter('filter')(actions, {thematicArea: ta.displayName},true);
         }
         
-        if( st && st.id ){
-            actions = $filter('filter')(actions, {supportType: st.id},true);
+        if( st && st.displayName ){
+            actions = $filter('filter')(actions, {supportType: st.displayName},true);
         }
         
         return actions;         

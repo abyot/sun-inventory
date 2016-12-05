@@ -9,6 +9,7 @@ sunInventory.controller('dataEntryController',
         function($scope,
                 $filter,
                 $modal,
+                $translate,
                 orderByFilter,
                 DataSetFactory,
                 PeriodService,
@@ -44,7 +45,6 @@ sunInventory.controller('dataEntryController',
                     mappedOptionCombos: [],
                     mappedOptionCombosById: [],
                     mappedOptionComboIds: [],
-                    showReportDiv: false,
                     metaDataCached: false,
                     actionConductedKey: null};
     
@@ -167,7 +167,7 @@ sunInventory.controller('dataEntryController',
                                                     $scope.model.supportTypes[index].category.push( degs.displayName );
                                                 }
                                             }
-                                            angular.extend($scope.dataElementLocation[de.id], {supportType: deg.groupType, thematicArea: names[0], category: degs.displayName});
+                                            angular.extend($scope.dataElementLocation[de.id], {supportType: names[1], thematicArea: names[0], category: degs.displayName});
                                         }
                                     }
                                 });
@@ -229,7 +229,7 @@ sunInventory.controller('dataEntryController',
                                     /*angular.forEach($scope.model.categoryOptionGroups, function(cog){
                                         cog.order = orderedOptionGroup[cog.id];
                                     });*/
-                                }                            
+                                }
                             }
 
                             else{
@@ -240,8 +240,8 @@ sunInventory.controller('dataEntryController',
 
                             $scope.model.mappedCategoryCombos[cc.id] = cc;
                         });
-
-
+                        
+                        
                         DataSetFactory.getDataSetsByProperty( 'dataSetDomain', 'INVENTORY' ).then(function(dataSets){            
                             $scope.model.dataSets = dataSets;                
                             angular.forEach($scope.model.dataSets, function(ds){
@@ -259,6 +259,14 @@ sunInventory.controller('dataEntryController',
                             });
 
                             $scope.model.metaDataCached = true;
+                            
+                            $scope.model.sampleDataSet = $scope.model.dataSets[0];
+                            
+                            $scope.model.staticHeaders = [];
+                            $scope.model.staticHeaders.push($translate.instant('category'));
+                            $scope.model.staticHeaders.push($translate.instant('thematic_area'));
+                            $scope.model.staticHeaders.push($translate.instant('support_type'));
+                            $scope.model.staticHeaders.push($translate.instant('action'));
 
                             console.log( 'Finished downloading meta-data' );
                         });
@@ -298,7 +306,7 @@ sunInventory.controller('dataEntryController',
             
             if( $scope.model.selectedDataSet.supportType ){
                 if( !$scope.model.selectedSupportType || angular.isUndefined( $scope.model.selectedSupportType ) ){
-                    var sts = $filter('filter')($scope.model.supportTypes, {id: $scope.model.selectedDataSet.supportType}, true);
+                    var sts = $filter('filter')($scope.model.supportTypes, {displayName: $scope.model.selectedDataSet.supportType}, true);
                     if( sts && sts.length ){
                         $scope.model.selectedSupportType = sts[0];
                     }
@@ -358,10 +366,10 @@ sunInventory.controller('dataEntryController',
         }
         
         if( $scope.model.selectedSupportType && 
-                $scope.model.selectedSupportType.id ){            
+                $scope.model.selectedSupportType.displayName ){            
             if( $scope.model.selectedDataSet && 
                     $scope.model.selectedDataSet.supportType ){
-                if( $scope.model.selectedSupportType.id !== $scope.model.selectedDataSet.supportType ){
+                if( $scope.model.selectedSupportType.displayName !== $scope.model.selectedDataSet.supportType ){
                     $scope.model.selectedDataSet = null;
                 }
             }
@@ -694,10 +702,6 @@ sunInventory.controller('dataEntryController',
             });
         });
     };
-    
-    $scope.displayReport = function(){
-        console.log('need to display country report');
-    };
         
     function processCompletness( isSave ){
         if( isSave ){
@@ -713,9 +717,7 @@ sunInventory.controller('dataEntryController',
         //check for form validity
         var invalidFields = [];
         angular.forEach($scope.model.selectedDataSet.dataElements, function(dataElement){            
-            if( dataElement.dataElementGroup && 
-                    $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] &&
-                    !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
+            if( dataElement.dataElementGroup && $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ){                
                 if( !$scope.dataValues[dataElement.id] || $scope.dataValues[dataElement.id] === ''){
                     invalidFields.push( $scope.desById[dataElement.id] );
                 }
@@ -856,6 +858,4 @@ sunInventory.controller('dataEntryController',
         }
         return status;
     };
-})
-
-;
+});

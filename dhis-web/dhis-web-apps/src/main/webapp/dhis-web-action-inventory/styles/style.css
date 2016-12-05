@@ -51,18 +51,6 @@ html, body {
 }
 
 /*----------------------------------------------------------------------------*/
-/* Table
-/*----------------------------------------------------------------------------*/
-
-table 
-{
-    font-size: 13px;
-    line-height: 24px;
-    table-layout: fixed;
-    margin-bottom: 10px;
-}
-
-/*----------------------------------------------------------------------------*/
 /* App specific
 /*----------------------------------------------------------------------------*/
 
@@ -182,7 +170,7 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
 .table-borderless>tbody>tr>td, 
 .table-borderless>tfoot>tr>td {
     border: none;
-    white-space:nowrap;
+    white-space:nowrap;    
 }
 
 .dhis2-table>thead>tr>th, 
@@ -211,16 +199,21 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
     height: 30px;
 }
 
-.dhis2-table-striped>thead>tr, 
-.dhis2-table-striped>tbody>tr, 
-.dhis2-table-striped>tfoot>tr, 
-.dhis2-table-striped>thead>tr, 
-.dhis2-table-striped>tbody>tr, 
-.dhis2-table-striped>tfoot>tr {
-    border-bottom: 1px solid #cad5e5;  
-    white-space:nowrap;
+.dhis2-table-striped, th, td {
+    border: 1px solid #cad5e5;
 }
 
+.dhis2-table-striped>thead>tr,
+.dhis2-table-striped>thead>tr,th
+.dhis2-table-striped>tbody>tr,
+.dhis2-table-striped>tbody>td {
+    border-bottom: 1px solid #cad5e5;
+}
+
+.cell-container {    
+    padding: 10px !important;
+    width: 250px;
+}
 .dhis2-table-striped > tbody > tr:nth-child(odd)> td, .dhis2-table-striped > tbody > tr:nth-child(odd)> th {
     background-color: #ebf0f6
 }
@@ -892,21 +885,6 @@ div#orgUnitTree {
 
 table {
     min-width: 100%;
-}
-
-table td {
-    border: 1px solid silver;
-    position: relative;
-}
-
-table td.crossed::after {    
-    position: absolute;
-    content: "";
-    left:0;
-    right:0;
-    top:0;
-    bottom:0;    
-    background-image: linear-gradient(to top right,  transparent calc(50% - 1px), #ddd, transparent calc(50% + 1px)); 
 }
 
 .ou-search-left-bar {
