@@ -694,6 +694,10 @@ div#orgUnitTree {
     font-weight: bold;
 }
 
+.font-18 {    
+    font-size: 18px !important;
+}
+
 .font-16 {    
     font-size: 16px !important;
 }
@@ -1010,7 +1014,3 @@ ul.tree ul li:last-child:before {
 .reset-color {
     color: #000 !important;
 }
-
-/*.leftBarArea li:nth-child(even) {
-    background-color: #faebc4;
-}*/
