@@ -98,7 +98,7 @@
                                                    theme="select2"                                 
                                                    style="width:100%;">
                                             <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                            <ui-select-choices group-by="'thematicArea'" repeat="dataSet in model.dataSets | actionFilter:model.selectedDataElementGroupSet:model.selectedThematicArea:model.selectedSupportType | filter: $select.search | limitTo:maxOptionSize | orderBy: ['category', 'thematicArea', 'supportType','displayName'] ">
+                                            <ui-select-choices group-by="'thematicArea'" repeat="dataSet in model.dataSets | actionFilter:model.selectedDataElementGroupSet:model.selectedThematicArea:model.selectedSupportType | filter: $select.search | limitTo:maxOptionSize | orderBy: ['category', 'thematicArea', 'supportType','order'] ">
                                                 <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
                                             </ui-select-choices>
                                         </ui-select>
