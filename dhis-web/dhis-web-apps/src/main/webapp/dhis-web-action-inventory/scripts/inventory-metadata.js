@@ -206,7 +206,7 @@ function filterMissingCategoryOptionGroups( objs ){
 }
 
 function getCategoryOptionGroups( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'categoryOptionGroups', 'categoryOptionGroups', '../api/categoryOptionGroups.json', 'paging=false&fields=id,name,attributeValues[value,attribute[id,name,code,valueType]],categoryOptions[id,name]', 'idb', dhis2.sunpmt.store);
+    return dhis2.metadata.getBatches( ids, batchSize, 'categoryOptionGroups', 'categoryOptionGroups', '../api/categoryOptionGroups.json', 'paging=false&fields=id,name,shortName,attributeValues[value,attribute[id,name,code,valueType]],categoryOptions[id,name]', 'idb', dhis2.sunpmt.store);
 }
 
 function getMetaDataSets(){
