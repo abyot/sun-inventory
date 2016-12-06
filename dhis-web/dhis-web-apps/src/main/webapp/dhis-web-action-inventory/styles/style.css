@@ -378,11 +378,11 @@ select {
 }
 
 .small-vertical-spacing{
-    margin-top: 5px;    
+    margin-top: 5px !important;
 }
 
 .vertical-spacing{
-    margin-top: 20px;    
+    margin-top: 20px;
 }
 
 .vertical-center {
@@ -421,6 +421,15 @@ div#orgUnitTree {
     background-color: #d0eBd0;
     padding-top: 10px;    
     border-radius: 3px;
+}
+
+.div-bottom-container {
+    position: relative;
+}
+
+.div-bottom {
+    position: absolute;
+    bottom: 0;
 }
 
 .padding-bottom {
@@ -478,11 +487,6 @@ div#orgUnitTree {
 .important-label {
     font-size: 12pt;
     text-transform: uppercase;
-}
-
-.div-bottom {
-    position: absolute;
-    bottom: 0;
 }
 
 .form-control-ui-select {

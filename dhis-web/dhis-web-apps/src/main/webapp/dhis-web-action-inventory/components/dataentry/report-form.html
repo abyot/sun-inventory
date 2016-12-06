@@ -1,49 +1,51 @@
-<div class="col-sm-12">
-    <table class="dhis2-table-striped">
-        <thead>
-            <tr>
-                <th ng-repeat="header in model.staticHeaders">
-                    <div class="cell-container">
-                        {{header}}
-                    </div>                        
-                </th>
-                <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups | orderBy: 'order'"> 
-                    <div class="cell-container">
-                        {{categoryOptionGroup.shortName}}
-                    </div>                    
-                </th>
-            <tr>
-        </thead>
-        <tbody>
-            <tr ng-repeat="dataSet in model.dataSets| orderBy: ['category', 'thematicArea', 'supportType', 'order'] ">
-                <td>
-                    <div class="cell-container">
-                        {{dataSet.category}}
-                    </div>                        
-                </td>
-                <td>
-                    <div class="cell-container">                        
-                        {{dataSet.thematicArea}}
-                    </div>
-                </td>
-                <td>
-                    <div class="cell-container">
-                        {{dataSet.supportType}}
-                    </div>                    
-                </td>
-                <td>
-                    <div class="cell-container">
-                        {{dataSet.displayName}}
-                    </div>                    
-                </td>
-                <td ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups | orderBy: 'order'"> 
-                    <div class="cell-container">
-                        
-                    </div>
-                </td>
-            </tr>
-        </tbody>
+<div class="row vertical-spacing" ng-if="showReportDiv && reportParamsReady()">
+    <div class="col-sm-12">
+        <table class="dhis2-table-striped">
+            <thead>
+                <tr>
+                    <th ng-repeat="header in model.staticHeaders">
+                        <div class="cell-container">
+                            {{header}}
+                        </div>                        
+                    </th>
+                    <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
+                        <div class="cell-container">
+                            {{categoryOptionGroup.shortName}}
+                        </div>                    
+                    </th>
+                <tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="dataSet in model.dataSets| orderBy: ['category', 'thematicArea', 'supportType', 'order'] ">
+                    <td>
+                        <div class="cell-container">
+                            {{dataSet.category}}
+                        </div>                        
+                    </td>
+                    <td>
+                        <div class="cell-container">                        
+                            {{dataSet.thematicArea}}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-container">
+                            {{dataSet.supportType}}
+                        </div>                    
+                    </td>
+                    <td>
+                        <div class="cell-container">
+                            {{dataSet.displayName}}
+                        </div>                    
+                    </td>
+                    <td ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
+                        <div class="cell-container">
 
-    </table>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
 
+        </table>
+
+    </div>
 </div>

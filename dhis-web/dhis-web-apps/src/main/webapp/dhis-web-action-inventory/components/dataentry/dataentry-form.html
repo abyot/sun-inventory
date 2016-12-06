@@ -89,57 +89,22 @@
 
                 <button type="button" 
                         class="btn btn-primary small-horizontal-spacing small-vertical-spacing"  
-                        ng-disabled="isEmpty(dataValues)"
+                        ng-disabled="isEmpty()"
                         ng-click="saveData()">
                     {{'save'| translate}}
                 </button>
 
                 <button type="button" 
                         class="btn btn-danger small-vertical-spacing pull-right add-default-right-padding" 
-                        ng-disabled="isEmpty(dataValues)"
+                        ng-disabled="isEmpty(true)"
                         ng-click="deleteData()">
                     {{'delete'| translate}}
                 </button>
 
-                <!--<button type="button" 
-                        class="btn btn-info small-vertical-spacing pull-right add-default-right-padding" 
-                        ng-disabled="isEmpty(dataValues)"
-                        ng-click="model.showReportDiv = !model.showReportDiv">
-                    {{'view_data_as_table'| translate}}
-                </button>-->
-
             </div>
-
-
 
         </div>          
     </div>
-
-    <!--<div class="col-sm-6 selectionAreaNoColor">
-        <div class="selectionArea">
-            <div class="padding-bottom">                
-                <button type="button" 
-                        class="btn btn-success small-horizontal-spacing small-vertical-spacing" 
-                        ng-disabled="isEmpty(dataValues)"
-                        ng-if="!model.dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                        ng-click="saveCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
-                    {{'mark_complete'| translate}}
-                </button>
-                <button type="button" 
-                        class="btn btn-warning small-horizontal-spacing small-vertical-spacing" 
-                        ng-if="model.dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                        ng-click="deleteCompletness(selectedOrgUnit.id, model.allowMultiOrgUnitEntry)">
-                    {{'mark_not_complete'| translate}}
-                </button>
-                <button type="button" 
-                        class="btn btn-info small-vertical-spacing pull-right add-default-right-padding" 
-                        ng-disabled="isEmpty(dataValues)"
-                        ng-click="model.showReportDiv = !model.showReportDiv">
-                    {{model.showReportDiv ? 'back_to_data_entry' : 'view_data_as_table'| translate}}
-                </button>
-            </div>
-        </div>
-    </div>-->
 
 </div>
 
