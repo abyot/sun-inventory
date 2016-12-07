@@ -3,7 +3,8 @@ html, body {
     margin: 0;
     padding: 0;
     background-color: white;
-    overflow: auto;    
+    overflow: auto;
+    font-size: 100% !important;
 }
 
 #mainPage {
