@@ -3,12 +3,12 @@ html, body {
     margin: 0;
     padding: 0;
     background-color: white;
-    overflow: auto;
-    font-size: 100% !important;
+    overflow: auto;    
 }
 
 #mainPage {
     margin: 60px 5px 5px 315px ;
+    font-size: 10pt;
 }
 
 .not-for-screen {
@@ -123,6 +123,10 @@ div.paging a.active
 
 .white {
     color: white;
+}
+
+.custom-icon-size {    
+    font-size: 150%;
 }
 
 .anchor-color {
