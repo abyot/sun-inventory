@@ -323,7 +323,7 @@
                                                    theme="select2"                                 
                                                    style="width:100%;">
                                             <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
-                                            <ui-select-choices  repeat="period in model.samplePeriods | filter: $select.search | limitTo:maxOptionSize">
+                                            <ui-select-choices  repeat="period in model.reportPeriods | filter: $select.search | limitTo:maxOptionSize">
                                                 <span ng-bind-html="period.name | highlight: $select.search"></span>
                                             </ui-select-choices>
                                         </ui-select>
@@ -348,7 +348,7 @@
                                 </div>
                             </div>
 
-                            <div ng-repeat="category in model.sampleAttributeCombo.categories" ng-if="category.displayName === 'Agency' && model.sampleAttributeCombo && !model.sampleAttributeCombo.isDefault">
+                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
                                 <div class="row small-vertical-spacing">
                                     <div class="col-sm-4">                            
                                         {{category.displayName}}

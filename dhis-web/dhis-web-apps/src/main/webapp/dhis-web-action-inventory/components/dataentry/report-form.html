@@ -1,6 +1,6 @@
 <div class="row vertical-spacing" ng-if="showReportDiv && reportParamsReady()">
     <div class="col-sm-12">
-        <table class="dhis2-table-striped">
+        <table class="dhis2-table">
             <thead>
                 <tr>
                     <th ng-repeat="header in model.staticHeaders">
@@ -8,36 +8,48 @@
                             {{header}}
                         </div>                        
                     </th>
+                    <th>
+                        <div class="cell-container">
+                            {{model.instanceCategory.displayName}}
+                        </div>
+                    </th>
                     <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
                         <div class="cell-container">
                             {{categoryOptionGroup.shortName}}
-                        </div>                    
+                        </div>
                     </th>
                 <tr>
             </thead>
-            <tbody>
-                <tr ng-repeat="dataSet in model.dataSets| orderBy: ['category', 'thematicArea', 'supportType', 'order'] ">
-                    <td>
+            <tbody ng-if="dataSet.dataElements && dataSet.dataElements.length && dataSet.dataElements.length === 1" 
+                   ng-repeat="dataSet in model.dataSets | orderBy: ['category', 'thematicArea', 'supportType', 'order']"
+                   ng-init="de = dataSet.dataElements[0]">
+                <tr ng-repeat="option in model.instanceCategory.categoryOptions">
+                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
                         <div class="cell-container">
                             {{dataSet.category}}
                         </div>                        
                     </td>
-                    <td>
+                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
                         <div class="cell-container">                        
                             {{dataSet.thematicArea}}
                         </div>
                     </td>
-                    <td>
+                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
                         <div class="cell-container">
                             {{dataSet.supportType}}
                         </div>                    
                     </td>
-                    <td>
+                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
                         <div class="cell-container">
                             {{dataSet.displayName}}
                         </div>                    
                     </td>
-                    <td ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
+                    <td>
+                        <div class="cell-container">
+                            {{option.displayName}}
+                        </div>
+                    </td>
+                    <td ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups | orderBy: 'order'"> 
                         <div class="cell-container">
 
                         </div>

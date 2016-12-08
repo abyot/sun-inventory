@@ -32,6 +32,8 @@
     <property name="dataElementAttribute" not-null="true" />
 
     <property name="dataElementGroupAttribute" not-null="false" />
+    
+    <property name="dataElementGroupSetAttribute" not-null="false" />
 
     <property name="indicatorAttribute" not-null="true" />
 
@@ -56,6 +58,8 @@
     <property name="trackedEntityAttribute" not-null="false" />
 
     <property name="trackedEntityAttributeAttribute" not-null="false" />
+    
+    <property name="categoryAttribute" not-null="false" />
 
     <property name="categoryOptionAttribute" not-null="false" />
 

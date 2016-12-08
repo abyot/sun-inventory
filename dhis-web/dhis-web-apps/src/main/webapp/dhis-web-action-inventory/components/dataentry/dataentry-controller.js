@@ -19,7 +19,8 @@ sunInventory.controller('dataEntryController',
                 CompletenessService,
                 OrgUnitFactory,
                 ModalService,
-                DialogService) {
+                DialogService,
+                ReportService) {
     $scope.periodOffset = 0;
     $scope.saveStatus = {};
     $scope.dataValues = {};
@@ -236,6 +237,7 @@ sunInventory.controller('dataEntryController',
                             else{
                                 angular.forEach(cc.categoryOptionCombos, function(oco){
                                     $scope.model.mappedOptionComboIds[oco.displayName] = oco.id;
+                                    $scope.model.mappedOptionCombosById[oco.id] = oco;
                                 });
                             }
 
@@ -261,24 +263,32 @@ sunInventory.controller('dataEntryController',
 
                             $scope.model.metaDataCached = true;
                             
-                            $scope.model.sampleDataSet = $scope.model.dataSets[0];
                             
-                            $scope.model.sampleAttributeCombo = $scope.model.selectedAttributeCategoryCombo = $scope.model.mappedCategoryCombos[$scope.model.sampleDataSet.categoryCombo.id];
                             
-                            for(var i=0; i<$scope.model.sampleAttributeCombo.categories.length; i++ ){
-                                if( $scope.model.sampleAttributeCombo.categories[i].displayName === 'Agency' ){
-                                    $scope.model.agencyCategory = $scope.model.sampleAttributeCombo.categories[i];
-                                    break;
+                            if( $scope.model.dataSets.length > 0 ){
+                                
+                                $scope.model.reportDataSet = $scope.model.dataSets[0];
+                            
+                                $scope.model.reportAttributeCombo = $scope.model.selectedAttributeCategoryCombo = $scope.model.mappedCategoryCombos[$scope.model.reportDataSet.categoryCombo.id];
+
+                                for(var i=0; i<$scope.model.reportAttributeCombo.categories.length; i++ ){
+                                    if( $scope.model.reportAttributeCombo.categories[i].displayName === 'Agency' ){
+                                        $scope.model.agencyCategory = $scope.model.reportAttributeCombo.categories[i];                                        
+                                    }                                    
+                                    if( $scope.model.reportAttributeCombo.categories[i].displayName === 'Action Instance' ){
+                                        $scope.model.instanceCategory = $scope.model.reportAttributeCombo.categories[i];                                        
+                                    }
                                 }
-                            }
-                            
-                            $scope.model.samplePeriods = $scope.model.periods = PeriodService.getPeriods($scope.model.sampleDataSet.periodType, $scope.periodOffset, $scope.model.sampleDataSet.openFuturePeriods);
-                            
-                            $scope.model.staticHeaders = [];
-                            $scope.model.staticHeaders.push($translate.instant('category'));
-                            $scope.model.staticHeaders.push($translate.instant('thematic_area'));
-                            $scope.model.staticHeaders.push($translate.instant('support_type'));
-                            $scope.model.staticHeaders.push($translate.instant('action'));
+
+                                $scope.model.reportPeriods = $scope.model.periods = PeriodService.getPeriods($scope.model.reportDataSet.periodType, $scope.periodOffset, $scope.model.reportDataSet.openFuturePeriods);
+
+                                $scope.model.staticHeaders = [];
+                                $scope.model.staticHeaders.push($translate.instant('category'));
+                                $scope.model.staticHeaders.push($translate.instant('thematic_area'));
+                                $scope.model.staticHeaders.push($translate.instant('support_type'));
+                                $scope.model.staticHeaders.push($translate.instant('action'));
+                                
+                            }                            
 
                             console.log( 'Finished downloading meta-data' );
                         });
@@ -888,5 +898,27 @@ sunInventory.controller('dataEntryController',
     
     $scope.showReport = function(){        
         $scope.showReportDiv = true;
+        
+        console.log('instance category:  ', $scope.model.instanceCategory);
+        
+        DataSetFactory.getDataSetsByProperty( 'dataSetDomain', 'REPORT' ).then(function(dataSets){
+            if( dataSets && dataSets[0] && dataSets[0].dataSetDomain === 'REPORT' ){
+                var reportUrl = 'orgUnit=' + $scope.selectedOrgUnit.id;
+                reportUrl += '&period=' + $scope.model.selectedPeriod.id;
+                reportUrl += '&dataSet=' + dataSets[0].id;
+                
+                var reportParams = {orgUnit: $scope.selectedOrgUnit.id,
+                        period: $scope.model.selectedPeriod, 
+                        url: reportUrl};
+                var reportData = {};
+                reportData.mappedOptionCombosById = $scope.model.mappedOptionCombosById;
+                if( $scope.model.agencyCategory && $scope.model.agencyCategory.selectedOption && $scope.model.agencyCategory.selectedOption.displayName ){
+                    reportData.agency = $scope.model.agencyCategory.selectedOption;
+                }
+                
+                ReportService.getReportData( reportParams, reportData ).then(function(response){
+                });                
+            }
+        });
     };
 });
