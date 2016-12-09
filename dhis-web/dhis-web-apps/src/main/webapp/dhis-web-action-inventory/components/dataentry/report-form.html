@@ -20,38 +20,44 @@
                     </th>
                 <tr>
             </thead>
-            <tbody ng-if="dataSet.dataElements && dataSet.dataElements.length && dataSet.dataElements.length === 1" 
-                   ng-repeat="dataSet in model.dataSets | orderBy: ['category', 'thematicArea', 'supportType', 'order']"
-                   ng-init="de = dataSet.dataElements[0]">
-                <tr ng-repeat="option in model.instanceCategory.categoryOptions">
-                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
+            <tbody ng-repeat="dataSet in model.dataSets | orderBy: ['category', 'thematicArea', 'supportType', 'order']"
+                   ng-init="deId = dataSet.dataElements[0].id"
+                   ng-if="(model.filterEmptyRows ? !reportData.mappedValues[dataSet.dataElements[0].id].empty : true) && dataSet.dataElements && dataSet.dataElements.length && dataSet.dataElements.length === 1">
+                <!--<tr ng-repeat="option in model.instanceCategory.categoryOptions" ng-if="reportData.mappedValues[deId][option.displayName]">-->
+                <tr ng-repeat="(key, value) in reportData.mappedValues[deId]" ng-if="reportData.mappedValues[deId][key] && key !== 'empty'">
+                    <td ng-if="$index === 0" rowspan="{{getRowSpan(reportData.mappedValues[deId])}}">
                         <div class="cell-container">
                             {{dataSet.category}}
                         </div>                        
                     </td>
-                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
+                    <td ng-if="$index === 0" rowspan="{{getRowSpan(reportData.mappedValues[deId])}}">
                         <div class="cell-container">                        
                             {{dataSet.thematicArea}}
                         </div>
                     </td>
-                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
+                    <td ng-if="$index === 0" rowspan="{{getRowSpan(reportData.mappedValues[deId])}}">
                         <div class="cell-container">
                             {{dataSet.supportType}}
                         </div>                    
                     </td>
-                    <td ng-if="$index === 0" rowspan="{{model.instanceCategory.categoryOptions.length}}">
+                    <td ng-if="$index === 0" rowspan="{{getRowSpan(reportData.mappedValues[deId])}}">
                         <div class="cell-container">
                             {{dataSet.displayName}}
                         </div>                    
                     </td>
                     <td>
                         <div class="cell-container">
-                            {{option.displayName}}
+                            {{key}}
                         </div>
                     </td>
-                    <td ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups | orderBy: 'order'"> 
+                    <td ng-if="co.name !== 'Action conducted'" ng-repeat="co in model.categoryOptionGroups | orderBy: 'order'"> 
                         <div class="cell-container">
-
+                            <span ng-if="co.dimensionEntryMode === 'SINGLE'">
+                                {{reportData.mappedValues[deId][key][co.id]}}
+                            </span>
+                            <span ng-if="co.dimensionEntryMode === 'MULTIPLE'">
+                                {{reportData.mappedValues[deId][key][co.id].join(', ')}}
+                            </span>                            
                         </div>
                     </td>
                 </tr>

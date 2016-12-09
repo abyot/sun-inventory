@@ -378,6 +378,9 @@
                                         ng-click="showReport()">                                         
                                     {{'view_data_as_table'| translate}}
                                 </button>
+                                <label class="horizontal-spacing">
+                                    <input type="checkbox" ng-disabled="!reportData.reportReady" ng-model="model.filterEmptyRows"/>  {{'filter_empty_rows'| translate}}
+                                </label>
                             </div>
                         </div>
 

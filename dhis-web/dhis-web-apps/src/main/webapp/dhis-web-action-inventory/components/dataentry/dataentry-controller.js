@@ -48,6 +48,7 @@ sunInventory.controller('dataEntryController',
                     mappedOptionCombosById: [],
                     mappedOptionComboIds: [],
                     metaDataCached: false,
+                    filterEmptyRows: false,
                     actionConductedKey: null};
     
     //Get orgunits for the logged in user
@@ -483,6 +484,8 @@ sunInventory.controller('dataEntryController',
         $scope.model.basicAuditInfo.exists = false;
         $scope.saveStatus = {};
         $scope.dataSetCompletness = {};
+        $scope.showReportDiv = false;
+        $scope.reportData = {};
     };
         
     $scope.loadDataEntryForm = function(){        
@@ -899,8 +902,6 @@ sunInventory.controller('dataEntryController',
     $scope.showReport = function(){        
         $scope.showReportDiv = true;
         
-        console.log('instance category:  ', $scope.model.instanceCategory);
-        
         DataSetFactory.getDataSetsByProperty( 'dataSetDomain', 'REPORT' ).then(function(dataSets){
             if( dataSets && dataSets[0] && dataSets[0].dataSetDomain === 'REPORT' ){
                 var reportUrl = 'orgUnit=' + $scope.selectedOrgUnit.id;
@@ -910,15 +911,38 @@ sunInventory.controller('dataEntryController',
                 var reportParams = {orgUnit: $scope.selectedOrgUnit.id,
                         period: $scope.model.selectedPeriod, 
                         url: reportUrl};
-                var reportData = {};
-                reportData.mappedOptionCombosById = $scope.model.mappedOptionCombosById;
+                $scope.reportData = {reportReady: false};
+                $scope.reportData.mappedOptionCombosById = $scope.model.mappedOptionCombosById;
                 if( $scope.model.agencyCategory && $scope.model.agencyCategory.selectedOption && $scope.model.agencyCategory.selectedOption.displayName ){
-                    reportData.agency = $scope.model.agencyCategory.selectedOption;
+                    $scope.reportData.agency = $scope.model.agencyCategory.selectedOption;
                 }
                 
-                ReportService.getReportData( reportParams, reportData ).then(function(response){
-                });                
+                ReportService.getReportData( reportParams, $scope.reportData ).then(function(response){
+                    if( response && response.mappedValues ){
+                        $scope.reportData = response;
+                        
+                        angular.forEach(dataSets[0].dataElements, function(de){
+                            if( !$scope.reportData.mappedValues[de.id] ){
+                                $scope.reportData.mappedValues[de.id] = {empty: true};
+                                $scope.reportData.mappedValues[de.id][$scope.model.instanceCategory.categoryOptions[0].displayName] = {};
+                            }
+                            else{
+                                $scope.reportData.mappedValues[de.id].empty = false;
+                            }
+                        });
+                    }                    
+                });
             }
         });
+    };
+    
+    $scope.getRowSpan = function( obj ){
+        var count = 0;
+        for( var key in obj ){
+            if( obj.hasOwnProperty( key ) ){
+                count++;
+            }
+        }        
+        return count;
     };
 });
