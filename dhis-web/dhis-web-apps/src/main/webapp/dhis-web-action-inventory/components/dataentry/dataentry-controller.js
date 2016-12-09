@@ -908,35 +908,44 @@ sunInventory.controller('dataEntryController',
                 reportUrl += '&period=' + $scope.model.selectedPeriod.id;
                 reportUrl += '&dataSet=' + dataSets[0].id;
                 
-                var reportParams = {orgUnit: $scope.selectedOrgUnit.id,
-                        period: $scope.model.selectedPeriod, 
-                        url: reportUrl};
-                $scope.reportData = {reportReady: false};
-                $scope.reportData.mappedOptionCombosById = $scope.model.mappedOptionCombosById;
-                if( $scope.model.agencyCategory && $scope.model.agencyCategory.selectedOption && $scope.model.agencyCategory.selectedOption.displayName ){
-                    $scope.reportData.agency = $scope.model.agencyCategory.selectedOption;
-                }
+                var keys = $filter('filter')($scope.model.mappedCategoryCombos[dataSets[0].dataElements[0].categoryCombo.id].categoryOptionCombos, {categoryOptionGroup: {id: $scope.model.actionConductedKey.id}});
                 
-                ReportService.getReportData( reportParams, $scope.reportData ).then(function(response){
-                    if( response && response.mappedValues ){
-                        $scope.reportData = response;
-                        
-                        angular.forEach(dataSets[0].dataElements, function(de){
-                            if( !$scope.reportData.mappedValues[de.id] ){
-                                $scope.reportData.mappedValues[de.id] = {empty: true};
-                                $scope.reportData.mappedValues[de.id][$scope.model.instanceCategory.categoryOptions[0].displayName] = {};
-                            }
-                            else{
-                                $scope.reportData.mappedValues[de.id].empty = false;
-                            }
-                        });
-                    }                    
-                });
+                if( keys[0] ){                
+                    var reportParams = {orgUnit: $scope.selectedOrgUnit.id,
+                            period: $scope.model.selectedPeriod, 
+                            url: reportUrl};
+                    $scope.reportData = {reportReady: false};
+                    $scope.reportData.mappedOptionCombosById = $scope.model.mappedOptionCombosById;
+                    $scope.reportData.keyDimension = keys[0].id;
+                    if( $scope.model.agencyCategory && $scope.model.agencyCategory.selectedOption && $scope.model.agencyCategory.selectedOption.displayName ){
+                        $scope.reportData.agency = $scope.model.agencyCategory.selectedOption;
+                    }
+
+                    ReportService.getReportData( reportParams, $scope.reportData ).then(function(response){
+                        if( response && response.mappedValues ){
+                            $scope.reportData = response;
+                            $scope.filteredReportData = {};
+                            
+                            console.log('report data:  ', $scope.reportData);
+                            
+                            angular.forEach(dataSets[0].dataElements, function(de){
+                                if( !$scope.reportData.mappedValues[de.id] ){
+                                    $scope.reportData.mappedValues[de.id] = {};
+                                    $scope.reportData.mappedValues[de.id][$scope.model.instanceCategory.categoryOptions[0].displayName] = {};
+                                }
+                                else{
+                                    //$scope.reportData.mappedValues[de.id].empty = false;
+                                    $scope.filteredReportData[de.id] = $scope.reportData.mappedValues[de.id];
+                                }
+                            });
+                        }
+                    });
+                }                
             }
         });
     };
     
-    $scope.getRowSpan = function( obj ){
+    $scope.getPropertyCount = function( obj ){
         var count = 0;
         for( var key in obj ){
             if( obj.hasOwnProperty( key ) ){
@@ -944,5 +953,13 @@ sunInventory.controller('dataEntryController',
             }
         }        
         return count;
+    };
+    
+    $scope.exportData = function () {
+        var blob = new Blob([document.getElementById('exportTable').innerHTML], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8"
+        });
+        var reportName = $scope.selectedOrgUnit.displayName + '-' + $scope.model.selectedPeriod.name + '-' +  $scope.model.agencyCategory.selectedOption.displayName +'.xls';
+        saveAs(blob, reportName);
     };
 });

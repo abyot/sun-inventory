@@ -759,10 +759,10 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
 .service('ReportService', function($q, $filter, orderByFilter, DataValueService, ActionMappingUtils){
     return {        
         getReportData: function(reportParams, reportData){            
-            var def = $q.defer();
-            var pushedHeaders = [];
+            var def = $q.defer();            
             var mappedValues = {};
-                    
+            reportData.comments = {};
+            
             DataValueService.getDataValueSet( reportParams.url ).then(function( response ){
                 if( response && response.dataValues ){
                     angular.forEach(response.dataValues, function(dv){
@@ -778,16 +778,32 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                                 }
                                 
                                 var coco = reportData.mappedOptionCombosById[dv.categoryOptionCombo];                                
-                                if ( coco && coco.categoryOptionGroup && coco.categoryOptionGroup.id && coco.categoryOptionGroup.dimensionEntryMode ){
-                                    if( coco.categoryOptionGroup.dimensionEntryMode === 'SINGLE'){
-                                        mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = coco.displayName;
+                                if ( coco && coco.categoryOptionGroup && coco.categoryOptionGroup.id ){                                    
+                                    if( coco.categoryOptionGroup.actionConducted ){
+                                        if( !reportData.comments[dv.dataElement] ){
+                                            reportData.comments[dv.dataElement] = {};
+                                            reportData.comments[dv.dataElement][aoco[1]] = {};
+                                        }
+                                        else{
+                                            if( !reportData.comments[dv.dataElement][aoco[1]] ){
+                                                reportData.comments[dv.dataElement][aoco[1]] = {};
+                                            }
+                                        }                                        
+                                        reportData.comments[dv.dataElement][aoco[1]].comment = dv.comment;
                                     }
                                     else{
-                                        if( !mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] ){
-                                            mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = [];
-                                        }                                        
-                                        mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id].push( coco.displayName );
-                                    }
+                                        if( coco.categoryOptionGroup.dimensionEntryMode ){
+                                            if( coco.categoryOptionGroup.dimensionEntryMode === 'SINGLE'){
+                                                mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = coco.displayName;
+                                            }
+                                            else{
+                                                if( !mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] ){
+                                                    mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = [];
+                                                }                                        
+                                                mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id].push( coco.displayName );
+                                            }
+                                        }
+                                    }                                    
                                 }
                             }
                         }
