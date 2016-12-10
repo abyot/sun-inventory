@@ -131,11 +131,21 @@ sunInventory.controller('dataEntryController',
                 $scope.model.supportTypes = [];
                 $scope.model.thematicAreas = [];
 
-                angular.forEach(dataElementGroupSets, function(degs){
-                    var idx = degs.displayName.indexOf(' - Category');
-                    if( idx !== -1 ){                    
-                        angular.forEach(degs.dataElementGroups, function(deg){
-                            deg = dhis2.metadata.processMetaDataAttribute( deg );                                
+                angular.forEach(dataElementGroupSets, function(degs){                    
+                    if( degs.displayName.indexOf(' - Category') !== -1 ){
+                        var ordr = 0;                        
+                        angular.forEach(degs.dataElementGroups, function(deg){                            
+                            deg = dhis2.metadata.processMetaDataAttribute( deg );
+                            var idx = $scope.model.dataElementGroupSets.indexOf( degs );                            
+                            if( deg.categoryOrder ){
+                                if( idx !== -1 ){
+                                    $scope.model.dataElementGroupSets[idx].order = deg.categoryOrder;
+                                }
+                                else{
+                                    degs.order = deg.categoryOrder;
+                                }
+                            }
+                            
                             if( deg.groupType && ( deg.groupType === 'thematicArea' || deg.groupType === 'enablingEnvironment' || deg.groupType === 'procurementLogisticsSupply') ){
                                 if( $scope.model.dataElementGroupSets.indexOf( degs ) === -1 ){
                                     degs.displayName = degs.displayName.split(' - ')[0];
@@ -148,16 +158,18 @@ sunInventory.controller('dataEntryController',
                                     }
 
                                     if( deg.groupType === "thematicArea" ){
-                                        var ta = {id: deg.id, displayName: deg.displayName, category: degs.displayName};
+                                        var ta = {id: deg.id, displayName: deg.displayName, category: degs.displayName, order: ordr, categoryOrder: degs.order};
                                         if( ActionMappingUtils.indexOf( $scope.model.thematicAreas, ta, 'id') === -1){
                                             $scope.model.thematicAreas.push( ta );
+                                            ordr++;
                                         }
-                                        angular.extend($scope.dataElementLocation[de.id], {thematicArea: deg.displayName, category: degs.displayName});
+                                        angular.extend($scope.dataElementLocation[de.id], {thematicArea: deg.displayName, categoryOrder: degs.order, thematicAreaOrder: ordr, category: degs.displayName});
                                     }
                                     else{
                                         var names = deg.displayName && deg.displayName.split(' - ') ? deg.displayName.split(' - ') : [];                                     
-                                        if( names.length === 2 ){                                    
-                                            var st = {id: deg.groupType, displayName: names[1], thematicArea: [names[0]], category: [degs.displayName]};
+                                        if( names.length === 2 ){
+                                            var stOrder = deg.groupType === 'procurementLogisticsSupply' ? 1 : 2;
+                                            var st = {id: deg.groupType, displayName: names[1], thematicArea: [names[0]], category: [degs.displayName], order: stOrder};
                                             var index = ActionMappingUtils.indexOf( $scope.model.supportTypes, st, 'id');
                                             if( index === -1 ){
                                                 $scope.model.supportTypes.push( st );
@@ -170,15 +182,14 @@ sunInventory.controller('dataEntryController',
                                                     $scope.model.supportTypes[index].category.push( degs.displayName );
                                                 }
                                             }
-                                            angular.extend($scope.dataElementLocation[de.id], {supportType: names[1], thematicArea: names[0], category: degs.displayName});
+                                            angular.extend($scope.dataElementLocation[de.id], {supportType: names[1], thematicArea: names[0], thematicAreaOrder: ordr, categoryOrder: degs.order, category: degs.displayName, supportTypeOrder: st.order});
                                         }
                                     }
                                 });
                             }
                         });
                     }
-                });                
-                
+                });
                 
                 var optionGroupByMembers = [];
                 MetaDataFactory.getAll('categoryOptionGroups').then(function(categoryOptionGroups){
@@ -264,8 +275,6 @@ sunInventory.controller('dataEntryController',
 
                             $scope.model.metaDataCached = true;
                             
-                            
-                            
                             if( $scope.model.dataSets.length > 0 ){
                                 
                                 $scope.model.reportDataSet = $scope.model.dataSets[0];
@@ -289,7 +298,13 @@ sunInventory.controller('dataEntryController',
                                 $scope.model.staticHeaders.push($translate.instant('support_type'));
                                 $scope.model.staticHeaders.push($translate.instant('action'));
                                 
-                            }                            
+                            }
+                            
+                            $scope.model.reportTypes = [];
+                            $scope.model.reportTypes.push({id: 'SUMMARY_REPORT', name: $translate.instant('summary_report')});
+                            $scope.model.reportTypes.push({id: 'CNA', name: $translate.instant('cnas')});
+                            $scope.model.reportTypes.push({id: 'ALIGNED_INVESTMENT', name: $translate.instant('align_invest')});
+                            
 
                             console.log( 'Finished downloading meta-data' );
                         });
@@ -926,15 +941,12 @@ sunInventory.controller('dataEntryController',
                             $scope.reportData = response;
                             $scope.filteredReportData = {};
                             
-                            console.log('report data:  ', $scope.reportData);
-                            
                             angular.forEach(dataSets[0].dataElements, function(de){
                                 if( !$scope.reportData.mappedValues[de.id] ){
                                     $scope.reportData.mappedValues[de.id] = {};
                                     $scope.reportData.mappedValues[de.id][$scope.model.instanceCategory.categoryOptions[0].displayName] = {};
                                 }
-                                else{
-                                    //$scope.reportData.mappedValues[de.id].empty = false;
+                                else{                                    
                                     $scope.filteredReportData[de.id] = $scope.reportData.mappedValues[de.id];
                                 }
                             });

@@ -48,7 +48,7 @@
                                                        theme="select2"                                 
                                                        style="width:100%;">
                                                 <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataElementGroupSets && model.dataElementGroupSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                                <ui-select-choices repeat="dataElementGroupSet in model.dataElementGroupSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                                                <ui-select-choices repeat="dataElementGroupSet in model.dataElementGroupSets | filter: $select.search | limitTo:maxOptionSize | orderBy: 'order' ">
                                                     <span ng-bind-html="dataElementGroupSet.displayName | highlight: $select.search"></span>
                                                 </ui-select-choices>
                                             </ui-select>
@@ -65,7 +65,7 @@
                                                        theme="select2"                                 
                                                        style="width:100%;">
                                                 <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.thematicAreas && model.thematicAreas.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                                <ui-select-choices repeat="thematicArea in model.thematicAreas | thematicAreaFilter:model.selectedDataElementGroupSet | filter: {'displayName': $select.search, 'category': model.dataElementGroupSet.displayName} | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                                                <ui-select-choices group-by="'category'" repeat="thematicArea in model.thematicAreas | thematicAreaFilter:model.selectedDataElementGroupSet | filter: {'displayName': $select.search, 'category': model.dataElementGroupSet.displayName} | limitTo:maxOptionSize | orderBy: ['categoryOrder', 'order']">
                                                     <span ng-bind-html="thematicArea.displayName | highlight: $select.search"></span>
                                                 </ui-select-choices>
                                             </ui-select>
@@ -82,7 +82,7 @@
                                                        theme="select2"                                 
                                                        style="width:100%;">
                                                 <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.supportTypes && model.supportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                                <ui-select-choices repeat="supportType in model.supportTypes | supportTypeFilter:model.selectedDataElementGroupSet:model.selectedThematicArea | filter: $select.search | limitTo:maxOptionSize | orderBy: 'displayName' ">
+                                                <ui-select-choices repeat="supportType in model.supportTypes | supportTypeFilter:model.selectedDataElementGroupSet:model.selectedThematicArea | filter: $select.search | limitTo:maxOptionSize | orderBy: 'order'">
                                                     <span ng-bind-html="supportType.displayName | highlight: $select.search"></span>
                                                 </ui-select-choices>
                                             </ui-select>
@@ -99,7 +99,7 @@
                                                        theme="select2"                                 
                                                        style="width:100%;">
                                                 <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.dataSets && model.dataSets.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                                <ui-select-choices group-by="'thematicArea'" repeat="dataSet in model.dataSets | actionFilter:model.selectedDataElementGroupSet:model.selectedThematicArea:model.selectedSupportType | filter: $select.search | limitTo:maxOptionSize | orderBy: ['category', 'thematicArea', 'supportType','order'] ">
+                                                <ui-select-choices group-by="'thematicArea'" repeat="dataSet in model.dataSets | actionFilter:model.selectedDataElementGroupSet:model.selectedThematicArea:model.selectedSupportType | filter: $select.search | limitTo:maxOptionSize | orderBy: ['categoryOrder', 'thematicAreaOrder', 'supportTypeOrder', 'order'] ">
                                                     <span ng-bind-html="dataSet.displayName | highlight: $select.search"></span>
                                                 </ui-select-choices>
                                             </ui-select>
@@ -291,6 +291,22 @@
                         <div class="col-sm-6 blueInfoArea add-default-padding">
                             <div class="row">
                                 <div class="col-sm-4">                            
+                                    {{'report_types'| translate}}
+                                </div>
+                                <div class="col-sm-8">
+                                    <ui-select ng-model="model.selectedReport"                                        
+                                               theme="select2"
+                                               style="width:100%;">
+                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes  && model.reportTypes .length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                        <ui-select-choices  repeat="rt in model.reportTypes | filter: $select.search | limitTo:maxOptionSize">
+                                            <span ng-bind-html="rt.name | highlight: $select.search"></span>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                            </div>
+                            
+                            <div class="row small-vertical-spacing">
+                                <div class="col-sm-4">                            
                                     {{'country'| translate}}
                                 </div>
                                 <div class="col-sm-8"> 
@@ -388,7 +404,9 @@
                     </div>
 
                     <!-- report begins -->                    
-                    <div ng-include="'components/dataentry/report-form.html'"></div>                    
+                    <div ng-if="model.selectedReport.id === 'SUMMARY_REPORT'" ng-include="'components/dataentry/reports/summary.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'CNA'" ng-include="'components/dataentry/reports/cna.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'ALIGNED_INVESTMENT'" ng-include="'components/dataentry/reports/align-invest.html'"></div>
                     <!-- report ends -->
 
                 </tab>

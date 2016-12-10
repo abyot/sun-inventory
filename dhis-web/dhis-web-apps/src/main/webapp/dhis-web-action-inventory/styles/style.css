@@ -9,7 +9,7 @@ html, body {
 
 #mainPage {
     margin: 60px 5px 5px 315px ;
-    font-size: 10pt;
+    font-size: 9pt;
 }
 
 .not-for-screen {
@@ -184,8 +184,8 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
 .dhis2-table>thead>tr>td, 
 .dhis2-table>tbody>tr>td, 
 .dhis2-table>tfoot>tr>td {
-    //border-top: none;
-    //background-color: #ebf0f6;
+    /*border-top: none;
+    background-color: #ebf0f6;*/
 }
 
 .dhis2-table-striped-border tr th {
