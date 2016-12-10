@@ -1,76 +1,76 @@
 <div class="vertical-spacing" ng-if="paramsReady()">
 
-    <div class="remove-left-padding">
-        <div class="col-sm-12" ng-repeat="de in model.selectedDataSet.dataElements">
+    <div ng-repeat="de in model.selectedDataSet.dataElements">
 
-            <table class="table table-bordered">
-                <tr ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
-                    ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})"
-                    ng-if="!categoryOptionGroup.actionConducted">                    
-                    <td class="cursor-pointer" ng-if="categoryOptionGroup.description" ng-click="categoryOptionGroup.showDescription = !categoryOptionGroup.showDescription">                        
-                        <i class="fa fa-info-circle custom-icon-size" aria-hidden="true"></i>                        
-                        {{categoryOptionGroup.name}}
-                        <div class="alert alert-info" 
-                             ng-if="categoryOptionGroup.description && categoryOptionGroup.showDescription"
-                             ng-bind-html="categoryOptionGroup.description">
+        <table class="table table-bordered">
+            <tr ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
+                ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {
+                                    categoryOptionGroup: {id: categoryOptionGroup.id}}
+                                )"
+                ng-if="!categoryOptionGroup.actionConducted">                    
+                <td class="cursor-pointer" ng-if="categoryOptionGroup.description" ng-click="categoryOptionGroup.showDescription = !categoryOptionGroup.showDescription">                        
+                    <i class="fa fa-info-circle custom-icon-size" aria-hidden="true"></i>                        
+                    {{categoryOptionGroup.name}}
+                    <div class="alert alert-info" 
+                         ng-if="categoryOptionGroup.description && categoryOptionGroup.showDescription"
+                         ng-bind-html="categoryOptionGroup.description">
+                    </div>
+                </td>
+                <td ng-if="!categoryOptionGroup.description">
+                    {{categoryOptionGroup.name}}
+                </td>
+                <td>
+                    <ng-form name="innerForm">
+                        <span ng-if="categoryOptionGroup.dimensionEntryMode === 'SINGLE'">
+                            <ui-select ng-required="true"
+                                       name="foo" 
+                                       ng-model="dataValues[de.id][categoryOptionGroup.id]" 
+                                       theme="select2" 
+                                       style="width:100%;">
+                                <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass(innerForm.foo)" class="form-control-ui-select" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                                <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
+                                    <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
+                                </ui-select-choices>
+                            </ui-select>                            </span>
+                        <span ng-if="categoryOptionGroup.dimensionEntryMode === 'MULTIPLE'">
+                            <ui-select array-required
+                                       name="foo" 
+                                       multiple ng-model="dataValues[de.id][categoryOptionGroup.id]" 
+                                       theme="bootstrap"
+                                       ng-style="getInputNotifcationClass(innerForm.foo) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
+                                <ui-select-match allow-clear="true" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
+                                <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
+                                    <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
+                                </ui-select-choices>
+                            </ui-select>
+                        </span>                            
+                        <div ng-messages="innerForm.foo.$error" ng-if="interacted(innerForm.foo)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
                         </div>
-                    </td>
-                    <td ng-if="!categoryOptionGroup.description">
-                        {{categoryOptionGroup.name}}
-                    </td>
-                    <td>
-                        <ng-form name="innerForm">
-                            <span ng-if="categoryOptionGroup.dimensionEntryMode === 'SINGLE'">
-                                <ui-select ng-required="true"
-                                           name="foo" 
-                                           ng-model="dataValues[de.id][categoryOptionGroup.id]" 
-                                           theme="select2" 
-                                           style="width:100%;">
-                                    <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass(innerForm.foo)" class="form-control-ui-select" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                    <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
-                                        <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
-                                    </ui-select-choices>
-                                </ui-select>                            </span>
-                            <span ng-if="categoryOptionGroup.dimensionEntryMode === 'MULTIPLE'">
-                                <ui-select array-required
-                                           name="foo" 
-                                           multiple ng-model="dataValues[de.id][categoryOptionGroup.id]" 
-                                           theme="bootstrap"
-                                           ng-style="getInputNotifcationClass(innerForm.foo) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
-                                    <ui-select-match allow-clear="true" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
-                                    <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
-                                        <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
-                                    </ui-select-choices>
-                                </ui-select>
-                            </span>                            
-                            <div ng-messages="innerForm.foo.$error" ng-if="interacted(innerForm.foo)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
-                            </div>
-                        </ng-form>
-                    </td>                
-                </tr>
-                <tr>
-                    <td>
-                        {{'proj_desc'| translate}}
-                    </td>
-                    <td ng-if="!model.showReportDiv">                        
-                        <textarea rows="5"  
-                                  name="comment"
-                                  ng-required="true"
-                                  ng-model="dataValues[de.id].comment"
-                                  class="form-control"
-                                  ng-style="getInputNotifcationClass(outerForm.comment) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
-                        </textarea>
-                        <div ng-messages="outerForm.comment.$error" ng-if="interacted(outerForm.comment)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
-                        </div>
-                    </td>
-                    <td ng-if="model.showReportDiv">
-                        {{dataValues[de.id].comment}}
-                    </td>
-                </tr>
-            </table>
-        </div>
+                    </ng-form>
+                </td>                
+            </tr>
+            <tr>
+                <td>
+                    {{'proj_desc'| translate}}
+                </td>
+                <td ng-if="!model.showReportDiv">                        
+                    <textarea rows="5"  
+                              name="comment"
+                              ng-required="true"
+                              ng-model="dataValues[de.id].comment"
+                              class="form-control"
+                              ng-style="getInputNotifcationClass(outerForm.comment) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
+                    </textarea>
+                    <div ng-messages="outerForm.comment.$error" ng-if="interacted(outerForm.comment)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
+                    </div>
+                </td>
+                <td ng-if="model.showReportDiv">
+                    {{dataValues[de.id].comment}}
+                </td>
+            </tr>
+        </table>
     </div>
-
+    
     <div class="clear selectionGroup">
         <div class="col-sm-6 selectionArea">
             <div class="row padding-bottom">
@@ -83,7 +83,7 @@
                 </button>
 
                 <button type="button" 
-                        class="btn btn-danger small-vertical-spacing pull-right add-default-right-padding" 
+                        class="btn btn-danger small-vertical-spacing pull-right add-small-right-padding" 
                         ng-disabled="isEmpty(true)"
                         ng-click="deleteData()">
                     {{'delete'| translate}}

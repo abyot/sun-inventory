@@ -3,13 +3,67 @@
     <a href="javascript:dhis2.leftBar.hideAnimated()" title="{{'hide_menu'| translate}}" id="hideMainMenuLink"><i class="fa fa-arrow-left leftBarIcon"></i></a>
     <a href="javascript:dhis2.leftBar.extendAnimated()" title="{{'extend_menu'| translate}}" id="extendMainMenuLink"><i class="fa fa-arrow-right leftBarIcon"></i></a>
 </div>
-<div class="leftBarArea yellowInfoArea">
-    <div ng-if="model.selectedDataSet">
-        <p class="bold font-16">{{model.selectedDataSet.dataElements[0].displayName}}</p>
-        <ul class="list-group" ng-if="model.selectedDataSet.code && model.mappedOptionSets[model.selectedDataSet.code]">
-            <li class="list-group-item" ng-repeat="option in model.mappedOptionSets[model.selectedDataSet.code].options | orderBy: 'displayName' ">
-                {{option.displayName}}
-            </li>            
-        </ul>
-    </div>    
+<div class="leftBarArea yellowInfoArea">    
+    <p class="bold font-18">
+        {{'can_title' | translate}}
+    </p>
+    <p class="font-18">
+        {{'can_sub_title' | translate}}
+    </p>
+    <p class="font-18 italic">
+        <span class="bold">{{'click' | translate}} <a href=""><span class="black underline">{{'here'| translate}}</span></a>  {{'view_full_can_doc'| translate}}</span>
+        <span> {{'view_each_can_doc' | translate}}</span>
+    </p>
+    <ul class="list-group">
+        <li>
+            <div class="can-1-container cursor-pointer" ng-click="showNutritionActions()">
+                <div class="thumbnail">
+                    <img src="images/food_agriculture_and_healthy_diets.png" alt="{{'food_agriculture_and_healthy_diets'| translate}}" class="align-center img-responsive">
+                </div>
+                <div class="font-16 bold caption pull-center small-vertical-spacing">
+                    {{'food_agriculture_and_healthy_diets'| translate}}
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="can-2-container cursor-pointer" ng-click="showNutritionActions()">
+                <div class="thumbnail">
+                    <img src="images/maternal_and_child_care.png" alt="{{'maternal_and_child_care'| translate}}" class="align-center img-responsive">
+                </div>
+                <div class="font-16 bold caption pull-center small-vertical-spacing">
+                    <p>{{'maternal_and_child_care'| translate}}</p>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="can-3-container cursor-pointer" ng-click="showNutritionActions()">
+                <div class="thumbnail">
+                    <img src="images/health.png" alt="{{'health'| translate}}" class="align-center img-responsive">
+                </div>
+                <div class="font-16 bold caption pull-center small-vertical-spacing">
+                    <p>{{'health'| translate}}</p>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="can-4-container cursor-pointer" ng-click="showNutritionActions()">
+                <div class="thumbnail">
+                    <img src="images/social_protection.png" alt="{{'social_protection'| translate}}" class="align-center img-responsive">
+                </div>
+                <div class="font-16 bold caption pull-center small-vertical-spacing">
+                    <p>{{'social_protection'| translate}}</p>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="can-5-container cursor-pointer" ng-click="showNutritionActions()">
+                <div class="thumbnail">
+                    <img src="images/facilitation_of_multisectoral_nutrition_governance.png" alt="{{'facilitation_of_multisectoral_nutrition_governance'| translate}}" class="align-center img-responsive">
+                </div>
+                <div class="font-16 bold caption pull-center small-vertical-spacing">
+                    <p>{{'facilitation_of_multisectoral_nutrition_governance'| translate}}</p>
+                </div>
+            </div>
+        </li>
+    </ul>
 </div>

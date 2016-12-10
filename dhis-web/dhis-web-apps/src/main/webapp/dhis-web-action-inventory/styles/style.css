@@ -8,7 +8,7 @@ html, body {
 }
 
 #mainPage {
-    margin: 60px 5px 5px 315px ;
+    margin: 60px 5px 5px 455px ;
     font-size: 9pt;
 }
 
@@ -259,7 +259,9 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
 }
 
 div#leftBar {
-    width: 300px;    
+    width: 450px;
+    height: 100%;
+    overflow-y: auto;        
 }
 
 .leftBarArea {
@@ -469,7 +471,8 @@ div#orgUnitTree {
 .greenInfoArea {
     border: 1px solid #a4d2a3;
     background-color: #d0eBd0;
-    padding: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     border-radius: 3px;
     margin-bottom: 10px;
 }
@@ -716,10 +719,21 @@ div#orgUnitTree {
     margin: 0 15px !important;
 }
 
-.add-default-right-padding {
+.add-small-right-padding {
     margin-right: 5px !important;
 }
 
+.add-default-right-padding {
+    margin-right: 15px !important;
+}
+
+.add-default-left-padding {
+    margin-left: 15px !important;
+}
+
+.add-small-left-padding {
+    margin-left: 5px !important;
+}
 .remove-default-padding {
     padding: 0 12px !important;
 }
@@ -1000,4 +1014,49 @@ ul.tree ul li:last-child:before {
 
 .reset-color {
     color: #000 !important;
+}
+
+.can-1-container {
+    color: #6EA44E;
+    background-color: #fff;
+    border: 3px solid #6EA44E;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.can-2-container {
+    color: #AE6734;
+    background-color: #fff;
+    border: 3px solid #AE6734;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.can-3-container {
+    color: #973B90;
+    background-color: #fff;
+    border: 3px solid #973B90;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.can-4-container {
+    color: #5D90C8;
+    background-color: #fff;
+    border: 3px solid #5D90C8;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.can-5-container {
+    color: #939497;
+    background-color: #fff;
+    border: 3px solid #939497;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 10px;
 }

@@ -29,14 +29,12 @@
                             {{'data_entry'| translate}}
                         </span>
                     </tab-heading>
-
+                    
                     <div class="row small-vertical-spacing">
-
-                        <div class="col-sm-12">                        
-
+                        <div class="col-sm-12">
                             <!-- selection begins-->
                             <div class="selectionGroup vertical-spacing">
-                                <div class="col-sm-6 selectionArea">
+                                <div class="col-sm-6 greenInfoArea">
 
                                     <div class="row small-vertical-spacing">
                                         <div class="col-sm-4">
@@ -129,151 +127,111 @@
                                     </div>
 
                                 </div>
-                                <div class="col-sm-6 selectionAreaNoColor">
-                                    <div class="blueInfoArea">
-                                        <div class="row">
+                                <div class="col-sm-6 blueInfoArea add-small-left-padding">
+                                    <div class="row">
+                                        <div class="col-sm-4">                            
+                                            {{'country'| translate}}
+                                        </div>
+                                        <div class="col-sm-8"> 
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                       name="foo" 
+                                                       class="form-control cursor-pointer" 
+                                                       placeholder="{{'please_select'| translate}}" 
+                                                       title="{{'select_from_tree'| translate}}"
+                                                       ng-model="selectedOrgUnit.displayName" 
+                                                       ng-readonly="{{true}}" 
+                                                       ng-required="true" 
+                                                       ng-click="showOrgUnitTree()">
+                                                <span class="input-group-btn">        
+                                                    <button class="btn btn-default" type="button" title="{{'select_from_tree'| translate}}" ng-disabled="d2Disabled" ng-click="showOrgUnitTree(d2Object)"> 
+                                                        <i class="fa fa-plus-square-o"></i> 
+                                                    </button> 
+                                                </span>
+                                            </div>                        
+                                        </div>
+                                    </div>
+
+                                    <div class="row small-vertical-spacing" ng-if="!model.invalidDimensions">
+                                        <div class="col-sm-4">
+                                            {{'inventory_year'| translate}}                        
+                                        </div>
+                                        <div class="col-sm-8">                            
+                                            <div class="input-group">
+                                                <ui-select ng-model="model.selectedPeriod" 
+                                                           theme="select2"                                 
+                                                           style="width:100%;">
+                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                                    <ui-select-choices  repeat="period in model.periods | filter: $select.search | limitTo:maxOptionSize">
+                                                        <span ng-bind-html="period.name | highlight: $select.search"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
+                                                <span class="input-group-btn">        
+                                                    <button type="button" 
+                                                            class="btn btn-default" 
+                                                            ng-disabled="!model.selectedDataSet"
+                                                            ng-click="getPeriods('PRV')" 
+                                                            title="{{'previous_periods'| translate}}">
+                                                        <i class="fa fa-backward"></i>
+                                                    </button>
+
+                                                    <button type="button" 
+                                                            class="btn btn-default" 
+                                                            ng-disabled="!model.selectedDataSet || periodOffset > -1" 
+                                                            ng-click="getPeriods('NXT')" 
+                                                            title="{{'next_periods'| translate}}">
+                                                        <i class="fa fa-forward"></i>
+                                                    </button>                                    
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div ng-repeat="category in model.selectedAttributeCategoryCombo.categories" ng-if="category.displayName === 'Agency' && model.selectedAttributeCategoryCombo && !model.selectedAttributeCategoryCombo.isDefault && !model.invalidDimensions">                
+                                        <div class="row small-vertical-spacing">
                                             <div class="col-sm-4">                            
-                                                {{'country'| translate}}
+                                                {{category.displayName}}
                                             </div>
-                                            <div class="col-sm-8"> 
-                                                <div class="input-group">
-                                                    <input type="text" 
-                                                           name="foo" 
-                                                           class="form-control cursor-pointer" 
-                                                           placeholder="{{'please_select'| translate}}" 
-                                                           title="{{'select_from_tree'| translate}}"
-                                                           ng-model="selectedOrgUnit.displayName" 
-                                                           ng-readonly="{{true}}" 
-                                                           ng-required="true" 
-                                                           ng-click="showOrgUnitTree()">
-                                                    <span class="input-group-btn">        
-                                                        <button class="btn btn-default" type="button" title="{{'select_from_tree'| translate}}" ng-disabled="d2Disabled" ng-click="showOrgUnitTree(d2Object)"> 
-                                                            <i class="fa fa-plus-square-o"></i> 
-                                                        </button> 
-                                                    </span>
-                                                </div>                        
-                                            </div>
-                                        </div>
-
-                                        <div class="row small-vertical-spacing" ng-if="!model.invalidDimensions">
-                                            <div class="col-sm-4">
-                                                {{'inventory_year'| translate}}                        
-                                            </div>
-                                            <div class="col-sm-8">                            
-                                                <div class="input-group">
-                                                    <ui-select ng-model="model.selectedPeriod" 
-                                                               theme="select2"                                 
-                                                               style="width:100%;">
-                                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
-                                                        <ui-select-choices  repeat="period in model.periods | filter: $select.search | limitTo:maxOptionSize">
-                                                            <span ng-bind-html="period.name | highlight: $select.search"></span>
-                                                        </ui-select-choices>
-                                                    </ui-select>
-                                                    <span class="input-group-btn">        
-                                                        <button type="button" 
-                                                                class="btn btn-default" 
-                                                                ng-disabled="!model.selectedDataSet"
-                                                                ng-click="getPeriods('PRV')" 
-                                                                title="{{'previous_periods'| translate}}">
-                                                            <i class="fa fa-backward"></i>
-                                                        </button>
-
-                                                        <button type="button" 
-                                                                class="btn btn-default" 
-                                                                ng-disabled="!model.selectedDataSet || periodOffset > - 1" 
-                                                                ng-click="getPeriods('NXT')" 
-                                                                title="{{'next_periods'| translate}}">
-                                                            <i class="fa fa-forward"></i>
-                                                        </button>                                    
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div ng-repeat="category in model.selectedAttributeCategoryCombo.categories" ng-if="category.displayName === 'Agency' && model.selectedAttributeCategoryCombo && !model.selectedAttributeCategoryCombo.isDefault && !model.invalidDimensions">                
-                                            <div class="row small-vertical-spacing">
-                                                <div class="col-sm-4">                            
-                                                    {{category.displayName}}
-                                                </div>
-                                                <div class="col-sm-8">
-                                                    <ui-select ng-model="category.selectedOption"                                        
-                                                               theme="select2"  
-                                                               on-select="getCategoryOptions(category)"
-                                                               style="width:100%;">
-                                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{category.categoryOptions && category.categoryOptions.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                                        <ui-select-choices  repeat="option in category.categoryOptions | filter: $select.search | limitTo:maxOptionSize">
-                                                            <span ng-bind-html="option.displayName | highlight: $select.search"></span>
-                                                        </ui-select-choices>
-                                                    </ui-select>
-                                                </div>
+                                            <div class="col-sm-8">
+                                                <ui-select ng-model="category.selectedOption"                                        
+                                                           theme="select2"  
+                                                           on-select="getCategoryOptions(category)"
+                                                           style="width:100%;">
+                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{category.categoryOptions && category.categoryOptions.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                                                    <ui-select-choices  repeat="option in category.categoryOptions | filter: $select.search | limitTo:maxOptionSize">
+                                                        <span ng-bind-html="option.displayName | highlight: $select.search"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="yellowInfoArea">
-                                        <p class='bold font-16'>
-                                            <a href=""><span class="black underline">{{'click_here'| translate}}</span></a>  {{'to_view_full_compendium'| translate}}
-                                        </p>
-                                        <p class="font-14">{{'view_list_of_actions_each'| translate}}</p>
-                                        <div class="row">
-                                            <div class="center-block">
-                                                <div class="col-sm-2 cursor-pointer" ng-click="showNutritionActions()">
-                                                    <div class="thumbnail">
-                                                        <img src="images/food_agr_health_diets.png" alt="{{'food_agr_health_diets'| translate}}" class="align-center img-responsive1">
-                                                    </div>
-                                                    <div class="caption pull-center">
-                                                        <p>{{'food_agr_health_diets'| translate}}</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-sm-2 cursor-pointer" ng-click="showNutritionActions()">
-                                                    <div class="thumbnail">
-                                                        <img src="images/maternal_child_care.png" alt="{{'maternal_child_care'| translate}}" class="align-center img-responsive1">
-                                                    </div>
-                                                    <div class="caption pull-center">
-                                                        <p>{{'maternal_child_care'| translate}}</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-sm-2 cursor-pointer" ng-click="showNutritionActions()">
-                                                    <div class="thumbnail">
-                                                        <img src="images/health.png" alt="{{'health'| translate}}" class="align-center img-responsive1">
-                                                    </div>
-                                                    <div class="caption pull-center">
-                                                        <p>{{'health'| translate}}</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-sm-2 cursor-pointer" ng-click="showNutritionActions()">
-                                                    <div class="thumbnail">
-                                                        <img src="images/social_protection.png" alt="{{'social_protection'| translate}}" class="align-center img-responsive1">
-                                                    </div>
-                                                    <div class="caption pull-center">
-                                                        <p>{{'social_protection'| translate}}</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-sm-2 cursor-pointer" ng-click="showNutritionActions()">
-                                                    <div class="thumbnail">
-                                                        <img src="images/multi_sectoral_governance.png" alt="{{'multi_sectoral_governance'| translate}}" class="align-center img-responsive1">
-                                                    </div>
-                                                    <div class="caption pull-center">
-                                                        <p>{{'multi_sectoral_governance'| translate}}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>            
+                                </div>
                             </div>
-                            <!-- selection ends -->        
-
+                            <!-- selection ends -->                            
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-sm-12" style="margin-top: -5px;">
+                            <div class="yellowInfoArea">
+                                sub-actions
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <!-- form begins -->
+                            <div ng-include="'components/dataentry/dataentry-form.html'"></div>
+                            <!-- form ends -->
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-sm-12">
                             <div class="alert alert-danger vertical-spacing" ng-if="model.invalidDimensions && model.selectedDataSet">
                                 {{'data_set_have_invalid_dimension'| translate}}
                             </div>
-
-                            <!-- form begins -->
-
-                            <div ng-include="'components/dataentry/dataentry-form.html'"></div>
-
-                            <!-- form ends -->
                         </div>
                     </div>
 
@@ -286,7 +244,7 @@
                     </tab-heading>
 
                     <div class="row selectionGroup small-vertical-spacing">
-                        
+
                         <!-- selection begins-->                        
                         <div class="col-sm-6 blueInfoArea add-default-padding">
                             <div class="row">
@@ -297,14 +255,14 @@
                                     <ui-select ng-model="model.selectedReport"                                        
                                                theme="select2"
                                                style="width:100%;">
-                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes  && model.reportTypes .length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes && model.reportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
                                         <ui-select-choices  repeat="rt in model.reportTypes | filter: $select.search | limitTo:maxOptionSize">
                                             <span ng-bind-html="rt.name | highlight: $select.search"></span>
                                         </ui-select-choices>
                                     </ui-select>
                                 </div>
                             </div>
-                            
+
                             <div class="row small-vertical-spacing">
                                 <div class="col-sm-4">                            
                                     {{'country'| translate}}
@@ -354,7 +312,7 @@
 
                                             <button type="button" 
                                                     class="btn btn-default" 
-                                                    ng-disabled="!model.selectedDataSet || periodOffset > - 1" 
+                                                    ng-disabled="!model.selectedDataSet || periodOffset > -1" 
                                                     ng-click="getPeriods('NXT')" 
                                                     title="{{'next_periods'| translate}}">
                                                 <i class="fa fa-forward"></i>
@@ -382,7 +340,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                         </div>
                         <!-- selection ends -->
 
