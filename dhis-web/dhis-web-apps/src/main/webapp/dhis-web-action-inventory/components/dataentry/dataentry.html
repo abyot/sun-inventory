@@ -3,15 +3,9 @@
 </span>
 
 <div id="leftBar">
-
+    <!--<div ng-include="'views/left-bar.html'"></div>-->
     <d2-left-bar></d2-left-bar>
-
-    <div class="yellowInfoArea">
-
-    </div>
-
 </div>
-
 
 <div class="page" id="mainPage">
 
@@ -211,10 +205,15 @@
                         </div>
                     </div>
                     
-                    <div class="row">
+                    <div class="row" ng-if="model.selectedDataSet">
                         <div class="col-sm-12" style="margin-top: -5px;">
                             <div class="yellowInfoArea">
-                                sub-actions
+                                <p class="bold font-16">{{model.selectedDataSet.dataElements[0].displayName}}</p>
+                                <ul class="list-group" ng-if="model.selectedDataSet.code && model.mappedOptionSets[model.selectedDataSet.code]">
+                                    <li class="list-group-item" ng-repeat="option in model.mappedOptionSets[model.selectedDataSet.code].options | orderBy: 'displayName' ">
+                                        {{option.displayName}}
+                                    </li>            
+                                </ul>
                             </div>
                         </div>
                     </div>
