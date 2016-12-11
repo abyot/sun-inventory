@@ -73,9 +73,7 @@
                         </div>
                     </td>
                     <td>
-                        <div class="cell-container">
-                            {{reportData.comments[deId][key].comment}}
-                        </div>
+                        <div class="cell-container" ng-bind-html="reportData.comments[deId][key].comment"></div>
                     </td>
                 </tr>
             </tbody>
@@ -147,9 +145,7 @@
                         </div>
                     </td>
                     <td>
-                        <div class="cell-container">
-                            {{reportData.comments[deId][key].comment}}
-                        </div>
+                        <div class="cell-container" ng-bind-html="reportData.comments[deId][key].comment"></div>                        
                     </td>
                 </tr>
             </tbody>

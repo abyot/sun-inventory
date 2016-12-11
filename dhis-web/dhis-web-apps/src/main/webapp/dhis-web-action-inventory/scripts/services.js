@@ -756,7 +756,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     };
 })
 
-.service('ReportService', function($q, $filter, orderByFilter, DataValueService, ActionMappingUtils){
+.service('ReportService', function($q, $sce, $filter, orderByFilter, DataValueService, ActionMappingUtils){
     return {        
         getReportData: function(reportParams, reportData){            
             var def = $q.defer();            
@@ -789,7 +789,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                                                 reportData.comments[dv.dataElement][aoco[1]] = {};
                                             }
                                         }                                        
-                                        reportData.comments[dv.dataElement][aoco[1]].comment = dv.comment;
+                                        reportData.comments[dv.dataElement][aoco[1]].comment = dv.comment ? $sce.trustAsHtml(dv.comment.replace(/\r?\n/g,'<br />')) : "";
                                     }
                                     else{
                                         if( coco.categoryOptionGroup.dimensionEntryMode ){

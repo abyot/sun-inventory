@@ -319,8 +319,19 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     };        
 })
 
-.service('DataValueService', function($q, $http, ActionMappingUtils) {   
-    
+.service('DataValueService', function($q, $http, ActionMappingUtils) {
+    var getDataValueSet = function( dv, dataSetId, aocId){
+        if( !dv || !dv.pe || !dv.ou || !dv.de || !dv.co || !dataSetId || !aocId){
+            return null;
+        }
+        var dataValueSet = {dataSet: dataSetId,
+                        period: dv.pe,
+                        orgUnit: dv.ou,
+                        dataValues: []};
+        dataValueSet.dataValues.push({dataElement: dv.de, categoryOptionCombo: dv.co, attributeOptionCombo: aocId, value: dv.value});
+        return dataValueSet;
+    };
+                              
     return {
         getDataValue: function( dv ){
             var promise = $http.get('../api/dataValues.json?de='+dv.de+'&ou='+dv.ou+'&pe='+dv.pe).then(function(response){
@@ -336,7 +347,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             });            
             return promise;
         },
-        saveDataValue: function( dv, oldValues, dataElement, optionCombos ){
+        saveDataValue: function( dv, oldValues, dataElement, optionCombos, dataSetId, aocId ){
             var url = '?de='+dv.de + '&ou='+dv.ou + '&pe='+dv.pe + '&co='+dv.co + '&value='+dv.value;
             var promise;
             if( dv.cc && dv.cp ){
@@ -390,9 +401,13 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 }
             }            
             else{
-                promise = $http.post('../api/dataValues.json' + url).then(function(){
-                    return [];
+                var dataValueSet = getDataValueSet( dv, dataSetId, aocId );                
+                promise = $http.post('../api/dataValueSets.json', dataValueSet).then(function(){
+                    return;
                 });
+                /*promise = $http.post('../api/dataValues.json' + url).then(function(){
+                    return [];
+                });*/
             }            
             return promise;
         },        

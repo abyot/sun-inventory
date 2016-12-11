@@ -53,4 +53,5 @@ var sunInventory = angular.module('sunInventory',
 
 .run(function($rootScope){    
     $rootScope.maxOptionSize = 500;
+    $rootScope.MAXCHARSLEN = 1500;
 });

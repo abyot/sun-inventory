@@ -607,7 +607,7 @@ sunSurvey.controller('dataEntryController',
                 }
             });
             
-            DataValueService.saveDataValueSet( dataValueSet, angular.copy( $scope.dataValuesCopy ), dataElement, $scope.model.mappedOptionCombosById ).then(function(){                
+            DataValueService.saveDataValueSet( dataValueSet, angular.copy( $scope.dataValuesCopy ), dataElement, $scope.model.mappedOptionCombosById, $scope.model.selectedDataSet.id, $scope.model.selectedAttributeOptionCombo ).then(function(){                
                 $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
             });
         }
@@ -634,7 +634,7 @@ sunSurvey.controller('dataEntryController',
                     dataValueSet.dataValues.push( val );
                 });            
 
-                DataValueService.saveDataValueSet( dataValueSet, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById ).then(function(){                    
+                DataValueService.saveDataValueSet( dataValueSet, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById, $scope.model.selectedDataSet.id, $scope.model.selectedAttributeOptionCombo ).then(function(){                    
                     $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
                 });
             }
@@ -657,7 +657,7 @@ sunSurvey.controller('dataEntryController',
                                 _dataValue.cc = $scope.model.selectedAttributeCategoryCombo.id;
                                 _dataValue.cp = ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
                             }                    
-                            DataValueService.saveDataValue( _dataValue, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById ).then(function(){
+                            DataValueService.saveDataValue( _dataValue, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById, $scope.model.selectedDataSet.id, $scope.model.selectedAttributeOptionCombo ).then(function(){
                                 $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
                             });
                         }                
@@ -668,7 +668,7 @@ sunSurvey.controller('dataEntryController',
                     }
                 }
             
-                DataValueService.saveDataValue( dataValue, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById ).then(function(){
+                DataValueService.saveDataValue( dataValue, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById, $scope.model.selectedDataSet.id, $scope.model.selectedAttributeOptionCombo ).then(function(){
                     if( ocId ){
                         $scope.saveStatus[deId + '-' + ocId].saved = true;
                         $scope.saveStatus[deId + '-' + ocId].pending = false;
@@ -896,5 +896,9 @@ sunSurvey.controller('dataEntryController',
         });
         var reportName = $scope.selectedOrgUnit.n + '-' + $scope.model.selectedPeriod.name + '.xls';
         saveAs(blob, reportName);
+    };
+    
+    $scope.getFormattedText = function( txt ){        
+        return txt ? txt.replace(/\r?\n/g,'<br />') : "";
     };
 });

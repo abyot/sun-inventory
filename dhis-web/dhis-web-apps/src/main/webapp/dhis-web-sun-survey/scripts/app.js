@@ -53,4 +53,5 @@ var sunSurvey = angular.module('sunSurvey',
 
 .run(function($rootScope){    
     $rootScope.maxOptionSize = 50;
+    $rootScope.MAXCHARSLEN = 1500;
 });

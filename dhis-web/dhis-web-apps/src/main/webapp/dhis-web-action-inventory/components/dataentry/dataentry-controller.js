@@ -643,56 +643,58 @@ sunInventory.controller('dataEntryController',
         var dataElement = $scope.model.selectedDataElement;
         var oldValues = angular.copy( $scope.dataValuesCopy[dataElement.id] );
         var processedCos = [];
+        
         angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
-
             var cog = oco.categoryOptionGroup;
-            var val = {dataElement: dataElement.id, categoryOptionCombo: oco.id, attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, value: ''};
+            if( cog && cog.dimensionEntryMode ){
+                var val = {dataElement: dataElement.id, categoryOptionCombo: oco.id, attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, value: ''};
             
-            if( oco.id === $scope.model.actionConductedDimensionKey.id ){
-                val.value = 1;
-                val.comment = $scope.dataValues[dataElement.id].comment ? $scope.dataValues[dataElement.id].comment : "";
-                dataValueSet.dataValues.push( val );
-                processedCos.push( oco.id );
-            }            
-            else{
-                if( cog.dimensionEntryMode === 'MULTIPLE' ){                
-                    if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] && $scope.dataValues[dataElement.id][cog.id].length ){
-                        for( var i=0; i<$scope.dataValues[dataElement.id][cog.id].length; i++){
-                            if( $scope.dataValues[dataElement.id][cog.id][i] && $scope.dataValues[dataElement.id][cog.id][i].id === oco.id ){
-                                val.value = 1;
-                                dataValueSet.dataValues.push( val );
-                                processedCos.push( oco.id );
-                                break;
-                            }
-                        }
-                    }
-
-                    if( processedCos.indexOf( oco.id) === -1 ){
-                        if( oldValues && oldValues[cog.id] && oldValues[cog.id].length ){                        
-                            for( var i=0; i<oldValues[cog.id].length; i++){                            
-                                if( oldValues[cog.id][i] && oldValues[cog.id][i].id === oco.id ){                                    
+                if( oco.id === $scope.model.actionConductedDimensionKey.id ){
+                    val.value = 1;
+                    val.comment = $scope.dataValues[dataElement.id].comment ? $scope.dataValues[dataElement.id].comment : "";
+                    dataValueSet.dataValues.push( val );
+                    processedCos.push( oco.id );
+                }            
+                else{
+                    if( cog.dimensionEntryMode === 'MULTIPLE' ){                
+                        if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] && $scope.dataValues[dataElement.id][cog.id].length ){
+                            for( var i=0; i<$scope.dataValues[dataElement.id][cog.id].length; i++){
+                                if( $scope.dataValues[dataElement.id][cog.id][i] && $scope.dataValues[dataElement.id][cog.id][i].id === oco.id ){
+                                    val.value = 1;
                                     dataValueSet.dataValues.push( val );
-                                    processedCos.push( oco.id );                                
+                                    processedCos.push( oco.id );
                                     break;
                                 }
                             }
                         }
+
+                        if( processedCos.indexOf( oco.id) === -1 ){
+                            if( oldValues && oldValues[cog.id] && oldValues[cog.id].length ){                        
+                                for( var i=0; i<oldValues[cog.id].length; i++){                            
+                                    if( oldValues[cog.id][i] && oldValues[cog.id][i].id === oco.id ){                                    
+                                        dataValueSet.dataValues.push( val );
+                                        processedCos.push( oco.id );                                
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-                else{
-                    if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] ){
-                        if( $scope.dataValues[dataElement.id][cog.id].id === oco.id ){                    
-                            val.value = 1;                            
+                    else{
+                        if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] ){
+                            if( $scope.dataValues[dataElement.id][cog.id].id === oco.id ){                    
+                                val.value = 1;                            
+                                dataValueSet.dataValues.push( val );
+                                processedCos.push( oco.id );                            
+                            }                        
+                        }
+
+                        if( oldValues && oldValues[cog.id] && oldValues[cog.id].id !== oco.id && processedCos.indexOf(oldValues[cog.id].id) === -1){                        
+                            val.categoryOptionCombo = oldValues[cog.id].id;
                             dataValueSet.dataValues.push( val );
-                            processedCos.push( oco.id );                            
-                        }                        
+                            processedCos.push(oldValues[cog.id].id );
+                        }                    
                     }
-                    
-                    if( oldValues && oldValues[cog.id] && oldValues[cog.id].id !== oco.id && processedCos.indexOf(oldValues[cog.id].id) === -1){                        
-                        val.categoryOptionCombo = oldValues[cog.id].id;
-                        dataValueSet.dataValues.push( val );
-                        processedCos.push(oldValues[cog.id].id );
-                    }                    
                 }
             }
         });

@@ -8,7 +8,7 @@
                                     categoryOptionGroup: {id: categoryOptionGroup.id}}
                                 )"
                 ng-if="!categoryOptionGroup.actionConducted">                    
-                <td class="cursor-pointer" ng-if="categoryOptionGroup.description" ng-click="categoryOptionGroup.showDescription = !categoryOptionGroup.showDescription">                        
+                <td class="cursor-pointer col-sm-4" ng-if="categoryOptionGroup.description" ng-click="categoryOptionGroup.showDescription = !categoryOptionGroup.showDescription">                        
                     <i class="fa fa-info-circle custom-icon-size" aria-hidden="true"></i>                        
                     {{categoryOptionGroup.name}}
                     <div class="alert alert-info" 
@@ -16,10 +16,10 @@
                          ng-bind-html="categoryOptionGroup.description">
                     </div>
                 </td>
-                <td ng-if="!categoryOptionGroup.description">
+                <td class="col-sm-4" ng-if="!categoryOptionGroup.description">
                     {{categoryOptionGroup.name}}
                 </td>
-                <td>
+                <td class="col-sm-8">
                     <ng-form name="innerForm">
                         <span ng-if="categoryOptionGroup.dimensionEntryMode === 'SINGLE'">
                             <ui-select ng-required="true"
@@ -50,22 +50,23 @@
                 </td>                
             </tr>
             <tr>
-                <td>
+                <td class="col-sm-4">
                     {{'proj_desc'| translate}}
                 </td>
-                <td ng-if="!model.showReportDiv">                        
+                <td class="col-sm-8">
                     <textarea rows="5"  
+                              maxlength="{{MAXCHARSLEN}}"
                               name="comment"
                               ng-required="true"
                               ng-model="dataValues[de.id].comment"
                               class="form-control"
                               ng-style="getInputNotifcationClass(outerForm.comment) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
                     </textarea>
+                    <div class="alert alert-warning small-vertical-spacing bold italic">
+                        {{'chars_remaining' | translate}}: {{dataValues[de.id].comment ? MAXCHARSLEN - dataValues[de.id].comment.length : MAXCHARSLEN}}
+                    </div>
                     <div ng-messages="outerForm.comment.$error" ng-if="interacted(outerForm.comment)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
                     </div>
-                </td>
-                <td ng-if="model.showReportDiv">
-                    {{dataValues[de.id].comment}}
                 </td>
             </tr>
         </table>

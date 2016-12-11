@@ -57,11 +57,15 @@
                                                             </span>
                                                             <span ng-if="de.valueType === 'LONG_TEXT'">
                                                                 <textarea rows="5"  
+                                                                       maxlength="{{MAXCHARSLEN}}"   
                                                                        ng-model="dataValues[de.id][oco.id].value"
                                                                        class="form-control" 
                                                                        ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                       
                                                                        d2-blur="saveDataValue(de.id, oco.id)">
                                                                 </textarea>
+                                                                <div class="alert alert-warning small-vertical-spacing bold italic">
+                                                                    {{'chars_remaining' | translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
+                                                                </div>
                                                             </span>
                                                             <span ng-if="de.valueType === 'NUMBER'">
                                                                 <input type="number"   
@@ -145,14 +149,18 @@
                                                     <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
                                                         {{optionName}}
                                                     </td>
-                                                    <td>
-                                                        <span ng-if="de.valueType === 'TEXT' || de.valueType === 'LONG_TEXT'">
-                                                            <textarea rows="3"  
+                                                    <td>                                                        
+                                                        <span ng-if="de.valueType === 'LONG_TEXT'">
+                                                            <textarea rows="5"  
+                                                                   maxlength="{{MAXCHARSLEN}}"      
                                                                    ng-model="dataValues[de.id][oco.id].value"
                                                                    class="form-control" 
                                                                    ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
                                                                    d2-blur="saveDataValue(de.id, oco.id)">
                                                             </textarea>
+                                                            <div class="alert alert-warning small-vertical-spacing bold italic">
+                                                                {{'chars_remaining' | translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
+                                                            </div>
                                                         </span>
                                                         <span ng-if="de.valueType === 'NUMBER'">
                                                             <input type="number"   
@@ -251,7 +259,7 @@
                                         </div>
                                         
                                         <div ng-if="currentDataElementGroup && currentDataElementGroup.id && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
-                                             ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">                                            
+                                             ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">
                                             <table class="table table-bordered table-condensed">
                                                 <thead ng-if="!isHidden(de, currentDataElementGroup) && $index === 0" ng-repeat="de in model.selectedDataSet.dataElements | orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
                                                     <tr>
@@ -337,8 +345,9 @@
                                             {{de.displayName}}
                                         </td>
                                         <td class="col-sm-1">
-                                            <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">                                                        
-                                                {{dataValues[de.id][oco.id].value}}
+                                            <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">
+                                                <div ng-bind-html="getFormattedText(dataValues[de.id][oco.id].value)"></div>
+                                                <!--{{dataValues[de.id][oco.id].value}}-->
                                             </div>
                                             <div ng-if="de.dimensionAsOptionSet">
                                                 {{dataValues[de.id].displayName}}
