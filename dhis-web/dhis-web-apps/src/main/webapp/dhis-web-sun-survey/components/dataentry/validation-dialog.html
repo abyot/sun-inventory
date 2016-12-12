@@ -23,7 +23,17 @@
                     {{ col.val}}
                 </td>
             </tr>
-        </table>        
+        </table>
+        <table class="table table-bordered vertical-spacing" ng-if="annex.length > 0">
+            <tr ng-repeat="anx in annex">
+                <td>
+                    {{anx.dataElementGroup.name}}
+                </td>
+                <td>
+                    {{anx.displayName}}
+                </td>
+            </tr>
+        </table>
     </div>
 
 </div>

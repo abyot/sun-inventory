@@ -14,13 +14,21 @@ function ($scope,
         dataElementGroupSets) {
 
     $scope.dataElementGroupSets = dataElementGroupSets;
-
+    
+    $scope.annex = [];
     $scope.invalidFields = $filter('orderBy')(invalidFields, ['dataElementGroupSet.code', 'dataElementGroup.code', 'order']);
 
     $scope.invalidGroupSets = [];
     angular.forEach($scope.invalidFields, function (field) {
-        if ($scope.invalidGroupSets.indexOf(field.dataElementGroupSet.code) === -1) {
-            $scope.invalidGroupSets.push(field.dataElementGroupSet.code);
+        if( field.isAnnex ){
+            $scope.annex.push( field );
+        }
+        else{
+            if( field.dataElementGroupSet && field.dataElementGroupSet.code ){
+                if ($scope.invalidGroupSets.indexOf(field.dataElementGroupSet.code) === -1) {
+                    $scope.invalidGroupSets.push(field.dataElementGroupSet.code);
+                }
+            }
         }
     });
 
