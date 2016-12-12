@@ -423,6 +423,23 @@ div#orgUnitTree {
     border-radius: 3px;
 }
 
+.greenInfoArea {
+    border: 1px solid #a4d2a3;
+    background-color: #d0eBd0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+}
+
+.blueInfoArea {
+    border: 1px solid #729fcf;
+    background-color: #BBD1EE;
+    padding: 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+}
+
 .rolesArea {
     border: 1px solid #81CBE0;
     background-color: #A1D6E5;
@@ -730,12 +747,20 @@ div#orgUnitTree {
     padding-left: 60px;
 }
 
+.add-small-left-padding {
+    margin-left: 5px !important;
+}
+
 .add-default-padding {
     margin: 0 15px !important;
 }
 
 .add-default-right-padding {
     margin-right: 15px !important;
+}
+
+.add-default-left-padding {
+    margin-left: 15px !important;
 }
 
 .remove-default-padding {
@@ -816,8 +841,7 @@ div#orgUnitTree {
 #multiSelectSelected option{    
     padding: 5px;
     line-height: 1.428571429;
-    font-size: 14px;
-    line-height: 1.428571429;
+    font-size: 14px;    
     color: #555;
     vertical-align: middle;
     background-color: #fff;
@@ -945,4 +969,33 @@ table td.crossed::after {
 
 .ui-select-multiple .ui-select-match-item {
     white-space: normal;
+}
+
+.font-18 {    
+    font-size: 18px !important;
+}
+
+.font-16 {    
+    font-size: 16px !important;
+}
+
+.font-14 {    
+    font-size: 14px !important;
+}
+
+.font-12 {    
+    font-size: 12px !important;
+}
+
+ul.arrow {
+    list-style-type: none;
+}
+
+ul.arrow > li {
+    line-height: 1.428571429;
+    font-size: 14px;
+}
+
+ul.arrow > li:before {
+    content: "\2192 \0020";
 }
