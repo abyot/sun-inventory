@@ -899,6 +899,12 @@ sunSurvey.controller('dataEntryController',
     };
     
     $scope.getFormattedText = function( txt ){        
-        return txt ? txt.replace(/\r?\n/g,'<br />') : "";
+        if( txt ){            
+            if( dhis2.validation.isNumber( txt ) ){
+                txt = txt.toString();
+            }
+            return txt.replace(/\r?\n/g,'<br />');
+        }
+        return txt;
     };
 });
