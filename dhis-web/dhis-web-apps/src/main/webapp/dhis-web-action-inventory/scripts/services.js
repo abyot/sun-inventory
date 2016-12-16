@@ -756,25 +756,132 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     };
 })
 
-.service('ReportService', function($q, $sce, $filter, orderByFilter, DataValueService, ActionMappingUtils){
+.service('ReportService', function($q, $sce, DataValueService){
+    
+    var getSummaryReport = function( rawData, reportData, mappedOptionCombosById ){
+        var mappedValues = {};
+        angular.forEach(rawData.dataValues, function(dv){
+            var aoco = mappedOptionCombosById[dv.attributeOptionCombo];
+            if( dv.value === "1" && reportData.agency && reportData.agency.displayName && aoco && aoco.displayName ){
+                aoco = aoco.displayName.split(", ");
+                if( aoco.indexOf( reportData.agency.displayName ) !== -1 && aoco.length === 2 ){                                
+                    if( !mappedValues[dv.dataElement] ){
+                        mappedValues[dv.dataElement] = {};
+                    }
+
+                    if( !mappedValues[dv.dataElement][aoco[1]] ){
+                        mappedValues[dv.dataElement][aoco[1]] = {};
+                    }
+
+                    var coco = mappedOptionCombosById[dv.categoryOptionCombo];                                
+                    if ( coco && coco.categoryOptionGroup && coco.categoryOptionGroup.id ){                                    
+                        if( coco.categoryOptionGroup.actionConducted ){
+                            if( !reportData.comments[dv.dataElement] ){
+                                reportData.comments[dv.dataElement] = {};
+                                reportData.comments[dv.dataElement][aoco[1]] = {};
+                            }
+                            else{
+                                if( !reportData.comments[dv.dataElement][aoco[1]] ){
+                                    reportData.comments[dv.dataElement][aoco[1]] = {};
+                                }
+                            }                                        
+                            reportData.comments[dv.dataElement][aoco[1]].comment = dv.comment ? $sce.trustAsHtml(dv.comment.replace(/\r?\n/g,'<br />')) : "";
+                        }
+                        else{
+                            if( coco.categoryOptionGroup.dimensionEntryMode ){
+                                if( coco.categoryOptionGroup.dimensionEntryMode === 'SINGLE'){
+                                    mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = coco.displayName;
+                                }
+                                else{
+                                    if( !mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] ){
+                                        mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = [];
+                                    }                                        
+                                    mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id].push( coco.displayName );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        reportData.mappedValues = mappedValues;
+        return reportData;
+    };
+    
+    var getCnaReport = function( rawData, reportData, mappedOptionCombosById ){
+        angular.forEach(rawData.dataValues, function(dv){
+            var aoco = mappedOptionCombosById[dv.attributeOptionCombo];
+            if( dv.value === "1" && aoco && aoco.displayName ){
+                aoco = aoco.displayName.split(", ");
+                if( aoco.length === 2 ){
+                    var coco = mappedOptionCombosById[dv.categoryOptionCombo];                                
+                    if ( coco && coco.categoryOptionGroup && coco.categoryOptionGroup.id ){                                    
+                        if( coco.categoryOptionGroup.actionConducted ){
+                            /*if( !reportData.comments[dv.dataElement] ){
+                                reportData.comments[dv.dataElement] = {};
+                                reportData.comments[dv.dataElement][aoco[0]] = {};
+                                reportData.comments[dv.dataElement][aoco[0]][aoco[1]] = {};
+                            }
+                            else{
+                                if( !reportData.comments[dv.dataElement][aoco[0]] ){
+                                    reportData.comments[dv.dataElement][aoco[0]] = {};
+                                    reportData.comments[dv.dataElement][aoco[0]][aoco[1]] = {};
+                                }
+                                else{
+                                   if( !reportData.comments[dv.dataElement][aoco[0]][aoco[1]] ){                                                    
+                                        reportData.comments[dv.dataElement][aoco[0]][aoco[1]] = {};
+                                    } 
+                                }
+                            }                                        
+                            reportData.comments[dv.dataElement][aoco[0]][aoco[1]].comment = dv.comment ? $sce.trustAsHtml(dv.comment.replace(/\r?\n/g,'<br />')) : "";*/
+                        }
+                        else{
+                            if( coco.categoryOptionGroup.dimensionEntryMode ){
+                                if( coco.categoryOptionGroup.dimensionEntryMode === 'SINGLE'){
+                                    reportData.allValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id] = coco.displayName;
+                                }
+                                else{
+                                    if( !reportData.allValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id] ){
+                                        reportData.allValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id] = [];
+                                    }                                        
+                                    reportData.allValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id].push( coco.displayName );
+                                }
+                            }
+                        }                                    
+                    }
+                }
+            }
+        });
+        return reportData;
+    };
     return {        
-        getReportData: function(reportParams, reportData){            
+        getReportData: function(reportParams, reportData, mappedOptionCombosById){            
             var def = $q.defer();            
-            var mappedValues = {};
-            reportData.comments = {};
-            
+            reportData.comments = {};            
             DataValueService.getDataValueSet( reportParams.url ).then(function( response ){
-                if( response && response.dataValues ){
-                    angular.forEach(response.dataValues, function(dv){
+                if( response && response.dataValues && reportData.reportType ){                    
+                    if( reportData.reportType.id === 'SUMMARY' ){
+                        reportData = getSummaryReport( response, reportData, mappedOptionCombosById );
+                    }
+                    else if( reportData.reportType.id === 'CNA' || reportData.reportType.id === 'ALIGNED_INVESTMENT' ){
+                        reportData = getCnaReport( response, reportData, mappedOptionCombosById );
+                    }                    
+                    /*angular.forEach(response.dataValues, function(dv){
                         var aoco = reportData.mappedOptionCombosById[dv.attributeOptionCombo];
                         if( dv.value === "1" && reportData.agency && reportData.agency.displayName && aoco && aoco.displayName ){
                             aoco = aoco.displayName.split(", ");
                             if( aoco.indexOf( reportData.agency.displayName ) !== -1 && aoco.length === 2 ){                                
                                 if( !mappedValues[dv.dataElement] ){
                                     mappedValues[dv.dataElement] = {};
-                                }                                
-                                if( !mappedValues[dv.dataElement][aoco[1]] ){
-                                    mappedValues[dv.dataElement][aoco[1]] = {};
+                                }
+                                
+                                if( !mappedValues[dv.dataElement][aoco[0]] ){
+                                    mappedValues[dv.dataElement][aoco[0]] = {};
+                                }
+                                
+                                if( !mappedValues[dv.dataElement][aoco[0]][aoco[1]] ){
+                                    mappedValues[dv.dataElement][aoco[0]][aoco[1]] = {};
                                 }
                                 
                                 var coco = reportData.mappedOptionCombosById[dv.categoryOptionCombo];                                
@@ -782,33 +889,40 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                                     if( coco.categoryOptionGroup.actionConducted ){
                                         if( !reportData.comments[dv.dataElement] ){
                                             reportData.comments[dv.dataElement] = {};
-                                            reportData.comments[dv.dataElement][aoco[1]] = {};
+                                            reportData.comments[dv.dataElement][aoco[0]] = {};
+                                            reportData.comments[dv.dataElement][aoco[0]][aoco[1]] = {};
                                         }
                                         else{
-                                            if( !reportData.comments[dv.dataElement][aoco[1]] ){
-                                                reportData.comments[dv.dataElement][aoco[1]] = {};
+                                            if( !reportData.comments[dv.dataElement][aoco[0]] ){
+                                                reportData.comments[dv.dataElement][aoco[0]] = {};
+                                                reportData.comments[dv.dataElement][aoco[0]][aoco[1]] = {};
+                                            }
+                                            else{
+                                               if( !reportData.comments[dv.dataElement][aoco[0]][aoco[1]] ){                                                    
+                                                    reportData.comments[dv.dataElement][aoco[0]][aoco[1]] = {};
+                                                } 
                                             }
                                         }                                        
-                                        reportData.comments[dv.dataElement][aoco[1]].comment = dv.comment ? $sce.trustAsHtml(dv.comment.replace(/\r?\n/g,'<br />')) : "";
+                                        reportData.comments[dv.dataElement][aoco[0]][aoco[1]].comment = dv.comment ? $sce.trustAsHtml(dv.comment.replace(/\r?\n/g,'<br />')) : "";
                                     }
                                     else{
                                         if( coco.categoryOptionGroup.dimensionEntryMode ){
                                             if( coco.categoryOptionGroup.dimensionEntryMode === 'SINGLE'){
-                                                mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = coco.displayName;
+                                                mappedValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id] = coco.displayName;
                                             }
                                             else{
-                                                if( !mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] ){
-                                                    mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id] = [];
+                                                if( !mappedValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id] ){
+                                                    mappedValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id] = [];
                                                 }                                        
-                                                mappedValues[dv.dataElement][aoco[1]][coco.categoryOptionGroup.id].push( coco.displayName );
+                                                mappedValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id].push( coco.displayName );
                                             }
                                         }
                                     }                                    
                                 }
                             }
                         }
-                    });                    
-                    reportData.mappedValues = mappedValues;
+                    });
+                    reportData.mappedValues = mappedValues;*/
                     reportData.noDataExists = false;
                 }
                 else{                    

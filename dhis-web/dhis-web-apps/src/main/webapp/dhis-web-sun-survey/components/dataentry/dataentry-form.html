@@ -25,7 +25,7 @@
                                     <span class="important-label">{{'important'| translate}}! </span>
                                     {{'show_definition_info'| translate}}
                                 </div>
-                                <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">                                            
+                                <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">                                    
                                     <table class="table table-bordered table-condensed" 
                                            ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">                                                
                                         <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
@@ -122,7 +122,7 @@
                                             <td colspan="2">
                                                 <div class="alert alert-success">
                                                     <a href="{{de.url}}" target="_blank">
-                                                        {{de.url}}
+                                                        {{'url_desc' | translate}}
                                                     </a>
                                                 </div>
                                             </td>
@@ -194,7 +194,7 @@
                                             <td colspan="4">
                                                 <div class="alert alert-success">
                                                     <a href="{{de.url}}" target="_blank">
-                                                        {{de.url}}
+                                                        {{'url_desc' | translate}}
                                                     </a>
                                                 </div>
                                             </td>
@@ -235,7 +235,7 @@
                                             <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
                                                 <div class="alert alert-success">
                                                     <a href="{{de.url}}" target="_blank">
-                                                        {{de.url}}
+                                                        {{'url_desc' | translate}}
                                                     </a>
                                                 </div>
                                             </td>

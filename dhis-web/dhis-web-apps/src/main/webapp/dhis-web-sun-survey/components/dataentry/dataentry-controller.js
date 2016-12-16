@@ -774,10 +774,13 @@ sunSurvey.controller('dataEntryController',
     
     $scope.saveCompletness = function(){
         
-        //check for form validity
+        var tabularElements = $filter('filter')($scope.model.selectedDataSet.dataElements, {displayMode: 'TABULAR'});
+        
+        //check for form validity        
         var invalidFields = [];
         angular.forEach($scope.model.selectedDataSet.dataElements, function(dataElement){            
-            if( dataElement.dataElementGroup && 
+            if( dataElement.displayMode !== 'TABULAR' &&
+                    dataElement.dataElementGroup && 
                     $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] &&
                     !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
                 if( !$scope.dataValues[dataElement.id] || $scope.dataValues[dataElement.id] === ''){

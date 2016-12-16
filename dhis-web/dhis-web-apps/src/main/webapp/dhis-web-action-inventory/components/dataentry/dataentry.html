@@ -28,12 +28,12 @@
                         <div class="col-sm-12">
                             <!-- selection begins-->
                             <div class="selectionGroup vertical-spacing">
-                                <div class="col-sm-6 greenInfoArea">
+                                <div class="col-sm-8 greenInfoArea">
 
                                     <div class="row small-vertical-spacing">
                                         <div class="col-sm-4">
                                             <i class="fa fa-question-circle custom-icon-size reset-color" tooltip="{{'CAN_review_info'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
-                                            {{'category'| translate}}                        
+                                            {{'section'| translate}}                        
                                         </div>
                                         <div class="col-sm-8">
                                             <ui-select ng-model="model.selectedDataElementGroupSet" 
@@ -121,7 +121,7 @@
                                     </div>
 
                                 </div>
-                                <div class="col-sm-6 blueInfoArea add-small-left-padding">
+                                <div class="col-sm-4 blueInfoArea add-small-left-padding">
                                     <div class="row">
                                         <div class="col-sm-4">                            
                                             {{'country'| translate}}
@@ -207,13 +207,15 @@
                     
                     <div class="row" ng-if="model.selectedDataSet">
                         <div class="col-sm-12" style="margin-top: -5px;">
-                            <div class="yellowInfoArea">
-                                <p class="bold font-16">{{model.selectedDataSet.dataElements[0].displayName}}</p>
-                                <ul class="list-group" ng-if="model.selectedDataSet.code && model.mappedOptionSets[model.selectedDataSet.code]">
-                                    <li class="list-group-item" ng-repeat="option in model.mappedOptionSets[model.selectedDataSet.code].options | orderBy: 'displayName' ">
-                                        {{option.displayName}}
-                                    </li>            
-                                </ul>
+                            <div class="greenInfoArea">
+                                <p class="bold add-default-padding">{{getSubActionName(model.selectedDataSet.dataElements[0].displayName)}}</p>
+                                <table class="table table-condensed" style="margin-bottom: -10px">
+                                    <tr ng-repeat="option in model.mappedOptionSets[model.selectedDataSet.code].options | orderBy: 'displayName' ">
+                                        <td>
+                                            <div class="add-default-padding">{{option.displayName}}</div>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -247,22 +249,6 @@
                         <!-- selection begins-->                        
                         <div class="col-sm-6 blueInfoArea add-default-padding">
                             <div class="row">
-                                <div class="col-sm-4">                            
-                                    {{'report_types'| translate}}
-                                </div>
-                                <div class="col-sm-8">
-                                    <ui-select ng-model="model.selectedReport"                                        
-                                               theme="select2"
-                                               style="width:100%;">
-                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes && model.reportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
-                                        <ui-select-choices  repeat="rt in model.reportTypes | filter: $select.search | limitTo:maxOptionSize">
-                                            <span ng-bind-html="rt.name | highlight: $select.search"></span>
-                                        </ui-select-choices>
-                                    </ui-select>
-                                </div>
-                            </div>
-
-                            <div class="row small-vertical-spacing">
                                 <div class="col-sm-4">                            
                                     {{'country'| translate}}
                                 </div>
@@ -320,8 +306,24 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
+                            
+                            <div class="row small-vertical-spacing">
+                                <div class="col-sm-4">                            
+                                    {{'report_types'| translate}}
+                                </div>
+                                <div class="col-sm-8">
+                                    <ui-select ng-model="model.selectedReport"                                        
+                                               theme="select2"
+                                               style="width:100%;">
+                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes && model.reportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                        <ui-select-choices  repeat="rt in model.reportTypes | filter: $select.search | limitTo:maxOptionSize">
+                                            <span ng-bind-html="rt.name | highlight: $select.search"></span>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                            </div>
+                            
+                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && model.selectedReport.id === 'SUMMARY' && category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
                                 <div class="row small-vertical-spacing">
                                     <div class="col-sm-4">                            
                                         {{category.displayName}}
@@ -351,17 +353,16 @@
                                         ng-click="showReport()">                                         
                                     {{'view_data_as_table'| translate}}
                                 </button>
-                                <label class="horizontal-spacing">
+                                <label class="horizontal-spacing" ng-if="model.selectedReport.id === 'SUMMARY'">
                                     <input type="checkbox" ng-disabled="!reportData.reportReady" ng-model="model.filterEmptyRows"/>  {{'filter_empty_rows'| translate}}
                                 </label>
                             </div>
                         </div>
 
-
                     </div>
 
                     <!-- report begins -->                    
-                    <div ng-if="model.selectedReport.id === 'SUMMARY_REPORT'" ng-include="'components/dataentry/reports/summary.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'SUMMARY'" ng-include="'components/dataentry/reports/summary.html'"></div>
                     <div ng-if="model.selectedReport.id === 'CNA'" ng-include="'components/dataentry/reports/cna.html'"></div>
                     <div ng-if="model.selectedReport.id === 'ALIGNED_INVESTMENT'" ng-include="'components/dataentry/reports/align-invest.html'"></div>
                     <!-- report ends -->
