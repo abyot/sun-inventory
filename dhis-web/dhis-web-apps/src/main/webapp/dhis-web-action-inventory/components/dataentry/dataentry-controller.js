@@ -295,6 +295,7 @@ sunInventory.controller('dataEntryController',
                                 }
 
                                 $scope.model.reportPeriods = $scope.model.periods = PeriodService.getPeriods($scope.model.reportDataSet.periodType, $scope.periodOffset, $scope.model.reportDataSet.openFuturePeriods);
+                                $scope.model.selectedPeriod = $scope.model.periods[0];
 
                                 $scope.model.staticHeaders = [];
                                 $scope.model.staticHeaders.push($translate.instant('section'));
@@ -438,6 +439,7 @@ sunInventory.controller('dataEntryController',
         if( $scope.model.selectedDataSet && $scope.model.selectedDataSet.id && $scope.model.selectedDataSet.periodType ){            
             
             $scope.model.periods = PeriodService.getPeriods($scope.model.selectedDataSet.periodType, $scope.periodOffset, $scope.model.selectedDataSet.openFuturePeriods);
+            $scope.model.selectedPeriod = $scope.model.periods[0];
         
             if(!$scope.model.selectedDataSet.dataElements || $scope.model.selectedDataSet.dataElements.length !== 1){
                 ActionMappingUtils.notificationDialog('error', 'missing_data_elements');
@@ -991,7 +993,7 @@ sunInventory.controller('dataEntryController',
                                     }
                                 });
                             }
-                        }                        
+                        }
                         else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'CNA' ){
                             $scope.model.cnaCols = [];
                             angular.forEach($scope.cnaHeader.categoryOptions, function(h){
@@ -1013,7 +1015,7 @@ sunInventory.controller('dataEntryController',
                                     var obj = $scope.reportData.allValues[k];                                    
                                     angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
                                         angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
-                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
+                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {
                                                 if( $scope.cnaRow && $scope.cnaRow.categoryOptions && $scope.cnaRow.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.cnaHeader.id] && obj[ag.displayName][ins.displayName][$scope.cnaRow.id]){                                                    
                                                     angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(val){
                                                         $scope.cnaData[ag.displayName][val] = _.union($scope.cnaData[ag.displayName][val], obj[ag.displayName][ins.displayName][$scope.cnaHeader.id]);
@@ -1026,7 +1028,46 @@ sunInventory.controller('dataEntryController',
                             }
                         }
                         else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'ALIGNED_INVESTMENT' ){
-                                                       
+                            $scope.cnaInvestData = {};
+                            $scope.nnpInvestData = {};
+                            
+                            angular.forEach($scope.cnaRow.categoryOptions, function(op){                                
+                                $scope.cnaInvestData[op.name] = {};
+                                angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
+                                    $scope.cnaInvestData[op.name][h.name] = 0;
+                                });                                
+                            });
+                            
+                            angular.forEach($scope.nnpRow.categoryOptions, function(op){                                
+                                $scope.nnpInvestData[op.name] = {};
+                                angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
+                                    $scope.nnpInvestData[op.name][h.name] = 0;
+                                });                                
+                            });
+                            
+                            for( var k in $scope.reportData.allValues ){
+                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){
+                                    var obj = $scope.reportData.allValues[k];                                    
+                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) && obj[ag.displayName][ins.displayName][$scope.investmentHeader.id] ) {
+                                                var val = obj[ag.displayName][ins.displayName][$scope.investmentHeader.id];
+                                                if( obj[ag.displayName][ins.displayName][$scope.cnaRow.id] ){
+                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(v){
+                                                        $scope.cnaInvestData[v][val]++;
+                                                    });
+                                                }
+                                                
+                                                if( obj[ag.displayName][ins.displayName][$scope.nnpRow.id] ){
+                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.nnpRow.id], function(v){
+                                                        $scope.nnpInvestData[v][val]++;
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    });
+                                }
+                            }
                         }
                     });
                 }
