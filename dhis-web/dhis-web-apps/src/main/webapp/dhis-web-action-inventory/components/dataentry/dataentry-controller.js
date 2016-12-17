@@ -1124,4 +1124,14 @@ sunInventory.controller('dataEntryController',
         }        
         return $translate.instant('no');
     };
+    
+    $scope.getInvestTotal = function( obj ){
+        var total = 0;        
+        for( var k in obj ){
+            if( obj.hasOwnProperty( k ) ){
+                total += obj[k];
+            }
+        }        
+        return total;
+    };
 });

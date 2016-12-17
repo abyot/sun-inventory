@@ -18,6 +18,9 @@
                     <th class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
                         {{header.name}}
                     </th>
+                    <th class="pull-center">
+                        {{'total_aligned_any' | translate}}
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -25,8 +28,11 @@
                     <td>
                         {{row.name}}
                     </td>
-                    <td ng-repeat="header in investmentHeader.categoryOptions">
-                        
+                    <td class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
+                        {{nnpInvestData[row.name][header.name]}}
+                    </td>
+                    <td class="pull-center">
+                        {{getInvestTotal( nnpInvestData[row.name] )}}
                     </td>
                 </tr>
             </tbody>
@@ -47,6 +53,9 @@
                     <th class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
                         {{header.name}}
                     </th>
+                    <th class="pull-center">
+                        {{'total_aligned_any' | translate}}
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -54,8 +63,11 @@
                     <td>
                         {{row.name}}
                     </td>
-                    <td ng-repeat="header in investmentHeader.categoryOptions">
-                        
+                    <td class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
+                        {{cnaInvestData[row.name][header.name]}}
+                    </td>
+                    <td class="pull-center">
+                        {{getInvestTotal( cnaInvestData[row.name] )}}
                     </td>
                 </tr>
             </tbody>
