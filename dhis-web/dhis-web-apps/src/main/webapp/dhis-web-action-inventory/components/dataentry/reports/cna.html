@@ -29,8 +29,8 @@
                     <td>
                         {{row.name}}
                     </td>
-                    <td ng-repeat="col in model.cnaCols">
-                        <!--{{col.displayName}} - {{col.parent.name}}-->
+                    <td class="pull-center" ng-repeat="col in model.cnaCols">
+                        {{cnaDataExists(col.displayName, row.name, col.parent.name)}}
                     </td>
                 </tr>
             </tbody>

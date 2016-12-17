@@ -52,7 +52,6 @@ sunInventory.controller('dataEntryController',
                     actionConductedKey: null};
     
     //Get orgunits for the logged in user
-    //Get orgunits for the logged in user
     OrgUnitFactory.getCaptureTreeRoot().then(function(response) {
         $scope.orgUnits = response.organisationUnits;
         angular.forEach($scope.orgUnits, function(ou){
@@ -362,7 +361,7 @@ sunInventory.controller('dataEntryController',
         }
     });
     
-    //make sure CAN is classification is respected
+    //make sure CAN classification is respected
     $scope.$watchGroup(['model.selectedDataElementGroupSet', 'model.selectedThematicArea', 'model.selectedSupportType'], function(){
         
         if( $scope.model.selectedDataElementGroupSet && 
@@ -891,14 +890,6 @@ sunInventory.controller('dataEntryController',
         return false;
     };
     
-    $scope.exportData = function () {
-        var blob = new Blob([document.getElementById('exportTable').innerHTML], {
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8"
-        });
-        var reportName = $scope.selectedOrgUnit.n + '-' + $scope.model.selectedPeriod.name + '.xls';
-        saveAs(blob, reportName);
-    };
-    
     var checkForEmpty = function( obj ){
         if( !obj || angular.equals({}, obj) || angular.equals([], obj)){
             return true;
@@ -1008,8 +999,34 @@ sunInventory.controller('dataEntryController',
                                     $scope.model.cnaCols.push(angular.copy( angular.extend(o,{parent: h})));
                                 });
                             });
-                            console.log('reportData:  ', $scope.reportData);
-                            console.log('cols:  ', $scope.model.cnaCols);
+                            
+                            $scope.cnaData = {};
+                            angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                $scope.cnaData[ag.displayName] = {};
+                                angular.forEach($scope.cnaRow.categoryOptions, function(op){
+                                    $scope.cnaData[ag.displayName][op.name] = [];
+                                });
+                            });
+                            
+                            for( var k in $scope.reportData.allValues ){
+                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){
+                                    var obj = $scope.reportData.allValues[k];                                    
+                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
+                                                if( $scope.cnaRow && $scope.cnaRow.categoryOptions && $scope.cnaRow.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.cnaHeader.id] && obj[ag.displayName][ins.displayName][$scope.cnaRow.id]){                                                    
+                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(val){
+                                                        $scope.cnaData[ag.displayName][val] = _.union($scope.cnaData[ag.displayName][val], obj[ag.displayName][ins.displayName][$scope.cnaHeader.id]);
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    });
+                                }
+                            }
+                        }
+                        else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'ALIGNED_INVESTMENT' ){
+                                                       
                         }
                     });
                 }
@@ -1052,5 +1069,18 @@ sunInventory.controller('dataEntryController',
         }
         var _str = str.split(' - ')[0];        
         return _str + ' - ' + $translate.instant('sub_actions');        
+    };
+    
+    $scope.cnaDataExists = function(agency, cna, region){
+        if( $scope.cnaData && 
+                agency && 
+                cna && 
+                region && 
+                $scope.cnaData[agency] && 
+                $scope.cnaData[agency][cna] && 
+                $scope.cnaData[agency][cna].length ){            
+            return $scope.cnaData[agency][cna].indexOf( region ) !== -1 ? $translate.instant('yes') : $translate.instant('no');
+        }        
+        return $translate.instant('no');
     };
 });
