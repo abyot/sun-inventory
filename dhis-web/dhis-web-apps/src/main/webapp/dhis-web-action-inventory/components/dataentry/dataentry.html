@@ -346,17 +346,33 @@
                         <!-- selection ends -->
 
                         <div class="col-sm-6 div-bottom-container">
-                            <div class="div-bottom">
+                            <div class="div-bottom">                                
                                 <button class="btn btn-success"
                                         type="button"   
                                         ng-disabled="!reportParamsReady()"
                                         ng-click="showReport()">                                         
                                     {{'view_data_as_table'| translate}}
                                 </button>
-                                <label class="horizontal-spacing" ng-if="model.selectedReport.id === 'SUMMARY'">
-                                    <input type="checkbox" ng-disabled="!reportData.reportReady" ng-model="model.filterEmptyRows"/>  {{'filter_empty_rows'| translate}}
-                                </label>
+                                <button class="btn btn-danger small-horizontal-spacing"
+                                        type="button" 
+                                        ng-if="model.selectedReport.id === 'SUMMARY'"
+                                        ng-disabled="!reportData.reportReady"
+                                        ng-click="model.filterEmptyRows = !model.filterEmptyRows">                                         
+                                    {{model.filterEmptyRows ? 'show_empty_rows' : 'hide_empty_rows' | translate}}
+                                </button>                                
                             </div>
+                            <!--<div class="div-bottom">                             
+                                <button class="btn btn-success"
+                                        type="button"   
+                                        ng-disabled="!reportParamsReady()"
+                                        ng-click="showReport()">                                         
+                                    {{'view_data_as_table'| translate}}
+                                </button>                                
+                                <label class="horizontal-spacing" ng-if="model.selectedReport.id === 'SUMMARY'">
+                                    <input class="big-checkbox" type="checkbox" ng-disabled="!reportData.reportReady" ng-model="model.filterEmptyRows"/>  
+                                    <span class="big-checkbox-label">{{'filter_empty_rows'| translate}}</span>
+                                </label>
+                            </div>-->
                         </div>
 
                     </div>
