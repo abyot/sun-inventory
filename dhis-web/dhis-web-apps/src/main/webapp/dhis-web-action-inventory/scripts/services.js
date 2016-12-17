@@ -864,7 +864,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                     if( reportData.reportType.id === 'SUMMARY' ){
                         reportData = getSummaryReport( response, reportData, mappedOptionCombosById );
                     }
-                    else if( reportData.reportType.id === 'CNA' || reportData.reportType.id === 'ALIGNED_INVESTMENT' ){
+                    else /*if( reportData.reportType.id === 'CNA' || reportData.reportType.id === 'ALIGNED_INVESTMENT' )*/{
                         reportData = getCnaReport( response, reportData, mappedOptionCombosById );
                     }
                     reportData.noDataExists = false;

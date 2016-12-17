@@ -309,6 +309,8 @@ sunInventory.controller('dataEntryController',
                             $scope.model.reportTypes.push({id: 'SUMMARY', name: $translate.instant('summary_report')});
                             $scope.model.reportTypes.push({id: 'CNA', name: $translate.instant('cnas')});
                             $scope.model.reportTypes.push({id: 'ALIGNED_INVESTMENT', name: $translate.instant('align_invest')});
+                            $scope.model.reportTypes.push({id: 'LOGO_MAP', name: $translate.instant('logo_map_agencies')});
+                            $scope.model.reportTypes.push({id: 'NUM_AGENCIES', name: $translate.instant('number_of_agencies')});
                             
                             $scope.model.selectedReport = $scope.model.reportTypes[0];
                             
@@ -882,7 +884,10 @@ sunInventory.controller('dataEntryController',
                 return true;
             }
         }
-        else if( $scope.model.selectedReport && ($scope.model.selectedReport.id === 'CNA' || $scope.model.selectedReport.id === 'ALIGNED_INVESTMENT') ){
+        else if( $scope.model.selectedReport && ($scope.model.selectedReport.id === 'CNA' || 
+                $scope.model.selectedReport.id === 'ALIGNED_INVESTMENT' || 
+                $scope.model.selectedReport.id === 'LOGO_MAP' ||
+                $scope.model.selectedReport.id === 'NUM_AGENCIES') ){
             if( $scope.selectedOrgUnit && $scope.selectedOrgUnit.id &&
                     $scope.model.selectedPeriod && $scope.model.selectedPeriod.id ){
                 return true;
@@ -928,9 +933,9 @@ sunInventory.controller('dataEntryController',
     $scope.showReport = function(){
         $scope.showReportDiv = true;
         
-        $scope.cnaHeader = $filter('filter')($scope.model.categoryOptionGroups, {actionInventoryDimensionType: 'geographicFocus'})[0];        
-        if( $scope.cnaHeader && $scope.cnaHeader.categoryOptions && $scope.cnaHeader.categoryOptions.length ){
-            $scope.cnaHeader.categoryOptions = orderByFilter($scope.cnaHeader.categoryOptions, '-order').reverse();
+        $scope.locationHeader = $filter('filter')($scope.model.categoryOptionGroups, {actionInventoryDimensionType: 'geographicFocus'})[0];
+        if( $scope.locationHeader && $scope.locationHeader.categoryOptions && $scope.locationHeader.categoryOptions.length ){
+            $scope.locationHeader.categoryOptions = orderByFilter($scope.locationHeader.categoryOptions, '-order').reverse();
         }
         
         $scope.investmentHeader = $filter('filter')($scope.model.categoryOptionGroups, {actionInventoryDimensionType: 'investmentSize'})[0];
@@ -946,7 +951,7 @@ sunInventory.controller('dataEntryController',
         $scope.nnpRow = $filter('filter')($scope.model.categoryOptionGroups, {actionInventoryDimensionType: 'nnp'})[0];
         if( $scope.nnpRow && $scope.nnpRow.categoryOptions && $scope.nnpRow.categoryOptions.length ){
             $scope.nnpRow.categoryOptions = orderByFilter($scope.nnpRow.categoryOptions, '-order').reverse();
-        }        
+        } 
         
         DataSetFactory.getDataSetsByProperty( 'dataSetDomain', 'REPORT' ).then(function(dataSets){
             if( dataSets && dataSets[0] && dataSets[0].dataSetDomain === 'REPORT' ){
@@ -996,7 +1001,7 @@ sunInventory.controller('dataEntryController',
                         }
                         else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'CNA' ){
                             $scope.model.cnaCols = [];
-                            angular.forEach($scope.cnaHeader.categoryOptions, function(h){
+                            angular.forEach($scope.locationHeader.categoryOptions, function(h){
                                 angular.forEach($scope.model.agencyCategory.categoryOptions, function(o){                                    
                                     $scope.model.cnaCols.push(angular.copy( angular.extend(o,{parent: h})));
                                 });
@@ -1016,9 +1021,9 @@ sunInventory.controller('dataEntryController',
                                     angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
                                         angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
                                             if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {
-                                                if( $scope.cnaRow && $scope.cnaRow.categoryOptions && $scope.cnaRow.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.cnaHeader.id] && obj[ag.displayName][ins.displayName][$scope.cnaRow.id]){                                                    
+                                                if( $scope.cnaRow && $scope.cnaRow.categoryOptions && $scope.cnaRow.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] && obj[ag.displayName][ins.displayName][$scope.cnaRow.id]){                                                    
                                                     angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(val){
-                                                        $scope.cnaData[ag.displayName][val] = _.union($scope.cnaData[ag.displayName][val], obj[ag.displayName][ins.displayName][$scope.cnaHeader.id]);
+                                                        $scope.cnaData[ag.displayName][val] = _.union($scope.cnaData[ag.displayName][val], obj[ag.displayName][ins.displayName][$scope.locationHeader.id]);
                                                     });
                                                 }
                                             }
@@ -1061,6 +1066,50 @@ sunInventory.controller('dataEntryController',
                                                 if( obj[ag.displayName][ins.displayName][$scope.nnpRow.id] ){
                                                     angular.forEach(obj[ag.displayName][ins.displayName][$scope.nnpRow.id], function(v){
                                                         $scope.nnpInvestData[v][val]++;
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    });
+                                }
+                            }
+                        }
+                        else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'LOGO_MAP' ){                            
+                            $scope.agencyData = {};
+                            angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                $scope.agencyData[ag.displayName] = [];
+                            });
+                            
+                            for( var k in $scope.reportData.allValues ){
+                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){                                    
+                                    var obj = $scope.reportData.allValues[k];                                    
+                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){                                        
+                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
+                                                if( $scope.locationHeader && $scope.locationHeader.id && $scope.locationHeader.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] ){
+                                                    $scope.agencyData[ag.displayName] = _.union($scope.agencyData[ag.displayName], obj[ag.displayName][ins.displayName][$scope.locationHeader.id]);
+                                                }
+                                            }
+                                        });
+                                    });
+                                }
+                            }
+                        }
+                        else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'NUM_AGENCIES' ){                            
+                            $scope.regionData = {};
+                            angular.forEach($scope.locationHeader.categoryOptions, function(l){
+                                $scope.regionData[l.name] = [];
+                            });
+                            
+                            for( var k in $scope.reportData.allValues ){
+                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){                                    
+                                    var obj = $scope.reportData.allValues[k];                                    
+                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){                                        
+                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
+                                                if( $scope.locationHeader && $scope.locationHeader.id && $scope.locationHeader.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] ){                                                    
+                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.locationHeader.id], function(r){                                                        
+                                                        $scope.regionData[r] = _.union($scope.regionData[r], [ag.displayName]);
                                                     });
                                                 }
                                             }
@@ -1121,6 +1170,17 @@ sunInventory.controller('dataEntryController',
                 $scope.cnaData[agency][cna] && 
                 $scope.cnaData[agency][cna].length ){            
             return $scope.cnaData[agency][cna].indexOf( region ) !== -1 ? $translate.instant('yes') : $translate.instant('no');
+        }        
+        return $translate.instant('no');
+    };
+    
+    $scope.agencyDataExists = function(agency, region){
+        if( $scope.agencyData && 
+                agency && 
+                region && 
+                $scope.agencyData[agency] &&  
+                $scope.agencyData[agency].length ){            
+            return $scope.agencyData[agency].indexOf( region ) !== -1 ? $translate.instant('yes') : $translate.instant('no');
         }        
         return $translate.instant('no');
     };

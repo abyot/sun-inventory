@@ -361,18 +361,6 @@
                                     {{model.filterEmptyRows ? 'show_empty_rows' : 'hide_empty_rows' | translate}}
                                 </button>                                
                             </div>
-                            <!--<div class="div-bottom">                             
-                                <button class="btn btn-success"
-                                        type="button"   
-                                        ng-disabled="!reportParamsReady()"
-                                        ng-click="showReport()">                                         
-                                    {{'view_data_as_table'| translate}}
-                                </button>                                
-                                <label class="horizontal-spacing" ng-if="model.selectedReport.id === 'SUMMARY'">
-                                    <input class="big-checkbox" type="checkbox" ng-disabled="!reportData.reportReady" ng-model="model.filterEmptyRows"/>  
-                                    <span class="big-checkbox-label">{{'filter_empty_rows'| translate}}</span>
-                                </label>
-                            </div>-->
                         </div>
 
                     </div>
@@ -381,6 +369,8 @@
                     <div ng-if="model.selectedReport.id === 'SUMMARY'" ng-include="'components/dataentry/reports/summary.html'"></div>
                     <div ng-if="model.selectedReport.id === 'CNA'" ng-include="'components/dataentry/reports/cna.html'"></div>
                     <div ng-if="model.selectedReport.id === 'ALIGNED_INVESTMENT'" ng-include="'components/dataentry/reports/align-invest.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'LOGO_MAP'" ng-include="'components/dataentry/reports/logo-map.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'NUM_AGENCIES'" ng-include="'components/dataentry/reports/region-agency.html'"></div>
                     <!-- report ends -->
 
                 </tab>

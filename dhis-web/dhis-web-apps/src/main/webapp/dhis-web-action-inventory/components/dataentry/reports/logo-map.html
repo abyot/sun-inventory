@@ -11,26 +11,20 @@
         <table class="dhis2-table">
             <thead>
                 <tr>
-                    <th rowspan="2" class="pull-center">
-                        {{'cna_report_header'| translate}}
+                    <th>                        
                     </th>
-                    <th class="pull-center" colspan="{{model.agencyCategory.categoryOptions.length}}" ng-repeat="header in locationHeader.categoryOptions">
+                    <th class="pull-center" ng-repeat="header in model.agencyCategory.categoryOptions">
                         {{header.name}}
-                    </th>
-                </tr>
-                <tr>                
-                    <th class="pull-center" ng-repeat="col in model.cnaCols">
-                        {{col.displayName}}
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="row in cnaRow.categoryOptions">
+                <tr ng-repeat="row in locationHeader.categoryOptions">
                     <td>
                         {{row.name}}
                     </td>
-                    <td class="pull-center" ng-repeat="col in model.cnaCols">
-                        {{cnaDataExists(col.displayName, row.name, col.parent.name)}}
+                    <td class="pull-center" ng-repeat="header in model.agencyCategory.categoryOptions">
+                        {{agencyDataExists(header.name, row.name)}}
                     </td>
                 </tr>
             </tbody>
