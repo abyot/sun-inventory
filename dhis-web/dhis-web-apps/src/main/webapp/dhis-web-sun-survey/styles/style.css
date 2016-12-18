@@ -743,6 +743,11 @@ div#orgUnitTree {
     padding-left: 40px;
 }
 
+.trimmed-alert {
+    padding: 5px !important;
+    margin-bottom: 0 !important;
+}
+
 .subprogram-output-indicator-row {
     padding-left: 60px;
 }
@@ -761,6 +766,10 @@ div#orgUnitTree {
 
 .add-default-left-padding {
     margin-left: 15px !important;
+}
+
+.add-default-vertical-padding {
+    padding-bottom: 15px !important;
 }
 
 .remove-default-padding {

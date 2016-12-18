@@ -715,50 +715,7 @@ sunSurvey.controller('dataEntryController',
         }        
         return "sub-question";
     };
-    
-    $scope.getAuditInfo = function(de, oco){        
-        var modalInstance = $modal.open({
-            templateUrl: 'components/dataentry/history.html',
-            controller: 'DataEntryHistoryController',
-            windowClass: 'modal-window-history',
-            resolve: {
-                period: function(){
-                    return $scope.model.selectedPeriod;
-                },
-                dataElement: function(){
-                    return de;
-                },
-                value: function(){
-                    return $scope.dataValues[de.id] && $scope.dataValues[de.id][oco.id] && $scope.dataValues[de.id][oco.id].value ? $scope.dataValues[de.id][oco.id].value : '';
-                },
-                comment: function(){
-                    return $scope.dataValues[de.id] && $scope.dataValues[de.id][oco.id] && $scope.dataValues[de.id][oco.id].comment ? $scope.dataValues[de.id][oco.id].comment : '';
-                },
-                program: function () {
-                    return $scope.model.selectedProgram;
-                },
-                orgUnitId: function(){
-                    return  $scope.selectedOrgUnit.id;
-                },
-                attributeCategoryCombo: function(){
-                    return $scope.model.selectedAttributeCategoryCombo;
-                },
-                attributeCategoryOptions: function(){
-                    return ActionMappingUtils.getOptionIds($scope.model.selectedOptions);
-                },
-                attributeOptionCombo: function(){
-                    return $scope.model.selectedAttributeOptionCombo;
-                },
-                optionCombo: function(){
-                    return oco;
-                }
-            }
-        });
-
-        modalInstance.result.then(function () {
-        });
-    };
-    
+        
     $scope.displayReport = function(){
         console.log('need to display country report');
     };
@@ -789,6 +746,23 @@ sunSurvey.controller('dataEntryController',
             }
         });
         
+        var tableIsEmpty = true;
+        for(var i=0; i<tabularElements.length; i++){
+            var dataElement = tabularElements[i];
+            if( dataElement.dataElementGroup && 
+                    $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] &&
+                    !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
+                if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id] !== ''){
+                    tableIsEmpty = false;
+                    break;
+                }
+            }
+        }
+        
+        if( tableIsEmpty ){
+            tabularElements = orderByFilter(tabularElements, '-order').reverse();
+            invalidFields.push( $scope.desById[tabularElements[0].id] );
+        }
         if( invalidFields.length > 0 ){
             
             var modalInstance = $modal.open({

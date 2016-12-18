@@ -41,16 +41,10 @@
                                                 ng-click="de.showDescription = !de.showDescription">
                                                 {{de.displayName}}
                                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                                <div ng-if="de.questionWarning" class="alert alert-warning">
-                                                    {{de.questionWarning}}
-                                                </div>
                                             </td>
                                             <td ng-class="getMainQuestionTableStyle(de)"
                                                 ng-if="!de.description">
                                                 {{de.displayName}}
-                                                <div ng-if="de.questionWarning" class="alert alert-warning">
-                                                    {{de.questionWarning}}
-                                                </div>
                                             </td>
                                             <td>
                                                 <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">                                                        
@@ -71,7 +65,7 @@
                                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                       
                                                                   d2-blur="saveDataValue(de.id, oco.id)">
                                                         </textarea>
-                                                        <div class="alert alert-warning small-vertical-spacing bold italic">
+                                                        <div class="alert alert-warning trimmed-alert small-vertical-spacing bold italic">
                                                             {{'chars_remaining'| translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
                                                         </div>
                                                     </span>
@@ -112,18 +106,16 @@
                                                 </div>                                                    
                                             </td>                                                
                                         </tr>
+                                        <tr ng-if="de.questionWarning">
+                                            <td colspan="2">
+                                                <div class="alert alert-warning trimmed-alert">
+                                                    {{de.questionWarning}}
+                                                </div>
+                                            </td>                                            
+                                        </tr>
                                         <tr ng-if="de.showDescription">
                                             <td colspan="2">
-                                                <div class="alert alert-info" ng-bind-html="de.description">
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr ng-if="de.url">
-                                            <td colspan="2">
-                                                <div class="alert alert-success">
-                                                    <a href="{{de.url}}" target="_blank">
-                                                        {{'url_desc' | translate}}
-                                                    </a>
+                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
                                                 </div>
                                             </td>
                                         </tr>
@@ -137,9 +129,6 @@
                                                 rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
                                                 ng-if="$index === 0 && !de.description">
                                                 {{de.displayName}}
-                                                <div ng-if="de.questionWarning" class="alert alert-warning">
-                                                    {{de.questionWarning}}
-                                                </div>
                                             </td>
                                             <td class="mouse-pointer"
                                                 ng-class="getMainQuestionTableStyle(de)" 
@@ -148,9 +137,6 @@
                                                 ng-click="de.showDescription = !de.showDescription">
                                                 {{de.displayName}}
                                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                                <div ng-if="de.questionWarning" class="alert alert-warning">
-                                                    {{de.questionWarning}}
-                                                </div>
                                             </td>
                                             <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
                                                 rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
@@ -170,7 +156,7 @@
                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
                                                               d2-blur="saveDataValue(de.id, oco.id)">
                                                     </textarea>
-                                                    <div class="alert alert-warning small-vertical-spacing bold italic">
+                                                    <div class="alert alert-warning trimmed-alert small-vertical-spacing bold italic">
                                                         {{'chars_remaining'| translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
                                                     </div>
                                                 </span>
@@ -184,18 +170,16 @@
                                                 </span>
                                             </td>
                                         </tr>
+                                        <tr ng-if="de.questionWarning">
+                                            <td colspan="4">
+                                                <div class="alert alert-warning trimmed-alert">
+                                                    {{de.questionWarning}}
+                                                </div>
+                                            </td>                                            
+                                        </tr>
                                         <tr ng-if="de.showDescription">
                                             <td colspan="4">
-                                                <div class="alert alert-info" ng-bind-html="de.description">                                                            
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr ng-if="de.url">
-                                            <td colspan="4">
-                                                <div class="alert alert-success">
-                                                    <a href="{{de.url}}" target="_blank">
-                                                        {{'url_desc' | translate}}
-                                                    </a>
+                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">                                                            
                                                 </div>
                                             </td>
                                         </tr>
@@ -211,32 +195,24 @@
                                                 ng-click="de.showDescription = !de.showDescription">
                                                 {{de.displayName}}
                                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                                <div ng-if="de.questionWarning" class="alert alert-warning">
-                                                    {{de.questionWarning}}
-                                                </div>
                                             </td>
                                             <td ng-if="!de.description"
                                                 colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
                                                 class="mouse-pointer" 
                                                 ng-class="getMainQuestionTableStyle(de)">
-                                                {{de.displayName}}
-                                                <div ng-if="de.questionWarning" class="alert alert-warning">
+                                                {{de.displayName}}                                                
+                                            </td>
+                                        </tr>
+                                        <tr ng-if="de.questionWarning">
+                                            <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                                <div class="alert alert-warning trimmed-alert">
                                                     {{de.questionWarning}}
                                                 </div>
-                                            </td>
+                                            </td>                                            
                                         </tr>
                                         <tr ng-if="de.showDescription">
                                             <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                <div class="alert alert-info" ng-bind-html="de.description">
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr ng-if="de.url">
-                                            <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                <div class="alert alert-success">
-                                                    <a href="{{de.url}}" target="_blank">
-                                                        {{'url_desc' | translate}}
-                                                    </a>
+                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
                                                 </div>
                                             </td>
                                         </tr>
@@ -335,12 +311,12 @@
                     </button>
                 </div>
                 <div class="col-sm-12 small-vertical-spacing" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
-                    <div class="alert alert-info">
+                    <div class="alert alert-info trimmed-alert">
                         <h1>{{dataElementGroupSet.name}}</h1>
                     </div>
                     <div class="row vertical-spacing">
                         <div class="col-sm-12" ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups">
-                            <div class="alert alert-warning remove-default-padding">
+                            <div class="alert alert-warning trimmed-alert remove-default-padding">
                                 <h3>{{dataElementGroup.name}}</h3>
                             </div>
 
