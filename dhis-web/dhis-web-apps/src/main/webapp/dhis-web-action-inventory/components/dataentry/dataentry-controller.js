@@ -307,11 +307,10 @@ sunInventory.controller('dataEntryController',
                             
                             $scope.model.reportTypes = [];
                             $scope.model.reportTypes.push({id: 'SUMMARY', name: $translate.instant('summary_report')});
+                            $scope.model.reportTypes.push({id: 'NUM_AGENCIES', name: $translate.instant('number_of_agencies')});
+                            $scope.model.reportTypes.push({id: 'LOGO_MAP', name: $translate.instant('logo_map_agencies')});                            
                             $scope.model.reportTypes.push({id: 'CNA', name: $translate.instant('cnas')});
                             $scope.model.reportTypes.push({id: 'ALIGNED_INVESTMENT', name: $translate.instant('align_invest')});
-                            $scope.model.reportTypes.push({id: 'LOGO_MAP', name: $translate.instant('logo_map_agencies')});
-                            $scope.model.reportTypes.push({id: 'NUM_AGENCIES', name: $translate.instant('number_of_agencies')});
-                            
                             $scope.model.selectedReport = $scope.model.reportTypes[0];
                             
 
@@ -325,6 +324,10 @@ sunInventory.controller('dataEntryController',
     
     $scope.$watchGroup(['model.selectedPeriod', 'selectedOrgUnit'], function(){
         $scope.loadDataEntryForm();
+    });
+    
+    $scope.$watch('model.selectedReport', function(){
+        $scope.showReportDiv = false;
     });
     
     //watch for selection of data set
@@ -876,7 +879,7 @@ sunInventory.controller('dataEntryController',
         return false;
     };
     
-    $scope.reportParamsReady = function(){
+    $scope.reportParamsReady = function(){        
         if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'SUMMARY' ){
             if( $scope.selectedOrgUnit && $scope.selectedOrgUnit.id &&
                     $scope.model.selectedPeriod && $scope.model.selectedPeriod.id && 
@@ -930,8 +933,12 @@ sunInventory.controller('dataEntryController',
         return status;
     };
     
-    $scope.showReport = function(){
+    $scope.showReport = function( summaryReport ){
         $scope.showReportDiv = true;
+        
+        if( summaryReport ){
+            $scope.model.selectedReport = $scope.model.reportTypes[0];
+        }        
         
         $scope.locationHeader = $filter('filter')($scope.model.categoryOptionGroups, {actionInventoryDimensionType: 'geographicFocus'})[0];
         if( $scope.locationHeader && $scope.locationHeader.categoryOptions && $scope.locationHeader.categoryOptions.length ){
@@ -984,14 +991,17 @@ sunInventory.controller('dataEntryController',
                     });
 
                     ReportService.getReportData( reportParams, $scope.reportData, $scope.model.mappedOptionCombosById ).then(function(response){                        
-                        $scope.reportData = response;                        
+                        $scope.reportData = response;
+                        $scope.emptyRowExists = false;
                         if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'SUMMARY' ){
                             if( response && response.mappedValues ){
-                                $scope.filteredReportData = {};                            
+                                $scope.filteredReportData = {};
+                                
                                 angular.forEach(dataSets[0].dataElements, function(de){
                                     if( !$scope.reportData.mappedValues[de.id] ){
                                         $scope.reportData.mappedValues[de.id] = {};
                                         $scope.reportData.mappedValues[de.id][$scope.model.instanceCategory.categoryOptions[0].displayName] = {};
+                                        $scope.emptyRowExists = true;
                                     }
                                     else{                                    
                                         $scope.filteredReportData[de.id] = $scope.reportData.mappedValues[de.id];

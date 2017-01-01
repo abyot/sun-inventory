@@ -1,10 +1,10 @@
 <div class="row vertical-spacing" ng-if="showReportDiv && reportParamsReady()">
     <div class="col-sm-12 hideInPrint">                    
         <button type="button" 
-                class="btn btn-success"
-                title="{{'export_excel'| translate}}"
+                class="btn btn-primary"
+                title="{{'export_excel' | translate}}"
                 ng-click="exportData()">
-            <i class="fa fa-file-excel-o fa-2x" aria-hidden="true"></i>
+            {{'export_excel' | translate}}
         </button>
     </div>
     <div class="col-sm-12 small-vertical-spacing" id="exportTable">

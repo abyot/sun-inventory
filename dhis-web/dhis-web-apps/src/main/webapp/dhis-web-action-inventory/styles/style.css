@@ -78,6 +78,10 @@ html, body {
     float: left;
 }
 
+.remove-text-decoration > a {
+    text-decoration: none;
+}
+
 div.paging a.active
 {
     text-decoration: none; 
@@ -190,6 +194,8 @@ input[type=date]::-webkit-inner-spin-button, input[type=date]::-webkit-outer-spi
 .dhis2-table>tfoot>tr>td {
     /*border-top: none;
     background-color: #ebf0f6;*/
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .dhis2-table-striped-border tr th {

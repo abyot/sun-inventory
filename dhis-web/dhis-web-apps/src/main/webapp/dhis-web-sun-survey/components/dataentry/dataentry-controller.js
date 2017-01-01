@@ -554,6 +554,12 @@ sunSurvey.controller('dataEntryController',
         if( !dataElement ){
             return;
         }
+        
+        //check for form validity
+        $scope.outerForm.submitted = true;        
+        if( $scope.outerForm.$invalid ){
+            return false;
+        }
             
         var dataValue = {ou: $scope.selectedOrgUnit.id, pe: $scope.model.selectedPeriod.id, de: deId};
         var status = {saved: false, pending: true, error: false};
@@ -883,5 +889,13 @@ sunSurvey.controller('dataEntryController',
             return txt.replace(/\r?\n/g,'<br />');
         }
         return txt;
+    };
+    
+    $scope.interacted = function(field) {
+        var status = false;
+        if(field){            
+            status = $scope.outerForm.submitted || field.$dirty;
+        }
+        return status;
     };
 });

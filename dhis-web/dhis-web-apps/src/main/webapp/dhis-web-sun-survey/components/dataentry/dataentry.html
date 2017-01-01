@@ -189,24 +189,14 @@
         </div>        
         <!-- selection ends -->        
 
-        <div class="vertical-spacing selectionArea alert" ng-if="model.showButtonInfo">
-            <p ng-if="!model.showReportDiv" class="btn-description">
-                <span class="bold">{{'view_data_as_table' | translate}}:</span>  {{'view_data_as_table_desc' | translate}}
-            </p>
-            <p ng-if="!dataSetCompletness[model.selectedAttributeOptionCombo]" class="btn-description">
-                <span class="bold">{{'mark_complete' | translate}}:</span>  {{'mark_complete_desc' | translate}}
-            </p>
-            <p ng-if="dataSetCompletness[model.selectedAttributeOptionCombo]" class="btn-description">
-                <span class="bold">{{'mark_not_complete' | translate}}:</span>  {{'mark_not_complete_desc' | translate}}
-            </p>
-        </div>
-        
         <div class="alert alert-danger vertical-spacing" ng-if="model.invalidDimensions && model.selectedDataSet">
             {{'data_set_have_invalid_dimension'| translate}}
         </div>
 
         <!-- form begins -->
-        <div ng-include="'components/dataentry/dataentry-form.html'"></div>
+        <form name="outerForm" novalidate>
+            <div ng-include="'components/dataentry/dataentry-form.html'"></div>
+        </form>        
         <!-- form ends -->
 
     </div>

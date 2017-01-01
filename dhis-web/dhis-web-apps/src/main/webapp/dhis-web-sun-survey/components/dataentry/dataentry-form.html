@@ -1,328 +1,31 @@
 <div class="vertical-spacing remove-left-padding" ng-if="model.selectedDataSet && model.selectedPeriod && model.categoryOptionsReady">
+    
+    <div ng-if="!model.showReportDiv">
 
-    <form name="outerForm" novalidate>
-        <div ng-if="!model.showReportDiv">
-            
-            <div class="col-sm-12">
-                <div class="alert alert-warning bold font-14" ng-if="dataSetCompletness[model.selectedAttributeOptionCombo]">
-                    {{'report_completed_not_editable' | translate}}
-                </div>
+        <div class="col-sm-12">
+            <div class="alert alert-warning bold font-14" ng-if="dataSetCompletness[model.selectedAttributeOptionCombo]">
+                {{'report_completed_not_editable' | translate}}
             </div>
-            
-            <div class="col-sm-12" equal-height-nav-tabs>
-
-                <tabset justified="true">
-                    <tab heading="{{dataElementGroupSet.name}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets" ng-click="setCurrentDataElementGroupSet(dataElementGroupSet)" active="dataElementGroupSet.active">
-                        <div class="row vertical-spacing remove-left-padding">
-
-                            <div class="list-group col-sm-3">
-                                <a ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups" class="list-group-item cursor-pointer" ng-class="{true: 'active'} [dataElementGroup.id === currentDataElementGroup.id]" ng-click="setCurrentDataElementGroup(dataElementGroup)">
-                                    {{dataElementGroup.name}}
-                                </a>
-                            </div>
-                            <div class="col-sm-9">
-                                <div class="alert redInfoArea bold">
-                                    <span class="important-label">{{'important'| translate}}! </span>
-                                    {{'show_definition_info'| translate}}
-                                </div>
-                                <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">                                    
-                                    <table class="table table-bordered table-condensed" 
-                                           ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">                                                
-                                        <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
-                                            <th>                                                
-                                            </th>
-                                            <th ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
-                                                {{oco.displayName}}
-                                            </th>
-                                        </tr>                                            
-                                        <tr>                                          
-                                            <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" 
-                                                ng-if="de.description" 
-                                                ng-click="de.showDescription = !de.showDescription">
-                                                {{de.displayName}}
-                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                            </td>
-                                            <td ng-class="getMainQuestionTableStyle(de)"
-                                                ng-if="!de.description">
-                                                {{de.displayName}}
-                                            </td>
-                                            <td>
-                                                <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">                                                        
-                                                    <span ng-if="de.valueType === 'TEXT'">
-                                                        <input type="text"   
-                                                               ng-model="dataValues[de.id][oco.id].value"
-                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                               class="form-control" 
-                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                       
-                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
-                                                    </span>
-                                                    <span ng-if="de.valueType === 'LONG_TEXT'">
-                                                        <textarea rows="5"  
-                                                                  maxlength="{{MAXCHARSLEN}}"   
-                                                                  ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                                  ng-model="dataValues[de.id][oco.id].value"
-                                                                  class="form-control" 
-                                                                  ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                       
-                                                                  d2-blur="saveDataValue(de.id, oco.id)">
-                                                        </textarea>
-                                                        <div class="alert alert-warning trimmed-alert small-vertical-spacing bold italic">
-                                                            {{'chars_remaining'| translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
-                                                        </div>
-                                                    </span>
-                                                    <span ng-if="de.valueType === 'NUMBER'">
-                                                        <input type="number"   
-                                                               ng-model="dataValues[de.id][oco.id].value" 
-                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                               class="form-control" 
-                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                       
-                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
-                                                    </span>
-                                                </div>
-                                                <div ng-if="de.dimensionAsOptionSet">
-                                                    <ui-select ng-model="dataValues[de.id]" 
-                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                               on-select="saveDataValue(de.id, $select.selected.id, true)"
-                                                               on-remove="saveDataValue(de.id, $select.selected.id, true)"
-                                                               theme="select2"                                 
-                                                               style="width:100%;">
-                                                        <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, $select.selected.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                                        <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
-                                                            <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
-                                                        </ui-select-choices>
-                                                    </ui-select>
-                                                </div>
-                                                <div ng-if="de.dimensionAsMultiOptionSet">
-                                                    <ui-select multiple
-                                                               ng-model="dataValues[de.id]" 
-                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                               on-select="saveDataValue(de.id, $select.selected.id, true)"
-                                                               on-remove="saveDataValue(de.id, $select.selected.id, true)"
-                                                               theme="bootstrap">
-                                                        <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass1(de.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
-                                                        <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
-                                                            <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
-                                                        </ui-select-choices>
-                                                    </ui-select>
-                                                </div>                                                    
-                                            </td>                                                
-                                        </tr>
-                                        <tr ng-if="de.questionWarning">
-                                            <td colspan="2">
-                                                <div class="alert alert-warning trimmed-alert">
-                                                    {{de.questionWarning}}
-                                                </div>
-                                            </td>                                            
-                                        </tr>
-                                        <tr ng-if="de.showDescription">
-                                            <td colspan="2">
-                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-
-                                    <table class="table table-bordered table-condensed" 
-                                           ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
-                                        <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
-                                            <td class="mouse-pointer"
-                                                ng-class="getMainQuestionTableStyle(de)" 
-                                                rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
-                                                ng-if="$index === 0 && !de.description">
-                                                {{de.displayName}}
-                                            </td>
-                                            <td class="mouse-pointer"
-                                                ng-class="getMainQuestionTableStyle(de)" 
-                                                rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
-                                                ng-if="$index === 0 && de.description"
-                                                ng-click="de.showDescription = !de.showDescription">
-                                                {{de.displayName}}
-                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                            </td>
-                                            <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
-                                                rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
-                                                ng-if="$index === 0 && (mainIndex % getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName) === 0)">
-                                                {{optionName}}
-                                            </td>
-                                            <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
-                                                {{optionName}}
-                                            </td>
-                                            <td>                                                        
-                                                <span ng-if="de.valueType === 'LONG_TEXT'">
-                                                    <textarea rows="5"  
-                                                              maxlength="{{MAXCHARSLEN}}"      
-                                                              ng-model="dataValues[de.id][oco.id].value" 
-                                                              ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                              class="form-control" 
-                                                              ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
-                                                              d2-blur="saveDataValue(de.id, oco.id)">
-                                                    </textarea>
-                                                    <div class="alert alert-warning trimmed-alert small-vertical-spacing bold italic">
-                                                        {{'chars_remaining'| translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
-                                                    </div>
-                                                </span>
-                                                <span ng-if="de.valueType === 'NUMBER'">
-                                                    <input type="number"   
-                                                           ng-model="dataValues[de.id][oco.id].value" 
-                                                           ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                           class="form-control" 
-                                                           ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
-                                                           d2-blur="saveDataValue(de.id, oco.id, false)">
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        <tr ng-if="de.questionWarning">
-                                            <td colspan="4">
-                                                <div class="alert alert-warning trimmed-alert">
-                                                    {{de.questionWarning}}
-                                                </div>
-                                            </td>                                            
-                                        </tr>
-                                        <tr ng-if="de.showDescription">
-                                            <td colspan="4">
-                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">                                                            
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>                                            
-
-                                    <table class="table table-bordered table-condensed large-table"                                                
-                                           ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">                                                
-                                        <tr>
-                                            <td ng-if="de.description"
-                                                colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
-                                                class="mouse-pointer" 
-                                                ng-class="getMainQuestionTableStyle(de)"
-                                                ng-click="de.showDescription = !de.showDescription">
-                                                {{de.displayName}}
-                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                            </td>
-                                            <td ng-if="!de.description"
-                                                colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
-                                                class="mouse-pointer" 
-                                                ng-class="getMainQuestionTableStyle(de)">
-                                                {{de.displayName}}                                                
-                                            </td>
-                                        </tr>
-                                        <tr ng-if="de.questionWarning">
-                                            <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                <div class="alert alert-warning trimmed-alert">
-                                                    {{de.questionWarning}}
-                                                </div>
-                                            </td>                                            
-                                        </tr>
-                                        <tr ng-if="de.showDescription">
-                                            <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th></th>
-                                            <th class="active pull-center" colspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                {{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].displayName}}
-                                            </th>
-                                        </tr>
-                                        <tr>    
-                                            <th class="active pull-center">
-                                                {{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].displayName}}
-                                            </th>
-                                            <td class="active pull-center" 
-                                                ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'name'">
-                                                {{option2.displayName}}
-                                            </td>
-                                        </tr>    
-                                        <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
-                                            <td class="active">
-                                                <span class="pull-right">{{option1.displayName}}</span>
-                                            </td>                                                
-                                            <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'name'"
-                                                ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">                                                    
-                                                <input type="number"   
-                                                       ng-model="dataValues[de.id][oco.id].value" 
-                                                       ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                       class="form-control" 
-                                                       ng-class="getInputNotifcationClass(de.id, oco.id)"
-                                                       d2-blur="saveDataValue(de.id, oco.id, false)">
-                                            </td>
-                                        </tr>
-                                    </table>                                        
-                                </div>
-
-                                <div ng-if="currentDataElementGroup && currentDataElementGroup.id && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
-                                     ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">
-                                    <table class="table table-bordered table-condensed">
-                                        <thead ng-if="!isHidden(de, currentDataElementGroup) && $index === 0" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
-                                            <tr>
-                                                <th class="active">
-                                                    {{'joint_program'| translate}}
-                                                </th>
-                                                <th class="active" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" >
-                                                    {{categoryOptionGroup.name}}
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tr ng-if="!isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
-                                            <td>
-                                                {{de.displayName}}
-                                            </td>                                                    
-                                            <td ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
-                                                ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">
-
-                                                <ui-select multiple
-                                                           ng-model="dataValues[de.id][categoryOptionGroup.id]"  
-                                                           ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
-                                                           on-select="saveDataValue(de.id, $select.selected.id, false, categoryOptionGroup.id)"
-                                                           on-remove="saveDataValue(de.id, $select.selected.id, false, categoryOptionGroup.id)"
-                                                           theme="bootstrap">
-                                                    <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass1(de.id)" placeholder="{{ocos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
-                                                    <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
-                                                        <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
-                                                    </ui-select-choices>
-                                                </ui-select>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-
-                        </div>
-                    </tab>                    
-                </tabset>
-
-            </div>
-
-
         </div>
 
-        <div ng-if="model.showReportDiv">            
-            <div class="remove-left-padding" id="exportTable">
-                <div class="col-sm-12 hideInPrint">                    
-                    <button type="button" 
-                            class="btn btn-success"
-                            title="{{'export_excel'| translate}}"
-                            ng-click="exportData()">
-                        <i class="fa fa-file-excel-o fa-2x" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" 
-                            class="btn btn-primary horizontal-spacing" 
-                            title="{{'export_pdf'| translate}}"
-                            onclick="javascript:window.print()">
-                        <i class="fa fa-file-pdf-o fa-2x" aria-hidden="true"></i>
-                    </button>
-                </div>
-                <div class="col-sm-12 small-vertical-spacing" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
-                    <div class="alert alert-info trimmed-alert">
-                        <h1>{{dataElementGroupSet.name}}</h1>
-                    </div>
-                    <div class="row vertical-spacing">
-                        <div class="col-sm-12" ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups">
-                            <div class="alert alert-warning trimmed-alert remove-default-padding">
-                                <h3>{{dataElementGroup.name}}</h3>
+        <div class="col-sm-12" equal-height-nav-tabs>
+
+            <tabset justified="true">
+                <tab heading="{{dataElementGroupSet.name}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets" ng-click="setCurrentDataElementGroupSet(dataElementGroupSet)" active="dataElementGroupSet.active">
+                    <div class="row vertical-spacing remove-left-padding">
+
+                        <div class="list-group col-sm-3">
+                            <a ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups" class="list-group-item cursor-pointer" ng-class="{true: 'active'} [dataElementGroup.id === currentDataElementGroup.id]" ng-click="setCurrentDataElementGroup(dataElementGroup)">
+                                {{dataElementGroup.name}}
+                            </a>
+                        </div>
+                        <div class="col-sm-9">
+                            <div class="alert redInfoArea bold">
+                                <span class="important-label">{{'important'| translate}}! </span>
+                                {{'show_definition_info'| translate}}
                             </div>
-
-                            <div ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}" ng-init="mainIndex = $index">
-
-                                <table border="1" class="table table-condensed report-table" 
+                            <div ng-if="currentDataElementGroup && currentDataElementGroup.id && !isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}">                                    
+                                <table class="table table-bordered table-condensed" 
                                        ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">                                                
                                     <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
                                         <th>                                                
@@ -332,108 +35,530 @@
                                         </th>
                                     </tr>                                            
                                     <tr>                                          
-                                        <td class="col-sm-1">
+                                        <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" 
+                                            ng-if="de.description" 
+                                            ng-click="de.showDescription = !de.showDescription">
+                                            {{de.displayName}}
+                                            <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                        </td>
+                                        <td ng-class="getMainQuestionTableStyle(de)"
+                                            ng-if="!de.description">
                                             {{de.displayName}}
                                         </td>
-                                        <td class="col-sm-1">
+                                        <td>
                                             <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">
-                                                <div ng-bind-html="getFormattedText(dataValues[de.id][oco.id].value)"></div>
-                                                <!--{{dataValues[de.id][oco.id].value}}-->
+                                                <ng-form name="innerForm">
+                                                    <span ng-switch="de.valueType">                                                        
+                                                        <span ng-switch-when="LONG_TEXT">
+                                                            <textarea rows="5" 
+                                                                      name="foo"
+                                                                      maxlength="{{MAXCHARSLEN}}"      
+                                                                      ng-model="dataValues[de.id][oco.id].value" 
+                                                                      ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                      class="form-control" 
+                                                                      ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                      d2-blur="saveDataValue(de.id, oco.id)">
+                                                            </textarea>
+                                                            <div class="alert alert-warning trimmed-alert small-vertical-spacing bold italic">
+                                                                {{'chars_remaining'| translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
+                                                            </div>
+                                                        </span>
+                                                        <span ng-switch-when="TEXT">
+                                                            <input type="text" 
+                                                                   name="foo"
+                                                                   ng-model="dataValues[de.id][oco.id].value" 
+                                                                   ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                   class="form-control" 
+                                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                   d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                        </span>
+                                                        <span ng-switch-when="NUMBER">
+                                                            <input type="number"  
+                                                                   name="foo"
+                                                                   d2-number-validator
+                                                                   number-type={{de.valueType}}
+                                                                   ng-model="dataValues[de.id][oco.id].value" 
+                                                                   ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                   class="form-control" 
+                                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                   d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                        </span>
+                                                        <span ng-switch-when="INTEGER">
+                                                            <input type="number"   
+                                                                   name="foo"
+                                                                   d2-number-validator
+                                                                   number-type={{de.valueType}}
+                                                                   ng-model="dataValues[de.id][oco.id].value" 
+                                                                   ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                   class="form-control" 
+                                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                   d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                        </span>
+                                                        <span ng-switch-when="INTEGER_POSITIVE">
+                                                            <input type="number" 
+                                                                   name="foo"
+                                                                   d2-number-validator
+                                                                   number-type={{de.valueType}}
+                                                                   ng-model="dataValues[de.id][oco.id].value" 
+                                                                   ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                   class="form-control" 
+                                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                   d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                        </span>
+                                                        <span ng-switch-when="INTEGER_NEGATIVE">
+                                                            <input type="number"   
+                                                                   name="foo"
+                                                                   d2-number-validator
+                                                                   number-type={{de.valueType}}
+                                                                   ng-model="dataValues[de.id][oco.id].value" 
+                                                                   ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                   class="form-control" 
+                                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                   d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                        </span>
+                                                        <span ng-switch-when="INTEGER_ZERO_OR_POSITIVE">
+                                                            <input type="number"   
+                                                                   name="foo"
+                                                                   d2-number-validator
+                                                                   number-type={{de.valueType}}
+                                                                   ng-model="dataValues[de.id][oco.id].value" 
+                                                                   ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                   class="form-control" 
+                                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                   d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                        </span>
+                                                        <span ng-switch-default>
+                                                            <div class="alert alert-danger form-control">
+                                                                {{'unsupported_value_type' | translate}}:  {{de.valueType}}
+                                                            </div>
+                                                        </span>
+                                                    </span>
+                                                    <span ng-messages="innerForm.foo.$error" ng-if="interacted(innerForm.foo)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
+                                                    </span>
+                                                </ng-form>
                                             </div>
                                             <div ng-if="de.dimensionAsOptionSet">
-                                                {{dataValues[de.id].displayName}}
+                                                <ui-select ng-model="dataValues[de.id]" 
+                                                           ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                           on-select="saveDataValue(de.id, $select.selected.id, true)"
+                                                           on-remove="saveDataValue(de.id, $select.selected.id, true)"
+                                                           theme="select2"                                 
+                                                           style="width:100%;">
+                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" ng-class="getInputNotifcationClass(de.id, $select.selected.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                                                    <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                                        <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
                                             </div>
                                             <div ng-if="de.dimensionAsMultiOptionSet">
-                                                {{joinOnProperty(dataValues[de.id], 'displayName')}}
+                                                <ui-select multiple
+                                                           ng-model="dataValues[de.id]" 
+                                                           ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                           on-select="saveDataValue(de.id, $select.selected.id, true)"
+                                                           on-remove="saveDataValue(de.id, $select.selected.id, true)"
+                                                           theme="bootstrap">
+                                                    <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass1(de.id)" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
+                                                    <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: $select.search | limitTo:maxOptionSize">
+                                                        <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
                                             </div>                                                    
                                         </td>                                                
                                     </tr>
+                                    <tr ng-if="de.questionWarning">
+                                        <td colspan="2">
+                                            <div class="alert alert-warning trimmed-alert">
+                                                {{de.questionWarning}}
+                                            </div>
+                                        </td>                                            
+                                    </tr>
+                                    <tr ng-if="de.showDescription">
+                                        <td colspan="2">
+                                            <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </table>
 
-                                <table border="1" class="table table-condensed report-table" 
-                                       ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">                                                
+                                <table class="table table-bordered table-condensed" 
+                                       ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
                                     <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
-                                        <td rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
-                                            class="col-sm-1"
-                                            ng-if="$index === 0">
+                                        <td class="mouse-pointer"
+                                            ng-class="getMainQuestionTableStyle(de)" 
+                                            rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
+                                            ng-if="$index === 0 && !de.description">
                                             {{de.displayName}}
                                         </td>
-                                        <td class="vertical-center col-sm-1" ng-repeat="optionName in oco.displayName.split(',')"                                                  
+                                        <td class="mouse-pointer"
+                                            ng-class="getMainQuestionTableStyle(de)" 
+                                            rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
+                                            ng-if="$index === 0 && de.description"
+                                            ng-click="de.showDescription = !de.showDescription">
+                                            {{de.displayName}}
+                                            <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                        </td>
+                                        <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')"                                                  
                                             rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
                                             ng-if="$index === 0 && (mainIndex % getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName) === 0)">
                                             {{optionName}}
                                         </td>
-                                        <td class="vertical-center col-sm-1" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
+                                        <td class="vertical-center" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
                                             {{optionName}}
                                         </td>
-                                        <td class="col-sm-1">
-                                            {{dataValues[de.id][oco.id].value}}
+                                        <td>
+                                            <ng-form name="innerForm1">
+                                                <span ng-switch="de.valueType">                                                        
+                                                    <span ng-switch-when="LONG_TEXT">
+                                                        <textarea rows="5"  
+                                                                  name="foo"
+                                                                  maxlength="{{MAXCHARSLEN}}"      
+                                                                  ng-model="dataValues[de.id][oco.id].value" 
+                                                                  ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                                  class="form-control" 
+                                                                  ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                                  d2-blur="saveDataValue(de.id, oco.id)">
+                                                        </textarea>
+                                                        <div class="alert alert-warning trimmed-alert small-vertical-spacing bold italic">
+                                                            {{'chars_remaining'| translate}}: {{dataValues[de.id][oco.id].value ? MAXCHARSLEN - dataValues[de.id][oco.id].value.length : MAXCHARSLEN}}
+                                                        </div>
+                                                    </span>
+                                                    <span ng-switch-when="TEXT">
+                                                        <input type="text"   
+                                                               name="foo"
+                                                               ng-model="dataValues[de.id][oco.id].value" 
+                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                               class="form-control" 
+                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                    </span>
+                                                    <span ng-switch-when="NUMBER">
+                                                        <input type="number" 
+                                                               name="foo"
+                                                               d2-number-validator
+                                                               number-type={{de.valueType}}
+                                                               ng-model="dataValues[de.id][oco.id].value" 
+                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                               class="form-control" 
+                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                    </span>
+                                                    <span ng-switch-when="INTEGER">
+                                                        <input type="number"   
+                                                               name="foo"
+                                                               d2-number-validator
+                                                               number-type={{de.valueType}}
+                                                               ng-model="dataValues[de.id][oco.id].value" 
+                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                               class="form-control" 
+                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                    </span>
+                                                    <span ng-switch-when="INTEGER_POSITIVE">
+                                                        <input type="number"   
+                                                               name="foo"
+                                                               d2-number-validator
+                                                               number-type={{de.valueType}}
+                                                               ng-model="dataValues[de.id][oco.id].value" 
+                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                               class="form-control" 
+                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                    </span>
+                                                    <span ng-switch-when="INTEGER_NEGATIVE">
+                                                        <input type="number"   
+                                                               name="foo"
+                                                               d2-number-validator
+                                                               number-type={{de.valueType}}
+                                                               ng-model="dataValues[de.id][oco.id].value" 
+                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                               class="form-control" 
+                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                    </span>
+                                                    <span ng-switch-when="INTEGER_ZERO_OR_POSITIVE">
+                                                        <input type="number"  
+                                                               name="foo"
+                                                               d2-number-validator
+                                                               number-type={{de.valueType}}
+                                                               ng-model="dataValues[de.id][oco.id].value" 
+                                                               ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                               class="form-control" 
+                                                               ng-class="getInputNotifcationClass(de.id, oco.id)"                                                                   
+                                                               d2-blur="saveDataValue(de.id, oco.id, false)">
+                                                    </span>
+                                                    <span ng-switch-default>
+                                                        <div class="alert alert-danger form-control">
+                                                            {{'unsupported_value_type' | translate}}:  {{de.valueType}}
+                                                        </div>
+                                                    </span>
+                                                </span>
+                                                <span ng-messages="innerForm1.foo.$error" ng-if="interacted(innerForm1.foo)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                                         
+                                                </span>
+                                            </ng-form>
                                         </td>
-                                    </tr>                                            
-                                </table>
+                                    </tr>
+                                    <tr ng-if="de.questionWarning">
+                                        <td colspan="4">
+                                            <div class="alert alert-warning trimmed-alert">
+                                                {{de.questionWarning}}
+                                            </div>
+                                        </td>                                            
+                                    </tr>
+                                    <tr ng-if="de.showDescription">
+                                        <td colspan="4">
+                                            <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">                                                            
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>                                            
 
-                                <table border="1" class="table-condensed report-table"                                                
+                                <table class="table table-bordered table-condensed large-table"                                                
                                        ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">                                                
-                                    <thead>
+                                    <tr>
+                                        <td ng-if="de.description"
+                                            colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
+                                            class="mouse-pointer" 
+                                            ng-class="getMainQuestionTableStyle(de)"
+                                            ng-click="de.showDescription = !de.showDescription">
+                                            {{de.displayName}}
+                                            <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                        </td>
+                                        <td ng-if="!de.description"
+                                            colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
+                                            class="mouse-pointer" 
+                                            ng-class="getMainQuestionTableStyle(de)">
+                                            {{de.displayName}}                                                
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="de.questionWarning">
+                                        <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                            <div class="alert alert-warning trimmed-alert">
+                                                {{de.questionWarning}}
+                                            </div>
+                                        </td>                                            
+                                    </tr>
+                                    <tr ng-if="de.showDescription">
+                                        <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                            <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th></th>
+                                        <th class="active pull-center" colspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
+                                            {{model.mappedCategoryCombos[de.categoryCombo.id].categories[0].displayName}}
+                                        </th>
+                                    </tr>
+                                    <tr>    
+                                        <th class="active pull-center">
+                                            {{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].displayName}}
+                                        </th>
+                                        <td class="active pull-center" 
+                                            ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'name'">
+                                            {{option2.displayName}}
+                                        </td>
+                                    </tr>    
+                                    <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
+                                        <td class="active">
+                                            <span class="pull-right">{{option1.displayName}}</span>
+                                        </td>                                                
+                                        <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'name'"
+                                            ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">                                                    
+                                            <input type="number"   
+                                                   ng-model="dataValues[de.id][oco.id].value" 
+                                                   ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                   class="form-control" 
+                                                   ng-class="getInputNotifcationClass(de.id, oco.id)"
+                                                   d2-blur="saveDataValue(de.id, oco.id, false)">
+                                        </td>
+                                    </tr>
+                                </table>                                        
+                            </div>
+
+                            <div ng-if="currentDataElementGroup && currentDataElementGroup.id && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
+                                 ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">
+                                <table class="table table-bordered table-condensed">
+                                    <thead ng-if="!isHidden(de, currentDataElementGroup) && $index === 0" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
                                         <tr>
-                                            <th colspan="2" class="col-sm-1"></th>                                        
-                                            <th class="active pull-center col-sm-1" 
-                                                ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'displayName'">
-                                                {{option2.displayName}}
+                                            <th class="active">
+                                                {{'joint_program'| translate}}
+                                            </th>
+                                            <th class="active" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" >
+                                                {{categoryOptionGroup.name}}
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
-                                            <td rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions.length}}" 
-                                                class="col-sm-1"
-                                                ng-if="$index === 0">
-                                                {{de.displayName}}
-                                            </td>
-                                            <th class="active col-sm-1">
-                                                {{option1.displayName}}
-                                            </th>                                                
-                                            <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'displayName'"
-                                                class="col-sm-1"
-                                                ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">
-                                                {{dataValues[de.id][oco.id].value}}
-                                            </td>
-                                        </tr>
-                                    </tbody>                                    
+                                    <tr ng-if="!isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
+                                        <td>
+                                            {{de.displayName}}
+                                        </td>                                                    
+                                        <td ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
+                                            ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">
+
+                                            <ui-select multiple
+                                                       ng-model="dataValues[de.id][categoryOptionGroup.id]"  
+                                                       ng-disabled="dataSetCompletness[model.selectedAttributeOptionCombo]"
+                                                       on-select="saveDataValue(de.id, $select.selected.id, false, categoryOptionGroup.id)"
+                                                       on-remove="saveDataValue(de.id, $select.selected.id, false, categoryOptionGroup.id)"
+                                                       theme="bootstrap">
+                                                <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass1(de.id)" placeholder="{{ocos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
+                                                <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize">
+                                                    <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
+                                                </ui-select-choices>
+                                            </ui-select>
+                                        </td>
+                                    </tr>
                                 </table>
-
-                                <div ng-if="mainIndex === 1 && de.displayMode === 'TABULAR' && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
-                                     ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">                                            
-                                    <table class="table table-bordered table-condensed">
-                                        <thead ng-if="$index === 0" ng-repeat="tde in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
-                                            <tr>
-                                                <th class="active">
-                                                    {{'joint_program'| translate}}
-                                                </th>
-                                                <th class="active" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" >
-                                                    {{categoryOptionGroup.name}}
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tr ng-repeat="tde in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
-                                            <td>
-                                                {{tde.displayName}}
-                                            </td>                                                    
-                                            <td ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
-                                                ng-init="ocos = (model.mappedCategoryCombos[tde.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">                                                
-                                                {{joinOnProperty(dataValues[tde.id][categoryOptionGroup.id], 'displayName')}}
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-
                             </div>
-                        </div>                        
-                    </div>                    
-                </div>
-            </div>
+                        </div>
+
+                    </div>
+                </tab>                    
+            </tabset>
+
         </div>
 
-    </form>
+
+    </div>
+
+    <div ng-if="model.showReportDiv">            
+        <div class="remove-left-padding" id="exportTable">
+            <div class="col-sm-12 hideInPrint">                    
+                <button type="button" 
+                        class="btn btn-success"
+                        title="{{'export_excel'| translate}}"
+                        ng-click="exportData()">
+                    <i class="fa fa-file-excel-o fa-2x" aria-hidden="true"></i>
+                </button>
+                <button type="button" 
+                        class="btn btn-primary horizontal-spacing" 
+                        title="{{'export_pdf'| translate}}"
+                        onclick="javascript:window.print()">
+                    <i class="fa fa-file-pdf-o fa-2x" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="col-sm-12 small-vertical-spacing" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
+                <div class="alert alert-info trimmed-alert">
+                    <h1>{{dataElementGroupSet.name}}</h1>
+                </div>
+                <div class="row vertical-spacing">
+                    <div class="col-sm-12" ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups">
+                        <div class="alert alert-warning trimmed-alert remove-default-padding">
+                            <h3>{{dataElementGroup.name}}</h3>
+                        </div>
+
+                        <div ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}" ng-init="mainIndex = $index">
+
+                            <table border="1" class="table table-condensed report-table" 
+                                   ng-if="de.dimensionAsMultiOptionSet || de.dimensionAsOptionSet || model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length === 1">                                                
+                                <tr ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">
+                                    <th>                                                
+                                    </th>
+                                    <th ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos">
+                                        {{oco.displayName}}
+                                    </th>
+                                </tr>                                            
+                                <tr>                                          
+                                    <td class="col-sm-1">
+                                        {{de.displayName}}
+                                    </td>
+                                    <td class="col-sm-1">
+                                        <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">
+                                            <div ng-bind-html="getFormattedText(dataValues[de.id][oco.id].value)"></div>
+                                            <!--{{dataValues[de.id][oco.id].value}}-->
+                                        </div>
+                                        <div ng-if="de.dimensionAsOptionSet">
+                                            {{dataValues[de.id].displayName}}
+                                        </div>
+                                        <div ng-if="de.dimensionAsMultiOptionSet">
+                                            {{joinOnProperty(dataValues[de.id], 'displayName')}}
+                                        </div>                                                    
+                                    </td>                                                
+                                </tr>
+                            </table>
+
+                            <table border="1" class="table table-condensed report-table" 
+                                   ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 1 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">                                                
+                                <tr ng-repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos" ng-init="mainIndex = $index">
+                                    <td rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
+                                        class="col-sm-1"
+                                        ng-if="$index === 0">
+                                        {{de.displayName}}
+                                    </td>
+                                    <td class="vertical-center col-sm-1" ng-repeat="optionName in oco.displayName.split(',')"                                                  
+                                        rowspan="{{getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName)}}"
+                                        ng-if="$index === 0 && (mainIndex % getRowSpan(model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos, optionName) === 0)">
+                                        {{optionName}}
+                                    </td>
+                                    <td class="vertical-center col-sm-1" ng-repeat="optionName in oco.displayName.split(',')" ng-if="$index !== 0">
+                                        {{optionName}}
+                                    </td>
+                                    <td class="col-sm-1">
+                                        {{dataValues[de.id][oco.id].value}}
+                                    </td>
+                                </tr>                                            
+                            </table>
+
+                            <table border="1" class="table-condensed report-table"                                                
+                                   ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">                                                
+                                <thead>
+                                    <tr>
+                                        <th colspan="2" class="col-sm-1"></th>                                        
+                                        <th class="active pull-center col-sm-1" 
+                                            ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'displayName'">
+                                            {{option2.displayName}}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="option1 in model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions">                                                
+                                        <td rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categories[1].categoryOptions.length}}" 
+                                            class="col-sm-1"
+                                            ng-if="$index === 0">
+                                            {{de.displayName}}
+                                        </td>
+                                        <th class="active col-sm-1">
+                                            {{option1.displayName}}
+                                        </th>                                                
+                                        <td ng-repeat="option2 in model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions| orderBy: 'displayName'"
+                                            class="col-sm-1"
+                                            ng-init="oco = getOptionComboByName(option2, option1, model.mappedCategoryCombos[de.categoryCombo.id])">
+                                            {{dataValues[de.id][oco.id].value}}
+                                        </td>
+                                    </tr>
+                                </tbody>                                    
+                            </table>
+
+                            <div ng-if="mainIndex === 1 && de.displayMode === 'TABULAR' && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
+                                 ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">                                            
+                                <table class="table table-bordered table-condensed">
+                                    <thead ng-if="$index === 0" ng-repeat="tde in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
+                                        <tr>
+                                            <th class="active">
+                                                {{'joint_program'| translate}}
+                                            </th>
+                                            <th class="active" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" >
+                                                {{categoryOptionGroup.name}}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tr ng-repeat="tde in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
+                                        <td>
+                                            {{tde.displayName}}
+                                        </td>                                                    
+                                        <td ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
+                                            ng-init="ocos = (model.mappedCategoryCombos[tde.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">                                                
+                                            {{joinOnProperty(dataValues[tde.id][categoryOptionGroup.id], 'displayName')}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>                        
+                </div>                    
+            </div>
+        </div>
+    </div>
 
 </div>

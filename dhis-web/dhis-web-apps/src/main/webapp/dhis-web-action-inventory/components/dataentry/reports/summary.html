@@ -1,11 +1,19 @@
 <div class="row vertical-spacing" ng-if="showReportDiv && reportParamsReady()">
     <div class="col-sm-12 hideInPrint">                    
         <button type="button" 
-                class="btn btn-success"
+                class="btn btn-primary"
                 title="{{'export_excel' | translate}}"
                 ng-click="exportData()">
-            <i class="fa fa-file-excel-o fa-2x" aria-hidden="true"></i>
+            {{'export_excel' | translate}}
+        </button>        
+        <button type="button" 
+                class="btn btn-primary small-horizontal-spacing"         
+                ng-disabled="!reportData.reportReady"
+                ng-if="emptyRowExists"
+                ng-click="model.filterEmptyRows = !model.filterEmptyRows">                                         
+            {{model.filterEmptyRows ? 'show_empty_rows' : 'hide_empty_rows' | translate}}
         </button>
+        
     </div>
     <div class="col-sm-12 small-vertical-spacing" id="exportTable">
         <table class="dhis2-table" ng-if="model.filterEmptyRows">

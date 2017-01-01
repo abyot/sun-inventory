@@ -240,7 +240,150 @@
                 <tab>
                     <tab-heading>
                         <span class="font-18 bold">
-                            {{'report'| translate}}
+                            {{'review_and_submit'| translate}}
+                        </span>
+                    </tab-heading>
+
+                    <div class="row selectionGroup small-vertical-spacing">
+
+                        <!-- selection begins-->                        
+                        <div class="col-sm-6 blueInfoArea add-default-padding">
+                            <div class="row">
+                                <div class="col-sm-4">                            
+                                    {{'country'| translate}}
+                                </div>
+                                <div class="col-sm-8"> 
+                                    <div class="input-group">
+                                        <input type="text" 
+                                               name="foo" 
+                                               class="form-control cursor-pointer" 
+                                               placeholder="{{'please_select'| translate}}" 
+                                               title="{{'select_from_tree'| translate}}"
+                                               ng-model="selectedOrgUnit.displayName" 
+                                               ng-readonly="{{true}}" 
+                                               ng-required="true" 
+                                               ng-click="showOrgUnitTree()">
+                                        <span class="input-group-btn">        
+                                            <button class="btn btn-default" type="button" title="{{'select_from_tree'| translate}}" ng-disabled="d2Disabled" ng-click="showOrgUnitTree(d2Object)"> 
+                                                <i class="fa fa-plus-square-o"></i> 
+                                            </button> 
+                                        </span>
+                                    </div>                        
+                                </div>
+                            </div>
+
+                            <div class="row small-vertical-spacing" ng-if="!model.invalidDimensions">
+                                <div class="col-sm-4">
+                                    {{'inventory_year'| translate}}                        
+                                </div>
+                                <div class="col-sm-8">                            
+                                    <div class="input-group">
+                                        <ui-select ng-model="model.selectedPeriod" 
+                                                   theme="select2"                                 
+                                                   style="width:100%;">
+                                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                            <ui-select-choices  repeat="period in model.reportPeriods | filter: $select.search | limitTo:maxOptionSize">
+                                                <span ng-bind-html="period.name | highlight: $select.search"></span>
+                                            </ui-select-choices>
+                                        </ui-select>
+                                        <span class="input-group-btn">        
+                                            <button type="button" 
+                                                    class="btn btn-default" 
+                                                    ng-disabled="!model.selectedDataSet"
+                                                    ng-click="getPeriods('PRV')" 
+                                                    title="{{'previous_periods'| translate}}">
+                                                <i class="fa fa-backward"></i>
+                                            </button>
+
+                                            <button type="button" 
+                                                    class="btn btn-default" 
+                                                    ng-disabled="!model.selectedDataSet || periodOffset > -1" 
+                                                    ng-click="getPeriods('NXT')" 
+                                                    title="{{'next_periods'| translate}}">
+                                                <i class="fa fa-forward"></i>
+                                            </button>                                    
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!--<div class="row small-vertical-spacing">
+                                <div class="col-sm-4">                            
+                                    {{'report_types'| translate}}
+                                </div>
+                                <div class="col-sm-8">
+                                    <ui-select ng-model="model.selectedReport"                                        
+                                               theme="select2"
+                                               style="width:100%;">
+                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes && model.reportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                        <ui-select-choices  repeat="rt in model.reportTypes | filter: $select.search | limitTo:maxOptionSize">
+                                            <span ng-bind-html="rt.name | highlight: $select.search"></span>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                            </div>-->
+                            
+                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && model.selectedReport.id === 'SUMMARY' && category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
+                                <div class="row small-vertical-spacing">
+                                    <div class="col-sm-4">                            
+                                        {{category.displayName}}
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <ui-select ng-model="category.selectedOption"                                        
+                                                   theme="select2"  
+                                                   on-select="getCategoryOptions(category)"
+                                                   style="width:100%;">
+                                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{category.categoryOptions && category.categoryOptions.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
+                                            <ui-select-choices  repeat="option in category.categoryOptions | filter: $select.search | limitTo:maxOptionSize">
+                                                <span ng-bind-html="option.displayName | highlight: $select.search"></span>
+                                            </ui-select-choices>
+                                        </ui-select>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- selection ends -->
+
+                        <div class="col-sm-6 div-bottom-container">
+                            <div class="div-bottom">                                
+                                <button class="btn btn-info"
+                                        type="button"   
+                                        ng-disabled="!reportParamsReady()"
+                                        ng-click="showReport(true)">                                         
+                                    {{'generate_report'| translate}}
+                                </button>
+                                <button type="button" 
+                                        ng-if="model.selectedReport.id === 'SUMMARY'"
+                                        class="btn btn-success small-horizontal-spacing" 
+                                        ng-disabled="true"                                        
+                                        ng-click="saveCompletness()">
+                                    {{'agency_data_complete'| translate}}
+                                </button>
+                                <!--<button type="button" 
+                                        class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
+                                        ng-disabled="true"
+                                        ng-click="deleteCompletness()">
+                                    {{'mark_not_complete'| translate}}
+                                </button>-->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- report begins -->                    
+                    <div ng-if="model.selectedReport.id === 'SUMMARY'" ng-include="'components/dataentry/reports/summary.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'CNA'" ng-include="'components/dataentry/reports/cna.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'ALIGNED_INVESTMENT'" ng-include="'components/dataentry/reports/align-invest.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'LOGO_MAP'" ng-include="'components/dataentry/reports/logo-map.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'NUM_AGENCIES'" ng-include="'components/dataentry/reports/region-agency.html'"></div>
+                    <!-- report ends -->
+
+                </tab>
+                <tab>
+                    <tab-heading>
+                        <span class="font-18 bold">
+                            {{'generate_reports'| translate}}
                         </span>
                     </tab-heading>
 
@@ -347,19 +490,25 @@
 
                         <div class="col-sm-6 div-bottom-container">
                             <div class="div-bottom">                                
-                                <button class="btn btn-success"
+                                <button class="btn btn-info"
                                         type="button"   
                                         ng-disabled="!reportParamsReady()"
                                         ng-click="showReport()">                                         
-                                    {{'view_data_as_table'| translate}}
+                                    {{'generate_report'| translate}}
                                 </button>
-                                <button class="btn btn-danger small-horizontal-spacing"
-                                        type="button" 
+                                <button type="button" 
                                         ng-if="model.selectedReport.id === 'SUMMARY'"
-                                        ng-disabled="!reportData.reportReady"
-                                        ng-click="model.filterEmptyRows = !model.filterEmptyRows">                                         
-                                    {{model.filterEmptyRows ? 'show_empty_rows' : 'hide_empty_rows' | translate}}
-                                </button>                                
+                                        class="btn btn-success small-horizontal-spacing" 
+                                        ng-disabled="true"                                        
+                                        ng-click="saveCompletness()">
+                                    {{'mark_complete'| translate}}
+                                </button>
+                                <!--<button type="button" 
+                                        class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
+                                        ng-disabled="true"
+                                        ng-click="deleteCompletness()">
+                                    {{'mark_not_complete'| translate}}
+                                </button>-->
                             </div>
                         </div>
 

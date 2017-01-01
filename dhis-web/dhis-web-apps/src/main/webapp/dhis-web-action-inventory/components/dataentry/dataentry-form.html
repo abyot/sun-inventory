@@ -76,14 +76,20 @@
             <div class="row padding-bottom">
 
                 <button type="button" 
-                        class="btn btn-primary small-horizontal-spacing small-vertical-spacing"  
+                        class="btn btn-primary small-horizontal-spacing"  
                         ng-disabled="isEmpty()"
                         ng-click="saveData()">
                     {{'save'| translate}}
                 </button>
+                <button type="button" 
+                        class="btn btn-success small-horizontal-spacing"  
+                        ng-disabled="isEmpty()"
+                        ng-click="saveData()">
+                    {{'save_complete'| translate}}
+                </button>
 
                 <button type="button" 
-                        class="btn btn-danger small-vertical-spacing pull-right add-small-right-padding" 
+                        class="btn btn-danger pull-right add-small-right-padding" 
                         ng-disabled="isEmpty(true)"
                         ng-click="deleteData()">
                     {{'delete'| translate}}
