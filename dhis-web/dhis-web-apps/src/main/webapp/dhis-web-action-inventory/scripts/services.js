@@ -752,6 +752,46 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 result.push( obj[prop] );
             });
             return result.join(', ');
+        },
+        getIcons: function(){
+            var icons = [];
+            
+            icons.push({
+                href: 'http://www.reachpartnership.org/documents/312104/647fc812-274b-4028-a36e-bf78a4e7c008',
+                src: 'images/food_agriculture_and_healthy_diets.jpg',
+                alt: 'food_agriculture_and_healthy_diets',
+                cls: 'can-1-container'
+            });
+            
+            icons.push({
+                href: 'http://www.reachpartnership.org/documents/312104/b58a5c8e-4989-4f1a-81fb-57ae850abd63',
+                src: 'images/maternal_and_child_care.jpg',
+                alt: 'maternal_and_child_care',
+                cls: 'can-2-container'
+            });
+            
+            icons.push({
+                href: 'http://www.reachpartnership.org/documents/312104/0c8e3dfd-a1f2-4678-a340-0050ef54290d',
+                src: 'images/health.jpg',
+                alt: 'health',
+                cls: 'can-3-container'
+            });
+            
+            icons.push({
+                href: 'http://www.reachpartnership.org/documents/312104/8df9b5e7-1452-4e40-ae83-b8b4e6cc9e23',
+                src: 'images/social_protection.jpg',
+                alt: 'social_protection',
+                cls: 'can-4-container'
+            });
+            
+            icons.push({
+                href: 'http://www.reachpartnership.org/documents/312104/7ce1820e-cdbd-42ad-84a8-24872d8db2cd',
+                src: 'images/facilitation_of_multisectoral_nutrition_governance.jpg',
+                alt: 'facilitation_of_multisectoral_nutrition_governance',
+                cls: 'can-5-container'
+            });
+            
+            return icons;
         }
     };
 })

@@ -495,20 +495,7 @@
                                         ng-disabled="!reportParamsReady()"
                                         ng-click="showReport()">                                         
                                     {{'generate_report'| translate}}
-                                </button>
-                                <button type="button" 
-                                        ng-if="model.selectedReport.id === 'SUMMARY'"
-                                        class="btn btn-success small-horizontal-spacing" 
-                                        ng-disabled="true"                                        
-                                        ng-click="saveCompletness()">
-                                    {{'mark_complete'| translate}}
-                                </button>
-                                <!--<button type="button" 
-                                        class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
-                                        ng-disabled="true"
-                                        ng-click="deleteCompletness()">
-                                    {{'mark_not_complete'| translate}}
-                                </button>-->
+                                </button>                                
                             </div>
                         </div>
 

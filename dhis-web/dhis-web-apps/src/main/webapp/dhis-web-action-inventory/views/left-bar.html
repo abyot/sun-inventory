@@ -22,65 +22,17 @@
         <span> {{'view_each_can_doc' | translate}}</span>
     </p>
     <ul class="list-group">
-        <li class="remove-text-decoration">
-            <a href="http://www.reachpartnership.org/documents/312104/647fc812-274b-4028-a36e-bf78a4e7c008" target="_blank">
-                <div class="can-1-container cursor-pointer" ng-click="showNutritionActions()">
+        <li class="remove-text-decoration" ng-repeat="icon in icons">
+            <a href="{{icon.href}}" target="_blank">
+                <div class="cursor-pointer" ng-class="getIconClass(icon)">
                     <div class="thumbnail1">
-                        <img src="images/food_agriculture_and_healthy_diets.jpg" alt="{{'food_agriculture_and_healthy_diets'| translate}}" class="align-center img-responsive">
+                        <img ng-src="{{icon.src}}" alt="{{icon.alt | translate}}" class="align-center img-responsive">
                     </div>
                     <div class="bold caption pull-center small-vertical-spacing">
-                        {{'food_agriculture_and_healthy_diets'| translate}}
+                        {{icon.alt | translate}}
                     </div>
                 </div>
-            </a>
-        </li>
-        <li class="remove-text-decoration">
-            <a href="http://www.reachpartnership.org/documents/312104/b58a5c8e-4989-4f1a-81fb-57ae850abd63" target="_blank">
-                <div class="can-2-container cursor-pointer" ng-click="showNutritionActions()">
-                    <div class="thumbnail1">
-                        <img src="images/maternal_and_child_care.jpg" alt="{{'maternal_and_child_care'| translate}}" class="align-center img-responsive">
-                    </div>
-                    <div class="bold caption pull-center small-vertical-spacing">
-                        <p>{{'maternal_and_child_care'| translate}}</p>
-                    </div>
-                </div>
-            </a>
-        </li>
-        <li class="remove-text-decoration">
-            <a href="http://www.reachpartnership.org/documents/312104/0c8e3dfd-a1f2-4678-a340-0050ef54290d" target="_blank">
-                <div class="can-3-container cursor-pointer" ng-click="showNutritionActions()">
-                    <div class="thumbnail1">
-                        <img src="images/health.jpg" alt="{{'health'| translate}}" class="align-center img-responsive">
-                    </div>
-                    <div class="bold caption pull-center small-vertical-spacing">
-                        <p>{{'health'| translate}}</p>
-                    </div>
-                </div>
-            </a>
-        </li>
-        <li class="remove-text-decoration">
-            <a href="http://www.reachpartnership.org/documents/312104/8df9b5e7-1452-4e40-ae83-b8b4e6cc9e23" target="_blank">
-                <div class="can-4-container cursor-pointer" ng-click="showNutritionActions()">
-                    <div class="thumbnail1">
-                        <img src="images/social_protection.jpg" alt="{{'social_protection'| translate}}" class="align-center img-responsive">
-                    </div>
-                    <div class="bold caption pull-center small-vertical-spacing">
-                        <p>{{'social_protection'| translate}}</p>
-                    </div>
-                </div>
-            </a>
-        </li>
-        <li class="remove-text-decoration">
-            <a href="http://www.reachpartnership.org/documents/312104/7ce1820e-cdbd-42ad-84a8-24872d8db2cd" target="_blank">
-                <div class="can-5-container cursor-pointer" ng-click="showNutritionActions()">
-                    <div class="thumbnail1">
-                        <img src="images/facilitation_of_multisectoral_nutrition_governance.jpg" alt="{{'facilitation_of_multisectoral_nutrition_governance'| translate}}" class="align-center img-responsive">
-                    </div>
-                    <div class="bold caption pull-center small-vertical-spacing">
-                        <p>{{'multisectoral_nutrition_governance'| translate}}</p>
-                    </div>
-                </div>
-            </a>
+            </a>            
         </li>
     </ul>
 </div>

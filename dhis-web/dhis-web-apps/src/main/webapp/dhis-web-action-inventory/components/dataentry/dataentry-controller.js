@@ -27,7 +27,7 @@ sunInventory.controller('dataEntryController',
     $scope.selectedOrgUnit = {};
     $scope.searchOuTree = {open: false};
     $scope.showReportDiv = false;
-    
+    $scope.icons = ActionMappingUtils.getIcons();
     $scope.model = {invalidDimensions: false,
                     selectedAttributeCategoryCombo: null,
                     multiDataSets: [],
@@ -1203,5 +1203,9 @@ sunInventory.controller('dataEntryController',
             }
         }        
         return total;
+    };
+    
+    $scope.getIconClass = function(icon){
+        return icon.cls;
     };
 });

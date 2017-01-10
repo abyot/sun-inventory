@@ -453,13 +453,13 @@ div#orgUnitTree {
 }
 
 .redInfoArea {
-    border: 1px solid #8e0000;
-    background-color: #b20000;
+    border: 1px solid transparent;
+    background-color: #d9534f;
     color: #fff;
     padding-top: 10px;
     padding-bottom: 10px;    
     border-radius: 3px;
-    font-size: 11pt;
+    font-size: 11pt;   
 }
 
 .important-label {
@@ -1007,4 +1007,12 @@ ul.arrow > li {
 
 ul.arrow > li:before {
     content: "\2192 \0020";
+}
+
+.direction-rtl {
+    direction: rtl;
+}
+
+.direction-ltr {
+    direction: ltr;
 }
