@@ -115,7 +115,9 @@
                 <select id="localeSelect" onchange="login.localeChanged()" style="margin-left: 30px">
                     <option value="">[ Change language ]</option>
                     #foreach( $locale in $availableLocales )
-                        <option value="${locale.language}">${locale.displayName}</option>
+                    	#if( $locale.language == 'en' || $locale.language == 'fr' )
+                    		<option value="${locale.language}">${locale.displayName}</option>
+                		#end                    		
                     #end
                 </select>
             </div>

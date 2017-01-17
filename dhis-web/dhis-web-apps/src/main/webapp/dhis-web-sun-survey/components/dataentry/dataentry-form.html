@@ -39,7 +39,7 @@
                                             <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" 
                                                 ng-if="de.description" 
                                                 ng-click="de.showDescription = !de.showDescription">
-                                                {{de.displayName}}
+                                                {{de.displayName}} - {{de.order}}
                                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                                             </td>
                                             <td ng-class="getMainQuestionTableStyle(de)"
@@ -391,7 +391,7 @@
                                         </thead>
                                         <tr ng-if="!isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
                                             <td>
-                                                {{de.displayName}}
+                                                {{de.displayName}} - {{de.order}}
                                             </td>                                                    
                                             <td ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
                                                 ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">
