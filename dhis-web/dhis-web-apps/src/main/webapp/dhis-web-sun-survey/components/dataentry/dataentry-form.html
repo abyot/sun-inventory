@@ -11,12 +11,12 @@
         <div class="col-sm-12" equal-height-nav-tabs>
 
             <tabset justified="true">
-                <tab heading="{{dataElementGroupSet.name}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets" ng-click="setCurrentDataElementGroupSet(dataElementGroupSet)" active="dataElementGroupSet.active">
+                <tab heading="{{dataElementGroupSet.displayName}}" class="bold" ng-repeat="dataElementGroupSet in model.dataElementGroupSets" ng-click="setCurrentDataElementGroupSet(dataElementGroupSet)" active="dataElementGroupSet.active">
                     <div class="row vertical-spacing remove-left-padding">
 
                         <div class="list-group col-sm-3">
                             <a ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups" class="list-group-item cursor-pointer" ng-class="{true: 'active'} [dataElementGroup.id === currentDataElementGroup.id]" ng-click="setCurrentDataElementGroup(dataElementGroup)">
-                                {{dataElementGroup.name}}
+                                {{dataElementGroup.displayName}}
                             </a>
                         </div>
                         <div class="col-sm-9">
@@ -37,13 +37,13 @@
                                         </tr>                                            
                                         <tr>                                          
                                             <td ng-class="getMainQuestionTableStyle(de)" class="mouse-pointer" 
-                                                ng-if="de.description" 
+                                                ng-if="de.displayDescription" 
                                                 ng-click="de.showDescription = !de.showDescription">
                                                 {{de.displayName}} - {{de.order}}
                                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                                             </td>
                                             <td ng-class="getMainQuestionTableStyle(de)"
-                                                ng-if="!de.description">
+                                                ng-if="!de.displayDescription">
                                                 {{de.displayName}}
                                             </td>
                                             <td>
@@ -175,7 +175,7 @@
                                         </tr>
                                         <tr ng-if="de.showDescription">
                                             <td colspan="2">
-                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
+                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.displayDescription">
                                                 </div>
                                             </td>
                                         </tr>
@@ -187,13 +187,13 @@
                                             <td class="mouse-pointer"
                                                 ng-class="getMainQuestionTableStyle(de)" 
                                                 rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
-                                                ng-if="$index === 0 && !de.description">
+                                                ng-if="$index === 0 && !de.displayDescription">
                                                 {{de.displayName}}
                                             </td>
                                             <td class="mouse-pointer"
                                                 ng-class="getMainQuestionTableStyle(de)" 
                                                 rowspan="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length}}"
-                                                ng-if="$index === 0 && de.description"
+                                                ng-if="$index === 0 && de.displayDescription"
                                                 ng-click="de.showDescription = !de.showDescription">
                                                 {{de.displayName}}
                                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
@@ -307,7 +307,7 @@
                                         </tr>
                                         <tr ng-if="de.showDescription">
                                             <td colspan="4">
-                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">                                                            
+                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.displayDescription">                                                            
                                                 </div>
                                             </td>
                                         </tr>
@@ -316,7 +316,7 @@
                                     <table class="table table-bordered table-condensed large-table"                                                
                                            ng-if="de.displayMode !== 'TABULAR' && de.categoryCombo.categories.length === 2 && !de.dimensionAsMultiOptionSet && !de.dimensionAsOptionSet && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 1">                                                
                                         <tr>
-                                            <td ng-if="de.description"
+                                            <td ng-if="de.displayDescription"
                                                 colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
                                                 class="mouse-pointer" 
                                                 ng-class="getMainQuestionTableStyle(de)"
@@ -324,7 +324,7 @@
                                                 {{de.displayName}}
                                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                                             </td>
-                                            <td ng-if="!de.description"
+                                            <td ng-if="!de.displayDescription"
                                                 colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}"
                                                 class="mouse-pointer" 
                                                 ng-class="getMainQuestionTableStyle(de)">
@@ -340,7 +340,7 @@
                                         </tr>
                                         <tr ng-if="de.showDescription">
                                             <td colspan="{{1 + model.mappedCategoryCombos[de.categoryCombo.id].categories[0].categoryOptions.length}}">
-                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.description">
+                                                <div class="alert alert-info trimmed-alert" ng-bind-html="de.displayDescription">
                                                 </div>
                                             </td>
                                         </tr>
@@ -385,13 +385,13 @@
                                                     {{'joint_program'| translate}}
                                                 </th>
                                                 <th class="active" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" >
-                                                    {{categoryOptionGroup.name}}
+                                                    {{categoryOptionGroup.displayName}}
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tr ng-if="!isHidden(de, currentDataElementGroup)" ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: currentDataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
                                             <td>
-                                                {{de.displayName}} - {{de.order}}
+                                                {{de.displayName}}
                                             </td>                                                    
                                             <td ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
                                                 ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})">
@@ -441,12 +441,12 @@
             </div>
             <div class="col-sm-12 small-vertical-spacing" ng-repeat="dataElementGroupSet in model.dataElementGroupSets">
                 <div class="alert alert-info trimmed-alert">
-                    <h1>{{dataElementGroupSet.name}}</h1>
+                    <h1>{{dataElementGroupSet.displayName}}</h1>
                 </div>
                 <div class="row vertical-spacing">
                     <div class="col-sm-12" ng-repeat="dataElementGroup in dataElementGroupSet.dataElementGroups">
                         <div class="alert alert-warning trimmed-alert remove-default-padding">
-                            <h3>{{dataElementGroup.name}}</h3>
+                            <h3>{{dataElementGroup.displayName}}</h3>
                         </div>
 
                         <div ng-repeat="de in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}}" ng-init="mainIndex = $index">
@@ -540,7 +540,7 @@
                                                 {{'joint_program'| translate}}
                                             </th>
                                             <th class="active" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" >
-                                                {{categoryOptionGroup.name}}
+                                                {{categoryOptionGroup.displayName}}
                                             </th>
                                         </tr>
                                     </thead>

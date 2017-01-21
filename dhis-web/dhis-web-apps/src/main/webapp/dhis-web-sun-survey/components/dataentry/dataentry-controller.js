@@ -86,10 +86,10 @@ sunSurvey.controller('dataEntryController',
                 angular.forEach(categoryOptionGroups, function(cog){
                     if( cog.dataSetDomain === 'SURVEY' ){
                         angular.forEach(cog.categoryOptions, function(co){
-                            optionGroupByMembers[co.name] = cog;
+                            optionGroupByMembers[co.displayName] = cog;
                         });                        
                         $scope.model.categoryOptionGroups.push(cog);
-                    }                    
+                    }
                 });
                 
                 var orderedOptionGroup = {};                            
@@ -111,9 +111,9 @@ sunSurvey.controller('dataEntryController',
                             cc.categoryOptionCombos = _.sortBy( cc.categoryOptionCombos, function(coc){
                                 return sortedOptions.indexOf( coc.displayName );
                             });                            
-                        }
+                        }                        
                         
-                        if( cc.displayName === 'Joint Programme Dimensions' ){
+                        if( cc.code === 'JointProgrammeDimensions' ){                            
                             for(var i=0; i< cc.categoryOptionCombos.length; i++){
                                 //$scope.model.mappedOptionCombos[cc.categoryOptionCombos[i].displayName] = cc.categoryOptionCombos[i];
                                 var og = optionGroupByMembers[cc.categoryOptionCombos[i].displayName];
@@ -189,8 +189,8 @@ sunSurvey.controller('dataEntryController',
                                     
                                     angular.forEach(deg.dataElements, function(de){
                                         de = dhis2.metadata.processMetaDataAttribute( de );
-                                        $scope.model.degs[de.id] = {name: degs.name, id: degs.id, code: degs.code};
-                                        $scope.model.deg[de.id] = {name: deg.name, id: deg.id, code: deg.shortName};
+                                        $scope.model.degs[de.id] = {displayName: degs.displayName, id: degs.id, code: degs.code};
+                                        $scope.model.deg[de.id] = {displayName: deg.displayName, id: deg.id, code: deg.shortName};
                                     });
                                     
                                     deg.dataElements = orderByFilter(deg.dataElements, '-order').reverse(); 
@@ -199,16 +199,7 @@ sunSurvey.controller('dataEntryController',
                             });
                         });
                         
-                        for(var i=0; i<$scope.model.dataElementGroupSets.length; i++){
-                            if( i=== 0 ){
-                                $scope.model.dataElementGroupSets[i].order = $scope.model.dataElementGroupSets.length;
-                            }
-                            else{
-                                $scope.model.dataElementGroupSets[i].order = i-1;
-                            }
-                        }
-                        
-                        $scope.model.dataElementGroupSets = orderByFilter($scope.model.dataElementGroupSets, '-order').reverse(); 
+                        $scope.model.dataElementGroupSets = orderByFilter($scope.model.dataElementGroupSets, '-code').reverse();
                     });
                 }
             });
@@ -314,7 +305,7 @@ sunSurvey.controller('dataEntryController',
                                     }
                                 }
                                 else{
-                                    if( value.displayName === 'Yes' ){
+                                    if( value.displayName === 'Yes' || value.displayName === 'Oui' ){
                                         return false;
                                     }
                                 }
@@ -424,7 +415,7 @@ sunSurvey.controller('dataEntryController',
                                                 }
                                                 
                                                 for( var j=0; j<cog.categoryOptions.length; j++){                                                    
-                                                    if( cog.categoryOptions[j].name === $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].displayName ){
+                                                    if( cog.categoryOptions[j].displayName === $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i].displayName ){
                                                         $scope.dataValues[dv.dataElement][cog.id].push( $scope.model.mappedCategoryCombos[$scope.desById[dv.dataElement].categoryCombo.id].categoryOptionCombos[i] );
                                                         break;
                                                     }

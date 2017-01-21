@@ -201,6 +201,16 @@ dhis2.metadata.getMetaObjects = function( store, objs, url, filter, storage, db,
                 obj = dhis2.metadata.processMetaDataAttribute( obj );
                 if( func ) {
                     obj = func(obj, 'organisationUnits');
+                }                
+                if( store === 'categoryCombos' && obj.categoryOptionCombos ){                     
+                    if( obj.categoryOptionCombos ){
+                        _.each( _.values( obj.categoryOptionCombos ), function ( coc ) {                            
+                            if( coc.categoryOptions ){
+                                var cocDisplayName = $.map(coc.categoryOptions, function(co){return co.displayName;}).join();
+                                coc.displayName = cocDisplayName ? cocDisplayName : coc.displayName;
+                            }
+                        });
+                    }
                 }
             });            
             
