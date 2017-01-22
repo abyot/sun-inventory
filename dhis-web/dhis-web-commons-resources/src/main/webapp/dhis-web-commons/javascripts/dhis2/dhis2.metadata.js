@@ -209,6 +209,7 @@ dhis2.metadata.getMetaObjects = function( store, objs, url, filter, storage, db,
                                 var cocDisplayName = $.map(coc.categoryOptions, function(co){return co.displayName;}).join();
                                 coc.displayName = cocDisplayName ? cocDisplayName : coc.displayName;
                             }
+                            delete coc.categoryOptions;
                         });
                     }
                 }
