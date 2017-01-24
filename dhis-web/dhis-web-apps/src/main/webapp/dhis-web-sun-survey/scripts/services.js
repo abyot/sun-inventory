@@ -658,23 +658,23 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             var optionNames = [];
             angular.forEach(options, function(op){
-                optionNames.push(op.displayName);
+                optionNames.push(op.displayName.trim());
             });
             
-            var selectedOptionComboName = optionNames.toString();
-            selectedOptionComboName =  selectedOptionComboName.replace(/\,/g, ', ');
+            var selectedOptionComboName = optionNames.join();
             
-            //var selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
             var selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
             
             if( !selectedAttributeOptionCombo || angular.isUndefined( selectedAttributeOptionCombo ) ){
-                selectedOptionComboName = optionNames.reverse().toString();
-                selectedOptionComboName = selectedOptionComboName.replace(",", ", ");
-                //selectedAttributeOptionCombo = optionComboMap['"' + selectedOptionComboName + '"'];
+                selectedOptionComboName = optionNames.reverse().join();
                 selectedAttributeOptionCombo = optionComboMap[selectedOptionComboName];
             }
             
-            return selectedAttributeOptionCombo;
+            if( !selectedAttributeOptionCombo || !selectedAttributeOptionCombo.id ){
+                console.log('ERROR: Missing category option combo !');
+                return null;
+            }
+            return selectedAttributeOptionCombo.id;
         },
         splitRoles: function( roles ){
             return roles.split(","); 
