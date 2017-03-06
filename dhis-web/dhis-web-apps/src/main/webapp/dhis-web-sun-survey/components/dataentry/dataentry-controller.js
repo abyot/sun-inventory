@@ -190,7 +190,7 @@ sunSurvey.controller('dataEntryController',
                                     angular.forEach(deg.dataElements, function(de){
                                         de = dhis2.metadata.processMetaDataAttribute( de );
                                         $scope.model.degs[de.id] = {displayName: degs.displayName, id: degs.id, code: degs.code};
-                                        $scope.model.deg[de.id] = {displayName: deg.displayName, id: deg.id, code: deg.shortName};
+                                        $scope.model.deg[de.id] = {displayName: deg.displayName, id: deg.id, code: deg.code};
                                     });
                                     
                                     deg.dataElements = orderByFilter(deg.dataElements, '-order').reverse(); 
@@ -299,14 +299,14 @@ sunSurvey.controller('dataEntryController',
                         if( de.dimensionAsOptionSet ){
                             value = $scope.dataValues[skipParent.id];
                             if( value ){
-                                if( dataElement.skipValue && dataElement.skipValue !== ''){
-                                    if( value && value.displayName === dataElement.skipValue ){                                    
-                                        return false;
-                                    }
-                                }
+                                if( value.displayName === 'Yes' || value.displayName === 'Oui' ){
+                                    return false;
+                                }                                
                                 else{
-                                    if( value.displayName === 'Yes' || value.displayName === 'Oui' ){
-                                        return false;
+                                    if( dataElement.skipValue && dataElement.skipValue !== ''){
+                                        if( value && value.displayName === dataElement.skipValue ){                                    
+                                            return false;
+                                        }
                                     }
                                 }
                             }                            
@@ -350,11 +350,14 @@ sunSurvey.controller('dataEntryController',
             }
             
             // need to hide / remove exsiting value
-            if( $scope.dataValues[dataElement.id] ){
-                
-                if( dataElement.displayMode === 'TABULAR'){
-                    delete $scope.dataValues[dataElement.id];
-                    $scope.saveDataValue(dataElement.id);
+            if( $scope.dataValues[dataElement.id] ){                
+                if( dataElement.displayMode === 'TABULAR'){                    
+                    angular.forEach($scope.model.categoryOptionGroups, function(cog){
+                        if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id]){
+                            delete $scope.dataValues[dataElement.id];
+                            $scope.saveDataValue(dataElement.id,null,false,cog.id);
+                        }
+                    });
                 }                
                 else{
                     if( dataElement.dimensionAsOptionSet ){                    
@@ -564,49 +567,50 @@ sunSurvey.controller('dataEntryController',
             $scope.saveStatus[deId + '-' + ocId ] = status;
         }
         
-        if( $scope.desById[deId].displayMode === 'TABULAR' ){
-            var dataValueSet = {
-                                dataSet: $scope.model.selectedDataSet.id,
-                                period: $scope.model.selectedPeriod.id,
-                                orgUnit: $scope.selectedOrgUnit.id,
-                                dataValues: []
-                              };
-            
-            var oldValues = angular.copy( $scope.dataValuesCopy[deId] );
-            var processedCos = [];
-            angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
-                
-                var cogId = $scope.model.mappedOptionCombosById[oco.id].categoryOptionGroup.id;                
-                var val = {dataElement: deId, categoryOptionCombo: oco.id, value: ''};
-                
-                if( $scope.dataValues[deId] && $scope.dataValues[deId][cogId] && $scope.dataValues[deId][cogId].length ){
-                    
-                    for( var i=0; i<$scope.dataValues[deId][cogId].length; i++){
-                        if( $scope.dataValues[deId][cogId][i] && $scope.dataValues[deId][cogId][i].id === oco.id ){
-                            val.value = 1;
-                            dataValueSet.dataValues.push( val );
-                            processedCos.push( oco.id );
-                            break;
-                        }
-                    }
-                }
-                    
-                if( processedCos.indexOf( oco.id) === -1 ){
-                    if( oldValues && oldValues[cogId] && oldValues[cogId].length ){                        
-                        for( var i=0; i<oldValues[cogId].length; i++){                            
-                            if( oldValues[cogId][i] && oldValues[cogId][i].id === oco.id ){                                    
+        if( $scope.desById[deId].displayMode === 'TABULAR'){
+            if( cogId ){                
+                var dataValueSet = {
+                                    dataSet: $scope.model.selectedDataSet.id,
+                                    period: $scope.model.selectedPeriod.id,
+                                    orgUnit: $scope.selectedOrgUnit.id,
+                                    dataValues: []
+                                  };
+
+                var oldValues = angular.copy( $scope.dataValuesCopy[deId] );
+                var processedCos = [];
+                angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){                
+
+                    var val = {dataElement: deId, categoryOptionCombo: oco.id, value: ''};
+
+                    if( $scope.dataValues[deId] && $scope.dataValues[deId][cogId] && $scope.dataValues[deId][cogId].length ){
+
+                        for( var i=0; i<$scope.dataValues[deId][cogId].length; i++){
+                            if( $scope.dataValues[deId][cogId][i] && $scope.dataValues[deId][cogId][i].id === oco.id ){
+                                val.value = 1;
                                 dataValueSet.dataValues.push( val );
-                                processedCos.push( oco.id );                                
+                                processedCos.push( oco.id );
                                 break;
                             }
                         }
                     }
-                }
-            });
-            
-            DataValueService.saveDataValueSet( dataValueSet, angular.copy( $scope.dataValuesCopy ), dataElement, $scope.model.mappedOptionCombosById, $scope.model.selectedDataSet.id, $scope.model.selectedAttributeOptionCombo ).then(function(){                
-                $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
-            });
+
+                    if( processedCos.indexOf( oco.id) === -1 ){
+                        if( oldValues && oldValues[cogId] && oldValues[cogId].length ){                        
+                            for( var i=0; i<oldValues[cogId].length; i++){                            
+                                if( oldValues[cogId][i] && oldValues[cogId][i].id === oco.id ){                                    
+                                    dataValueSet.dataValues.push( val );
+                                    processedCos.push( oco.id );                                
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                DataValueService.saveDataValueSet( dataValueSet, angular.copy( $scope.dataValuesCopy ), dataElement, $scope.model.mappedOptionCombosById, $scope.model.selectedDataSet.id, $scope.model.selectedAttributeOptionCombo ).then(function(){                
+                    $scope.dataValuesCopy[deId] = angular.copy( $scope.dataValues[deId] );
+                });
+            }
         }
         else{
             if( $scope.desById[deId].dimensionAsMultiOptionSet ){ 
@@ -664,7 +668,7 @@ sunSurvey.controller('dataEntryController',
                         dataValue.value = '';
                     }
                 }
-            
+                
                 DataValueService.saveDataValue( dataValue, $scope.dataValuesCopy, dataElement, $scope.model.mappedOptionCombosById, $scope.model.selectedDataSet.id, $scope.model.selectedAttributeOptionCombo ).then(function(){
                     if( ocId ){
                         $scope.saveStatus[deId + '-' + ocId].saved = true;
@@ -744,8 +748,8 @@ sunSurvey.controller('dataEntryController',
         });
         
         var tableIsEmpty = true;
-        for(var i=0; i<tabularElements.length; i++){
-            var dataElement = tabularElements[i];
+        for(var i=0; i<tabularElements.length; i++){            
+            var dataElement = tabularElements[i];            
             if( dataElement.dataElementGroup && 
                     $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] &&
                     !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){                
@@ -757,8 +761,13 @@ sunSurvey.controller('dataEntryController',
         }
         
         if( tableIsEmpty ){
-            tabularElements = orderByFilter(tabularElements, '-order').reverse();
-            invalidFields.push( $scope.desById[tabularElements[0].id] );
+            tabularElements = orderByFilter(tabularElements, '-order').reverse();            
+            var dataElement = tabularElements[0];
+            if( dataElement.dataElementGroup && $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id]  ){
+                if( !$scope.isHidden( dataElement, $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ) ){
+                    invalidFields.push( $scope.desById[tabularElements[0].id] );
+                }
+            }
         }
         if( invalidFields.length > 0 ){
             

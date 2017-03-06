@@ -396,18 +396,15 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 }
                 else{                    
                     promise = $q.when(function(){
-                        return; 
+                        return []; 
                     });
                 }
             }            
             else{
                 var dataValueSet = getDataValueSet( dv, dataSetId, aocId );                
                 promise = $http.post('../api/dataValueSets.json', dataValueSet).then(function(){
-                    return;
-                });
-                /*promise = $http.post('../api/dataValues.json' + url).then(function(){
                     return [];
-                });*/
+                });
             }            
             return promise;
         },        
