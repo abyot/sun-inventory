@@ -467,7 +467,6 @@
                                     <td class="col-sm-1">
                                         <div ng-if="!de.dimensionAsOptionSet && !de.dimensionAsMultiOptionSet" ng-init="oco = model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos[0]">
                                             <div ng-bind-html="getFormattedText(dataValues[de.id][oco.id].value)"></div>
-                                            <!--{{dataValues[de.id][oco.id].value}}-->
                                         </div>
                                         <div ng-if="de.dimensionAsOptionSet">
                                             {{dataValues[de.id].displayName}}
@@ -531,7 +530,7 @@
                                 </tbody>                                    
                             </table>
 
-                            <div ng-if="mainIndex === 1 && de.displayMode === 'TABULAR' && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
+                            <div ng-if="mainIndex === (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length -1 && de.displayMode === 'TABULAR' && (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}).length > 0" 
                                  ng-init="sampleDe = (model.selectedDataSet.dataElements | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'})[0]">                                            
                                 <table class="table table-bordered table-condensed">
                                     <thead ng-if="$index === 0" ng-repeat="tde in model.selectedDataSet.dataElements| orderBy: 'order' | filter: {dataElementGroup: {id: dataElementGroup.id}, dataElementGroupSet: {id: dataElementGroupSet.id}, displayMode: 'TABULAR'}">
