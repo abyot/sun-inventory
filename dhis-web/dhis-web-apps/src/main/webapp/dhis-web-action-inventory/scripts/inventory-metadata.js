@@ -194,7 +194,7 @@ function filterMissingCategoryCombos( objs ){
 }
 
 function getCategoryCombos( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'categoryCombos', 'categoryCombos', '../api/categoryCombos.json', 'paging=false&fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,attributeValues[value,attribute[id,name,valueType,code]],categoryOptions[id,name,displayName,code]]', 'idb', dhis2.sunpmt.store);
+    return dhis2.metadata.getBatches( ids, batchSize, 'categoryCombos', 'categoryCombos', '../api/categoryCombos.json', 'paging=false&fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,code,displayName,shortName,dimension,dataDimensionType,attributeValues[value,attribute[id,name,valueType,code]],categoryOptions[id,name,displayName,code]]', 'idb', dhis2.sunpmt.store);
 }
 
 function getMetaCategoryOptionGroups(){
