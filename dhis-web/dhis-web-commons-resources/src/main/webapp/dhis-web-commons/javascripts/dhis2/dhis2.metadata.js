@@ -202,14 +202,34 @@ dhis2.metadata.getMetaObjects = function( store, objs, url, filter, storage, db,
                 if( func ) {
                     obj = func(obj, 'organisationUnits');
                 }                
-                if( store === 'categoryCombos' && obj.categoryOptionCombos ){                     
-                    if( obj.categoryOptionCombos ){
+                if( store === 'categoryCombos' ){                    
+                	if( obj.categories ){
+                        _.each( _.values( obj.categories ), function ( ca ) {                            
+                            if( ca.categoryOptions ){
+                                _.each( _.values( ca.categoryOptions ), function ( co ) {
+                                    co.mappedOrganisationUnits = [];
+                                    if( co.organisationUnits && co.organisationUnits.length > 0 ){                                        
+                                        co.mappedOrganisationUnits = $.map(co.organisationUnits, function(ou){return ou.id;});
+                                    }
+                                    delete co.organisationUnits;
+                                });
+                            }
+                        });
+                    }
+                	if( obj.categoryOptionCombos ){
                         _.each( _.values( obj.categoryOptionCombos ), function ( coc ) {                            
                             if( coc.categoryOptions ){
+                            	_.each( _.values( coc.categoryOptions ), function ( co ) {
+                                    co.mappedOrganisationUnits = [];
+                                    if( co.organisationUnits && co.organisationUnits.length > 0 ){                                        
+                                        co.mappedOrganisationUnits = $.map(co.organisationUnits, function(ou){return ou.id;});
+                                    }
+                                    delete co.organisationUnits;
+                                });                            	
                                 var cocDisplayName = $.map(coc.categoryOptions, function(co){return co.displayName;}).join();
                                 coc.displayName = cocDisplayName ? cocDisplayName : coc.displayName;
                             }
-                            delete coc.categoryOptions;
+                            //delete coc.categoryOptions;
                         });
                     }
                 }
