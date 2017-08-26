@@ -1,7 +1,7 @@
 package org.hisp.dhis.trackedentity;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,8 @@ import java.util.List;
 public class DefaultTrackedEntityAttributeService
     implements TrackedEntityAttributeService
 {
+    private static final int VALUE_MAX_LENGTH = 50000;
+
     // -------------------------------------------------------------------------
     // Dependencies
     // -------------------------------------------------------------------------
@@ -113,7 +115,8 @@ public class DefaultTrackedEntityAttributeService
     @Override
     public int addTrackedEntityAttribute( TrackedEntityAttribute attribute )
     {
-        return attributeStore.save( attribute );
+        attributeStore.save( attribute );
+        return attribute.getId();
     }
 
     @Override
@@ -138,18 +141,6 @@ public class DefaultTrackedEntityAttributeService
     public TrackedEntityAttribute getTrackedEntityAttributeByCode( String code )
     {
         return attributeStore.getByShortName( code );
-    }
-
-    @Override
-    public List<TrackedEntityAttribute> getOptionalAttributesWithoutGroup()
-    {
-        return attributeStore.getOptionalAttributesWithoutGroup();
-    }
-
-    @Override
-    public List<TrackedEntityAttribute> getTrackedEntityAttributesWithoutGroup()
-    {
-        return attributeStore.getWithoutGroup();
     }
 
     @Override
@@ -257,9 +248,9 @@ public class DefaultTrackedEntityAttributeService
 
         String errorValue = StringUtils.substring( value, 0, 30 );
 
-        if ( value.length() > 255 )
+        if ( value.length() > VALUE_MAX_LENGTH )
         {
-            return "Value length is greater than 255 chars for attribute " + trackedEntityAttribute.getUid();
+            return "Value length is greater than 50000 chars for attribute " + trackedEntityAttribute.getUid();
         }
 
         if ( ValueType.NUMBER == valueType && !MathUtils.isNumeric( value ) )

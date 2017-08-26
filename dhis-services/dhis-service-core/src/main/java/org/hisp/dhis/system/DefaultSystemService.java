@@ -1,7 +1,7 @@
 package org.hisp.dhis.system;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,9 +32,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.calendar.CalendarService;
@@ -49,7 +51,7 @@ import org.hisp.dhis.setting.SettingKey;
 import org.hisp.dhis.setting.SystemSettingManager;
 import org.hisp.dhis.system.database.DatabaseInfo;
 import org.hisp.dhis.system.util.DateUtils;
-import org.hisp.dhis.system.util.SystemUtils;
+import org.hisp.dhis.commons.util.SystemUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -57,6 +59,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * @author Lars Helge Overland
@@ -97,7 +101,16 @@ public class DefaultSystemService
     {
         systemInfo = getFixedSystemInfo();
         
-        log.info( "Version: " + systemInfo.getVersion() + ", revision: " + systemInfo.getRevision() + ", build date: " + systemInfo.getBuildTime() );
+        List<String> info = ImmutableList.<String>builder()
+            .add( "Version: " + systemInfo.getVersion() )
+            .add( "revision: " + systemInfo.getRevision() )
+            .add( "build date: " + systemInfo.getBuildTime() )
+            .add( "database name: " + systemInfo.getDatabaseInfo().getName() )
+            .add( "database type: " + systemInfo.getDatabaseInfo().getType() )
+            .add( "Java version: " + systemInfo.getJavaVersion() )
+            .build();
+        
+        log.info( StringUtils.join( info, ", " ) );
     }
 
     // -------------------------------------------------------------------------
@@ -107,44 +120,33 @@ public class DefaultSystemService
     @Override
     public SystemInfo getSystemInfo()
     {
+        SystemInfo info = systemInfo.instance();
+        
+        if ( info == null )
+        {
+            return null;
+        }
+        
         Date lastAnalyticsTableSuccess = (Date) systemSettingManager.getSystemSetting( SettingKey.LAST_SUCCESSFUL_ANALYTICS_TABLES_UPDATE );
         String lastAnalyticsTableRuntime = (String) systemSettingManager.getSystemSetting( SettingKey.LAST_SUCCESSFUL_ANALYTICS_TABLES_RUNTIME );
+        String systemName = (String) systemSettingManager.getSystemSetting( SettingKey.APPLICATION_TITLE );
+
+        Configuration config = configurationService.getConfiguration();
 
         Date now = new Date();
-        SystemInfo info = systemInfo.instance();
 
         info.setCalendar( calendarService.getSystemCalendar().name() );
         info.setDateFormat( calendarService.getSystemDateFormat().getJs() );
         info.setServerDate( new Date() );
         info.setLastAnalyticsTableSuccess( lastAnalyticsTableSuccess );
         info.setIntervalSinceLastAnalyticsTableSuccess( DateUtils.getPrettyInterval( lastAnalyticsTableSuccess, now ) );
+        info.setSystemId( config.getSystemId() );
         info.setLastAnalyticsTableRuntime( lastAnalyticsTableRuntime );
+        info.setSystemName( systemName );
 
-        setSystemMetadataVersionInfo(info);
+        setSystemMetadataVersionInfo( info );
+
         return info;
-    }
-
-    private Date getLastMetadataVersionSyncAttempt( Date lastSuccessfulMetadataSyncTime, Date lastFailedMetadataSyncTime )
-    {
-
-        if ( lastSuccessfulMetadataSyncTime == null && lastFailedMetadataSyncTime == null )
-        {
-            return null;
-        }
-        else if ( lastSuccessfulMetadataSyncTime == null || lastFailedMetadataSyncTime == null )
-        {
-            return (lastFailedMetadataSyncTime != null ? lastFailedMetadataSyncTime : lastSuccessfulMetadataSyncTime);
-        }
-
-        if ( lastSuccessfulMetadataSyncTime.compareTo( lastFailedMetadataSyncTime ) < 0 )
-        {
-            return lastFailedMetadataSyncTime;
-        }
-        else
-        {
-            return lastSuccessfulMetadataSyncTime;
-        }
-
     }
 
     private SystemInfo getFixedSystemInfo()
@@ -207,7 +209,9 @@ public class DefaultSystemService
         }
 
         info.setFileStoreProvider( dhisConfig.getProperty( ConfigurationKey.FILESTORE_PROVIDER ) );
+        info.setCacheProvider( dhisConfig.getProperty( ConfigurationKey.CACHE_PROVIDER ) );
         info.setReadOnlyMode( dhisConfig.getProperty( ConfigurationKey.SYSTEM_READ_ONLY_MODE ) );
+        info.setNodeId( dhisConfig.getProperty( ConfigurationKey.NODE_ID ) );
 
         // ---------------------------------------------------------------------
         // Database
@@ -241,14 +245,10 @@ public class DefaultSystemService
         info.setCpuCores( SystemUtils.getCpuCores() );
         info.setEncryption( dhisConfig.getEncryptionStatus().isOk() );
 
-        Configuration config = configurationService.getConfiguration();
-
-        info.setSystemId( config.getSystemId() );
-
         return info;
     }
 
-    private void setSystemMetadataVersionInfo(SystemInfo info)
+    private void setSystemMetadataVersionInfo( SystemInfo info )
     {
         Boolean isMetadataVersionEnabled = (boolean) systemSettingManager.getSystemSetting( SettingKey.METADATAVERSION_ENABLED );
         Date lastSuccessfulMetadataSync = (Date) systemSettingManager.getSystemSetting( SettingKey.LAST_SUCCESSFUL_METADATA_SYNC );
@@ -258,18 +258,22 @@ public class DefaultSystemService
         Date lastMetadataVersionSyncAttempt = getLastMetadataVersionSyncAttempt( lastSuccessfulMetadataSync, metadataLastFailedTime );
 
         info.setIsMetadataVersionEnabled( isMetadataVersionEnabled );
-
         info.setSystemMetadataVersion( systemMetadataVersion );
-
-        if ( metadataSyncCron == null || metadataSyncCron.isEmpty() )
-        {
-            info.setIsMetadataSyncEnabled( false );
-        }
-        else
-        {
-            info.setIsMetadataSyncEnabled( true );
-        }
-
+        info.setIsMetadataSyncEnabled( !StringUtils.isEmpty( metadataSyncCron ) );
         info.setLastMetadataVersionSyncAttempt( lastMetadataVersionSyncAttempt );
+    }
+
+    private Date getLastMetadataVersionSyncAttempt( Date lastSuccessfulMetadataSyncTime, Date lastFailedMetadataSyncTime )
+    {
+        if ( lastSuccessfulMetadataSyncTime == null && lastFailedMetadataSyncTime == null )
+        {
+            return null;
+        }
+        else if ( lastSuccessfulMetadataSyncTime == null || lastFailedMetadataSyncTime == null )
+        {
+            return (lastFailedMetadataSyncTime != null ? lastFailedMetadataSyncTime : lastSuccessfulMetadataSyncTime);
+        }
+
+        return ( lastSuccessfulMetadataSyncTime.compareTo( lastFailedMetadataSyncTime ) < 0 ) ? lastFailedMetadataSyncTime : lastSuccessfulMetadataSyncTime;
     }
 }

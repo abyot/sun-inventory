@@ -1,7 +1,7 @@
 package org.hisp.dhis.de.action;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,9 +62,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Sets;
 import com.opensymphony.xwork2.Action;
-import org.hisp.dhis.attribute.Attribute;
-import org.hisp.dhis.attribute.AttributeService;
-import org.hisp.dhis.attribute.AttributeValue;
 
 /**
  * @author Lars Helge Overland
@@ -238,8 +235,7 @@ public class GetMetaDataAction
 
         expressionService.substituteExpressions( indicators, null );
 
-        //dataSets = dataSetService.getCurrentUserDataSets();
-        dataSets = getNonActionDataSets();
+        dataSets = dataSetService.getCurrentUserDataSets();
         
         Set<DataElementCategoryCombo> categoryComboSet = new HashSet<>();
         Set<DataElementCategory> categorySet = new HashSet<>();
@@ -277,34 +273,5 @@ public class GetMetaDataAction
         defaultCategoryCombo = categoryService.getDefaultDataElementCategoryCombo();
 
         return SUCCESS;
-    }
-    
-    // -------------------------------------------------------------------------
-    // Supportive methods
-    // -------------------------------------------------------------------------
-    
-    private List<DataSet> getNonActionDataSets( )
-    {
-        List<DataSet> nonActionDataSets = new ArrayList<>();
-        
-        for ( DataSet dataSet : dataSetService.getCurrentUserDataSets() )
-        {
-            boolean dataSetIsAction = false;
-            
-            for( AttributeValue av : dataSet.getAttributeValues() )
-            {                
-                if( av.getAttribute().getCode().equalsIgnoreCase( "isAction" ) && av.getValue().equalsIgnoreCase( "true" ) )
-                {
-                    dataSetIsAction = true;
-                }
-            }
-
-            if( !dataSetIsAction )
-            {
-            	nonActionDataSets.add( dataSet );
-            }
-        }
-        
-        return nonActionDataSets;
     }
 }

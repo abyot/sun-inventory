@@ -1,7 +1,7 @@
 package org.hisp.dhis.de.action;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -195,9 +195,9 @@ public class LoadFormAction
         return orderedCategoryCombos;
     }
 
-    private Map<Integer, Integer> sectionCombos = new HashMap<>();
+    private Map<Integer, Collection<Integer>> sectionCombos = new HashMap<>();
 
-    public Map<Integer, Integer> getSectionCombos()
+    public Map<Integer, Collection<Integer>> getSectionCombos()
     {
         return sectionCombos;
     }
@@ -214,6 +214,13 @@ public class LoadFormAction
     public DataSet getDataSet()
     {
         return dataSet;
+    }
+    
+    private Map<String, Collection<DataElement>> sectionCategoryComboDataElements = new HashMap<>();
+
+    public Map<String, Collection<DataElement>> getSectionCategoryComboDataElements()
+    {
+        return sectionCategoryComboDataElements;
     }
 
     // -------------------------------------------------------------------------
@@ -331,6 +338,7 @@ public class LoadFormAction
         {
             DataSet dataSetCopy = new DataSet();
             dataSetCopy.setUid( dataSet.getUid() );
+            dataSetCopy.setCode( dataSet.getCode() );
             dataSetCopy.setName( dataSet.getName() );
             dataSetCopy.setShortName( dataSet.getShortName() );
             dataSetCopy.setRenderAsTabs( dataSet.isRenderAsTabs() );
@@ -344,7 +352,7 @@ public class LoadFormAction
                 String name = !categoryCombo.isDefault() ? categoryCombo.getName() : dataSetCopy.getName();
 
                 Section section = new Section();
-                section.setUid( CodeGenerator.generateCode() );
+                section.setUid( CodeGenerator.generateUid() );
                 section.setId( i );
                 section.setName( name );
                 section.setSortOrder( i );
@@ -362,7 +370,7 @@ public class LoadFormAction
         // For multi-org unit only section forms supported
         // ---------------------------------------------------------------------
 
-        if ( CodeGenerator.isValidCode( multiOrganisationUnit ) )
+        if ( CodeGenerator.isValidUid( multiOrganisationUnit ) )
         {
             OrganisationUnit organisationUnit = organisationUnitService.getOrganisationUnit( multiOrganisationUnit );
             List<OrganisationUnit> organisationUnitChildren = new ArrayList<>();
@@ -376,11 +384,6 @@ public class LoadFormAction
             }
 
             Collections.sort( organisationUnitChildren );
-
-            if ( organisationUnit.getDataSets().contains( dsOriginal ) )
-            {
-                organisationUnits.add( organisationUnit );
-            }
 
             organisationUnits.addAll( organisationUnitChildren );
 
@@ -406,13 +409,18 @@ public class LoadFormAction
 
         for ( Section section : sections )
         {
-            DataElementCategoryCombo sectionCategoryCombo = section.getCategoryCombo();
-
-            if ( sectionCategoryCombo != null )
+            Set<Integer> categoryComboIds = new HashSet<>();
+            
+            for( DataElementCategoryCombo categoryCombo : section.getCategoryCombos() )
             {
-                orderedCategoryCombos.add( sectionCategoryCombo );
-
-                sectionCombos.put( section.getId(), sectionCategoryCombo.getId() );
+                categoryComboIds.add( categoryCombo.getId() );
+                
+                sectionCategoryComboDataElements.put( section.getId() + "-" + categoryCombo.getId() , section.getDataElementsByCategoryCombo( categoryCombo ) );
+            }
+            
+            if( !categoryComboIds.isEmpty() )
+            {
+                sectionCombos.put( section.getId(), categoryComboIds );
             }
 
             for ( DataElementOperand operand : section.getGreyedFields() )

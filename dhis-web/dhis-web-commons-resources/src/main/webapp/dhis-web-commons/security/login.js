@@ -2,7 +2,7 @@
 var login = {};
 login.localeKey = "dhis2.locale.ui";
 
-var base = "../..";
+var base = "../../";
 
 var mappedDashboard = {};
 

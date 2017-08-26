@@ -1,7 +1,7 @@
 package org.hisp.dhis.dxf2.datavalueset;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,10 @@ package org.hisp.dhis.dxf2.datavalueset;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.amplecode.staxwax.reader.XMLReader;
-import org.amplecode.staxwax.writer.XMLWriter;
+import org.hisp.staxwax.reader.XMLReader;
+import org.hisp.staxwax.writer.XMLWriter;
 import org.hisp.dhis.dxf2.datavalue.DataValue;
-import org.hisp.dhis.dxf2.datavalue.StreamingDataValue;
+import org.hisp.dhis.dxf2.datavalue.StreamingXmlDataValue;
 
 /**
  * @author Lars Helge Overland
@@ -93,6 +93,12 @@ public class StreamingXmlDataValueSet
     {
         return categoryOptionComboIdScheme = categoryOptionComboIdScheme == null ? reader.getAttributeValue( FIELD_CATEGORYOPTCOMBOIDSCHEME ) : categoryOptionComboIdScheme;
     }
+
+    @Override
+    public String getDataSetIdScheme()
+    {
+        return dataSetIdScheme = dataSetIdScheme == null ? reader.getAttributeValue( FIELD_DATASETIDSCHEME ) : dataSetIdScheme;
+    }
     
     @Override
     public Boolean getDryRun()
@@ -145,7 +151,7 @@ public class StreamingXmlDataValueSet
     @Override
     public DataValue getNextDataValue()
     {
-        return new StreamingDataValue( reader );
+        return new StreamingXmlDataValue( reader );
     }
 
     //--------------------------------------------------------------------------
@@ -177,6 +183,12 @@ public class StreamingXmlDataValueSet
     }
     
     @Override
+    public void setDataSetIdScheme( String dataSetIdScheme )
+    {
+        writer.writeAttribute( FIELD_DATASETIDSCHEME, dataSetIdScheme );
+    }
+
+    @Override
     public void setDataSet( String dataSet )
     {
         writer.writeAttribute( FIELD_DATASET, dataSet );
@@ -203,7 +215,7 @@ public class StreamingXmlDataValueSet
     @Override
     public DataValue getDataValueInstance()
     {
-        return new StreamingDataValue( writer );
+        return new StreamingXmlDataValue( writer );
     }
 
     @Override

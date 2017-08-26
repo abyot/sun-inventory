@@ -1,7 +1,7 @@
 package org.hisp.dhis.dxf2.events.event;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,8 @@ import java.util.List;
 public class Event
     extends BaseLinkableObject
 {
+    private String uid;
+
     private String event;
 
     private EventStatus status = EventStatus.ACTIVE;
@@ -79,9 +81,17 @@ public class Event
 
     private Boolean followup;
 
+    private Boolean deleted;
+
     private String created;
 
     private String lastUpdated;
+
+    private String createdAtClient;
+
+    private String lastUpdatedAtClient;
+
+    private String attributeOptionCombo;
 
     private String attributeCategoryOptions;
 
@@ -91,6 +101,17 @@ public class Event
 
     public Event()
     {
+        deleted = false;
+    }
+
+    public String getUid()
+    {
+        return uid;
+    }
+
+    public void setUid( String uid )
+    {
+        this.uid = uid;
     }
 
     @JsonProperty( required = true )
@@ -311,6 +332,42 @@ public class Event
         this.lastUpdated = lastUpdated;
     }
 
+    @JsonProperty( required = true )
+    @JacksonXmlProperty( isAttribute = true )
+    public String getCreatedAtClient()
+    {
+        return createdAtClient;
+    }
+
+    public void setCreatedAtClient( String createdAtClient )
+    {
+        this.createdAtClient = createdAtClient;
+    }
+
+    @JsonProperty( required = true )
+    @JacksonXmlProperty( isAttribute = true )
+    public String getLastUpdatedAtClient()
+    {
+        return lastUpdatedAtClient;
+    }
+
+    public void setLastUpdatedAtClient( String lastUpdatedAtClient )
+    {
+        this.lastUpdatedAtClient = lastUpdatedAtClient;
+    }
+
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public String getAttributeOptionCombo()
+    {
+        return attributeOptionCombo;
+    }
+
+    public void setAttributeOptionCombo( String attributeOptionCombo )
+    {
+        this.attributeOptionCombo = attributeOptionCombo;
+    }
+
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public String getAttributeCategoryOptions()
@@ -347,6 +404,18 @@ public class Event
         this.completedDate = completedDate;
     }
 
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Boolean isDeleted()
+    {
+        return deleted;
+    }
+
+    public void setDeleted( Boolean deleted )
+    {
+        this.deleted = deleted;
+    }
+
     @Override
     public boolean equals( Object o )
     {
@@ -381,9 +450,11 @@ public class Event
             ", storedBy='" + storedBy + '\'' +
             ", coordinate=" + coordinate +
             ", dataValues=" + dataValues +
+            ", attributeOptionCombo=" + attributeOptionCombo +
             ", attributeCategoryOptions=" + attributeCategoryOptions +
             ", completedBy=" + completedBy +
             ", completedDate=" + completedDate +
+            ", deleted=" + deleted +
             '}';
     }
 }

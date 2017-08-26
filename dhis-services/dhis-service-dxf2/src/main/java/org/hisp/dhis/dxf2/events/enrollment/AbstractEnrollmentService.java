@@ -1,10 +1,7 @@
 package org.hisp.dhis.dxf2.events.enrollment;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +26,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.hisp.dhis.common.IdSchemes;
@@ -40,7 +40,10 @@ import org.hisp.dhis.common.exception.InvalidIdentifierReferenceException;
 import org.hisp.dhis.commons.collection.CachingMap;
 import org.hisp.dhis.dbms.DbmsManager;
 import org.hisp.dhis.dxf2.common.ImportOptions;
+import org.hisp.dhis.dxf2.events.TrackedEntityInstanceParams;
 import org.hisp.dhis.dxf2.events.event.Coordinate;
+import org.hisp.dhis.dxf2.events.event.Event;
+import org.hisp.dhis.dxf2.events.event.EventService;
 import org.hisp.dhis.dxf2.events.event.Note;
 import org.hisp.dhis.dxf2.events.trackedentity.Attribute;
 import org.hisp.dhis.dxf2.events.trackedentity.TrackedEntityInstance;
@@ -50,15 +53,19 @@ import org.hisp.dhis.dxf2.importsummary.ImportStatus;
 import org.hisp.dhis.dxf2.importsummary.ImportSummaries;
 import org.hisp.dhis.dxf2.importsummary.ImportSummary;
 import org.hisp.dhis.i18n.I18nManager;
+import org.hisp.dhis.importexport.ImportStrategy;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.program.Program;
 import org.hisp.dhis.program.ProgramInstance;
 import org.hisp.dhis.program.ProgramInstanceQueryParams;
 import org.hisp.dhis.program.ProgramInstanceService;
 import org.hisp.dhis.program.ProgramService;
+import org.hisp.dhis.program.ProgramStageInstance;
+import org.hisp.dhis.program.ProgramStageInstanceService;
 import org.hisp.dhis.program.ProgramStatus;
 import org.hisp.dhis.program.ProgramTrackedEntityAttribute;
 import org.hisp.dhis.system.callable.IdentifiableObjectCallable;
+import org.hisp.dhis.system.util.DateUtils;
 import org.hisp.dhis.trackedentity.TrackedEntityAttribute;
 import org.hisp.dhis.trackedentity.TrackedEntityAttributeService;
 import org.hisp.dhis.trackedentityattributevalue.TrackedEntityAttributeValue;
@@ -75,6 +82,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -85,6 +93,9 @@ public abstract class AbstractEnrollmentService
 {
     @Autowired
     protected ProgramInstanceService programInstanceService;
+
+    @Autowired
+    protected ProgramStageInstanceService programStageInstanceService;
 
     @Autowired
     protected ProgramService programService;
@@ -119,12 +130,15 @@ public abstract class AbstractEnrollmentService
     @Autowired
     protected DbmsManager dbmsManager;
 
+    @Autowired
+    protected EventService eventService;
+
     private CachingMap<String, OrganisationUnit> organisationUnitCache = new CachingMap<>();
 
     private CachingMap<String, Program> programCache = new CachingMap<>();
 
     private CachingMap<String, TrackedEntityAttribute> trackedEntityAttributeCache = new CachingMap<>();
-    
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     // -------------------------------------------------------------------------
@@ -158,6 +172,12 @@ public abstract class AbstractEnrollmentService
     @Override
     public Enrollment getEnrollment( ProgramInstance programInstance )
     {
+        return getEnrollment( programInstance, TrackedEntityInstanceParams.FALSE );
+    }
+
+    @Override
+    public Enrollment getEnrollment( ProgramInstance programInstance, TrackedEntityInstanceParams params )
+    {
         Enrollment enrollment = new Enrollment();
 
         enrollment.setEnrollment( programInstance.getUid() );
@@ -173,7 +193,7 @@ public abstract class AbstractEnrollmentService
             enrollment.setOrgUnit( programInstance.getOrganisationUnit().getUid() );
             enrollment.setOrgUnitName( programInstance.getOrganisationUnit().getName() );
         }
-        
+
         if ( programInstance.getProgram().getCaptureCoordinates() )
         {
             Coordinate coordinate = null;
@@ -184,7 +204,9 @@ public abstract class AbstractEnrollmentService
 
                 try
                 {
-                    List<Double> list = OBJECT_MAPPER.readValue( coordinate.getCoordinateString(),  new TypeReference<List<Double>>() {} );
+                    List<Double> list = OBJECT_MAPPER.readValue( coordinate.getCoordinateString(), new TypeReference<List<Double>>()
+                    {
+                    } );
 
                     coordinate.setLongitude( list.get( 0 ) );
                     coordinate.setLatitude( list.get( 1 ) );
@@ -200,8 +222,10 @@ public abstract class AbstractEnrollmentService
             }
         }
 
-        enrollment.setCreated( programInstance.getCreated() );
-        enrollment.setLastUpdated( programInstance.getLastUpdated() );
+        enrollment.setCreated( DateUtils.getIso8601NoTz( programInstance.getCreated() ) );
+        enrollment.setCreatedAtClient( DateUtils.getIso8601NoTz( programInstance.getCreatedAtClient() ) );
+        enrollment.setLastUpdated( DateUtils.getIso8601NoTz( programInstance.getLastUpdated() ) );
+        enrollment.setLastUpdatedAtClient( DateUtils.getIso8601NoTz( programInstance.getLastUpdatedAtClient() ) );
         enrollment.setProgram( programInstance.getProgram().getUid() );
         enrollment.setStatus( EnrollmentStatus.fromProgramStatus( programInstance.getStatus() ) );
         enrollment.setEnrollmentDate( programInstance.getEnrollmentDate() );
@@ -225,6 +249,14 @@ public abstract class AbstractEnrollmentService
             }
 
             enrollment.getNotes().add( note );
+        }
+
+        if ( params.isIncludeEvents() )
+        {
+            for ( ProgramStageInstance programStageInstance : programInstance.getProgramStageInstances() )
+            {
+                enrollment.getEvents().add( eventService.getEvent( programStageInstance ) );
+            }
         }
 
         return enrollment;
@@ -251,7 +283,7 @@ public abstract class AbstractEnrollmentService
 
             if ( counter % FLUSH_FREQUENCY == 0 )
             {
-                dbmsManager.clearSession();
+                clearSession();
             }
 
             counter++;
@@ -268,7 +300,7 @@ public abstract class AbstractEnrollmentService
             importOptions = new ImportOptions();
         }
 
-        ImportSummary importSummary = new ImportSummary();
+        ImportSummary importSummary = new ImportSummary( enrollment.getEnrollment() );
 
         org.hisp.dhis.trackedentity.TrackedEntityInstance entityInstance = getTrackedEntityInstance( enrollment.getTrackedEntityInstance() );
         TrackedEntityInstance trackedEntityInstance = trackedEntityInstanceService.getTrackedEntityInstance( entityInstance );
@@ -343,13 +375,13 @@ public abstract class AbstractEnrollmentService
         if ( program.getDisplayIncidentDate() && programInstance.getIncidentDate() == null )
         {
             importSummary.setStatus( ImportStatus.ERROR );
-            importSummary.setDescription( "DisplayIncidentDate is true but IncidentDate is null ");
+            importSummary.setDescription( "DisplayIncidentDate is true but IncidentDate is null " );
             importSummary.incrementIgnored();
 
             return importSummary;
         }
-        
-        if( program.getCaptureCoordinates() )
+
+        if ( program.getCaptureCoordinates() )
         {
             if ( enrollment.getCoordinate() != null && enrollment.getCoordinate().isValid() )
             {
@@ -364,13 +396,19 @@ public abstract class AbstractEnrollmentService
         }
 
         updateAttributeValues( enrollment, importOptions );
+        updateDateFields( enrollment, programInstance );
         programInstance.setFollowup( enrollment.getFollowup() );
+
         programInstanceService.updateProgramInstance( programInstance );
+        manager.update( programInstance.getEntityInstance() );
 
         saveTrackedEntityComment( programInstance, enrollment );
 
         importSummary.setReference( programInstance.getUid() );
         importSummary.getImportCount().incrementImported();
+
+        importOptions.setStrategy( ImportStrategy.CREATE_AND_UPDATE );
+        importSummary.setEvents( handleEvents( enrollment, programInstance, importOptions ) );
 
         return importSummary;
     }
@@ -396,7 +434,7 @@ public abstract class AbstractEnrollmentService
 
             if ( counter % FLUSH_FREQUENCY == 0 )
             {
-                dbmsManager.clearSession();
+                clearSession();
             }
 
             counter++;
@@ -413,12 +451,12 @@ public abstract class AbstractEnrollmentService
             importOptions = new ImportOptions();
         }
 
-        ImportSummary importSummary = new ImportSummary();
-
         if ( enrollment == null || enrollment.getEnrollment() == null )
         {
             return new ImportSummary( ImportStatus.ERROR, "No enrollment or enrollment ID was supplied" ).incrementIgnored();
         }
+
+        ImportSummary importSummary = new ImportSummary( enrollment.getEnrollment() );
 
         ProgramInstance programInstance = programInstanceService.getProgramInstance( enrollment.getEnrollment() );
 
@@ -445,22 +483,37 @@ public abstract class AbstractEnrollmentService
 
         programInstance.setProgram( program );
         programInstance.setEntityInstance( entityInstance );
-        programInstance.setIncidentDate( enrollment.getIncidentDate() );
-        programInstance.setEnrollmentDate( enrollment.getEnrollmentDate() );
+
+        if ( enrollment.getIncidentDate() != null )
+        {
+            programInstance.setIncidentDate( enrollment.getIncidentDate() );
+        }
+
+        if ( enrollment.getEnrollmentDate() != null )
+        {
+            programInstance.setEnrollmentDate( enrollment.getEnrollmentDate() );
+        }
+        
+        if ( enrollment.getOrgUnit() != null ) 
+        {
+            OrganisationUnit organisationUnit = getOrganisationUnit( importOptions.getIdSchemes(), enrollment.getOrgUnit() );
+            programInstance.setOrganisationUnit( organisationUnit );
+        }
+
         programInstance.setFollowup( enrollment.getFollowup() );
 
         if ( program.getDisplayIncidentDate() && programInstance.getIncidentDate() == null )
         {
             importSummary.setStatus( ImportStatus.ERROR );
-            importSummary.setDescription( "DisplayIncidentDate is true but IncidentDate is null ");
+            importSummary.setDescription( "DisplayIncidentDate is true but IncidentDate is null " );
             importSummary.incrementIgnored();
 
             return importSummary;
         }
-        
-        if( program.getCaptureCoordinates() )
+
+        if ( program.getCaptureCoordinates() )
         {
-            if ( enrollment.getCoordinate().isValid() )
+            if ( enrollment.getCoordinate() != null && enrollment.getCoordinate().isValid() )
             {
                 programInstance.setLatitude( enrollment.getCoordinate().getLatitude() );
                 programInstance.setLongitude( enrollment.getCoordinate().getLongitude() );
@@ -489,12 +542,18 @@ public abstract class AbstractEnrollmentService
         }
 
         updateAttributeValues( enrollment, importOptions );
+        updateDateFields( enrollment, programInstance );
+
         programInstanceService.updateProgramInstance( programInstance );
+        manager.update( programInstance.getEntityInstance() );
 
         saveTrackedEntityComment( programInstance, enrollment );
 
         importSummary.setReference( enrollment.getEnrollment() );
         importSummary.getImportCount().incrementUpdated();
+
+        importOptions.setStrategy( ImportStrategy.CREATE_AND_UPDATE );
+        importSummary.setEvents( handleEvents( enrollment, programInstance, importOptions ) );
 
         return importSummary;
     }
@@ -502,12 +561,12 @@ public abstract class AbstractEnrollmentService
     @Override
     public ImportSummary updateEnrollmentForNote( Enrollment enrollment )
     {
-        ImportSummary importSummary = new ImportSummary();
-
         if ( enrollment == null || enrollment.getEnrollment() == null )
         {
             return new ImportSummary( ImportStatus.ERROR, "No enrollment or enrollment ID was supplied" ).incrementIgnored();
         }
+
+        ImportSummary importSummary = new ImportSummary( enrollment.getEnrollment() );
 
         ProgramInstance programInstance = programInstanceService.getProgramInstance( enrollment.getEnrollment() );
 
@@ -536,6 +595,7 @@ public abstract class AbstractEnrollmentService
         if ( programInstance != null )
         {
             programInstanceService.deleteProgramInstance( programInstance );
+            manager.update( programInstance.getEntityInstance() );
             return new ImportSummary( ImportStatus.SUCCESS, "Deletion of enrollment " + uid + " was successful." ).incrementDeleted();
         }
 
@@ -554,7 +614,7 @@ public abstract class AbstractEnrollmentService
 
             if ( counter % FLUSH_FREQUENCY == 0 )
             {
-                dbmsManager.clearSession();
+                clearSession();
             }
 
             counter++;
@@ -568,6 +628,7 @@ public abstract class AbstractEnrollmentService
     {
         ProgramInstance programInstance = programInstanceService.getProgramInstance( uid );
         programInstanceService.cancelProgramInstanceStatus( programInstance );
+        manager.update( programInstance.getEntityInstance() );
     }
 
     @Override
@@ -575,6 +636,7 @@ public abstract class AbstractEnrollmentService
     {
         ProgramInstance programInstance = programInstanceService.getProgramInstance( uid );
         programInstanceService.completeProgramInstanceStatus( programInstance );
+        manager.update( programInstance.getEntityInstance() );
     }
 
     @Override
@@ -582,11 +644,39 @@ public abstract class AbstractEnrollmentService
     {
         ProgramInstance programInstance = programInstanceService.getProgramInstance( uid );
         programInstanceService.incompleteProgramInstanceStatus( programInstance );
+        manager.update( programInstance.getEntityInstance() );
     }
 
     // -------------------------------------------------------------------------
     // HELPERS
     // -------------------------------------------------------------------------
+
+    private ImportSummaries handleEvents( Enrollment enrollment, ProgramInstance programInstance, ImportOptions importOptions )
+    {
+        List<Event> create = new ArrayList<>();
+        List<Event> update = new ArrayList<>();
+
+        for ( Event event : enrollment.getEvents() )
+        {
+            event.setEnrollment( enrollment.getEnrollment() );
+            event.setProgram( programInstance.getProgram().getUid() );
+
+            if ( !programStageInstanceService.programStageInstanceExists( event.getEvent() ) )
+            {
+                create.add( event );
+            }
+            else
+            {
+                update.add( event );
+            }
+        }
+
+        ImportSummaries importSummaries = new ImportSummaries();
+        importSummaries.addImportSummaries( eventService.addEvents( create, importOptions ) );
+        importSummaries.addImportSummaries( eventService.updateEvents( update, false ) );
+
+        return importSummaries;
+    }
 
     private List<ImportConflict> checkAttributes( Enrollment enrollment, ImportOptions importOptions )
     {
@@ -645,6 +735,24 @@ public abstract class AbstractEnrollmentService
                 "Only program attributes is allowed for enrollment " + attributeValueMap ) );
         }
 
+        if ( !program.getSelectEnrollmentDatesInFuture() )
+        {
+            if ( Objects.nonNull( enrollment.getEnrollmentDate() ) && enrollment.getEnrollmentDate().after( new Date() ) )
+            {
+                importConflicts.add( new ImportConflict( "Enrollment.date", "Enrollment Date can't be future date :" + enrollment
+                    .getEnrollmentDate() ) );
+            }
+        }
+
+        if ( !program.getSelectIncidentDatesInFuture() )
+        {
+            if ( Objects.nonNull( enrollment.getIncidentDate() ) && enrollment.getIncidentDate().after( new Date() ) )
+            {
+                importConflicts.add( new ImportConflict( "Enrollment.incidentDate", "Incident Date can't be future date :" + enrollment
+                    .getIncidentDate() ) );
+            }
+        }
+
         return importConflicts;
     }
 
@@ -682,7 +790,8 @@ public abstract class AbstractEnrollmentService
 
         trackedEntityInstance.getTrackedEntityAttributeValues().stream().
             filter( value -> attributeValueMap.containsKey( value.getAttribute().getUid() ) ).
-            forEach( value -> {
+            forEach( value ->
+            {
                 String newValue = attributeValueMap.get( value.getAttribute().getUid() );
                 value.setValue( newValue );
 
@@ -773,5 +882,33 @@ public abstract class AbstractEnrollmentService
     private TrackedEntityAttribute getTrackedEntityAttribute( IdSchemes idSchemes, String id )
     {
         return trackedEntityAttributeCache.get( id, new IdentifiableObjectCallable<>( manager, TrackedEntityAttribute.class, idSchemes.getTrackedEntityAttributeIdScheme(), id ) );
+    }
+
+    private void clearSession()
+    {
+        organisationUnitCache.clear();
+        programCache.clear();
+        trackedEntityAttributeCache.clear();
+
+        dbmsManager.clearSession();
+    }
+
+    private void updateDateFields( Enrollment enrollment, ProgramInstance programInstance )
+    {
+        programInstance.setAutoFields();
+
+        Date createdAtClient = DateUtils.parseDate( enrollment.getCreatedAtClient() );
+
+        if ( createdAtClient != null )
+        {
+            programInstance.setCreatedAtClient( createdAtClient );
+        }
+
+        String lastUpdatedAtClient = enrollment.getLastUpdatedAtClient();
+
+        if ( lastUpdatedAtClient != null )
+        {
+            programInstance.setLastUpdatedAtClient( DateUtils.parseDate( lastUpdatedAtClient ) );
+        }
     }
 }

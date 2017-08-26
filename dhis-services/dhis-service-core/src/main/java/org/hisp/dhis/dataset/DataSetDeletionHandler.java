@@ -1,7 +1,7 @@
 package org.hisp.dhis.dataset;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,6 @@ package org.hisp.dhis.dataset;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
 import org.hisp.dhis.common.IdentifiableObjectManager;
 import org.hisp.dhis.dataapproval.DataApprovalWorkflow;
 import org.hisp.dhis.dataelement.DataElement;
@@ -44,6 +40,10 @@ import org.hisp.dhis.legend.LegendSet;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.system.deletion.DeletionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.hisp.dhis.dataelement.DataElementCategoryCombo.DEFAULT_CATEGORY_COMBO_NAME;
 
@@ -140,14 +140,16 @@ public class DataSetDeletionHandler
     @Override
     public void deleteLegendSet( LegendSet legendSet )
     {
-        Collection<DataSet> dataSets = idObjectManager.getAllNoAcl( DataSet.class );
-        
-        for ( DataSet dataSet : dataSets )
+        for ( DataSet dataSet : idObjectManager.getAllNoAcl( DataSet.class ) )
         {
-            if ( legendSet.equals( dataSet.getLegendSet() ) )
+            for ( LegendSet ls : dataSet.getLegendSets() )
             {
-                dataSet.setLegendSet( null );
-                idObjectManager.updateNoAcl( dataSet );
+                if( legendSet.equals( ls ) )
+                {
+                    dataSet.getLegendSets().remove( ls );
+                    idObjectManager.updateNoAcl( dataSet );
+                }
+
             }
         }
     }

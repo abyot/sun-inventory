@@ -1,7 +1,7 @@
 package org.hisp.dhis.dxf2.datavalueset;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,12 @@ public class StreamingJsonDataValueSet extends DataValueSet
         writeObjectField( FIELD_CATEGORYOPTCOMBOIDSCHEME, categoryOptionComboIdScheme );
     }
 
+    @Override
+    public void setDataSetIdScheme( String dataSetIdScheme )
+    {
+        writeObjectField( FIELD_DATASETIDSCHEME, dataSetIdScheme );
+    }
+    
     @Override
     public void setDataSet( String dataSet )
     {

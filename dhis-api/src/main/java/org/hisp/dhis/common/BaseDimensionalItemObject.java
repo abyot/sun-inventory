@@ -1,7 +1,7 @@
 package org.hisp.dhis.common;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,13 @@ package org.hisp.dhis.common;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.hisp.dhis.analytics.AggregationType;
 import org.hisp.dhis.legend.LegendSet;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Lars Helge Overland
@@ -47,9 +50,9 @@ public class BaseDimensionalItemObject
     private DimensionItemType dimensionItemType;
 
     /**
-     * The legend set for this dimension.
+     * The legend sets for this dimension.
      */
-    protected LegendSet legendSet;
+    protected List<LegendSet> legendSets = new ArrayList<>();
 
     /**
      * The aggregation type for this dimension.
@@ -78,7 +81,7 @@ public class BaseDimensionalItemObject
     @Override
     public boolean hasLegendSet()
     {
-        return getLegendSet() != null;
+        return legendSets != null && !legendSets.isEmpty();
     }
 
     @Override
@@ -100,7 +103,7 @@ public class BaseDimensionalItemObject
     {
         return getPropertyValue( idScheme );
     }
-    
+
     // -------------------------------------------------------------------------
     // Get and set methods
     // -------------------------------------------------------------------------
@@ -120,16 +123,24 @@ public class BaseDimensionalItemObject
 
     @Override
     @JsonProperty
-    @JsonSerialize( as = BaseIdentifiableObject.class )
+    @JacksonXmlElementWrapper( localName = "legendSets", namespace = DxfNamespaces.DXF_2_0 )
+    @JacksonXmlProperty( localName = "legendSets", namespace = DxfNamespaces.DXF_2_0 )
+    public List<LegendSet> getLegendSets()
+    {
+        return this.legendSets;
+    }
+
+    @Override
+    @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
     public LegendSet getLegendSet()
     {
-        return legendSet;
+        return legendSets.isEmpty() ? null : legendSets.get( 0 );
     }
 
-    public void setLegendSet( LegendSet legendSet )
+    public void setLegendSets( List<LegendSet> legendSets )
     {
-        this.legendSet = legendSet;
+        this.legendSets = legendSets;
     }
 
     @Override
@@ -143,31 +154,5 @@ public class BaseDimensionalItemObject
     public void setAggregationType( AggregationType aggregationType )
     {
         this.aggregationType = aggregationType;
-    }
-
-    // -------------------------------------------------------------------------
-    // Merge
-    // -------------------------------------------------------------------------
-
-    @Override
-    public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
-    {
-        super.mergeWith( other, mergeMode );
-
-        if ( other.getClass().isInstance( this ) )
-        {
-            DimensionalItemObject object = (DimensionalItemObject) other;
-
-            if ( mergeMode.isReplace() )
-            {
-                legendSet = object.getLegendSet();
-                aggregationType = object.getAggregationType();
-            }
-            else if ( mergeMode.isMerge() )
-            {
-                legendSet = object.getLegendSet() == null ? legendSet : object.getLegendSet();
-                aggregationType = object.getAggregationType() == null ? aggregationType : object.getAggregationType();
-            }
-        }
     }
 }

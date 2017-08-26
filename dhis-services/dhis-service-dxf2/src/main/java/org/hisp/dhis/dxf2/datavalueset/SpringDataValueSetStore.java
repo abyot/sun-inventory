@@ -1,7 +1,7 @@
 package org.hisp.dhis.dxf2.datavalueset;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,15 @@ package org.hisp.dhis.dxf2.datavalueset;
  */
 
 import com.csvreader.CsvWriter;
-import org.amplecode.staxwax.factory.XMLFactory;
+import org.hisp.staxwax.factory.XMLFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.calendar.Calendar;
+import org.hisp.dhis.common.IdScheme;
 import org.hisp.dhis.common.IdSchemes;
 import org.hisp.dhis.commons.util.TextUtils;
+import org.hisp.dhis.datavalue.DataExportParams;
 import org.hisp.dhis.dxf2.datavalue.DataValue;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.period.PeriodType;
@@ -137,10 +139,14 @@ public class SpringDataValueSetStore
     {
         if ( params.isSingleDataValueSet() )
         {
-            dataValueSet.setDataSet( params.getFirstDataSet().getUid() ); //TODO id scheme
+            IdSchemes idScheme = params.getOutputIdSchemes() != null ? params.getOutputIdSchemes() : new IdSchemes();
+            IdScheme ouScheme = idScheme.getOrgUnitIdScheme();
+            IdScheme dataSetScheme = idScheme.getDataSetIdScheme();
+            
+            dataValueSet.setDataSet( params.getFirstDataSet().getPropertyValue( dataSetScheme ) );
             dataValueSet.setCompleteDate( getLongGmtDateString( completeDate ) );
             dataValueSet.setPeriod( params.getFirstPeriod().getIsoDate() );
-            dataValueSet.setOrgUnit( params.getFirstOrganisationUnit().getUid() );
+            dataValueSet.setOrgUnit( params.getFirstOrganisationUnit().getPropertyValue( ouScheme ) );
         }
 
         final Calendar calendar = PeriodType.getCalendar();
@@ -293,7 +299,7 @@ public class SpringDataValueSetStore
 
             sql += ") ";
         }
-
+        
         if ( !params.isIncludeDeleted() )
         {
             sql += "and dv.deleted is false ";
@@ -306,6 +312,11 @@ public class SpringDataValueSetStore
         else if ( params.hasPeriods() )
         {
             sql += "and dv.periodid in (" + getCommaDelimitedString( getIdentifiers( params.getPeriods() ) ) + ") ";
+        }
+
+        if ( params.hasAttributeOptionCombos() )
+        {
+            sql += "and dv.attributeoptioncomboid in (" + getCommaDelimitedString( getIdentifiers( params.getAttributeOptionCombos() ) ) + ") ";
         }
 
         if ( params.hasLastUpdated() )

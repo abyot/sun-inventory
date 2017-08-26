@@ -1,7 +1,7 @@
 package org.hisp.dhis.dataapproval;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
-import org.hisp.dhis.common.IdentifiableObject;
-import org.hisp.dhis.common.MergeMode;
+import org.hisp.dhis.common.MetadataObject;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeDeserializer;
 import org.hisp.dhis.common.adapter.JacksonPeriodTypeSerializer;
+import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.schema.PropertyType;
@@ -64,7 +64,7 @@ import java.util.Set;
  */
 @JacksonXmlRootElement( localName = "dataApprovalWorkflow", namespace = DxfNamespaces.DXF_2_0 )
 public class DataApprovalWorkflow
-    extends BaseIdentifiableObject
+    extends BaseIdentifiableObject implements MetadataObject
 {
     /**
      * The period type for approving data with this workflow.
@@ -72,10 +72,15 @@ public class DataApprovalWorkflow
     private PeriodType periodType;
 
     /**
+     * The category combination for approving data with this workflow.
+     */
+    private DataElementCategoryCombo categoryCombo;
+
+    /**
      * The data approval levels used in this workflow.
      */
     private Set<DataApprovalLevel> levels = new HashSet<>();
-    
+
     /**
      * The data sets part of this workflow. Inverse side.
      */
@@ -98,6 +103,15 @@ public class DataApprovalWorkflow
     {
         this.name = name;
         this.periodType = periodType;
+        this.levels = levels;
+    }
+
+    public DataApprovalWorkflow( String name, PeriodType periodType,
+        DataElementCategoryCombo categoryCombo, Set<DataApprovalLevel> levels )
+    {
+        this.name = name;
+        this.periodType = periodType;
+        this.categoryCombo = categoryCombo;
         this.levels = levels;
     }
 
@@ -141,6 +155,19 @@ public class DataApprovalWorkflow
         this.periodType = periodType;
     }
 
+    @JsonProperty
+    @JsonSerialize( as = BaseIdentifiableObject.class )
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public DataElementCategoryCombo getCategoryCombo()
+    {
+        return categoryCombo;
+    }
+
+    public void setCategoryCombo( DataElementCategoryCombo categoryCombo )
+    {
+        this.categoryCombo = categoryCombo;
+    }
+
     @JsonProperty( "dataApprovalLevels" )
     @JsonSerialize( contentAs = BaseIdentifiableObject.class )
     @JacksonXmlElementWrapper( localName = "dataApprovalLevels", namespace = DxfNamespaces.DXF_2_0 )
@@ -167,28 +194,5 @@ public class DataApprovalWorkflow
     public void setDataSets( Set<DataSet> dataSets )
     {
         this.dataSets = dataSets;
-    }
-
-    @Override
-    public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
-    {
-        super.mergeWith( other, mergeMode );
-
-        if ( other.getClass().isInstance( this ) )
-        {
-            DataApprovalWorkflow dataApprovalWorkflow = (DataApprovalWorkflow) other;
-
-            if ( mergeMode.isReplace() )
-            {
-                periodType = dataApprovalWorkflow.getPeriodType();
-            }
-            else if ( mergeMode.isMerge() )
-            {
-                periodType = dataApprovalWorkflow.getPeriodType() == null ? periodType : dataApprovalWorkflow.getPeriodType();
-            }
-
-            levels.clear();
-            levels.addAll( dataApprovalWorkflow.getLevels() );
-        }
     }
 }

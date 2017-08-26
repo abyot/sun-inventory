@@ -3,14 +3,13 @@
 
   jQuery(function() {
     var rules = getValidationRules("user");
-    rules["rawPassword"].required = false;
     rules["retypePassword"].required = false;
     rules["inviteEmail"].required = false;
 
     validation2('updateUserForm', function(form) {
-      jQuery("#urSelected").children().attr("selected", "selected");
-      jQuery("#ugSelected").children().attr("selected", "selected");
-      jQuery("#dcSelected").children().attr("selected", "selected");
+      jQuery("#urSelected").children().prop("selected", true);
+      jQuery("#ugSelected").children().prop("selected", true);
+      jQuery("#dcSelected").children().prop("selected", true);
 
       if( $('#orgUnitTree').find('.selected').size() == 0 ) {
         setHeaderDelayMessage('$encoder.jsEncode( $i18n.getString( "data_capture_organisation_unit_required_for_user" ) )');
@@ -28,6 +27,7 @@
     });
 
     checkValueIsExist("openId", "validateUser.action", { id: $userCredentials.id });
+      checkValueIsExist("rawPassword", "validateUser.action", { id: $userCredentials.id, newUser: false });
 
     ouwtSelected = selection.getSelected();
     selection.clearSelected(); // Sync ouwt from server

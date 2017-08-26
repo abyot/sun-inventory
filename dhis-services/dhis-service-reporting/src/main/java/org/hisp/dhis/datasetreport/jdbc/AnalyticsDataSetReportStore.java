@@ -1,7 +1,7 @@
 package org.hisp.dhis.datasetreport.jdbc;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@ package org.hisp.dhis.datasetreport.jdbc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -43,6 +44,7 @@ import org.hisp.dhis.analytics.DataQueryService;
 import org.hisp.dhis.common.IdScheme;
 import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategory;
+import org.hisp.dhis.dataelement.DataElementCategoryCombo;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.Section;
 import org.hisp.dhis.datasetreport.DataSetReportStore;
@@ -95,7 +97,7 @@ public class AnalyticsDataSetReportStore
         
         if ( dimensions != null )
         {
-            params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, IdScheme.UID ) );
+            params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, false, IdScheme.UID ) );
         }
         
         Map<String, Object> map = analyticsService.getAggregatedDataValueMapping( params.build() );
@@ -119,7 +121,12 @@ public class AnalyticsDataSetReportStore
         for ( Section section : dataSet.getSections() )
         {
             List<DataElement> dataElements = new ArrayList<>( section.getDataElements() );
-            List<DataElementCategory> categories = section.hasCategoryCombo() ? section.getCategoryCombo().getCategories() : null;
+            Set<DataElementCategory> categories = new HashSet<>();
+            
+            for( DataElementCategoryCombo categoryCombo : section.getCategoryCombos() )
+            {
+                categories.addAll( categoryCombo.getCategories() );
+            }            
 
             FilterUtils.filter( dataElements, AggregatableDataElementFilter.INSTANCE );
 
@@ -149,7 +156,7 @@ public class AnalyticsDataSetReportStore
 
                 if ( dimensions != null )
                 {
-                    params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, IdScheme.UID ) );
+                    params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, false, IdScheme.UID ) );
                 }
                 
                 Map<String, Object> map = analyticsService.getAggregatedDataValueMapping( params.build() );
@@ -184,7 +191,7 @@ public class AnalyticsDataSetReportStore
 
         if ( dimensions != null )
         {
-            params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, IdScheme.UID ) );
+            params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, false, IdScheme.UID ) );
         }
         
         Map<String, Object> map = analyticsService.getAggregatedDataValueMapping( params.build() );
@@ -217,7 +224,7 @@ public class AnalyticsDataSetReportStore
 
         if ( dimensions != null )
         {
-            params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, IdScheme.UID ) );
+            params.addFilters( dataQueryService.getDimensionalObjects( dimensions, null, null, null, false, IdScheme.UID ) );
         }
         
         Map<String, Object> map = analyticsService.getAggregatedDataValueMapping( params.build() );

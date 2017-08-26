@@ -1,7 +1,7 @@
 package org.hisp.dhis.user;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@ import org.hisp.dhis.setting.SystemSettingManager;
 import org.hisp.dhis.system.deletion.DeletionManager;
 import org.hisp.dhis.system.filter.UserAuthorityGroupCanIssueFilter;
 import org.hisp.dhis.system.util.DateUtils;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +62,8 @@ public class DefaultUserService
     implements UserService
 {
     private static final Log log = LogFactory.getLog( DefaultUserService.class );
+
+    private static final int EXPIRY_THRESHOLD = 14;
 
     // -------------------------------------------------------------------------
     // Dependencies
@@ -131,7 +134,9 @@ public class DefaultUserService
     {
         AuditLogUtil.infoWrapper( log, currentUserService.getCurrentUsername(), user, AuditLogUtil.ACTION_CREATE );
 
-        return userStore.save( user );
+        userStore.save( user );
+
+        return user.getId();
     }
 
     @Override
@@ -339,8 +344,12 @@ public class DefaultUserService
     @Override
     public boolean canAddOrUpdateUser( Collection<String> userGroups )
     {
-        User currentUser = currentUserService.getCurrentUser();
+        return canAddOrUpdateUser( userGroups, currentUserService.getCurrentUser() );
+    }
 
+    @Override
+    public boolean canAddOrUpdateUser( Collection<String> userGroups, User currentUser )
+    {
         if ( currentUser == null )
         {
             return false;
@@ -383,7 +392,8 @@ public class DefaultUserService
     @Override
     public int addUserAuthorityGroup( UserAuthorityGroup userAuthorityGroup )
     {
-        return userAuthorityGroupStore.save( userAuthorityGroup );
+        userAuthorityGroupStore.save( userAuthorityGroup );
+        return userAuthorityGroup.getId();
     }
 
     @Override
@@ -475,7 +485,8 @@ public class DefaultUserService
     @Override
     public int addUserCredentials( UserCredentials userCredentials )
     {
-        return userCredentialsStore.save( userCredentials );
+        userCredentialsStore.save( userCredentials );
+        return userCredentials.getId();
     }
 
     @Override
@@ -522,6 +533,7 @@ public class DefaultUserService
         // Encode and set password
 
         userCredentials.setPassword( passwordManager.encode( rawPassword ) );
+        userCredentials.getPreviousPasswords().add( passwordManager.encode( rawPassword ) );
     }
 
     @Override
@@ -582,13 +594,18 @@ public class DefaultUserService
             return true;
         }
 
+        if ( credentials == null || credentials.getPasswordLastUpdated() == null )
+        {
+            return true;
+        }
+
         int months = DateUtils.monthsBetween( credentials.getPasswordLastUpdated(), new Date() );
 
         return months < credentialsExpires;
     }
 
     @Override
-    public List<ErrorReport> validateUser( User currentUser, User user )
+    public List<ErrorReport> validateUser( User user, User currentUser )
     {
         List<ErrorReport> errors = new ArrayList<>();
 
@@ -626,12 +643,26 @@ public class DefaultUserService
 
         user.getGroups().forEach( ug ->
         {
-            if ( !currentUser.canManage( ug ) )
+            if ( ! ( currentUser.canManage( ug ) || userGroupService.canAddOrRemoveMember( ug.getUid() ) ) )
             {
                 errors.add( new ErrorReport( UserGroup.class, ErrorCode.E3005, currentUser, ug ) );
             }
         } );
 
         return errors;
+    }
+
+    @Override
+    public List<User> getExpiringUsers()
+    {
+        int daysBeforePasswordChangeRequired = (Integer) systemSettingManager.getSystemSetting( SettingKey.CREDENTIALS_EXPIRES ) * 30;
+
+        Date daysPassed = new DateTime( new Date() ).minusDays( daysBeforePasswordChangeRequired - EXPIRY_THRESHOLD ).toDate();
+
+        UserQueryParams userQueryParams = new UserQueryParams();
+
+        userQueryParams.setDaysPassedSincePasswordChange( daysPassed );
+
+        return userStore.getExpiringUsers( userQueryParams );
     }
 }

@@ -1,7 +1,7 @@
 package org.hisp.dhis.sqlview.hibernate;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ public class HibernateSqlViewStore
     implements SqlViewStore
 {
     private static final Log log = LogFactory.getLog( HibernateSqlViewStore.class );
-    
+
     private static final Map<SqlViewType, String> TYPE_CREATE_PREFIX_MAP = 
         ImmutableMap.of( SqlViewType.VIEW, "CREATE VIEW ", SqlViewType.MATERIALIZED_VIEW, "CREATE MATERIALIZED VIEW " );
 

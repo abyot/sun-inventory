@@ -1,7 +1,7 @@
 package org.hisp.dhis.user.action;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -238,25 +238,26 @@ public class UpdateUserAction
     public String execute()
         throws Exception
     {
-        if ( !userService.canAddOrUpdateUser( ugSelected ) )
+        User currentUser = currentUserService.getCurrentUser();
+
+        User user = userService.getUser( id );
+
+        if ( user == null || !userService.canAddOrUpdateUser( ugSelected )
+            || !currentUser.getUserCredentials().canModifyUser( user.getUserCredentials() ) )
         {
             throw new AccessDeniedException( "You cannot edit this user" );
         }
-        
-        User currentUser = currentUserService.getCurrentUser();
 
         // ---------------------------------------------------------------------
         // User credentials and user
         // ---------------------------------------------------------------------
 
-        User user = userService.getUser( id );
         user.setSurname( StringUtils.trimToNull( surname ) );
         user.setFirstName( StringUtils.trimToNull( firstName ) );
         user.setEmail( StringUtils.trimToNull( email ) );
         user.setPhoneNumber( StringUtils.trimToNull( phoneNumber ) );
 
         UserCredentials userCredentials = user.getUserCredentials();
-
         userCredentials.setExternalAuth( externalAuth );
         userCredentials.setOpenId( StringUtils.trimToNull( openId ) );
         userCredentials.setLdapId( StringUtils.trimToNull( ldapId ) );

@@ -1,7 +1,7 @@
 package org.hisp.dhis.webapi.webdomain.user;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,12 +50,12 @@ public class Dashboard
 
     @JsonProperty
     @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public long getUnreadMessageConversation()
+    public long getUnreadMessageConversations()
     {
         return unreadMessageConversation;
     }
 
-    public void setUnreadMessageConversation( long unreadMessageConversation )
+    public void setUnreadMessageConversations( long unreadMessageConversation )
     {
         this.unreadMessageConversation = unreadMessageConversation;
     }

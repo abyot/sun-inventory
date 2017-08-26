@@ -1,7 +1,7 @@
 package org.hisp.dhis.dxf2.datavalue;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,12 @@ package org.hisp.dhis.dxf2.datavalue;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
 
-import org.apache.commons.lang3.StringUtils;
-import org.hisp.dhis.common.DimensionalObject;
 import org.hisp.dhis.common.DxfNamespaces;
 
 /**
@@ -95,12 +93,27 @@ public class DataValue
         String creat = getCreated();
         return creat != null && !creat.isEmpty();
     }
-
+    
     public String getPrimaryKey()
-    {        
-        return StringUtils.join( 
-            Lists.newArrayList( dataElement, period, orgUnit, categoryOptionCombo, attributeOptionCombo )
-            .toArray(), DimensionalObject.DIMENSION_SEP );
+    {
+        return new StringBuilder()
+            .append( dataElement )
+            .append( period )
+            .append( orgUnit )
+            .append( categoryOptionCombo )
+            .append( attributeOptionCombo )
+            .toString();
+    }
+    
+    public boolean isNullValue()
+    {
+        return getValue() == null && getComment() == null;
+    }
+    
+    public boolean isDeletedValue()
+    {
+        Boolean deleted = getDeleted();
+        return deleted != null && deleted;
     }
     
     @Override
@@ -190,6 +203,11 @@ public class DataValue
     }
 
     public void setValue( String value )
+    {
+        this.value = value;
+    }
+
+    public void setValueForced( String value )
     {
         this.value = value;
     }

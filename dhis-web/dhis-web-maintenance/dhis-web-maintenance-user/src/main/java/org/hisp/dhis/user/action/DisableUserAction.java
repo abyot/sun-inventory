@@ -1,7 +1,7 @@
 package org.hisp.dhis.user.action;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@ package org.hisp.dhis.user.action;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.user.CurrentUserService;
 import org.hisp.dhis.user.User;
 import org.hisp.dhis.user.UserCredentials;
@@ -78,8 +79,9 @@ public class DisableUserAction
         {
             return ERROR;
         }
-        
-        if ( !currentUser.getUserCredentials().canModifyUser( credentials ) )
+
+        if ( !userService.canAddOrUpdateUser( IdentifiableObjectUtils.getUids( credentials.getUserInfo().getGroups() ) )
+            || !currentUser.getUserCredentials().canModifyUser( credentials ) )
         {
             return ERROR;
         }

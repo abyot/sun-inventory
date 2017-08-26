@@ -13,14 +13,6 @@
 		font-size: 10pt;
 	}
 	</style>
-    <script>
-        function clearJsession()
-        {
-            console.log('clearing session....');            
-            document.cookie = 'JSESSIONID' + '=' + "" + "";
-            window.location.href = "../dhis-web-commons/security/login.action";
-        }
-    </script>
 </head>
 <body>
 
@@ -30,7 +22,7 @@
 
 <p>$encoder.htmlEncode( $i18n.getString( "access_denied_message" ) )</p>
 
-<p><input type="button" value="$encoder.htmlEncode( $i18n.getString( "go_back" ) )" onclick="clearJsession()"></p>
+<p><input type="button" value="$encoder.htmlEncode( $i18n.getString( "go_back" ) )" onclick="window.history.back()"></p>
 
 ## -------------------------------------------------------------------------- ##
 

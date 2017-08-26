@@ -1,7 +1,7 @@
 package org.hisp.dhis.webapi.controller.user;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,47 +30,38 @@ package org.hisp.dhis.webapi.controller.user;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.hisp.dhis.common.DhisApiVersion;
 import org.hisp.dhis.common.IdentifiableObjectManager;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
+import org.hisp.dhis.dxf2.webmessage.WebMessageUtils;
 import org.hisp.dhis.fieldfilter.FieldFilterService;
+import org.hisp.dhis.interpretation.InterpretationService;
+import org.hisp.dhis.message.MessageService;
 import org.hisp.dhis.node.NodeService;
 import org.hisp.dhis.node.NodeUtils;
+import org.hisp.dhis.node.Preset;
 import org.hisp.dhis.node.types.CollectionNode;
 import org.hisp.dhis.node.types.ComplexNode;
 import org.hisp.dhis.node.types.RootNode;
 import org.hisp.dhis.node.types.SimpleNode;
 import org.hisp.dhis.render.RenderService;
 import org.hisp.dhis.security.PasswordManager;
-import org.hisp.dhis.system.util.ValidationUtils;
-import org.hisp.dhis.user.CurrentUserService;
-import org.hisp.dhis.user.User;
-import org.hisp.dhis.user.UserService;
-import org.hisp.dhis.user.UserSettingKey;
-import org.hisp.dhis.user.UserSettingService;
+import org.hisp.dhis.user.*;
 import org.hisp.dhis.webapi.controller.exception.NotAuthenticatedException;
 import org.hisp.dhis.webapi.mvc.annotation.ApiVersion;
-import org.hisp.dhis.webapi.mvc.annotation.ApiVersion.Version;
 import org.hisp.dhis.webapi.service.ContextService;
-import org.hisp.dhis.dxf2.webmessage.WebMessageUtils;
+import org.hisp.dhis.webapi.webdomain.user.Dashboard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -78,7 +69,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequestMapping( value = "/me", method = RequestMethod.GET )
-@ApiVersion( { Version.V24, Version.V25 } )
+@ApiVersion( { DhisApiVersion.V24, DhisApiVersion.V25, DhisApiVersion.V26, DhisApiVersion.V27 } )
 public class MeController
 {
     @Autowired
@@ -103,10 +94,19 @@ public class MeController
     private PasswordManager passwordManager;
 
     @Autowired
+    private MessageService messageService;
+
+    @Autowired
+    private InterpretationService interpretationService;
+
+    @Autowired
     private NodeService nodeService;
 
     @Autowired
     private UserSettingService userSettingService;
+
+    @Autowired
+    private PasswordValidationService passwordValidationService;
 
     private static final Set<String> USER_SETTING_NAMES = Sets.newHashSet(
         UserSettingKey.values() ).stream().map( UserSettingKey::getName ).collect( Collectors.toSet() );
@@ -125,7 +125,7 @@ public class MeController
 
         if ( fields.isEmpty() )
         {
-            fields.add( ":all" );
+            fields.addAll( Preset.ALL.getFields() );
         }
 
         CollectionNode collectionNode = fieldFilterService.filter( User.class, Collections.singletonList( currentUser ), fields );
@@ -134,13 +134,32 @@ public class MeController
 
         RootNode rootNode = NodeUtils.createRootNode( collectionNode.getChildren().get( 0 ) );
 
-        rootNode.addChild( new ComplexNode( "settings" ) ).addChildren(
-            NodeUtils.createSimples( userSettingService.getUserSettingsWithFallbackByUserAsMap( currentUser, USER_SETTING_NAMES, true ) ) );
+        if ( fieldsContains( "settings", fields ) )
+        {
+            rootNode.addChild( new ComplexNode( "settings" ) ).addChildren(
+                NodeUtils.createSimples( userSettingService.getUserSettingsWithFallbackByUserAsMap( currentUser, USER_SETTING_NAMES, true ) ) );
+        }
 
-        rootNode.addChild( new CollectionNode( "authorities" ) ).addChildren(
-            NodeUtils.createSimples( currentUser.getUserCredentials().getAllAuthorities() ) );
+        if ( fieldsContains( "authorities", fields ) )
+        {
+            rootNode.addChild( new CollectionNode( "authorities" ) ).addChildren(
+                NodeUtils.createSimples( currentUser.getUserCredentials().getAllAuthorities() ) );
+        }
 
         nodeService.serialize( rootNode, "application/json", response.getOutputStream() );
+    }
+
+    private boolean fieldsContains( String key, List<String> fields )
+    {
+        for ( String field : fields )
+        {
+            if ( field.contains( key ) || field.equals( "*" ) || field.startsWith( ":" ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @RequestMapping( value = "", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE )
@@ -167,7 +186,7 @@ public class MeController
 
         if ( fields.isEmpty() )
         {
-            fields.add( ":all" );
+            fields.addAll( Preset.ALL.getFields() );
         }
 
         CollectionNode collectionNode = fieldFilterService.filter( User.class, Collections.singletonList( currentUser ), fields );
@@ -224,9 +243,15 @@ public class MeController
     }
 
     @RequestMapping( value = "/settings/{key}" )
-    public void getSetting( HttpServletResponse response, @PathVariable String key ) throws IOException, WebMessageException
+    public void getSetting( HttpServletResponse response, @PathVariable String key ) throws IOException, WebMessageException, NotAuthenticatedException
     {
         User currentUser = currentUserService.getCurrentUser();
+
+        if ( currentUser == null )
+        {
+            throw new NotAuthenticatedException();
+        }
+
         Optional<UserSettingKey> keyEnum = UserSettingKey.getByName( key );
 
         if ( !keyEnum.isPresent() )
@@ -256,11 +281,6 @@ public class MeController
             throw new NotAuthenticatedException();
         }
 
-        if ( !ValidationUtils.passwordIsValid( password ) )
-        {
-            throw new WebMessageException( WebMessageUtils.conflict( "Password must have at least 8 characters, one digit, one uppercase" ) );
-        }
-
         updatePassword( currentUser, password );
         manager.update( currentUser );
 
@@ -274,11 +294,35 @@ public class MeController
         return verifyPasswordInternal( password, getCurrentUserOrThrow() );
     }
 
+    @RequestMapping( value = "/validatePassword", method = RequestMethod.POST, consumes = "text/*" )
+    public @ResponseBody RootNode validatePasswordText( @RequestBody String password, HttpServletResponse response )
+            throws WebMessageException
+    {
+        return validatePasswordInternal( password, getCurrentUserOrThrow() );
+    }
+
     @RequestMapping( value = "/verifyPassword", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE )
     public @ResponseBody RootNode verifyPasswordJson( @RequestBody Map<String, String> body, HttpServletResponse response )
         throws WebMessageException
     {
         return verifyPasswordInternal( body.get( "password" ), getCurrentUserOrThrow() );
+    }
+
+    @RequestMapping( value = "/dashboard" )
+    public @ResponseBody Dashboard getDashboard( HttpServletResponse response ) throws Exception
+    {
+        User currentUser = currentUserService.getCurrentUser();
+
+        if ( currentUser == null )
+        {
+            throw new NotAuthenticatedException();
+        }
+
+        Dashboard dashboard = new Dashboard();
+        dashboard.setUnreadMessageConversations( messageService.getUnreadMessageConversationCount() );
+        dashboard.setUnreadInterpretations( interpretationService.getNewInterpretationCount() );
+
+        return dashboard;
     }
 
     //------------------------------------------------------------------------------------------------
@@ -297,6 +341,29 @@ public class MeController
 
         RootNode rootNode = NodeUtils.createRootNode( "response" );
         rootNode.addChild( new SimpleNode( "isCorrectPassword", valid ) );
+
+        return rootNode;
+    }
+
+    private RootNode validatePasswordInternal( String password, User currentUser )
+            throws WebMessageException
+    {
+        if ( password == null )
+        {
+            throw new WebMessageException( WebMessageUtils.conflict( "Required attribute 'password' missing or null." ) );
+        }
+
+        CredentialsInfo credentialsInfo = new CredentialsInfo( currentUser.getUsername(), password, currentUser.getEmail(), false );
+
+        PasswordValidationResult result = passwordValidationService.validate( credentialsInfo );
+
+        RootNode rootNode = NodeUtils.createRootNode( "response" );
+        rootNode.addChild( new SimpleNode( "isValidPassword", result.isValid() ) );
+
+        if ( !result.isValid() )
+        {
+            rootNode.addChild( new SimpleNode( "errorMessage", result.getErrorMessage() ) );
+        }
 
         return rootNode;
     }
@@ -339,13 +406,17 @@ public class MeController
     {
         if ( !StringUtils.isEmpty( password ) )
         {
-            if ( ValidationUtils.passwordIsValid( password ) )
+            CredentialsInfo credentialsInfo = new CredentialsInfo( currentUser.getUsername(), password, currentUser.getEmail(), false );
+
+            PasswordValidationResult result = passwordValidationService.validate( credentialsInfo );
+
+            if ( result.isValid() )
             {
                 userService.encodeAndSetPassword( currentUser.getUserCredentials(), password );
             }
             else
             {
-                throw new WebMessageException( WebMessageUtils.conflict( "Invalid password format." ) );
+                throw new WebMessageException( WebMessageUtils.conflict( result.getErrorMessage() ) );
             }
         }
     }

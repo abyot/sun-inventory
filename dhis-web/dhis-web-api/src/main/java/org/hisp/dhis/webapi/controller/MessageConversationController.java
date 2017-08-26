@@ -1,7 +1,7 @@
 package org.hisp.dhis.webapi.controller;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,9 @@ package org.hisp.dhis.webapi.controller;
 
 import com.google.common.collect.Lists;
 import org.hisp.dhis.common.Pager;
+import org.hisp.dhis.configuration.ConfigurationService;
 import org.hisp.dhis.dxf2.webmessage.WebMessageException;
+import org.hisp.dhis.dxf2.webmessage.WebMessageUtils;
 import org.hisp.dhis.hibernate.exception.DeleteAccessDeniedException;
 import org.hisp.dhis.hibernate.exception.UpdateAccessDeniedException;
 import org.hisp.dhis.message.MessageConversationPriority;
@@ -50,7 +52,6 @@ import org.hisp.dhis.user.UserGroup;
 import org.hisp.dhis.user.UserGroupService;
 import org.hisp.dhis.user.UserService;
 import org.hisp.dhis.webapi.utils.ContextUtils;
-import org.hisp.dhis.dxf2.webmessage.WebMessageUtils;
 import org.hisp.dhis.webapi.webdomain.MessageConversation;
 import org.hisp.dhis.webapi.webdomain.WebMetadata;
 import org.hisp.dhis.webapi.webdomain.WebOptions;
@@ -92,6 +93,9 @@ public class MessageConversationController
 
     @Autowired
     private UserGroupService userGroupService;
+
+    @Autowired
+    private ConfigurationService configurationService;
 
     @Override
     protected void postProcessEntity( org.hisp.dhis.message.MessageConversation entity, WebOptions options, Map<String, String> parameters )
@@ -234,7 +238,7 @@ public class MessageConversationController
 
         String metaData = MessageService.META_USER_AGENT + request.getHeader( ContextUtils.HEADER_USER_AGENT );
 
-        int id = messageService.sendMessage( messageConversation.getSubject(), messageConversation.getText(), metaData,
+        int id = messageService.sendPrivateMessage( messageConversation.getSubject(), messageConversation.getText(), metaData,
             messageConversation.getUsers() );
 
         org.hisp.dhis.message.MessageConversation conversation = messageService.getMessageConversation( id );
@@ -288,7 +292,7 @@ public class MessageConversationController
     {
         String metaData = MessageService.META_USER_AGENT + request.getHeader( ContextUtils.HEADER_USER_AGENT );
 
-        messageService.sendFeedback( subject, body, metaData );
+        messageService.sendTicketMessage( subject, body, metaData );
 
         webMessageService.send( WebMessageUtils.created( "Feedback created" ), response, request );
     }
@@ -343,7 +347,7 @@ public class MessageConversationController
         MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE } )
     public @ResponseBody RootNode setMessageStatus(
         @PathVariable String uid,
-        @RequestParam( required = true ) MessageConversationStatus messageConversationStatus,
+        @RequestParam MessageConversationStatus messageConversationStatus,
         HttpServletResponse response )
     {
         RootNode responseNode = new RootNode( "response" );
@@ -373,6 +377,98 @@ public class MessageConversationController
         messageConversation.setStatus( messageConversationStatus );
         messageService.updateMessageConversation( messageConversation );
         marked.addChild( new SimpleNode( "uid", messageConversation.getUid() ) );
+        response.setStatus( HttpServletResponse.SC_OK );
+
+        return responseNode;
+    }
+
+    //--------------------------------------------------------------------------
+    // Assign user
+    //--------------------------------------------------------------------------
+
+    @RequestMapping( value = "/{uid}/assign", method = RequestMethod.POST, produces = {
+        MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE } )
+    public @ResponseBody RootNode setUserAssigned(
+        @PathVariable String uid,
+        @RequestParam( required = false ) String userId,
+        HttpServletResponse response )
+    {
+        RootNode responseNode = new RootNode( "response" );
+
+        User user = currentUserService.getCurrentUser();
+
+        if ( !canModifyUserConversation( user, user ) &&
+            (messageService.hasAccessToManageFeedbackMessages( user )) )
+        {
+            throw new UpdateAccessDeniedException( "Not authorized to modify this object." );
+        }
+
+        org.hisp.dhis.message.MessageConversation messageConversation = messageService
+            .getMessageConversation( uid );
+
+        if ( messageConversation == null )
+        {
+            response.setStatus( HttpServletResponse.SC_NOT_FOUND );
+            responseNode.addChild( new SimpleNode( "message", "No MessageConversation found for the given ID." ) );
+            return responseNode;
+        }
+
+        User userToAssign;
+
+        if ( (userToAssign = userService.getUser( userId )) == null )
+        {
+            response.setStatus( HttpServletResponse.SC_NOT_FOUND );
+            responseNode.addChild( new SimpleNode( "message", "Could not find user to assign" ) );
+            return responseNode;
+        }
+
+        if ( !configurationService.isUserInFeedbackRecipientUserGroup( userToAssign ) )
+        {
+            response.setStatus( HttpServletResponse.SC_CONFLICT );
+            responseNode.addChild( new SimpleNode( "message", "User provided is not a member of the system's feedback recipient group" ) );
+            return responseNode;
+        }
+
+        messageConversation.setAssignee( userToAssign );
+        messageService.updateMessageConversation( messageConversation );
+        responseNode.addChild( new SimpleNode( "message", "User " + userToAssign.getName() + " was assigned to ticket" ) );
+        response.setStatus( HttpServletResponse.SC_OK );
+
+        return responseNode;
+    }
+    //--------------------------------------------------------------------------
+    // Remove assigned user
+    //--------------------------------------------------------------------------
+
+    @RequestMapping( value = "/{uid}/assign", method = RequestMethod.DELETE, produces = {
+        MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE } )
+    public @ResponseBody RootNode removeUserAssigned(
+        @PathVariable String uid,
+        HttpServletResponse response )
+    {
+        RootNode responseNode = new RootNode( "response" );
+
+        User user = currentUserService.getCurrentUser();
+
+        if ( !canModifyUserConversation( user, user ) &&
+            (messageService.hasAccessToManageFeedbackMessages( user )) )
+        {
+            throw new UpdateAccessDeniedException( "Not authorized to modify this object." );
+        }
+
+        org.hisp.dhis.message.MessageConversation messageConversation = messageService
+            .getMessageConversation( uid );
+
+        if ( messageConversation == null )
+        {
+            response.setStatus( HttpServletResponse.SC_NOT_FOUND );
+            responseNode.addChild( new SimpleNode( "message", "No MessageConversation found for the given ID." ) );
+            return responseNode;
+        }
+
+        messageConversation.setAssignee( null );
+        messageService.updateMessageConversation( messageConversation );
+        responseNode.addChild( new SimpleNode( "message", "Message is no longer assigned to user" ) );
         response.setStatus( HttpServletResponse.SC_OK );
 
         return responseNode;

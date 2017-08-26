@@ -1,7 +1,7 @@
 package org.hisp.dhis.dxf2.events.trackedentity;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,8 @@ public class Attribute
     private String code;
 
     private String value;
+
+    private String storedBy;
 
     public Attribute()
     {
@@ -154,6 +156,18 @@ public class Attribute
         this.value = value;
     }
 
+    @JsonProperty
+    @JacksonXmlProperty( isAttribute = true )
+    public String getStoredBy()
+    {
+        return storedBy;
+    }
+
+    public void setStoredBy( String storedBy )
+    {
+        this.storedBy = storedBy;
+    }
+
     @Override
     public boolean equals( Object o )
     {
@@ -168,22 +182,22 @@ public class Attribute
         {
             return false;
         }
-        
+
         if ( displayName != null ? !displayName.equals( attribute1.displayName ) : attribute1.displayName != null )
         {
             return false;
         }
-        
+
         if ( valueType != null ? !valueType.equals( attribute1.valueType ) : attribute1.valueType != null )
         {
             return false;
         }
-        
+
         if ( code != null ? !code.equals( attribute1.code ) : attribute1.code != null )
         {
             return false;
         }
-        
+
         if ( value != null ? !value.equals( attribute1.value ) : attribute1.value != null )
         {
             return false;

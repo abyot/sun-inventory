@@ -40,8 +40,10 @@ import java.util.Map;
 import org.hisp.dhis.attribute.Attribute;
 import org.hisp.dhis.attribute.AttributeValue;
 import org.hisp.dhis.dataelement.DataElement;
+import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
+import org.hisp.dhis.dataelement.DataElementOperand;
 import org.hisp.dhis.program.Program;
-import org.hisp.dhis.program.ProgramDataElement;
+import org.hisp.dhis.program.ProgramDataElementDimensionItem;
 
 /**
  * @author Lars Helge Overland
@@ -62,6 +64,12 @@ public class DimensionalObjectUtilsTest
     public void testIsCompositeDimensionObject()
     {
         assertTrue( DimensionalObjectUtils.isCompositeDimensionalObject( "d4HjsAHkj42.G142kJ2k3Gj" ) );
+        assertTrue( DimensionalObjectUtils.isCompositeDimensionalObject( "d4HjsAHkj42.G142kJ2k3Gj.BoaSg2GopVn" ) );
+        assertTrue( DimensionalObjectUtils.isCompositeDimensionalObject( "d4HjsAHkj42.*.BoaSg2GopVn" ) );
+        assertTrue( DimensionalObjectUtils.isCompositeDimensionalObject( "d4HjsAHkj42.G142kJ2k3Gj.*" ) );
+        assertTrue( DimensionalObjectUtils.isCompositeDimensionalObject( "d4HjsAHkj42.*" ) );
+        assertTrue( DimensionalObjectUtils.isCompositeDimensionalObject( "d4HjsAHkj42.*.*" ) );
+        assertTrue( DimensionalObjectUtils.isCompositeDimensionalObject( "codeA.codeB" ) );
         
         assertFalse( DimensionalObjectUtils.isCompositeDimensionalObject( "d4HjsAHkj42" ) );
         assertFalse( DimensionalObjectUtils.isCompositeDimensionalObject( "14HjsAHkj42-G142kJ2k3Gj" ) );
@@ -110,10 +118,10 @@ public class DimensionalObjectUtilsTest
         deA.setCode( "DCodeA" );
         deB.setCode( "DCodeB" );
         
-        ProgramDataElement pdeA = new ProgramDataElement( prA, deA );
-        ProgramDataElement pdeB = new ProgramDataElement( prA, deB );
+        ProgramDataElementDimensionItem pdeA = new ProgramDataElementDimensionItem( prA, deA );
+        ProgramDataElementDimensionItem pdeB = new ProgramDataElementDimensionItem( prA, deB );
         
-        List<ProgramDataElement> elements = Lists.newArrayList( pdeA, pdeB );
+        List<ProgramDataElementDimensionItem> elements = Lists.newArrayList( pdeA, pdeB );
         
         Map<String, String> map = DimensionalObjectUtils.getDimensionItemIdSchemeMap( elements, IdScheme.CODE );
 
@@ -154,5 +162,82 @@ public class DimensionalObjectUtilsTest
         assertEquals( "AttributeValueA", map.get( "A123456789A" ) );
         assertEquals( "AttributeValueB", map.get( "A123456789B" ) );
         assertEquals( null, map.get( "A123456789C" ) );
+    }
+
+    @Test
+    public void testGetDataElementOperandIdSchemeCodeMap()
+    {        
+        DataElement deA = new DataElement( "NameA" );
+        DataElement deB = new DataElement( "NameB" );
+
+        deA.setUid( "D123456789A" );
+        deB.setUid( "D123456789B" );
+        
+        deA.setCode( "DCodeA" );
+        deB.setCode( "DCodeB" );
+        
+        DataElementCategoryOptionCombo ocA = new DataElementCategoryOptionCombo();
+        ocA.setUid( "C123456789A" );
+        ocA.setCode( "CCodeA" );
+        
+        DataElementOperand opA = new DataElementOperand( deA, ocA );
+        DataElementOperand opB = new DataElementOperand( deB, ocA );
+        
+        List<DataElementOperand> operands = Lists.newArrayList( opA, opB );
+        
+        Map<String, String> map = DimensionalObjectUtils.getDataElementOperandIdSchemeMap( operands, IdScheme.CODE );
+
+        assertEquals( 3, map.size() );
+        assertEquals( "DCodeA", map.get( "D123456789A" ) );
+        assertEquals( "DCodeB", map.get( "D123456789B" ) );
+        assertEquals( "CCodeA", map.get( "C123456789A" ) );
+    }
+
+    @Test
+    public void testGetFirstSecondIdentifier()
+    {
+        assertEquals( "A123456789A", DimensionalObjectUtils.getFirstIdentifer( "A123456789A.P123456789A" ) );
+        assertNull( DimensionalObjectUtils.getFirstIdentifer( "A123456789A" ) );
+    }
+
+    @Test
+    public void testGetSecondIdentifier()
+    {
+        assertEquals( "P123456789A", DimensionalObjectUtils.getSecondIdentifer( "A123456789A.P123456789A" ) );
+        assertNull( DimensionalObjectUtils.getSecondIdentifer( "A123456789A" ) );
+    }
+    
+    @Test
+    public void testReplaceOperandTotalsWithDataElements()
+    {
+        DataElement deA = new DataElement( "NameA" );
+        DataElement deB = new DataElement( "NameB" );
+        deA.setAutoFields();
+        deB.setAutoFields();
+        
+        DataElementCategoryOptionCombo cocA = new DataElementCategoryOptionCombo();
+        cocA.setAutoFields();
+
+        DataElementOperand opA = new DataElementOperand( deA );
+        DataElementOperand opB = new DataElementOperand( deA, cocA );
+        DataElementOperand opC = new DataElementOperand( deB, cocA );
+        
+        List<DimensionalItemObject> items = Lists.newArrayList( deB, opA, opB, opC );
+
+        assertEquals( 4, items.size() );
+        assertTrue( items.contains( deB ) );
+        assertTrue( items.contains( opA ) );
+        assertTrue( items.contains( opB ) );
+        assertTrue( items.contains( opC ) );
+        assertFalse( items.contains( deA ) );
+        
+        items = DimensionalObjectUtils.replaceOperandTotalsWithDataElements( items );
+
+        assertEquals( 4, items.size() );
+        assertTrue( items.contains( deB ) );
+        assertFalse( items.contains( opA ) );
+        assertTrue( items.contains( opB ) );
+        assertTrue( items.contains( opC ) );
+        assertTrue( items.contains( deA ) );
     }
 }

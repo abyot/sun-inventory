@@ -1,7 +1,7 @@
 package org.hisp.dhis.analytics.data;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,6 @@ package org.hisp.dhis.analytics.data;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.Collection;
-import java.util.List;
-import java.util.ArrayList;
-
 import org.hisp.dhis.analytics.AggregationType;
 import org.hisp.dhis.analytics.DataQueryParams;
 import org.hisp.dhis.analytics.DataType;
@@ -45,7 +41,13 @@ import org.hisp.dhis.period.Period;
 import org.hisp.dhis.period.PeriodType;
 import org.hisp.dhis.util.ObjectUtils;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
+ * Utilities for analytics query planning.
+ * 
  * @author Lars Helge Overland
  */
 public class QueryPlannerUtils
@@ -85,7 +87,11 @@ public class QueryPlannerUtils
         for ( DimensionalItemObject element : dataElements )
         {
             DataElement dataElement = (DataElement) element;
-            DataType dataType = dataElement.getValueType().isText() ? DataType.TEXT : DataType.NUMERIC;
+
+            ValueType valueType = dataElement.getValueType();
+
+            // Both Text and Date types are recognized as TEXT
+            DataType dataType = ( valueType.isText() || valueType.isDate() ) ? DataType.TEXT : DataType.NUMERIC;
 
             map.putValue( dataType, dataElement );
         }
@@ -125,7 +131,7 @@ public class QueryPlannerUtils
      * Creates a mapping between the number of days in the period interval and period
      * for the given periods.
      * 
-     * @param periods.
+     * @param periods
      */
     public static ListMap<Integer, DimensionalItemObject> getDaysPeriodMap( List<DimensionalItemObject> periods )
     {

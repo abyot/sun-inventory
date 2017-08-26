@@ -1,7 +1,7 @@
 package org.hisp.dhis.common;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,8 @@ package org.hisp.dhis.common;
 import org.hisp.dhis.analytics.AggregationType;
 import org.hisp.dhis.legend.LegendSet;
 
+import java.util.List;
+
 /**
 * @author Lars Helge Overland
 */
@@ -56,7 +58,16 @@ public interface DimensionalItemObject
     DimensionItemType getDimensionItemType();
 
     /**
-     * Gets the legend set.
+     * Gets the legend sets.
+     */
+    List<LegendSet> getLegendSets();
+
+    /**
+     * Gets the first legend set in the legend set list. This
+     * field is derived from {@link DimensionalObject#getLegendSet()} and
+     * is not persisted.
+     * 
+     * Will be removed from serialization in 2.28.
      */
     LegendSet getLegendSet();
 

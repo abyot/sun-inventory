@@ -4,6 +4,8 @@
 
 <script>
   jQuery(document).ready(function() {
+      hideDueDateOnChange();
+      
     validation2( 'updateProgramStageForm', function( form )
    	{
    		form.submit();
@@ -35,25 +37,32 @@
    			var allowProvidedElsewhere = jQuery( "#allowProvidedElsewhere" );
    			allowProvidedElsewhere.empty();
 
+            var renderOptionsAsRadios = jQuery( "#renderOptionsAsRadios" );
+   			renderOptionsAsRadios.empty();
+
    			jQuery("#selectedList").find("tr").each( function( i, item ){
 
    				selectedDataElementsValidator.append( "<option value='" + item.id + "' selected='true'>" + item.id + "</option>" );
 
    				var compulsory = jQuery( item ).find( "input[name='compulsory']:first");
-   				var checked = compulsory.attr('checked') ? true : false;
+   				var checked = compulsory.prop('checked') ? true : false;
    				compulsories.append( "<option value='" + checked + "' selected='true'>" + checked + "</option>" );
 
    				var allowProvided = jQuery( item ).find( "input[name='allowProvided']:first");
-   				checked = allowProvided.attr('checked') ? true : false;
+   				checked = allowProvided.prop('checked') ? true : false;
    				allowProvidedElsewhere.append( "<option value='" + checked + "' selected='true'>" + checked + "</option>" );
 
    				var displayInReport = jQuery( item ).find( "input[name='displayInReport']:first");
-   				checked = displayInReport.attr('checked') ? true : false;
+   				checked = displayInReport.prop('checked') ? true : false;
    				displayInReports.append( "<option value='" + checked + "' selected='true'><" + checked + "/option>" );
 
    				var allowFutureDate = jQuery( item ).find( "input[name='allowFutureDate']:first");
-   				checked = allowFutureDate.attr('checked') ? true : false;
+   				checked = allowFutureDate.prop('checked') ? true : false;
    				allowFutureDates.append( "<option value='" + checked + "' selected='true'>" + checked + "</option>" );
+
+                var renderOptionsAsRadio = jQuery( item ).find( "input[name='renderOptionsAsRadio']:first");
+   				var checked = renderOptionsAsRadio.prop('checked') ? true : false;
+   				renderOptionsAsRadios.append( "<option value='" + checked + "' selected='true'>" + checked + "</option>" );
    			});
    		},
    		'rules' : getValidationRules( "programStage" )
@@ -139,7 +148,7 @@
 			#if($programStage.program.programType.value=="with_registration")
 			<tr>
 				<td><label for="autoGenerateEvent">$i18n.getString( "auto_generate_event" )</label></td>
-				<td><input type="checkbox" id="autoGenerateEvent" name="autoGenerateEvent" value='true' onchange='autoGenerateEventOnChange("$openAfterEnrollment")' #if( $programStage.autoGenerateEvent && $programStage.autoGenerateEvent=='true' ) checked #end /></td>
+				<td><input type="checkbox" id="autoGenerateEvent" name="autoGenerateEvent" value='true' onchange='autoGenerateEventOnChange("$openAfterEnrollment")' #if( $programStage.program.hasCategoryCombo() )  disabled #else #if( $programStage.autoGenerateEvent && $programStage.autoGenerateEvent=='true' ) checked #end #end /></td>
 			</tr>
 			#end
 			
@@ -200,7 +209,7 @@
 			</tr>
 			<tr>
         		<td><label for="hideDueDate">$i18n.getString( "hide_due_date" )</label></td>
-        		<td><input type="checkbox" id="hideDueDate" name="hideDueDate" value='true' #if( $programStage.hideDueDate=='true' ) checked #end ></td>
+        		<td><input type="checkbox" id="hideDueDate" name="hideDueDate" value='true' #if( $programStage.hideDueDate=='true' ) checked #end onchange='hideDueDateOnChange();'></td>
         		<td></td>
         	</tr>
 			#end
@@ -225,6 +234,13 @@
 				<td><input type="text" id="excecutionDateLabel" name="excecutionDateLabel" value='$!programStage.executionDateLabel' class="{validate:{required:true}}" /></td>
 			</tr>
 			
+			#if($programStage.program.programType.value=="with_registration")
+			<tr>
+				<td><label for="dueDateLabel">$i18n.getString( "due_date_description" ) <em title="$i18n.getString( 'required' )" class="required">*</em></label></td>
+				<td><input type="text" id="dueDateLabel" name="dueDateLabel" value='$!programStage.dueDateLabel' class="{validate:{required:true}}" /></td>
+			</tr>
+			#end
+			
 		</tbody>
 		<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
 	</table>
@@ -246,7 +262,8 @@
 					<select id="compulsories" name='compulsories' multiple="multiple" class="hidden"></select>
 					<select id="allowProvidedElsewhere" name='allowProvidedElsewhere' multiple="multiple" class="hidden"></select>
 					<select id="displayInReports" name='displayInReports' multiple="multiple" class="hidden"></select>
-					<select id="allowFutureDates" name='allowFutureDates' multiple="multiple" class="hidden"></select>     
+					<select id="allowFutureDates" name='allowFutureDates' multiple="multiple" class="hidden"></select>
+                    <select id="renderOptionsAsRadios" name='renderOptionsAsRadios' multiple="multiple" class="hidden"></select>
 				</th>
 			</tr>
 		</thead>
@@ -268,7 +285,7 @@
 			
 			<td>
 				<div class="dataElementDiv">
-					<table>
+					<table class="bordered-table">
 						<colgroup>
 							<col/>
 							<col style="width:20px;"/>
@@ -281,6 +298,7 @@
 								<th>$i18n.getString( "allow_provided_elsewhere" )</th>
 								<th>$i18n.getString( "display_in_reports" )</th>
 								<th>$i18n.getString( "date_in_future" )</th>
+								<th>$i18n.getString( "render_options_as_radio" )</th>
 							</tr>
 						</thead>
 						<tbody id="selectedList">
@@ -292,9 +310,16 @@
 									<td align="center"><input type="checkbox" name="displayInReport" value="$programStageDataElement.dataElement.id" #if($programStageDataElement.displayInReports == 'true' ) checked #end /></td>
 									<td align="center">
 										#if($programStageDataElement.dataElement.valueType=='DATE')
-										<input type="checkbox" name="allowFutureDate" value="$programStageDataElement.dataElement.id" #if($programStageDataElement.allowFutureDate == 'true' ) checked #end />
+											<input type="checkbox" name="allowFutureDate" value="$programStageDataElement.dataElement.id" #if($programStageDataElement.allowFutureDate == 'true' ) checked #end />
 										#else
-										<input type="hidden" name="allowFutureDate" />
+											<input type="hidden" name="allowFutureDate" />
+										#end
+									</td>
+									<td align="center">                                        
+										#if($programStageDataElement.dataElement.hasOptionSet() == 'true')
+											<input type="checkbox" name="renderOptionsAsRadio" value="$programStageDataElement.dataElement.id" #if($programStageDataElement.renderOptionsAsRadio == 'true' ) checked #end />
+										#else
+											<input type="hidden" name="renderOptionsAsRadio" />
 										#end
 									</td>
 								</tr>

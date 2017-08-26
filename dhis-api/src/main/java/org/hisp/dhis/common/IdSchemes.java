@@ -1,7 +1,7 @@
 package org.hisp.dhis.common;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,12 @@ public class IdSchemes
     private IdScheme trackedEntityIdScheme;
 
     private IdScheme trackedEntityAttributeIdScheme;
+
+    private IdScheme dataSetIdScheme;
+
+    private IdScheme attributeOptionComboIdScheme;
+
+    private IdScheme programStageInstanceIdScheme;
 
     public IdSchemes()
     {
@@ -116,6 +122,28 @@ public class IdSchemes
         return this;
     }
 
+    public IdScheme getAttributeOptionComboIdScheme()
+    {
+        return getScheme( attributeOptionComboIdScheme );
+    }
+
+    public IdSchemes setAttributeOptionComboIdScheme( String idScheme )
+    {
+        this.attributeOptionComboIdScheme = IdScheme.from( idScheme );
+        return this;
+    }
+
+    public IdScheme getDataSetIdScheme()
+    {
+        return getScheme( dataSetIdScheme );
+    }
+
+    public IdSchemes setDataSetIdScheme( String idScheme )
+    {
+        this.dataSetIdScheme = IdScheme.from( idScheme );
+        return this;
+    }
+
     public IdScheme getOrgUnitIdScheme()
     {
         return getScheme( orgUnitIdScheme );
@@ -146,6 +174,17 @@ public class IdSchemes
     public IdSchemes setProgramStageIdScheme( String idScheme )
     {
         this.programStageIdScheme = IdScheme.from( idScheme );
+        return this;
+    }
+
+    public IdScheme getProgramStageInstanceIdScheme()
+    {
+        return getScheme( programStageInstanceIdScheme );
+    }
+
+    public IdSchemes setProgramStageInstanceIdScheme( String idScheme )
+    {
+        this.programStageInstanceIdScheme = IdScheme.from( idScheme );
         return this;
     }
 
@@ -183,6 +222,7 @@ public class IdSchemes
     public static String getValue( String uid, String code, IdScheme idScheme )
     {
         boolean isId = idScheme.is( IdentifiableProperty.ID ) || idScheme.is( IdentifiableProperty.UID );
+
         return isId ? uid : code;
     }
 
@@ -203,7 +243,7 @@ public class IdSchemes
         {
             return identifiableObject.getCode();
         }
-        else if ( idScheme.is( IdentifiableProperty.CODE ) )
+        else if ( idScheme.is( IdentifiableProperty.NAME ) )
         {
             return identifiableObject.getName();
         }
@@ -224,6 +264,9 @@ public class IdSchemes
             .add( "programStageIdScheme", programStageIdScheme )
             .add( "trackedEntityIdScheme", trackedEntityIdScheme )
             .add( "trackedEntityAttributeIdScheme", trackedEntityAttributeIdScheme )
+            .add( "dataSetIdScheme", dataSetIdScheme )
+            .add( "attributeOptionComboIdScheme", attributeOptionComboIdScheme )
+            .add( "programStageInstanceIdScheme", programStageInstanceIdScheme )
             .toString();
     }
 }

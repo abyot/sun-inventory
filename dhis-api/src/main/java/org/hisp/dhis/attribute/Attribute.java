@@ -1,7 +1,7 @@
 package org.hisp.dhis.attribute;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,19 +32,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.base.MoreObjects;
-import org.hisp.dhis.common.BaseIdentifiableObject;
+import org.hisp.dhis.common.BaseNameableObject;
 import org.hisp.dhis.common.DxfNamespaces;
 import org.hisp.dhis.common.IdentifiableObject;
-import org.hisp.dhis.common.MergeMode;
+import org.hisp.dhis.common.MetadataObject;
 import org.hisp.dhis.common.ValueType;
 import org.hisp.dhis.constant.Constant;
 import org.hisp.dhis.dataelement.CategoryOptionGroup;
 import org.hisp.dhis.dataelement.DataElement;
-import org.hisp.dhis.dataelement.DataElementCategory;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementGroup;
-import org.hisp.dhis.dataelement.DataElementGroupSet;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.Section;
 import org.hisp.dhis.document.Document;
@@ -74,15 +72,13 @@ import java.util.Objects;
  */
 @JacksonXmlRootElement( localName = "attribute", namespace = DxfNamespaces.DXF_2_0 )
 public class Attribute
-    extends BaseIdentifiableObject
+    extends BaseNameableObject implements MetadataObject
 {
     private ValueType valueType;
 
     private boolean dataElementAttribute;
 
     private boolean dataElementGroupAttribute;
-    
-    private boolean dataElementGroupSetAttribute;
 
     private boolean indicatorAttribute;
 
@@ -108,8 +104,6 @@ public class Attribute
 
     private boolean trackedEntityAttributeAttribute;
 
-    private boolean categoryAttribute;
-    
     private boolean categoryOptionAttribute;
 
     private boolean categoryOptionGroupAttribute;
@@ -154,9 +148,9 @@ public class Attribute
     @Override
     public int hashCode()
     {
-        return 31 * super.hashCode() + Objects.hash( valueType, dataElementAttribute, dataElementGroupAttribute, dataElementGroupSetAttribute, indicatorAttribute, indicatorGroupAttribute,
+        return 31 * super.hashCode() + Objects.hash( valueType, dataElementAttribute, dataElementGroupAttribute, indicatorAttribute, indicatorGroupAttribute,
             dataSetAttribute, organisationUnitAttribute, organisationUnitGroupAttribute, organisationUnitGroupSetAttribute, userAttribute, userGroupAttribute,
-            programAttribute, programStageAttribute, trackedEntityAttribute, trackedEntityAttributeAttribute, categoryAttribute, categoryOptionAttribute, categoryOptionGroupAttribute,
+            programAttribute, programStageAttribute, trackedEntityAttribute, trackedEntityAttributeAttribute, categoryOptionAttribute, categoryOptionGroupAttribute,
             mandatory, unique, optionSet, optionAttribute, constantAttribute, legendSetAttribute, programIndicatorAttribute, sqlViewAttribute, sectionAttribute, categoryOptionComboAttribute );
     }
 
@@ -181,7 +175,6 @@ public class Attribute
         return Objects.equals( this.valueType, other.valueType )
             && Objects.equals( this.dataElementAttribute, other.dataElementAttribute )
             && Objects.equals( this.dataElementGroupAttribute, other.dataElementGroupAttribute )
-            && Objects.equals( this.dataElementGroupSetAttribute, other.dataElementGroupSetAttribute )
             && Objects.equals( this.indicatorAttribute, other.indicatorAttribute )
             && Objects.equals( this.indicatorGroupAttribute, other.indicatorGroupAttribute )
             && Objects.equals( this.dataSetAttribute, other.dataSetAttribute )
@@ -194,7 +187,6 @@ public class Attribute
             && Objects.equals( this.programStageAttribute, other.programStageAttribute )
             && Objects.equals( this.trackedEntityAttribute, other.trackedEntityAttribute )
             && Objects.equals( this.trackedEntityAttributeAttribute, other.trackedEntityAttributeAttribute )
-            && Objects.equals( this.categoryAttribute, other.categoryAttribute )
             && Objects.equals( this.categoryOptionAttribute, other.categoryOptionAttribute )
             && Objects.equals( this.categoryOptionGroupAttribute, other.categoryOptionGroupAttribute )
             && Objects.equals( this.optionAttribute, other.optionAttribute )
@@ -268,18 +260,6 @@ public class Attribute
     public void setDataElementGroupAttribute( Boolean dataElementGroupAttribute )
     {
         this.dataElementGroupAttribute = dataElementGroupAttribute;
-    }
-    
-    @JsonProperty
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public boolean isDataElementGroupSetAttribute()
-    {
-        return dataElementGroupSetAttribute;
-    }
-
-    public void setDataElementGroupSetAttribute( Boolean dataElementGroupSetAttribute )
-    {
-        this.dataElementGroupSetAttribute = dataElementGroupSetAttribute;
     }
 
     @JsonProperty
@@ -424,18 +404,6 @@ public class Attribute
     public void setTrackedEntityAttributeAttribute( boolean trackedEntityAttributeAttribute )
     {
         this.trackedEntityAttributeAttribute = trackedEntityAttributeAttribute;
-    }
-    
-    @JsonProperty
-    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
-    public boolean isCategoryAttribute()
-    {
-        return categoryAttribute;
-    }
-
-    public void setCategoryAttribute( boolean categoryAttribute )
-    {
-        this.categoryAttribute = categoryAttribute;
     }
 
     @JsonProperty
@@ -600,8 +568,6 @@ public class Attribute
 
         if ( dataElementAttribute ) klasses.add( DataElement.class );
         if ( dataElementGroupAttribute ) klasses.add( DataElementGroup.class );
-        if ( dataElementGroupSetAttribute ) klasses.add( DataElementGroupSet.class );
-        if ( categoryAttribute ) klasses.add( DataElementCategory.class );
         if ( categoryOptionAttribute ) klasses.add( DataElementCategoryOption.class );
         if ( categoryOptionGroupAttribute ) klasses.add( CategoryOptionGroup.class );
         if ( indicatorAttribute ) klasses.add( Indicator.class );
@@ -630,59 +596,6 @@ public class Attribute
     }
 
     @Override
-    public void mergeWith( IdentifiableObject other, MergeMode mergeMode )
-    {
-        super.mergeWith( other, mergeMode );
-
-        if ( other.getClass().isInstance( this ) )
-        {
-            Attribute attribute = (Attribute) other;
-
-            dataElementAttribute = attribute.isDataElementAttribute();
-            dataElementGroupAttribute = attribute.isDataElementGroupAttribute();
-            dataElementGroupSetAttribute = attribute.isDataElementGroupSetAttribute();
-            indicatorAttribute = attribute.isIndicatorAttribute();
-            indicatorGroupAttribute = attribute.isIndicatorGroupAttribute();
-            dataSetAttribute = attribute.isDataSetAttribute();
-            organisationUnitAttribute = attribute.isOrganisationUnitAttribute();
-            organisationUnitGroupAttribute = attribute.isOrganisationUnitGroupAttribute();
-            organisationUnitGroupSetAttribute = attribute.isOrganisationUnitGroupSetAttribute();
-            userAttribute = attribute.isUserAttribute();
-            userGroupAttribute = attribute.isUserGroupAttribute();
-            programAttribute = attribute.isProgramAttribute();
-            programStageAttribute = attribute.isProgramStageAttribute();
-            trackedEntityAttribute = attribute.isTrackedEntityAttribute();
-            trackedEntityAttributeAttribute = attribute.isTrackedEntityAttributeAttribute();
-            categoryAttribute = attribute.isCategoryAttribute();
-            categoryOptionAttribute = attribute.isCategoryOptionAttribute();
-            categoryOptionGroupAttribute = attribute.isCategoryOptionGroupAttribute();
-            documentAttribute = attribute.isDocumentAttribute();
-            optionAttribute = attribute.isOptionAttribute();
-            optionSetAttribute = attribute.isOptionSetAttribute();
-            constantAttribute = attribute.isConstantAttribute();
-            legendSetAttribute = attribute.isLegendSetAttribute();
-            programIndicatorAttribute = attribute.isProgramIndicatorAttribute();
-            sqlViewAttribute = attribute.isSqlViewAttribute();
-            sectionAttribute = attribute.isSectionAttribute();
-            categoryOptionComboAttribute = attribute.isCategoryOptionComboAttribute();
-            mandatory = attribute.isMandatory();
-            unique = attribute.isUnique();
-            optionSet = attribute.getOptionSet();
-
-            if ( mergeMode.isReplace() )
-            {
-                valueType = attribute.getValueType();
-                sortOrder = attribute.getSortOrder();
-            }
-            else if ( mergeMode.isMerge() )
-            {
-                valueType = attribute.getValueType() == null ? valueType : attribute.getValueType();
-                sortOrder = attribute.getSortOrder() == null ? sortOrder : attribute.getSortOrder();
-            }
-        }
-    }
-
-    @Override
     public String toString()
     {
         return MoreObjects.toStringHelper( this )
@@ -690,7 +603,6 @@ public class Attribute
             .add( "valueType", valueType )
             .add( "dataElementAttribute", dataElementAttribute )
             .add( "dataElementGroupAttribute", dataElementGroupAttribute )
-            .add( "dataElementGroupSetAttribute", dataElementGroupSetAttribute )
             .add( "indicatorAttribute", indicatorAttribute )
             .add( "indicatorGroupAttribute", indicatorGroupAttribute )
             .add( "dataSetAttribute", dataSetAttribute )
@@ -703,7 +615,6 @@ public class Attribute
             .add( "programStageAttribute", programStageAttribute )
             .add( "trackedEntityAttribute", trackedEntityAttribute )
             .add( "trackedEntityAttributeAttribute", trackedEntityAttributeAttribute )
-            .add( "categoryAttribute", categoryAttribute )
             .add( "categoryOptionAttribute", categoryOptionAttribute )
             .add( "categoryOptionGroupAttribute", categoryOptionGroupAttribute )
             .add( "constantAttribute", constantAttribute )

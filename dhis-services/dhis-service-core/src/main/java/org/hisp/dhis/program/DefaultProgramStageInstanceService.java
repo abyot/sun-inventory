@@ -1,7 +1,7 @@
 package org.hisp.dhis.program;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@ import org.hisp.dhis.trackedentitydatavalue.TrackedEntityDataValueAuditService;
 import org.hisp.dhis.user.CurrentUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -95,14 +96,32 @@ public class DefaultProgramStageInstanceService
     public int addProgramStageInstance( ProgramStageInstance programStageInstance )
     {
         programStageInstance.setAutoFields();
-        return programStageInstanceStore.save( programStageInstance );
+        programStageInstanceStore.save( programStageInstance );
+
+        return programStageInstance.getId();
     }
 
     @Override
     public void deleteProgramStageInstance( ProgramStageInstance programStageInstance )
     {
+        deleteProgramStageInstance( programStageInstance, false );
+    }
+
+    public void deleteProgramStageInstance( ProgramStageInstance programStageInstance, boolean forceDelete )
+    {
         dataValueAuditService.deleteTrackedEntityDataValueAudits( programStageInstance );
-        programStageInstanceStore.delete( programStageInstance );
+
+        if ( forceDelete )
+        {
+            programStageInstanceStore.delete( programStageInstance );
+        }
+        else
+        {
+            // Soft delete
+            programStageInstance.setDeleted( !forceDelete );
+            programStageInstanceStore.save( programStageInstance );
+        }
+
     }
 
     @Override
@@ -169,7 +188,11 @@ public class DefaultProgramStageInstanceService
 
         programStageInstance.setStatus( EventStatus.COMPLETED );
         programStageInstance.setCompletedDate( date );
-        programStageInstance.setCompletedBy( currentUserService.getCurrentUsername() );
+
+        if ( StringUtils.isEmpty( programStageInstance.getCompletedBy() ) )
+        {
+            programStageInstance.setCompletedBy( currentUserService.getCurrentUsername() );
+        }
 
         if ( !skipNotifications )
         {
@@ -285,4 +308,5 @@ public class DefaultProgramStageInstanceService
 
         return programStageInstance;
     }
+
 }

@@ -1,7 +1,7 @@
 package org.hisp.dhis.color;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,13 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultColorService
     implements ColorService
 {
-    private GenericIdentifiableObjectStore<Color> colorStore;
-    
-    public void setColorStore( GenericIdentifiableObjectStore<Color> colorStore )
-    {
-        this.colorStore = colorStore;
-    }
-
     private GenericIdentifiableObjectStore<ColorSet> colorSetStore;
 
     public void setColorSetStore( GenericIdentifiableObjectStore<ColorSet> colorSetStore )
@@ -56,11 +49,6 @@ public class DefaultColorService
     // Dependencies
     // -------------------------------------------------------------------------
 
-    public Color getColor( String uid )
-    {
-        return colorStore.getByUid( uid );
-    }
-    
     public ColorSet getColorSet( String uid )
     {
         return colorSetStore.getByUid( uid );

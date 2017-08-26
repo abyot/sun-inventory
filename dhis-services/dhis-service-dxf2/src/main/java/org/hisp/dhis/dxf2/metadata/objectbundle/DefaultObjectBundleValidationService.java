@@ -1,7 +1,7 @@
 package org.hisp.dhis.dxf2.metadata.objectbundle;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hisp.dhis.attribute.Attribute;
 import org.hisp.dhis.attribute.AttributeValue;
+import org.hisp.dhis.common.EmbeddedObject;
 import org.hisp.dhis.common.IdentifiableObject;
 import org.hisp.dhis.common.IdentifiableObjectUtils;
 import org.hisp.dhis.commons.timer.SystemTimer;
 import org.hisp.dhis.commons.timer.Timer;
-import org.hisp.dhis.dataelement.DataElementOperand;
 import org.hisp.dhis.dxf2.metadata.AtomicMode;
 import org.hisp.dhis.dxf2.metadata.objectbundle.feedback.ObjectBundleValidationReport;
 import org.hisp.dhis.feedback.ErrorCode;
@@ -95,6 +95,9 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
     @Autowired
     private UserService userService;
 
+    @Autowired( required = false )
+    private List<ObjectBundleHook> objectBundleHooks = new ArrayList<>();
+
     @Override
     public ObjectBundleValidationReport validate( ObjectBundle bundle )
     {
@@ -125,6 +128,8 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
 
             if ( bundle.getImportMode().isCreateAndUpdate() )
             {
+                typeReport.merge( runValidationHooks( klass, nonPersistedObjects, bundle ) );
+                typeReport.merge( runValidationHooks( klass, persistedObjects, bundle ) );
                 typeReport.merge( validateSecurity( klass, nonPersistedObjects, bundle, ImportStrategy.CREATE ) );
                 typeReport.merge( validateSecurity( klass, persistedObjects, bundle, ImportStrategy.UPDATE ) );
                 typeReport.merge( validateBySchemas( klass, nonPersistedObjects, bundle ) );
@@ -143,10 +148,14 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                     typeReport.getStats().incIgnored();
                 }
 
+                typeReport.getStats().incCreated( nonPersistedObjects.size() );
+                typeReport.getStats().incUpdated( persistedObjects.size() );
+
                 typeReport.merge( checkReferences );
             }
             else if ( bundle.getImportMode().isCreate() )
             {
+                typeReport.merge( runValidationHooks( klass, nonPersistedObjects, bundle ) );
                 typeReport.merge( validateSecurity( klass, nonPersistedObjects, bundle, ImportStrategy.CREATE ) );
                 typeReport.merge( validateForCreate( klass, persistedObjects, bundle ) );
                 typeReport.merge( validateBySchemas( klass, nonPersistedObjects, bundle ) );
@@ -161,10 +170,13 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                     typeReport.getStats().incIgnored();
                 }
 
+                typeReport.getStats().incCreated( nonPersistedObjects.size() );
+
                 typeReport.merge( checkReferences );
             }
             else if ( bundle.getImportMode().isUpdate() )
             {
+                typeReport.merge( runValidationHooks( klass, persistedObjects, bundle ) );
                 typeReport.merge( validateSecurity( klass, persistedObjects, bundle, ImportStrategy.UPDATE ) );
                 typeReport.merge( validateForUpdate( klass, nonPersistedObjects, bundle ) );
                 typeReport.merge( validateBySchemas( klass, persistedObjects, bundle ) );
@@ -179,12 +191,16 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                     typeReport.getStats().incIgnored();
                 }
 
+                typeReport.getStats().incUpdated( persistedObjects.size() );
+
                 typeReport.merge( checkReferences );
             }
             else if ( bundle.getImportMode().isDelete() )
             {
                 typeReport.merge( validateSecurity( klass, persistedObjects, bundle, ImportStrategy.DELETE ) );
                 typeReport.merge( validateForDelete( klass, nonPersistedObjects, bundle ) );
+
+                typeReport.getStats().incDeleted( persistedObjects.size() );
             }
 
             validation.addTypeReport( typeReport );
@@ -204,17 +220,44 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
 
     private void handleDefaults( List<IdentifiableObject> objects )
     {
+        objects.removeIf( Preheat::isDefault );
+    }
+
+    private TypeReport runValidationHooks( Class<? extends IdentifiableObject> klass, List<IdentifiableObject> objects, ObjectBundle bundle )
+    {
+        TypeReport typeReport = new TypeReport( klass );
+
+        if ( objects == null || objects.isEmpty() )
+        {
+            return typeReport;
+        }
+
         Iterator<IdentifiableObject> iterator = objects.iterator();
+        int idx = 0;
 
         while ( iterator.hasNext() )
         {
             IdentifiableObject object = iterator.next();
+            List<ErrorReport> errorReports = new ArrayList<>();
+            objectBundleHooks.forEach( hook -> errorReports.addAll( hook.validate( object, bundle ) ) );
 
-            if ( Preheat.isDefault( object ) )
+            if ( !errorReports.isEmpty() )
             {
+                ObjectReport objectReport = new ObjectReport( klass, idx, object.getUid() );
+                objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
+                objectReport.addErrorReports( errorReports );
+
+                typeReport.addObjectReport( objectReport );
+                typeReport.getStats().incIgnored();
+
                 iterator.remove();
+                continue;
             }
+
+            idx++;
         }
+
+        return typeReport;
     }
 
     private void validateAtomicity( ObjectBundle bundle, ObjectBundleValidationReport validation )
@@ -272,9 +315,11 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
             }
             else
             {
+                IdentifiableObject persistedObject = bundle.getPreheat().get( bundle.getPreheatIdentifier(), object );
+
                 if ( importMode.isUpdate() )
                 {
-                    if ( !aclService.canUpdate( bundle.getUser(), object ) )
+                    if ( !aclService.canUpdate( bundle.getUser(), persistedObject ) )
                     {
                         ObjectReport objectReport = new ObjectReport( klass, idx, object.getUid() );
                         objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
@@ -290,7 +335,7 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                 }
                 else if ( importMode.isDelete() )
                 {
-                    if ( !aclService.canDelete( bundle.getUser(), object ) )
+                    if ( !aclService.canDelete( bundle.getUser(), persistedObject ) )
                     {
                         ObjectReport objectReport = new ObjectReport( klass, idx, object.getUid() );
                         objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
@@ -309,7 +354,7 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
             if ( User.class.isInstance( object ) )
             {
                 User user = (User) object;
-                List<ErrorReport> errorReports = userService.validateUser( bundle.getUser(), user );
+                List<ErrorReport> errorReports = userService.validateUser( user, bundle.getUser() );
 
                 if ( !errorReports.isEmpty() )
                 {
@@ -323,6 +368,21 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                     iterator.remove();
                     continue;
                 }
+            }
+
+            List<ErrorReport> sharingErrorReports = aclService.verifySharing( object, bundle.getUser() );
+
+            if ( !sharingErrorReports.isEmpty() )
+            {
+                ObjectReport objectReport = new ObjectReport( klass, idx, object.getUid() );
+                objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
+                objectReport.addErrorReports( sharingErrorReports );
+
+                typeReport.addObjectReport( objectReport );
+                typeReport.getStats().incIgnored();
+
+                iterator.remove();
+                continue;
             }
 
             idx++;
@@ -353,7 +413,7 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                 ObjectReport objectReport = new ObjectReport( klass, idx, object.getUid() );
                 objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
                 objectReport.addErrorReport( new ErrorReport( klass, ErrorCode.E5000, bundle.getPreheatIdentifier(),
-                    bundle.getPreheatIdentifier().getIdentifiersWithName( identifiableObject ) ) );
+                    bundle.getPreheatIdentifier().getIdentifiersWithName( identifiableObject ) ).setMainId( identifiableObject.getUid() ) );
 
                 typeReport.addObjectReport( objectReport );
                 typeReport.getStats().incIgnored();
@@ -391,7 +451,9 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                 ObjectReport objectReport = new ObjectReport( klass, idx, object != null ? object.getUid() : null );
                 objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
                 objectReport.addErrorReport( new ErrorReport( klass, ErrorCode.E5001, bundle.getPreheatIdentifier(),
-                    bundle.getPreheatIdentifier().getIdentifiersWithName( identifiableObject ) ) );
+                    bundle.getPreheatIdentifier().getIdentifiersWithName( identifiableObject ) )
+                    .setErrorProperty( "id" )
+                    .setMainId( identifiableObject.getUid() ) );
 
                 typeReport.addObjectReport( objectReport );
                 typeReport.getStats().incIgnored();
@@ -429,7 +491,7 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                 ObjectReport objectReport = new ObjectReport( klass, idx, object != null ? object.getUid() : null );
                 objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
                 objectReport.addErrorReport( new ErrorReport( klass, ErrorCode.E5001, bundle.getPreheatIdentifier(),
-                    bundle.getPreheatIdentifier().getIdentifiersWithName( identifiableObject ) ) );
+                    bundle.getPreheatIdentifier().getIdentifiersWithName( identifiableObject ) ).setMainId( object != null ? object.getUid() : null ) );
 
                 typeReport.addObjectReport( objectReport );
                 typeReport.getStats().incIgnored();
@@ -595,6 +657,14 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                     identifier.getIdentifiersWithName( userGroupAccesses.getUserGroup() ), identifier.getIdentifiersWithName( object ), "userGroupAccesses" ) ) );
         }
 
+        if ( schema.havePersistedProperty( "userAccesses" ) )
+        {
+            object.getUserAccesses().stream()
+                .filter( userGroupAccess -> !skipSharing && userGroupAccess.getUser() != null && preheat.get( identifier, userGroupAccess.getUser() ) == null )
+                .forEach( userAccesses -> preheatErrorReports.add( new PreheatErrorReport( identifier, object.getClass(), ErrorCode.E5002,
+                    identifier.getIdentifiersWithName( userAccesses.getUser() ), identifier.getIdentifiersWithName( object ), "userAccesses" ) ) );
+        }
+
         return preheatErrorReports;
     }
 
@@ -619,7 +689,8 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
 
             if ( idMap.containsKey( object.getClass() ) && idMap.get( object.getClass() ).equals( object.getUid() ) )
             {
-                ErrorReport errorReport = new ErrorReport( object.getClass(), ErrorCode.E5004, object.getUid(), object.getClass() );
+                ErrorReport errorReport = new ErrorReport( object.getClass(), ErrorCode.E5004, object.getUid(), object.getClass() )
+                    .setMainId( object.getUid() ).setErrorProperty( "id" );
 
                 ObjectReport objectReport = new ObjectReport( object.getClass(), idx );
                 objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
@@ -646,7 +717,8 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
 
             if ( idMap.containsKey( object.getClass() ) && idMap.get( object.getClass() ).equals( object.getUid() ) )
             {
-                ErrorReport errorReport = new ErrorReport( object.getClass(), ErrorCode.E5004, object.getUid(), object.getClass() );
+                ErrorReport errorReport = new ErrorReport( object.getClass(), ErrorCode.E5004, object.getUid(), object.getClass() )
+                    .setMainId( object.getUid() ).setErrorProperty( "id" );
 
                 ObjectReport objectReport = new ObjectReport( object.getClass(), idx );
                 objectReport.setDisplayName( IdentifiableObjectUtils.getDisplayName( object ) );
@@ -749,7 +821,7 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                     if ( !object.getUid().equals( persistedUid ) )
                     {
                         errorReports.add( new ErrorReport( object.getClass(), ErrorCode.E5003, property.getName(), value,
-                            identifier.getIdentifiersWithName( object ), persistedUid ) );
+                            identifier.getIdentifiersWithName( object ), persistedUid ).setMainId( persistedUid ).setErrorProperty( property.getName() ) );
                     }
                 }
                 else
@@ -815,7 +887,8 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
         }
 
         attributeValues.forEach( attributeValue -> mandatoryAttributes.remove( attributeValue.getAttribute().getUid() ) );
-        mandatoryAttributes.forEach( att -> errorReports.add( new ErrorReport( Attribute.class, ErrorCode.E4011, att ) ) );
+        mandatoryAttributes.forEach( att -> errorReports.add( new ErrorReport( Attribute.class, ErrorCode.E4011, att )
+            .setMainId( att ).setErrorProperty( "value" ) ) );
 
         return errorReports;
     }
@@ -895,7 +968,7 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
                 if ( values.containsKey( attributeValue.getValue() ) && !values.get( attributeValue.getValue() ).equals( object.getUid() ) )
                 {
                     errorReports.add( new ErrorReport( Attribute.class, ErrorCode.E4009, IdentifiableObjectUtils.getDisplayName( attribute ),
-                        attributeValue.getValue() ) );
+                        attributeValue.getValue() ).setMainId( attribute.getUid() ).setErrorProperty( "value" ) );
                 }
                 else
                 {
@@ -914,8 +987,7 @@ public class DefaultObjectBundleValidationService implements ObjectBundleValidat
 
     private boolean skipCheck( Class<?> klass )
     {
-        return klass != null && (
-            UserCredentials.class.isAssignableFrom( klass ) || DataElementOperand.class.isAssignableFrom( klass )
-                || Period.class.isAssignableFrom( klass ) || PeriodType.class.isAssignableFrom( klass ));
+        return klass != null && (UserCredentials.class.isAssignableFrom( klass ) || EmbeddedObject.class.isAssignableFrom( klass ) ||
+            Period.class.isAssignableFrom( klass ) || PeriodType.class.isAssignableFrom( klass ));
     }
 }

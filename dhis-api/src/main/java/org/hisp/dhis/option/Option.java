@@ -1,7 +1,7 @@
 package org.hisp.dhis.option;
 
 /*
- * Copyright (c) 2004-2016, University of Oslo
+ * Copyright (c) 2004-2017, University of Oslo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.hisp.dhis.common.BaseIdentifiableObject;
 import org.hisp.dhis.common.DxfNamespaces;
+import org.hisp.dhis.common.MetadataObject;
 import org.hisp.dhis.schema.PropertyType;
 import org.hisp.dhis.schema.annotation.Property;
 
@@ -42,9 +43,10 @@ import org.hisp.dhis.schema.annotation.Property;
  */
 @JacksonXmlRootElement( localName = "option", namespace = DxfNamespaces.DXF_2_0 )
 public class Option
-    extends BaseIdentifiableObject
+    extends BaseIdentifiableObject implements MetadataObject
 {
     private OptionSet optionSet;
+    private Integer sortOrder;
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -62,22 +64,13 @@ public class Option
         this.code = code;
     }
 
-    // -------------------------------------------------------------------------
-    // Logic
-    // -------------------------------------------------------------------------
-
-    @Override
-    public boolean haveUniqueNames()
+    public Option( String name, String code, Integer sortOrder )
     {
-        return false;
+        this();
+        this.name = name;
+        this.code = code;
+        this.sortOrder = sortOrder;
     }
-
-    @Override
-    public boolean haveUniqueCode()
-    {
-        return false;
-    }
-
 
     // -------------------------------------------------------------------------
     // Getters and setters
@@ -105,4 +98,15 @@ public class Option
         this.optionSet = optionSet;
     }
 
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public Integer getSortOrder()
+    {
+        return sortOrder;
+    }
+
+    public void setSortOrder( Integer sortOrder )
+    {
+        this.sortOrder = sortOrder;
+    }
 }

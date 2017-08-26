@@ -104,6 +104,7 @@
 .sectionTable
 {
   border-collapse: collapse;
+  margin-bottom: 40px;
 }
 
 .sectionTable thead {
@@ -186,7 +187,7 @@ textarea:read-only
 {
     padding: 0;
     width:  545px;
-    height: 345px;
+    height: 305px;
 }
 
 #historyTabs.ui-tabs.ui-widget.ui-widget-content
@@ -427,4 +428,15 @@ textarea:read-only
 
 .select2-chosen {
     padding-top: 6px;
+}
+
+.sectionContainer {
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.total-cell {
+    text-align: center;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #aaa;
 }
