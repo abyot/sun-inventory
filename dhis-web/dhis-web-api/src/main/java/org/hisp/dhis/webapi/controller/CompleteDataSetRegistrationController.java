@@ -58,6 +58,7 @@ import org.hisp.dhis.webapi.service.ContextService;
 import org.hisp.dhis.dxf2.webmessage.WebMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -281,7 +282,7 @@ public class CompleteDataSetRegistrationController
         registrationService.saveCompleteDataSetRegistrations( registrations, true );
     }
 
-    @RequestMapping( method = RequestMethod.POST, consumes = "application/json", value = MULTIPLE_SAVE_RESOURCE_PATH )
+    @RequestMapping( method = RequestMethod.POST, consumes = "application/json", value = MULTIPLE_SAVE_RESOURCE_PATH )    
     @ResponseStatus( HttpStatus.NO_CONTENT )
     public void saveCompleteDataSetRegistration(
         @RequestBody CompleteDataSetRegistrationRequests completeDataSetRegistrationRequests,
@@ -376,6 +377,7 @@ public class CompleteDataSetRegistrationController
 
     @RequestMapping( method = RequestMethod.DELETE )
     @ResponseStatus( HttpStatus.NO_CONTENT )
+    @PreAuthorize( "hasRole('ALL') or hasRole('F_DATASET_UNCOMPLETE')" )
     public void deleteCompleteDataSetRegistration(
         @RequestParam Set<String> ds,
         @RequestParam String pe,
