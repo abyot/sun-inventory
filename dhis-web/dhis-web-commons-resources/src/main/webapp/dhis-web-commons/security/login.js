@@ -2,7 +2,7 @@
 var login = {};
 login.localeKey = "dhis2.locale.ui";
 
-var base = "../../";
+var base = "../..";
 
 var mappedDashboard = {};
 
@@ -77,8 +77,8 @@ function fetchPublicDashboard( data ) {
     		mappedDashboard[dashboard.id] = dashboard;
     		$('#dashboardList').append($('<option>', { 
     	        value: dashboard.id,
-    	        text: dashboard.name,
-    	        selected: dashboard.name === 'Global Dashboard (public)'
+    	        text: dashboard.name,	
+    	        selected: dashboard.id == data.dashboards[0].id
     	    }));
     	});
     	
