@@ -2,7 +2,8 @@
 var login = {};
 login.localeKey = "dhis2.locale.ui";
 
-var base = "../../";
+var base = "../..";
+var apiBase = "../../";
 
 var mappedDashboard = {};
 
@@ -48,7 +49,7 @@ $(window).load(function() {
         beforeSend: function (xhr) {
             xhr.setRequestHeader('Authorization', 'Basic ' + btoa('publicdashboard:Public123'));
         },
-        url: base + "api/dashboards.json?filter=publicAccess:eq:r-------&paging=false&fields=id,name,dashboardItems[:all]",
+        url: apiBase + "api/dashboards.json?filter=publicAccess:eq:r-------&paging=false&fields=id,name,dashboardItems[:all]",
         type: 'GET',
         success: function( data ){
         	fetchPublicDashboard( data );
@@ -99,7 +100,7 @@ displaySelectedDashboard = function() {
 			mappedDashboard[dashboardId].dashboardItems &&
 			mappedDashboard[dashboardId].dashboardItems.length > 0 ){		
 				        
-        var chartItems = [];
+        var chartItems = [], tableItems = [], mapItems = [];
         
         $.each(mappedDashboard[dashboardId].dashboardItems, function (i, item) {            
             var size = "col-xs-12 col-sm-6 col-md-4";            
@@ -115,13 +116,38 @@ displaySelectedDashboard = function() {
                         "col-xs-12 col-sm-6 col-md-4";
                 }
             }            
-            $div.append('<div class="' + size + '"><div class="bordered-div"><div id=' + item.id + ' class="dashboard-object-size"></div></div></div>');                        
-            chartItems.push( {url: base, el: item.id, id: item.chart.id} );            
+            $div.append('<div class="' + size + '"><div class="bordered-div"><div id=' + item.id + ' class="dashboard-object-size"></div></div></div>');
+            
+            switch( item.type ){
+            	case 'CHART':
+            		chartItems.push( {url: base, el: item.id, id: item.chart.id} );
+            		break;
+            	case 'REPORT_TABLE':
+            		tableItems.push( {url: base, el: item.id, id: item.reportTable.id} );
+            		break;
+            	case 'MAP':
+            		mapItems.push( {url: base, el: item.id, id: item.map.id} );
+            		break;
+        		default:
+            		break;
+            }            
+                        
         });        
         
-        chartPlugin.url = base;  
-        chartPlugin.showTitles = true;
-        chartPlugin.load( chartItems );
+        if( chartItems.length > 0 ){
+        	chartPlugin.url = base;
+        	//chartPlugin.dashboard = true;
+            chartPlugin.showTitles = true;
+            chartPlugin.load( chartItems );
+        }
+        
+        if( tableItems.length > 0 ){
+        	reportTablePlugin.url = base;  
+        	reportTablePlugin.showTitles = true;
+        	//reportTablePlugin.dashboard = true;
+        	reportTablePlugin.load( tableItems );
+        }
+        
 	}
 	else{
 		if( dashboardId && dashboardId !== "" ){
