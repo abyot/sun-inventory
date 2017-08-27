@@ -1,39 +1,54 @@
 <div class="row vertical-spacing" ng-if="showReportDiv && reportParamsReady()">
-    <div class="col-sm-12 hideInPrint">                    
-        <button type="button" 
-                class="btn btn-primary"
-                title="{{'export_excel' | translate}}"
-                ng-click="exportData()">
-            {{'export_excel' | translate}}
-        </button>
+    <div ng-if="reportData.reportReady">
+        <div ng-if="!reportData.noDataExists">
+            <div class="col-sm-12 hideInPrint">
+                <button type="button" 
+                        class="btn btn-primary"
+                        title="{{'export_excel'| translate}}"
+                        ng-click="exportData()">
+                    {{'export_excel'| translate}}
+                </button>
+            </div>
+            <div class="col-sm-12 small-vertical-spacing" id="exportTable">
+                <table class="dhis2-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="pull-center">
+                                {{'cna_report_header'| translate}}
+                            </th>
+                            <th class="pull-center" colspan="{{model.agencyCategory.categoryOptions.length}}" ng-repeat="header in locationHeader.categoryOptions">
+                                {{header.name}}
+                            </th>
+                        </tr>
+                        <tr>                
+                            <th class="pull-center" ng-repeat="col in model.cnaCols">
+                                {{col.displayName}}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="row in cnaRow.categoryOptions">
+                            <td>
+                                {{row.name}}
+                            </td>
+                            <td class="pull-center" ng-repeat="col in model.cnaCols">
+                                {{cnaDataExists(col.displayName, row.name, col.parent.name)}}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-sm-12" ng-if="reportData.noDataExists">
+            <div class="alert alert-info">
+                {{'no_data_exists'| translate}}
+            </div>
+        </div>
     </div>
-    <div class="col-sm-12 small-vertical-spacing" id="exportTable">
-        <table class="dhis2-table">
-            <thead>
-                <tr>
-                    <th rowspan="2" class="pull-center">
-                        {{'cna_report_header'| translate}}
-                    </th>
-                    <th class="pull-center" colspan="{{model.agencyCategory.categoryOptions.length}}" ng-repeat="header in locationHeader.categoryOptions">
-                        {{header.name}}
-                    </th>
-                </tr>
-                <tr>                
-                    <th class="pull-center" ng-repeat="col in model.cnaCols">
-                        {{col.displayName}}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-repeat="row in cnaRow.categoryOptions">
-                    <td>
-                        {{row.name}}
-                    </td>
-                    <td class="pull-center" ng-repeat="col in model.cnaCols">
-                        {{cnaDataExists(col.displayName, row.name, col.parent.name)}}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div ng-if="!reportData.reportReady">        
+        <div class="col-sm-12">
+            <img src="../images/ajax-loader-bar.gif" alt="{{'in_progress'| translate}}"/><br>
+            {{'generating_report'| translate}}
+        </div>        
     </div>
 </div>

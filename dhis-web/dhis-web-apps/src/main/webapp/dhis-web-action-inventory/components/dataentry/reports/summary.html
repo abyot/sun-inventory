@@ -1,162 +1,174 @@
 <div class="row vertical-spacing" ng-if="showReportDiv && reportParamsReady()">
-    <div class="col-sm-12 hideInPrint">                    
-        <button type="button" 
-                class="btn btn-primary"
-                title="{{'export_excel' | translate}}"
-                ng-click="exportData()">
-            {{'export_excel' | translate}}
-        </button>        
-        <button type="button" 
-                class="btn btn-primary small-horizontal-spacing"         
-                ng-disabled="!reportData.reportReady"
-                ng-if="emptyRowExists"
-                ng-click="model.filterEmptyRows = !model.filterEmptyRows">                                         
-            {{model.filterEmptyRows ? 'show_empty_rows' : 'hide_empty_rows' | translate}}
-        </button>
-        
+    <div ng-if="reportData.reportReady">
+        <div ng-if="!reportData.noDataExists">
+            <div class="col-sm-12 hideInPrint">
+                <button type="button" 
+                        class="btn btn-primary"
+                        title="{{'export_excel'| translate}}"
+                        ng-click="exportData()">
+                    {{'export_excel'| translate}}
+                </button>        
+                <button type="button" 
+                        class="btn btn-primary small-horizontal-spacing"         
+                        ng-disabled="!reportData.reportReady"
+                        ng-if="emptyRowExists"
+                        ng-click="model.filterEmptyRows = !model.filterEmptyRows">                                         
+                    {{model.filterEmptyRows ? 'show_empty_rows' : 'hide_empty_rows'| translate}}
+                </button>
+            </div>
+            <div class="col-sm-12 small-vertical-spacing" id="exportTable">
+                <table class="dhis2-table" ng-if="model.filterEmptyRows">
+                    <thead>
+                        <tr>
+                            <th ng-repeat="header in model.staticHeaders">
+                                <div class="cell-container">
+                                    {{header}}
+                                </div>                        
+                            </th>
+                            <th>
+                                <div class="cell-container">
+                                    {{model.instanceCategory.displayName}}
+                                </div>
+                            </th>
+                            <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
+                                <div class="cell-container">
+                                    {{categoryOptionGroup.shortName}}
+                                </div>
+                            </th>
+                            <th>
+                                <div class="cell-container">
+                                    {{'short_proj_desc'| translate}}
+                                </div>
+                            </th>
+                        <tr>
+                    </thead>
+                    <tbody ng-repeat="dataSet in model.dataSets| orderBy: ['category', 'thematicArea', 'supportType', 'order']"
+                           ng-init="deId = dataSet.dataElements[0].id"
+                           ng-if="dataSet.dataElements && dataSet.dataElements.length && dataSet.dataElements.length === 1">                
+                        <tr ng-repeat="(key, value) in filteredReportData[deId]">
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">
+                                    {{dataSet.category}}
+                                </div>                        
+                            </td>
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">                        
+                                    {{dataSet.thematicArea}}
+                                </div>
+                            </td>
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">
+                                    {{dataSet.supportType}}
+                                </div>                    
+                            </td>
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">
+                                    {{dataSet.displayName}}
+                                </div>                    
+                            </td>
+                            <td>
+                                <div class="cell-container">
+                                    {{key}}
+                                </div>
+                            </td>
+                            <td ng-if="co.name !== 'Action conducted'" ng-repeat="co in model.categoryOptionGroups| orderBy: 'order'"> 
+                                <div class="cell-container">
+                                    <span ng-if="co.dimensionEntryMode === 'SINGLE'">
+                                        {{reportData.mappedValues[deId][key][co.id]}}
+                                    </span>
+                                    <span ng-if="co.dimensionEntryMode === 'MULTIPLE'">
+                                        {{reportData.mappedValues[deId][key][co.id].join(', ')}}
+                                    </span>                            
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-container" ng-bind-html="reportData.comments[deId][key].comment"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="dhis2-table" ng-if="!model.filterEmptyRows">
+                    <thead>
+                        <tr>
+                            <th ng-repeat="header in model.staticHeaders">
+                                <div class="cell-container">
+                                    {{header}}
+                                </div>                        
+                            </th>
+                            <th>
+                                <div class="cell-container">
+                                    {{model.instanceCategory.displayName}}
+                                </div>
+                            </th>
+                            <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
+                                <div class="cell-container">
+                                    {{categoryOptionGroup.shortName}}
+                                </div>
+                            </th>
+                            <th>
+                                <div class="cell-container">
+                                    {{'short_proj_desc'| translate}}
+                                </div>
+                            </th>
+                        <tr>
+                    </thead>
+                    <tbody ng-repeat="dataSet in model.dataSets| orderBy: ['category', 'thematicArea', 'supportType', 'order']"
+                           ng-init="deId = dataSet.dataElements[0].id"
+                           ng-if="dataSet.dataElements && dataSet.dataElements.length && dataSet.dataElements.length === 1">                
+                        <tr ng-repeat="(key, value) in reportData.mappedValues[deId]">
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">
+                                    {{dataSet.category}}
+                                </div>                        
+                            </td>
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">                        
+                                    {{dataSet.thematicArea}}
+                                </div>
+                            </td>
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">
+                                    {{dataSet.supportType}}
+                                </div>                    
+                            </td>
+                            <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
+                                <div class="cell-container">
+                                    {{dataSet.displayName}}
+                                </div>                    
+                            </td>
+                            <td>
+                                <div class="cell-container">
+                                    {{key}}
+                                </div>
+                            </td>
+                            <td ng-if="co.name !== 'Action conducted'" ng-repeat="co in model.categoryOptionGroups| orderBy: 'order'"> 
+                                <div class="cell-container">
+                                    <span ng-if="co.dimensionEntryMode === 'SINGLE'">
+                                        {{reportData.mappedValues[deId][key][co.id]}}
+                                    </span>
+                                    <span ng-if="co.dimensionEntryMode === 'MULTIPLE'">
+                                        {{reportData.mappedValues[deId][key][co.id].join(', ')}}
+                                    </span>                            
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-container" ng-bind-html="reportData.comments[deId][key].comment"></div>                        
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-sm-12" ng-if="reportData.noDataExists">
+            <div class="alert alert-info">
+                {{'no_data_exists'| translate}}
+            </div>
+        </div>
     </div>
-    <div class="col-sm-12 small-vertical-spacing" id="exportTable">
-        <table class="dhis2-table" ng-if="model.filterEmptyRows">
-            <thead>
-                <tr>
-                    <th ng-repeat="header in model.staticHeaders">
-                        <div class="cell-container">
-                            {{header}}
-                        </div>                        
-                    </th>
-                    <th>
-                        <div class="cell-container">
-                            {{model.instanceCategory.displayName}}
-                        </div>
-                    </th>
-                    <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
-                        <div class="cell-container">
-                            {{categoryOptionGroup.shortName}}
-                        </div>
-                    </th>
-                    <th>
-                        <div class="cell-container">
-                            {{'short_proj_desc' | translate}}
-                        </div>
-                    </th>
-                <tr>
-            </thead>
-            <tbody ng-repeat="dataSet in model.dataSets | orderBy: ['category', 'thematicArea', 'supportType', 'order']"
-                   ng-init="deId = dataSet.dataElements[0].id"
-                   ng-if="dataSet.dataElements && dataSet.dataElements.length && dataSet.dataElements.length === 1">                
-                <tr ng-repeat="(key, value) in filteredReportData[deId]">
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">
-                            {{dataSet.category}}
-                        </div>                        
-                    </td>
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">                        
-                            {{dataSet.thematicArea}}
-                        </div>
-                    </td>
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">
-                            {{dataSet.supportType}}
-                        </div>                    
-                    </td>
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">
-                            {{dataSet.displayName}}
-                        </div>                    
-                    </td>
-                    <td>
-                        <div class="cell-container">
-                            {{key}}
-                        </div>
-                    </td>
-                    <td ng-if="co.name !== 'Action conducted'" ng-repeat="co in model.categoryOptionGroups | orderBy: 'order'"> 
-                        <div class="cell-container">
-                            <span ng-if="co.dimensionEntryMode === 'SINGLE'">
-                                {{reportData.mappedValues[deId][key][co.id]}}
-                            </span>
-                            <span ng-if="co.dimensionEntryMode === 'MULTIPLE'">
-                                {{reportData.mappedValues[deId][key][co.id].join(', ')}}
-                            </span>                            
-                        </div>
-                    </td>
-                    <td>
-                        <div class="cell-container" ng-bind-html="reportData.comments[deId][key].comment"></div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        
-        
-        <table class="dhis2-table" ng-if="!model.filterEmptyRows">
-            <thead>
-                <tr>
-                    <th ng-repeat="header in model.staticHeaders">
-                        <div class="cell-container">
-                            {{header}}
-                        </div>                        
-                    </th>
-                    <th>
-                        <div class="cell-container">
-                            {{model.instanceCategory.displayName}}
-                        </div>
-                    </th>
-                    <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
-                        <div class="cell-container">
-                            {{categoryOptionGroup.shortName}}
-                        </div>
-                    </th>
-                    <th>
-                        <div class="cell-container">
-                            {{'short_proj_desc' | translate}}
-                        </div>
-                    </th>
-                <tr>
-            </thead>
-            <tbody ng-repeat="dataSet in model.dataSets | orderBy: ['category', 'thematicArea', 'supportType', 'order']"
-                   ng-init="deId = dataSet.dataElements[0].id"
-                   ng-if="dataSet.dataElements && dataSet.dataElements.length && dataSet.dataElements.length === 1">                
-                <tr ng-repeat="(key, value) in reportData.mappedValues[deId]">
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">
-                            {{dataSet.category}}
-                        </div>                        
-                    </td>
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">                        
-                            {{dataSet.thematicArea}}
-                        </div>
-                    </td>
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">
-                            {{dataSet.supportType}}
-                        </div>                    
-                    </td>
-                    <td ng-if="$index === 0" rowspan="{{getPropertyCount(reportData.mappedValues[deId])}}">
-                        <div class="cell-container">
-                            {{dataSet.displayName}}
-                        </div>                    
-                    </td>
-                    <td>
-                        <div class="cell-container">
-                            {{key}}
-                        </div>
-                    </td>
-                    <td ng-if="co.name !== 'Action conducted'" ng-repeat="co in model.categoryOptionGroups | orderBy: 'order'"> 
-                        <div class="cell-container">
-                            <span ng-if="co.dimensionEntryMode === 'SINGLE'">
-                                {{reportData.mappedValues[deId][key][co.id]}}
-                            </span>
-                            <span ng-if="co.dimensionEntryMode === 'MULTIPLE'">
-                                {{reportData.mappedValues[deId][key][co.id].join(', ')}}
-                            </span>                            
-                        </div>
-                    </td>
-                    <td>
-                        <div class="cell-container" ng-bind-html="reportData.comments[deId][key].comment"></div>                        
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div ng-if="!reportData.reportReady">        
+        <div class="col-sm-12">
+            <img src="../images/ajax-loader-bar.gif" alt="{{'in_progress'| translate}}"/><br>
+            {{'generating_report'| translate}}
+        </div>        
     </div>
 </div>
