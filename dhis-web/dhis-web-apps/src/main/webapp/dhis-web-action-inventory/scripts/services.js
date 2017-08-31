@@ -405,27 +405,39 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
 .service('CompletenessService', function($http, ActionMappingUtils) {   
     
     return {        
-        get: function( ds, ou, startDate, endDate, children ){
-            var promise = $http.get('../api/completeDataSetRegistrations?dataSet='+ds+'&orgUnit='+ou+'&startDate='+startDate+'&endDate='+endDate+'&children='+children).then(function(response){
+        get: function( ds, ou, period, children ){
+            var promise = $http.get('../api/completeDataSetRegistrations?dataSet='+ds+'&orgUnit='+ou+'&period='+period+'&children='+children).then(function(response){
                 return response.data;
-            }, function(response){
+            }, function(response){                
                 ActionMappingUtils.errorNotifier(response);
+                return response.data;
+            });
+            return promise;
+        },
+        saveLatest: function( dsr ){
+            var promise = $http.post('../api/completeDataSetRegistrations', dsr ).then(function(response){
+                return response.data;
+            }, function(response){                
+                ActionMappingUtils.errorNotifier(response);
+                return response.data;
             });
             return promise;
         },
         save: function( ds, pe, ou, cc, cp, multiOu){
-            var promise = $http.post('../api/completeDataSetRegistrations?ds='+ ds + '&pe=' + pe + '&ou=' + ou + '&cc=' + cc + '&cp=' + cp + '&multiOu=' + multiOu ).then(function(response){
+            var promise = $http.post('../api/25/completeDataSetRegistrations?ds='+ ds + '&pe=' + pe + '&ou=' + ou + '&cc=' + cc + '&cp=' + cp + '&multiOu=' + multiOu ).then(function(response){
                 return response.data;
-            }, function(response){
+            }, function(response){                
                 ActionMappingUtils.errorNotifier(response);
+                return response.data;
             });
             return promise;
         },
         delete: function( ds, pe, ou, cc, cp, multiOu){
-            var promise = $http.delete('../api/completeDataSetRegistrations?ds='+ ds + '&pe=' + pe + '&ou=' + ou + '&cc=' + cc + '&cp=' + cp + '&multiOu=' + multiOu ).then(function(response){
+            var promise = $http.delete('../api/25/completeDataSetRegistrations?ds='+ ds + '&pe=' + pe + '&ou=' + ou + '&cc=' + cc + '&cp=' + cp + '&multiOu=' + multiOu ).then(function(response){
                 return response.data;
-            }, function(response){
+            }, function(response){                
                 ActionMappingUtils.errorNotifier(response);
+                return response.data;
             });
             return promise;
         }
@@ -898,10 +910,10 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     return {        
         getReportData: function(reportParams, reportData, mappedOptionCombosById){            
             var def = $q.defer();            
-            reportData.comments = {};            
+            reportData.comments = {};
             DataValueService.getDataValueSet( reportParams.url ).then(function( response ){
                 if( response && response.dataValues && reportData.reportType ){                    
-                    if( reportData.reportType.id === 'SUMMARY' ){
+                    if( reportData.reportType.id === 'SUMMARY' || reportData.reportType.id  === 'AGENCY_COMPLETENESS' ){
                         reportData = getSummaryReport( response, reportData, mappedOptionCombosById );
                     }
                     else /*if( reportData.reportType.id === 'CNA' || reportData.reportType.id === 'ALIGNED_INVESTMENT' )*/{

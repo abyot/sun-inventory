@@ -99,10 +99,12 @@ public class DefaultChartService
 
     private static final String TREND_PREFIX = "Trend - ";
 
-    private static final Color[] COLORS = { Color.decode( "#88be3b" ), Color.decode( "#3b6286" ),
-        Color.decode( "#b7404c" ), Color.decode( "#ff9f3a" ), Color.decode( "#968f8f" ), Color.decode( "#b7409f" ),
-        Color.decode( "#ffda64" ), Color.decode( "#4fbdae" ), Color.decode( "#b78040" ), Color.decode( "#676767" ),
-        Color.decode( "#6a33cf" ), Color.decode( "#4a7833" ) };
+    private static final Color[] COLORS = { 
+    	Color.decode( "#ffd700" ), Color.decode( "#ff8c00" ), Color.decode( "#8b2500" ), Color.decode( "#cdcd00" ), 
+    	Color.decode( "#551a8b" ), Color.decode( "#458b00" ), Color.decode( "#00b2ee" ), Color.decode( "#104e8b" ), 
+    	Color.decode( "#191970" ), Color.decode( "#ee3b3b" ), Color.decode( "#458b74" ), Color.decode( "#838b8b" ), 
+    	Color.decode( "#8a2be2" ), Color.decode( "#cd5b45" ), Color.decode( "#6495ed" ), Color.decode( "#8b4500" ), 
+    	Color.decode( "#8b3a62" ), Color.decode( "#607b8b" ), Color.decode( "#00868b" ), Color.decode( "#8b1a1a" ) };
 
     private static final Color COLOR_TRANSPARENT = new Color( 255, 255, 255, 0 );
     private static final Color COLOR_LIGHT_GRAY = Color.decode( "#dddddd" );

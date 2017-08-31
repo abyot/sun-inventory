@@ -75,6 +75,7 @@ import org.hisp.dhis.webapi.service.ContextService;
 import org.hisp.dhis.webapi.utils.ContextUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -463,6 +464,7 @@ public class CompleteDataSetRegistrationController
     @ApiVersion( { DhisApiVersion.ALL, DhisApiVersion.DEFAULT } )
     @RequestMapping( method = RequestMethod.DELETE )
     @ResponseStatus( HttpStatus.NO_CONTENT )
+    @PreAuthorize( "hasRole('ALL') or hasRole('F_DATASET_DELETE_COMPLETENESS')" )
     public void deleteCompleteDataSetRegistration(
         @RequestParam Set<String> ds,
         @RequestParam String pe,

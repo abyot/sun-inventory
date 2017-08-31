@@ -17,6 +17,7 @@
                                 <ui-select ng-required="true"
                                            name="foo" 
                                            ng-model="dataValues[de.id][categoryOptionGroup.id]" 
+                                           ng-disabled="dataSetCompleteness[model.selectedDataSet.id][model.selectedAttributeOptionCombo]"
                                            theme="select2" 
                                            style="width:100%;">
                                     <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass(innerForm.foo)" class="form-control-ui-select" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
@@ -27,7 +28,9 @@
                             <span ng-if="categoryOptionGroup.dimensionEntryMode === 'MULTIPLE'">
                                 <ui-select array-required
                                            name="foo" 
-                                           multiple ng-model="dataValues[de.id][categoryOptionGroup.id]" 
+                                           multiple 
+                                           ng-model="dataValues[de.id][categoryOptionGroup.id]" 
+                                           ng-disabled="dataSetCompleteness[model.selectedDataSet.id][model.selectedAttributeOptionCombo]"
                                            theme="bootstrap"
                                            ng-style="getInputNotifcationClass(innerForm.foo) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
                                     <ui-select-match allow-clear="true" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
@@ -57,7 +60,8 @@
                               maxlength="{{MAXCHARSLEN}}"
                               name="comment"
                               ng-required="true"
-                              ng-model="dataValues[de.id].comment"
+                              ng-model="dataValues[de.id].comment" 
+                              ng-disabled="dataSetCompleteness[model.selectedDataSet.id][model.selectedAttributeOptionCombo]"
                               class="form-control"
                               ng-style="getInputNotifcationClass(outerForm.comment) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
                     </textarea>
@@ -77,7 +81,7 @@
 
                 <button type="button" 
                         class="btn btn-primary small-horizontal-spacing"  
-                        ng-disabled="isEmpty()"
+                        ng-disabled="isEmpty() || dataSetCompleteness[model.selectedDataSet.id][model.selectedAttributeOptionCombo]"
                         ng-click="saveData()">
                     {{'save'| translate}}
                 </button>
@@ -90,7 +94,7 @@
 
                 <button type="button" 
                         class="btn btn-danger pull-right add-small-right-padding" 
-                        ng-disabled="isEmpty(true)"
+                        ng-disabled="isEmpty(true) || dataSetCompleteness[model.selectedDataSet.id][model.selectedAttributeOptionCombo]"
                         ng-click="deleteData()">
                     {{'delete'| translate}}
                 </button>

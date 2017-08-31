@@ -83,7 +83,7 @@ var d2Services = angular.module('d2Services', ['ngResource'])
     };
 
     return {
-        getUserAuthorities: function (roles) {
+        getUserAuthorities: function (roles) {            
             var auth = getAuthorities(roles);
             var authority = {};
             authority.canDeleteEvent = auth['F_TRACKED_ENTITY_DATAVALUE_DELETE'] || auth['ALL'] ? true : false;
@@ -94,6 +94,7 @@ var d2Services = angular.module('d2Services', ['ngResource'])
             authority.canEnrollTei = auth['F_PROGRAM_ENROLLMENT'] || auth['ALL'] ? true : false;
             authority.canUnEnrollTei = auth['F_PROGRAM_UNENROLLMENT'] || auth['ALL'] ? true : false;
             authority.canAdministerDashboard = auth['F_PROGRAM_DASHBOARD_CONFIG_ADMIN'] || auth['ALL'] ? true : false;
+            authority.canDeleteDataSetCompleteness = auth['F_DATASET_DELETE_COMPLETENESS'] || auth['ALL'] ? true : false;
             return authority;
         }
     };

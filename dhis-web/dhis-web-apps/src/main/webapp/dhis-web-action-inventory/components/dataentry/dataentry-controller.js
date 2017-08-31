@@ -20,14 +20,16 @@ sunInventory.controller('dataEntryController',
                 OrgUnitFactory,
                 ModalService,
                 DialogService,
-                ReportService) {
+                ReportService,
+                SessionStorageService,
+                AuthorityService) {
     $scope.periodOffset = 0;
     $scope.saveStatus = {};
     $scope.dataValues = {};
     $scope.selectedOrgUnit = {};
     $scope.searchOuTree = {open: false};
     $scope.showReportDiv = false;
-    $scope.icons = ActionMappingUtils.getIcons();
+    $scope.icons = ActionMappingUtils.getIcons();    
     $scope.model = {invalidDimensions: false,
                     selectedAttributeCategoryCombo: null,
                     multiDataSets: [],
@@ -105,6 +107,7 @@ sunInventory.controller('dataEntryController',
     
     //Download metadata
     downloadMetaData().then(function(){
+        $scope.userAuthority = AuthorityService.getUserAuthorities(SessionStorageService.get('USER_ROLES'));
         $scope.model.periods = [];
         $scope.model.dataSets = [];
         $scope.model.selectedDataSet = null;
@@ -293,6 +296,11 @@ sunInventory.controller('dataEntryController',
                                         $scope.model.instanceCategory = $scope.model.reportAttributeCombo.categories[i];                                        
                                     }
                                 }
+                                
+                                $scope.instanceCategoryOptions = {};
+                                angular.forEach($scope.model.instanceCategory.categoryOptions, function(co){
+                                    $scope.instanceCategoryOptions[co.displayName] = co;
+                                });
 
                                 $scope.model.reportPeriods = $scope.model.periods = PeriodService.getPeriods($scope.model.reportDataSet.periodType, $scope.periodOffset, $scope.model.reportDataSet.openFuturePeriods);
                                 $scope.model.selectedPeriod = $scope.model.periods[0];
@@ -303,6 +311,8 @@ sunInventory.controller('dataEntryController',
                                 $scope.model.staticHeaders.push($translate.instant('support_type'));
                                 $scope.model.staticHeaders.push($translate.instant('action'));
                                 
+                                $scope.model.reversedStaticHeaders = angular.copy( $scope.model.staticHeaders ).reverse();
+                                
                             }
                             
                             $scope.model.reportTypes = [];
@@ -311,8 +321,8 @@ sunInventory.controller('dataEntryController',
                             $scope.model.reportTypes.push({id: 'LOGO_MAP', name: $translate.instant('logo_map_agencies')});                            
                             $scope.model.reportTypes.push({id: 'CNA', name: $translate.instant('cnas')});
                             $scope.model.reportTypes.push({id: 'ALIGNED_INVESTMENT', name: $translate.instant('align_invest')});
+                            $scope.model.reportTypes.push({id: 'AGENCY_COMPLETENESS', name: $translate.instant('agency_completness')});                            
                             $scope.model.selectedReport = $scope.model.reportTypes[0];
-                            
 
                             console.log( 'Finished downloading meta-data' );
                         });
@@ -511,7 +521,7 @@ sunInventory.controller('dataEntryController',
         $scope.model.basicAuditInfo = {};
         $scope.model.basicAuditInfo.exists = false;
         $scope.saveStatus = {};
-        $scope.dataSetCompletness = {};
+        $scope.dataSetCompleteness = {};
         $scope.showReportDiv = false;
         $scope.reportData = {};
     };
@@ -583,16 +593,16 @@ sunInventory.controller('dataEntryController',
 
             CompletenessService.get( $scope.model.selectedDataSet.id, 
                                     $scope.selectedOrgUnit.id,
-                                    $scope.model.selectedPeriod.startDate,
-                                    $scope.model.selectedPeriod.endDate,
+                                    $scope.model.selectedPeriod.id,
                                     false).then(function(response){                
                 if( response && 
                         response.completeDataSetRegistrations && 
                         response.completeDataSetRegistrations.length &&
                         response.completeDataSetRegistrations.length > 0){
                     
+                    $scope.dataSetCompleteness[$scope.model.selectedDataSet.id] = {};
                     angular.forEach(response.completeDataSetRegistrations, function(cdr){
-                        $scope.dataSetCompletness[cdr.attributeOptionCombo.id] = true;
+                        $scope.dataSetCompleteness[$scope.model.selectedDataSet.id][cdr.attributeOptionCombo] = true;
                     });
                 }
             });
@@ -760,105 +770,96 @@ sunInventory.controller('dataEntryController',
         });
     };
         
-    function processCompletness( isSave ){
-        if( isSave ){
-            $scope.dataSetCompletness[$scope.model.selectedAttributeOptionCombo] = true;
+    function processCompleteness( isSave, dataSet, attOc ){
+        if( isSave ){            
+            if( !$scope.dataSetCompleteness ){
+                $scope.dataSetCompleteness = {};
+            }
+            if( !$scope.dataSetCompleteness[dataSet.id] ){
+                $scope.dataSetCompleteness[dataSet.id] = {};
+            }
+            $scope.dataSetCompleteness[dataSet.id][attOc] = true;
         }
         else{
-            delete $scope.dataSetCompletness[$scope.model.selectedAttributeOptionCombo];
+            if( $scope.dataSetCompleteness[dataSet.id] && $scope.dataSetCompleteness[dataSet.id][attOc] ){
+                delete $scope.dataSetCompleteness[dataSet.id][attOc];
+            }
         }
     };
     
-    $scope.saveCompletness = function(){
+    $scope.getAttributeOptionCombo = function( instance ){
+        return ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.mappedOptionComboIds, [instance,$scope.model.agencyCategory.selectedOption], $scope.model.reportAttributeCombo);        
+    };
+    
+    $scope.saveDataSetCompleteness = function(dataSet, attOc){
         
-        //check for form validity
-        var invalidFields = [];
-        angular.forEach($scope.model.selectedDataSet.dataElements, function(dataElement){            
-            if( dataElement.dataElementGroup && $scope.model.dataElementGroupsById[dataElement.dataElementGroup.id] ){                
-                if( !$scope.dataValues[dataElement.id] || $scope.dataValues[dataElement.id] === ''){
-                    invalidFields.push( $scope.desById[dataElement.id] );
-                }
-            }
-        });
-        
-        if( invalidFields.length > 0 ){
-            
-            var modalInstance = $modal.open({
-                templateUrl: 'components/dataentry/validation-dialog.html',
-                controller: 'ValidationDialogController',
-                windowClass: 'modal-full-window',
-                resolve: {
-                    invalidFields: function(){
-                        return invalidFields;
-                    },
-                    dataElementGroupSets: function(){
-                        return $scope.model.dataElementGroupSets;
-                    }
-                }
-            });
-
-            modalInstance.result.then(function () {
-            });            
-        }
-        else{
-            var modalOptions = {
+        var modalOptions = {
                 closeButtonText: 'no',
                 actionButtonText: 'yes',
                 headerText: 'mark_complete',
-                bodyText: 'are_you_sure_to_mark_complete'
+                bodyText: 'are_you_sure_to_save_completeness'
             };
 
-            ModalService.showModal({}, modalOptions).then(function(result){
-
-                CompletenessService.save($scope.model.selectedDataSet.id, 
-                    $scope.model.selectedPeriod.id, 
-                    $scope.selectedOrgUnit.id,
-                    $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
-                    $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                    false).then(function(response){
-
+        ModalService.showModal({}, modalOptions).then(function(result){
+            
+            var dsr = {completeDataSetRegistrations: [{dataSet: dataSet.id, organisationUnit: $scope.selectedOrgUnit.id, period: $scope.model.selectedPeriod.id, attributeOptionCombo: attOc}]};
+            CompletenessService.saveLatest(dsr).then(function(response){                
+                if( response && response.status === 'SUCCESS' ){
                     var dialogOptions = {
                         headerText: 'success',
                         bodyText: 'marked_complete'
                     };
                     DialogService.showDialog({}, dialogOptions);
-                    processCompletness(true);
+                    processCompleteness(true, dataSet, attOc);
+                }
+
+            }, function(response){
+                ActionMappingUtils.errorNotifier( response );
+            });
+        });
+    };
+    
+    $scope.deleteDataSetCompleteness = function(dataSet, instance){
+       
+        if( $scope.userAuthority.canDeleteDataSetCompleteness ) {
+            var attOc = ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.mappedOptionComboIds, [instance,$scope.model.agencyCategory.selectedOption], $scope.model.reportAttributeCombo);
+        
+            var modalOptions = {
+                closeButtonText: 'no',
+                actionButtonText: 'yes',
+                headerText: 'mark_not_complete',
+                bodyText: 'are_you_sure_to_delete_completeness'
+            };
+
+            ModalService.showModal({}, modalOptions).then(function(result){
+
+                CompletenessService.delete(dataSet.id, 
+                    $scope.model.selectedPeriod.id, 
+                    $scope.selectedOrgUnit.id,
+                    $scope.model.reportAttributeCombo.isDefault ? null : $scope.model.reportAttributeCombo.id,
+                    $scope.model.reportAttributeCombo.isDefault ? null : ActionMappingUtils.getOptionIds([instance,$scope.model.agencyCategory.selectedOption]),
+                    false).then(function(response){                
+                    if( response && response.status === 'SUCCESS' ){
+                        var dialogOptions = {
+                            headerText: 'success',
+                            bodyText: 'marked_not_complete'
+                        };
+                        DialogService.showDialog({}, dialogOptions);
+                        processCompleteness(false, dataSet, attOc);
+                    }                
 
                 }, function(response){
                     ActionMappingUtils.errorNotifier( response );
                 });
             });
         }
-    };
-    
-    $scope.deleteCompletness = function(){
-        var modalOptions = {
-            closeButtonText: 'no',
-            actionButtonText: 'yes',
-            headerText: 'mark_not_complete',
-            bodyText: 'are_you_sure_to_mark_not_complete'
-        };
-
-        ModalService.showModal({}, modalOptions).then(function(result){
-            
-            CompletenessService.delete($scope.model.selectedDataSet.id, 
-                $scope.model.selectedPeriod.id, 
-                $scope.selectedOrgUnit.id,
-                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : $scope.model.selectedAttributeCategoryCombo.id,
-                $scope.model.selectedAttributeCategoryCombo.isDefault ? null : ActionMappingUtils.getOptionIds($scope.model.selectedOptions),
-                false).then(function(response){
-                
-                var dialogOptions = {
-                    headerText: 'success',
-                    bodyText: 'marked_not_complete'
-                };
-                DialogService.showDialog({}, dialogOptions);
-                processCompletness(false);
-                
-            }, function(response){
-                ActionMappingUtils.errorNotifier( response );
-            });
-        });        
+        else{
+            var dialogOptions = {
+                headerText: 'info',
+                bodyText: 'missing_authority_delete_completeness'
+            };
+            DialogService.showDialog({}, dialogOptions);
+        }                
     };
     
     $scope.getOptionComboByName = function(option1, option2, cc){        
@@ -880,7 +881,7 @@ sunInventory.controller('dataEntryController',
     };
     
     $scope.reportParamsReady = function(){        
-        if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'SUMMARY' ){
+        if( $scope.model.selectedReport && ( $scope.model.selectedReport.id === 'SUMMARY' || $scope.model.selectedReport.id === 'AGENCY_COMPLETENESS' ) ){
             if( $scope.selectedOrgUnit && $scope.selectedOrgUnit.id &&
                     $scope.model.selectedPeriod && $scope.model.selectedPeriod.id && 
                     $scope.model.agencyCategory && $scope.model.agencyCategory.selectedOption){
@@ -978,14 +979,14 @@ sunInventory.controller('dataEntryController',
                     
                     $scope.reportData.reportType = $scope.model.selectedReport;
                     
-                    $scope.reportData.allValues = {};
+                    $scope.reportData.allValues = {};                    
                     angular.forEach($scope.model.dataSets, function(ds){
                         var deId = ds.dataElements[0].id;
                         $scope.reportData.allValues[deId] = {};
                         angular.forEach($scope.model.agencyCategory.categoryOptions, function(o){
                             $scope.reportData.allValues[deId][o.displayName] = {};
                             angular.forEach($scope.model.instanceCategory.categoryOptions, function(i){
-                                $scope.reportData.allValues[deId][o.displayName][i.displayName] = {};
+                                $scope.reportData.allValues[deId][o.displayName][i.displayName] = {};                                
                             });
                         });
                     });
@@ -993,138 +994,175 @@ sunInventory.controller('dataEntryController',
                     ReportService.getReportData( reportParams, $scope.reportData, $scope.model.mappedOptionCombosById ).then(function(response){                        
                         $scope.reportData = response;
                         $scope.emptyRowExists = false;
-                        if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'SUMMARY' ){
-                            if( response && response.mappedValues ){
-                                $scope.filteredReportData = {};
-                                
-                                angular.forEach(dataSets[0].dataElements, function(de){
-                                    if( !$scope.reportData.mappedValues[de.id] ){
-                                        $scope.reportData.mappedValues[de.id] = {};
-                                        $scope.reportData.mappedValues[de.id][$scope.model.instanceCategory.categoryOptions[0].displayName] = {};
-                                        $scope.emptyRowExists = true;
+                        $scope.dataSetCompletedBy = {};
+                        $scope.completenessExists = false;
+                        if( $scope.model.selectedReport ){
+                            if( $scope.model.selectedReport.id === 'SUMMARY' || $scope.model.selectedReport.id === 'AGENCY_COMPLETENESS' ){
+                                if( response && response.mappedValues ){
+                                    $scope.filteredReportData = {};
+                                    var dataSetsWithData = [];
+                                    angular.forEach($scope.model.dataSets, function(ds){
+                                        if( ds.dataElements && ds.dataElements.length === 1 ){
+                                            var de = ds.dataElements[0];
+                                            if( !$scope.reportData.mappedValues[de.id] ){
+                                                $scope.reportData.mappedValues[de.id] = {};
+                                                $scope.reportData.mappedValues[de.id][$scope.model.instanceCategory.categoryOptions[0].displayName] = {};
+                                                $scope.emptyRowExists = true;
+                                            }
+                                            else{                                    
+                                                $scope.filteredReportData[de.id] = $scope.reportData.mappedValues[de.id];
+                                                dataSetsWithData.push( ds.id );
+                                            }
+                                        }                                    
+                                    });
+                                    
+                                    if( dataSetsWithData.length > 0 ){
+                                        CompletenessService.get( $.map(dataSetsWithData, function(ds){return ds;}).join(','), $scope.selectedOrgUnit.id, $scope.model.selectedPeriod.id, false).then(function(response){
+                                            if( response && 
+                                                    response.completeDataSetRegistrations && 
+                                                    response.completeDataSetRegistrations.length &&
+                                                    response.completeDataSetRegistrations.length > 0){
+
+                                                angular.forEach(response.completeDataSetRegistrations, function(cdr){                                            
+                                                    if( !$scope.dataSetCompleteness ){
+                                                        $scope.dataSetCompleteness = {};
+                                                    }
+                                                    if( !$scope.dataSetCompleteness[cdr.dataSet] ){
+                                                        $scope.dataSetCompleteness[cdr.dataSet] = {};
+                                                    }
+
+                                                    if( !$scope.dataSetCompletedBy ){
+                                                        $scope.dataSetCompletedBy = {};
+                                                    }
+                                                    if( !$scope.dataSetCompletedBy[cdr.dataSet] ){
+                                                        $scope.dataSetCompletedBy[cdr.dataSet] = {};
+                                                    }
+                                                    $scope.dataSetCompletedBy[cdr.dataSet][cdr.attributeOptionCombo] = cdr.storedBy;
+                                                    $scope.dataSetCompleteness[cdr.dataSet][cdr.attributeOptionCombo] = true;
+                                                });
+                                                $scope.completenessExists = true;
+                                            }
+                                        });
                                     }
-                                    else{                                    
-                                        $scope.filteredReportData[de.id] = $scope.reportData.mappedValues[de.id];
+                                }
+                            }                            
+                            else if( $scope.model.selectedReport.id === 'CNA' ){
+                                $scope.model.cnaCols = [];
+                                angular.forEach($scope.locationHeader.categoryOptions, function(h){
+                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(o){                                    
+                                        $scope.model.cnaCols.push(angular.copy( angular.extend(o,{parent: h})));
+                                    });
+                                });
+
+                                $scope.cnaData = {};
+                                angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                    $scope.cnaData[ag.displayName] = {};
+                                    angular.forEach($scope.cnaRow.categoryOptions, function(op){
+                                        $scope.cnaData[ag.displayName][op.name] = [];
+                                    });
+                                });
+
+                                for( var k in $scope.reportData.allValues ){
+                                    if( $scope.reportData.allValues.hasOwnProperty( k ) ){
+                                        var obj = $scope.reportData.allValues[k];                                    
+                                        angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                            angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                                if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {
+                                                    if( $scope.cnaRow && $scope.cnaRow.categoryOptions && $scope.cnaRow.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] && obj[ag.displayName][ins.displayName][$scope.cnaRow.id]){                                                    
+                                                        angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(val){
+                                                            $scope.cnaData[ag.displayName][val] = _.union($scope.cnaData[ag.displayName][val], obj[ag.displayName][ins.displayName][$scope.locationHeader.id]);
+                                                        });
+                                                    }
+                                                }
+                                            });
+                                        });
                                     }
-                                });
-                            }
-                        }
-                        else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'CNA' ){
-                            $scope.model.cnaCols = [];
-                            angular.forEach($scope.locationHeader.categoryOptions, function(h){
-                                angular.forEach($scope.model.agencyCategory.categoryOptions, function(o){                                    
-                                    $scope.model.cnaCols.push(angular.copy( angular.extend(o,{parent: h})));
-                                });
-                            });
-                            
-                            $scope.cnaData = {};
-                            angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
-                                $scope.cnaData[ag.displayName] = {};
-                                angular.forEach($scope.cnaRow.categoryOptions, function(op){
-                                    $scope.cnaData[ag.displayName][op.name] = [];
-                                });
-                            });
-                            
-                            for( var k in $scope.reportData.allValues ){
-                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){
-                                    var obj = $scope.reportData.allValues[k];                                    
-                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
-                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
-                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {
-                                                if( $scope.cnaRow && $scope.cnaRow.categoryOptions && $scope.cnaRow.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] && obj[ag.displayName][ins.displayName][$scope.cnaRow.id]){                                                    
-                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(val){
-                                                        $scope.cnaData[ag.displayName][val] = _.union($scope.cnaData[ag.displayName][val], obj[ag.displayName][ins.displayName][$scope.locationHeader.id]);
-                                                    });
-                                                }
-                                            }
-                                        });
-                                    });
                                 }
                             }
-                        }
-                        else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'ALIGNED_INVESTMENT' ){
-                            $scope.cnaInvestData = {};
-                            $scope.nnpInvestData = {};
-                            
-                            angular.forEach($scope.cnaRow.categoryOptions, function(op){                                
-                                $scope.cnaInvestData[op.name] = {};
-                                angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
-                                    $scope.cnaInvestData[op.name][h.name] = 0;
-                                });                                
-                            });
-                            
-                            angular.forEach($scope.nnpRow.categoryOptions, function(op){                                
-                                $scope.nnpInvestData[op.name] = {};
-                                angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
-                                    $scope.nnpInvestData[op.name][h.name] = 0;
-                                });                                
-                            });
-                            
-                            for( var k in $scope.reportData.allValues ){
-                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){
-                                    var obj = $scope.reportData.allValues[k];                                    
-                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
-                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
-                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) && obj[ag.displayName][ins.displayName][$scope.investmentHeader.id] ) {
-                                                var val = obj[ag.displayName][ins.displayName][$scope.investmentHeader.id];
-                                                if( obj[ag.displayName][ins.displayName][$scope.cnaRow.id] ){
-                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(v){
-                                                        $scope.cnaInvestData[v][val]++;
-                                                    });
+                            else if( $scope.model.selectedReport.id === 'ALIGNED_INVESTMENT' ){
+                                $scope.cnaInvestData = {};
+                                $scope.nnpInvestData = {};
+
+                                angular.forEach($scope.cnaRow.categoryOptions, function(op){                                
+                                    $scope.cnaInvestData[op.name] = {};
+                                    angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
+                                        $scope.cnaInvestData[op.name][h.name] = 0;
+                                    });                                
+                                });
+
+                                angular.forEach($scope.nnpRow.categoryOptions, function(op){                                
+                                    $scope.nnpInvestData[op.name] = {};
+                                    angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
+                                        $scope.nnpInvestData[op.name][h.name] = 0;
+                                    });                                
+                                });
+
+                                for( var k in $scope.reportData.allValues ){
+                                    if( $scope.reportData.allValues.hasOwnProperty( k ) ){
+                                        var obj = $scope.reportData.allValues[k];                                    
+                                        angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                            angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                                if( !angular.equals(obj[ag.displayName][ins.displayName], {}) && obj[ag.displayName][ins.displayName][$scope.investmentHeader.id] ) {
+                                                    var val = obj[ag.displayName][ins.displayName][$scope.investmentHeader.id];
+                                                    if( obj[ag.displayName][ins.displayName][$scope.cnaRow.id] ){
+                                                        angular.forEach(obj[ag.displayName][ins.displayName][$scope.cnaRow.id], function(v){
+                                                            $scope.cnaInvestData[v][val]++;
+                                                        });
+                                                    }
+
+                                                    if( obj[ag.displayName][ins.displayName][$scope.nnpRow.id] ){
+                                                        angular.forEach(obj[ag.displayName][ins.displayName][$scope.nnpRow.id], function(v){
+                                                            $scope.nnpInvestData[v][val]++;
+                                                        });
+                                                    }
                                                 }
-                                                
-                                                if( obj[ag.displayName][ins.displayName][$scope.nnpRow.id] ){
-                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.nnpRow.id], function(v){
-                                                        $scope.nnpInvestData[v][val]++;
-                                                    });
-                                                }
-                                            }
+                                            });
                                         });
-                                    });
+                                    }
                                 }
                             }
-                        }
-                        else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'LOGO_MAP' ){                            
-                            $scope.agencyData = {};
-                            angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
-                                $scope.agencyData[ag.displayName] = [];
-                            });
-                            
-                            for( var k in $scope.reportData.allValues ){
-                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){                                    
-                                    var obj = $scope.reportData.allValues[k];                                    
-                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){                                        
-                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
-                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
-                                                if( $scope.locationHeader && $scope.locationHeader.id && $scope.locationHeader.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] ){
-                                                    $scope.agencyData[ag.displayName] = _.union($scope.agencyData[ag.displayName], obj[ag.displayName][ins.displayName][$scope.locationHeader.id]);
+                            else if( $scope.model.selectedReport.id === 'LOGO_MAP' ){                            
+                                $scope.agencyData = {};
+                                angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
+                                    $scope.agencyData[ag.displayName] = [];
+                                });
+
+                                for( var k in $scope.reportData.allValues ){
+                                    if( $scope.reportData.allValues.hasOwnProperty( k ) ){                                    
+                                        var obj = $scope.reportData.allValues[k];                                    
+                                        angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){                                        
+                                            angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                                if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
+                                                    if( $scope.locationHeader && $scope.locationHeader.id && $scope.locationHeader.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] ){
+                                                        $scope.agencyData[ag.displayName] = _.union($scope.agencyData[ag.displayName], obj[ag.displayName][ins.displayName][$scope.locationHeader.id]);
+                                                    }
                                                 }
-                                            }
+                                            });
                                         });
-                                    });
+                                    }
                                 }
                             }
-                        }
-                        else if( $scope.model.selectedReport && $scope.model.selectedReport.id === 'NUM_AGENCIES' ){                            
-                            $scope.regionData = {};
-                            angular.forEach($scope.locationHeader.categoryOptions, function(l){
-                                $scope.regionData[l.name] = [];
-                            });
-                            
-                            for( var k in $scope.reportData.allValues ){
-                                if( $scope.reportData.allValues.hasOwnProperty( k ) ){                                    
-                                    var obj = $scope.reportData.allValues[k];                                    
-                                    angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){                                        
-                                        angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
-                                            if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
-                                                if( $scope.locationHeader && $scope.locationHeader.id && $scope.locationHeader.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] ){                                                    
-                                                    angular.forEach(obj[ag.displayName][ins.displayName][$scope.locationHeader.id], function(r){                                                        
-                                                        $scope.regionData[r] = _.union($scope.regionData[r], [ag.displayName]);
-                                                    });
+                            else if( $scope.model.selectedReport.id === 'NUM_AGENCIES' ){                            
+                                $scope.regionData = {};
+                                angular.forEach($scope.locationHeader.categoryOptions, function(l){
+                                    $scope.regionData[l.name] = [];
+                                });
+
+                                for( var k in $scope.reportData.allValues ){
+                                    if( $scope.reportData.allValues.hasOwnProperty( k ) ){                                    
+                                        var obj = $scope.reportData.allValues[k];                                    
+                                        angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){                                        
+                                            angular.forEach($scope.model.instanceCategory.categoryOptions, function(ins){                                            
+                                                if( !angular.equals(obj[ag.displayName][ins.displayName], {}) ) {                                                
+                                                    if( $scope.locationHeader && $scope.locationHeader.id && $scope.locationHeader.categoryOptions.length && obj[ag.displayName][ins.displayName][$scope.locationHeader.id] ){                                                    
+                                                        angular.forEach(obj[ag.displayName][ins.displayName][$scope.locationHeader.id], function(r){                                                        
+                                                            $scope.regionData[r] = _.union($scope.regionData[r], [ag.displayName]);
+                                                        });
+                                                    }
                                                 }
-                                            }
+                                            });
                                         });
-                                    });
+                                    }
                                 }
                             }
                         }

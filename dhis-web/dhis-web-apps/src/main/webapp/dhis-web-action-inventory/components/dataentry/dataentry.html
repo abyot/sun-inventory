@@ -306,23 +306,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!--<div class="row small-vertical-spacing">
-                                <div class="col-sm-4">                            
-                                    {{'report_types'| translate}}
-                                </div>
-                                <div class="col-sm-8">
-                                    <ui-select ng-model="model.selectedReport"                                        
-                                               theme="select2"
-                                               style="width:100%;">
-                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes && model.reportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
-                                        <ui-select-choices  repeat="rt in model.reportTypes | filter: $select.search | limitTo:maxOptionSize">
-                                            <span ng-bind-html="rt.name | highlight: $select.search"></span>
-                                        </ui-select-choices>
-                                    </ui-select>
-                                </div>
-                            </div>-->
-                            
+                                                        
                             <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && model.selectedReport.id === 'SUMMARY' && category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
                                 <div class="row small-vertical-spacing">
                                     <div class="col-sm-4">                            
@@ -353,30 +337,13 @@
                                         ng-click="showReport(true)">                                         
                                     {{'generate_report'| translate}}
                                 </button>
-                                <button type="button" 
-                                        ng-if="model.selectedReport.id === 'SUMMARY'"
-                                        class="btn btn-success small-horizontal-spacing" 
-                                        ng-disabled="true"                                        
-                                        ng-click="saveCompletness()">
-                                    {{'agency_data_complete'| translate}}
-                                </button>
-                                <!--<button type="button" 
-                                        class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
-                                        ng-disabled="true"
-                                        ng-click="deleteCompletness()">
-                                    {{'mark_not_complete'| translate}}
-                                </button>-->
                             </div>
                         </div>
 
                     </div>
 
                     <!-- report begins -->                    
-                    <div ng-if="model.selectedReport.id === 'SUMMARY'" ng-include="'components/dataentry/reports/summary.html'"></div>
-                    <div ng-if="model.selectedReport.id === 'CNA'" ng-include="'components/dataentry/reports/cna.html'"></div>
-                    <div ng-if="model.selectedReport.id === 'ALIGNED_INVESTMENT'" ng-include="'components/dataentry/reports/align-invest.html'"></div>
-                    <div ng-if="model.selectedReport.id === 'LOGO_MAP'" ng-include="'components/dataentry/reports/logo-map.html'"></div>
-                    <div ng-if="model.selectedReport.id === 'NUM_AGENCIES'" ng-include="'components/dataentry/reports/region-agency.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'SUMMARY'" ng-include="'components/dataentry/completeness/review-submit.html'"></div>                    
                     <!-- report ends -->
 
                 </tab>
@@ -466,7 +433,7 @@
                                 </div>
                             </div>
                             
-                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && model.selectedReport.id === 'SUMMARY' && category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
+                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && (model.selectedReport.id === 'SUMMARY' || model.selectedReport.id === 'AGENCY_COMPLETENESS') && category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
                                 <div class="row small-vertical-spacing">
                                     <div class="col-sm-4">                            
                                         {{category.displayName}}
@@ -507,6 +474,7 @@
                     <div ng-if="model.selectedReport.id === 'ALIGNED_INVESTMENT'" ng-include="'components/dataentry/reports/align-invest.html'"></div>
                     <div ng-if="model.selectedReport.id === 'LOGO_MAP'" ng-include="'components/dataentry/reports/logo-map.html'"></div>
                     <div ng-if="model.selectedReport.id === 'NUM_AGENCIES'" ng-include="'components/dataentry/reports/region-agency.html'"></div>
+                    <div ng-if="model.selectedReport.id === 'AGENCY_COMPLETENESS'" ng-include="'components/dataentry/reports/dataset-completeness.html'"></div>
                     <!-- report ends -->
 
                 </tab>
