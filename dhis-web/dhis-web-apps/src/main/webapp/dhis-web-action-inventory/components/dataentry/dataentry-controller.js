@@ -780,7 +780,7 @@ sunInventory.controller('dataEntryController',
             }
             $scope.dataSetCompleteness[dataSet.id][attOc] = true;
         }
-        else{
+        else{            
             if( $scope.dataSetCompleteness[dataSet.id] && $scope.dataSetCompleteness[dataSet.id][attOc] ){
                 delete $scope.dataSetCompleteness[dataSet.id][attOc];
             }
@@ -803,7 +803,7 @@ sunInventory.controller('dataEntryController',
         ModalService.showModal({}, modalOptions).then(function(result){
             
             var dsr = {completeDataSetRegistrations: [{dataSet: dataSet.id, organisationUnit: $scope.selectedOrgUnit.id, period: $scope.model.selectedPeriod.id, attributeOptionCombo: attOc}]};
-            CompletenessService.saveLatest(dsr).then(function(response){                
+            CompletenessService.save(dsr).then(function(response){                
                 if( response && response.status === 'SUCCESS' ){
                     var dialogOptions = {
                         headerText: 'success',
@@ -839,14 +839,12 @@ sunInventory.controller('dataEntryController',
                     $scope.model.reportAttributeCombo.isDefault ? null : $scope.model.reportAttributeCombo.id,
                     $scope.model.reportAttributeCombo.isDefault ? null : ActionMappingUtils.getOptionIds([instance,$scope.model.agencyCategory.selectedOption]),
                     false).then(function(response){                
-                    if( response && response.status === 'SUCCESS' ){
-                        var dialogOptions = {
-                            headerText: 'success',
-                            bodyText: 'marked_not_complete'
-                        };
-                        DialogService.showDialog({}, dialogOptions);
-                        processCompleteness(false, dataSet, attOc);
-                    }                
+                    var dialogOptions = {
+                        headerText: 'success',
+                        bodyText: 'marked_not_complete'
+                    };
+                    DialogService.showDialog({}, dialogOptions);
+                    processCompleteness(false, dataSet, attOc);                
 
                 }, function(response){
                     ActionMappingUtils.errorNotifier( response );

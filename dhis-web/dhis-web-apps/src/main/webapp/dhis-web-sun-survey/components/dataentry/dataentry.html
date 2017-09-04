@@ -166,15 +166,15 @@
                                 <button type="button" 
                                         class="btn btn-primary small-horizontal-spacing small-vertical-spacing" 
                                         ng-disabled="!model.selectedDataSet || !model.selectedPeriod"
-                                        ng-if="!dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                                        ng-click="saveCompletness()">
+                                        ng-if="!dataSetCompleteness[model.selectedAttributeOptionCombo]" 
+                                        ng-click="saveCompleteness()">
                                     {{'mark_complete'| translate}}
                                 </button>
                                 <button type="button" 
                                         class="btn btn-danger small-horizontal-spacing small-vertical-spacing" 
                                         ng-disabled="!model.selectedDataSet || !model.selectedPeriod"
-                                        ng-if="dataSetCompletness[model.selectedAttributeOptionCombo]" 
-                                        ng-click="deleteCompletness()">
+                                        ng-if="dataSetCompleteness[model.selectedAttributeOptionCombo]" 
+                                        ng-click="deleteCompleteness()">
                                     {{'mark_not_complete'| translate}}
                                 </button>                    
                                 <a class="cursor-pointer small-horizontal-spacing small-vertical-spacing"                        
@@ -193,10 +193,10 @@
             <p ng-if="!model.showReportDiv" class="btn-description">
                 <span class="bold">{{'view_data_as_table' | translate}}:</span>  {{'view_data_as_table_desc' | translate}}
             </p>
-            <p ng-if="!dataSetCompletness[model.selectedAttributeOptionCombo]" class="btn-description">
+            <p ng-if="!dataSetCompleteness[model.selectedAttributeOptionCombo]" class="btn-description">
                 <span class="bold">{{'mark_complete' | translate}}:</span>  {{'mark_complete_desc' | translate}}
             </p>
-            <p ng-if="dataSetCompletness[model.selectedAttributeOptionCombo]" class="btn-description">
+            <p ng-if="dataSetCompleteness[model.selectedAttributeOptionCombo]" class="btn-description">
                 <span class="bold">{{'mark_not_complete' | translate}}:</span>  {{'mark_not_complete_desc' | translate}}
             </p>
         </div>

@@ -483,25 +483,22 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
 
 .service('CompletenessService', function($http, ActionMappingUtils) {   
     
-    return {        
-        get: function( ds, ou, startDate, endDate, children ){
-            var promise = $http.get('../api/completeDataSetRegistrations?dataSet='+ds+'&orgUnit='+ou+'&startDate='+startDate+'&endDate='+endDate+'&children='+children).then(function(response){
+    return {   
+        get: function( ds, ou, period, children ){
+            var promise = $http.get('../api/completeDataSetRegistrations?dataSet='+ds+'&orgUnit='+ou+'&period='+period+'&children='+children).then(function(response){
                 return response.data;
-            }, function(response){
+            }, function(response){                
                 ActionMappingUtils.errorNotifier(response);
+                return response.data;
             });
             return promise;
         },
-        save: function( ds, pe, ou, cc, cp, multiOu){
-            
-            var url = 'ds='+ ds + '&pe=' + pe + '&ou=' + ou;            
-            if( cc && cp ){
-                url += '&cc=' + cc + '&cp=' + cp;
-            }            
-            var promise = $http.post( '../api/completeDataSetRegistrations?' + url + '&multiOu=' + multiOu ).then(function(response){
+        save: function( dsr ){
+            var promise = $http.post('../api/completeDataSetRegistrations', dsr ).then(function(response){
                 return response.data;
-            }, function(response){
+            }, function(response){                
                 ActionMappingUtils.errorNotifier(response);
+                return response.data;
             });
             return promise;
         },
