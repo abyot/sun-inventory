@@ -44,24 +44,25 @@ dhis2.metadata.chunk = function( array, size ){
 };
 
 dhis2.metadata.processMetaDataAttribute = function( obj )
-{
+{    
     if(!obj){
         return;
     }
     
     if(obj.attributeValues){
         for(var i=0; i<obj.attributeValues.length; i++){
-            if(obj.attributeValues[i].value && obj.attributeValues[i].attribute && obj.attributeValues[i].attribute.code && obj.attributeValues[i].attribute.valueType){
-            	if( obj.attributeValues[i].attribute.valueType === 'BOOLEAN' ){
-                    obj[obj.attributeValues[i].attribute.code] = obj.attributeValues[i].value === 'true' ? true : false;
+            if(obj.attributeValues[i].value && obj.attributeValues[i].attribute && obj.attributeValues[i].attribute.code && obj.attributeValues[i].attribute.valueType){                
+            	if( obj.attributeValues[i].attribute.valueType === 'BOOLEAN' || obj.attributeValues[i].attribute.valueType === 'TRUE_ONLY' ){
+                    if( obj.attributeValues[i].value === 'true' ){
+                        obj[obj.attributeValues[i].attribute.code] = true;
+                    }                    
             	}
             	else if( obj.attributeValues[i].attribute.valueType === 'NUMBER' && obj.attributeValues[i].value ){
                     obj[obj.attributeValues[i].attribute.code] = parseInt( obj.attributeValues[i].value );
             	}
                 else{
                     obj[obj.attributeValues[i].attribute.code] = obj.attributeValues[i].value;
-                }
-                
+                }                
             }
         }
     }

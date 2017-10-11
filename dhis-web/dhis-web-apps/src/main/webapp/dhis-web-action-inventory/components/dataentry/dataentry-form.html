@@ -3,9 +3,7 @@
     <div ng-repeat="de in model.selectedDataSet.dataElements">
 
         <table class="table table-bordered">
-            <tbody ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" 
-                ng-init="ocos = (model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {categoryOptionGroup: {id: categoryOptionGroup.id}})"
-                ng-if="!categoryOptionGroup.actionConducted">
+            <tbody ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'" ng-if="!categoryOptionGroup.actionConducted">
                 <tr>
                     <td class="cursor-pointer col-sm-4" ng-if="categoryOptionGroup.description" ng-click="categoryOptionGroup.showDescription = !categoryOptionGroup.showDescription">                        
                         <i class="fa fa-info-circle custom-icon-size" aria-hidden="true"></i>                        
@@ -21,10 +19,11 @@
                                            theme="select2" 
                                            style="width:100%;">
                                     <ui-select-match allow-clear="true" ng-class="getInputNotifcationClass(innerForm.foo)" class="form-control-ui-select" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
-                                    <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize | dimensionOptionFilter:selectedOrgUnit">
+                                    <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {'displayName': $select.search, 'categoryOptionGroup': {'id': categoryOptionGroup.id}} | limitTo:maxOptionSize | dimensionOptionFilter:selectedOrgUnit">
                                         <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                     </ui-select-choices>
-                                </ui-select>                            </span>
+                                </ui-select>
+                            </span>
                             <span ng-if="categoryOptionGroup.dimensionEntryMode === 'MULTIPLE'">
                                 <ui-select array-required
                                            name="foo" 
@@ -34,7 +33,7 @@
                                            theme="bootstrap"
                                            ng-style="getInputNotifcationClass(innerForm.foo) === 'input-pending' ? {'background-color': '#fffe8c !important'} : {}">
                                     <ui-select-match allow-clear="true" placeholder="{{model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos && model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$item.displayName}}</ui-select-match>
-                                    <ui-select-choices repeat="oco in ocos | filter: $select.search | limitTo:maxOptionSize | dimensionOptionFilter:selectedOrgUnit">
+                                    <ui-select-choices repeat="oco in model.mappedCategoryCombos[de.categoryCombo.id].categoryOptionCombos | filter: {'displayName': $select.search, 'categoryOptionGroup': {'id': categoryOptionGroup.id}} | limitTo:maxOptionSize | dimensionOptionFilter:selectedOrgUnit">
                                         <span ng-bind-html="oco.displayName | highlight: $select.search"></span>
                                     </ui-select-choices>
                                 </ui-select>
