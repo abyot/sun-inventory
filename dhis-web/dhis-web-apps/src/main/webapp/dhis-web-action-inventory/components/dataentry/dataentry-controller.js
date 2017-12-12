@@ -134,7 +134,7 @@ sunInventory.controller('dataEntryController',
                 $scope.model.thematicAreas = [];
 
                 angular.forEach(dataElementGroupSets, function(degs){                    
-                    if( degs.displayName.indexOf(' - Category') !== -1 ){
+                    //if( degs.displayName.indexOf(' - Category') !== -1 ){
                         var ordr = 0;                        
                         angular.forEach(degs.dataElementGroups, function(deg){                            
                             deg = dhis2.metadata.processMetaDataAttribute( deg );
@@ -190,7 +190,7 @@ sunInventory.controller('dataEntryController',
                                 });
                             }
                         });
-                    }
+                    //}
                 });
                 
                 var optionGroupByMembers = [];
@@ -229,27 +229,32 @@ sunInventory.controller('dataEntryController',
                                     return sortedOptions.indexOf( coc.displayName );
                                 });
 
-                                if( cc.code && cc.code === 'ActionInventoryDimensions' ){
-                                    for(var i=0; i< cc.categoryOptionCombos.length; i++){
-                                        cc.categoryOptionCombos[i].order = i;
-                                        $scope.model.mappedOptionCombos[cc.categoryOptionCombos[i].displayName] = cc.categoryOptionCombos[i];
-                                        $scope.model.mappedOptionCombosById[cc.categoryOptionCombos[i].id] = cc.categoryOptionCombos[i];
-                                        var og = optionGroupByMembers[cc.categoryOptionCombos[i].displayName];
-                                        if( og ){                                    
-                                            cc.categoryOptionCombos[i].categoryOptionGroup = og;
-                                            if( !orderedOptionGroup[og.id] ){
-                                                orderedOptionGroup[og.id] = i;
-                                            }
-                                        }
-                                    }                                   
+                                if( cc.code ){
                                     
-                                    angular.forEach($scope.model.categoryOptionGroups, function(cog){
-                                        angular.forEach(cog.categoryOptions, function(o){                                            
-                                            if( $scope.model.mappedOptionCombos[o.name] && $scope.model.mappedOptionCombos[o.name].order ){
-                                                o.order = $scope.model.mappedOptionCombos[o.name].order;
-                                            } 
+                                    cc.code = cc.code.toLowerCase();
+                                    
+                                    if( cc.code === 'actioninventorydimensions' ){
+                                        for(var i=0; i< cc.categoryOptionCombos.length; i++){
+                                            cc.categoryOptionCombos[i].order = i;
+                                            $scope.model.mappedOptionCombos[cc.categoryOptionCombos[i].displayName] = cc.categoryOptionCombos[i];
+                                            $scope.model.mappedOptionCombosById[cc.categoryOptionCombos[i].id] = cc.categoryOptionCombos[i];
+                                            var og = optionGroupByMembers[cc.categoryOptionCombos[i].displayName];
+                                            if( og ){                                    
+                                                cc.categoryOptionCombos[i].categoryOptionGroup = og;
+                                                if( !orderedOptionGroup[og.id] ){
+                                                    orderedOptionGroup[og.id] = i;
+                                                }
+                                            }
+                                        }                                   
+
+                                        angular.forEach($scope.model.categoryOptionGroups, function(cog){
+                                            angular.forEach(cog.categoryOptions, function(o){                                            
+                                                if( $scope.model.mappedOptionCombos[o.name] && $scope.model.mappedOptionCombos[o.name].order ){
+                                                    o.order = $scope.model.mappedOptionCombos[o.name].order;
+                                                } 
+                                            });
                                         });
-                                    });
+                                    }                                    
                                 }
                             }
 
@@ -288,14 +293,17 @@ sunInventory.controller('dataEntryController',
                             
                                 $scope.model.reportAttributeCombo = $scope.model.selectedAttributeCategoryCombo = $scope.model.mappedCategoryCombos[$scope.model.reportDataSet.categoryCombo.id];
 
-                                for(var i=0; i<$scope.model.reportAttributeCombo.categories.length; i++ ){
-                                    if( $scope.model.reportAttributeCombo.categories[i].displayName === 'Agency' ){
-                                        $scope.model.agencyCategory = $scope.model.reportAttributeCombo.categories[i];                                        
-                                    }                                    
-                                    if( $scope.model.reportAttributeCombo.categories[i].displayName === 'Action Instance' ){
-                                        $scope.model.instanceCategory = $scope.model.reportAttributeCombo.categories[i];                                        
+                                angular.forEach($scope.model.reportAttributeCombo.categories, function(cat){
+                                    if( cat.code ){
+                                        cat.code = cat.code.toLowerCase();
+                                        if( cat.code === 'agency' ){
+                                            $scope.model.agencyCategory = cat;
+                                        }
+                                        else if( cat.code === 'actioninstance' ){
+                                            $scope.model.instanceCategory = cat;
+                                        }
                                     }
-                                }
+                                });
                                 
                                 $scope.instanceCategoryOptions = {};
                                 angular.forEach($scope.model.instanceCategory.categoryOptions, function(co){

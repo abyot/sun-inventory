@@ -101,7 +101,7 @@
                                     <div ng-repeat="category in model.selectedAttributeCategoryCombo.categories" ng-if="category.displayName !== 'Agency' && model.selectedAttributeCategoryCombo && !model.selectedAttributeCategoryCombo.isDefault && !model.invalidDimensions">                
                                         <div class="row small-vertical-spacing">
                                             <div class="col-sm-4">
-                                                <span ng-if="category.code === 'ActionInstance'">
+                                                <span ng-if="category.code === 'actioninstance'">
                                                     <i class="fa fa-question-circle custom-icon-size reset-color" tooltip="{{'action_instance_definition'| translate}}" tooltip-placement="bottom" tooltip-class="custom-tooltip-class"></i>
                                                 </span>                            
                                                 {{category.displayName}}
@@ -181,7 +181,7 @@
                                         </div>
                                     </div>
 
-                                    <div ng-repeat="category in model.selectedAttributeCategoryCombo.categories" ng-if="category.displayName === 'Agency' && model.selectedAttributeCategoryCombo && !model.selectedAttributeCategoryCombo.isDefault && !model.invalidDimensions">                
+                                    <div ng-repeat="category in model.selectedAttributeCategoryCombo.categories" ng-if="category.code === 'agency' && model.selectedAttributeCategoryCombo && !model.selectedAttributeCategoryCombo.isDefault && !model.invalidDimensions">                
                                         <div class="row small-vertical-spacing">
                                             <div class="col-sm-4">                            
                                                 {{category.displayName}}
@@ -307,7 +307,7 @@
                                 </div>
                             </div>
                                                         
-                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && model.selectedReport.id === 'SUMMARY' && category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
+                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && model.selectedReport.id === 'SUMMARY' && category.code === 'agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
                                 <div class="row small-vertical-spacing">
                                     <div class="col-sm-4">                            
                                         {{category.displayName}}
@@ -433,7 +433,7 @@
                                 </div>
                             </div>
                             
-                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && (model.selectedReport.id === 'SUMMARY' || model.selectedReport.id === 'AGENCY_COMPLETENESS') && category.displayName === 'Agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
+                            <div ng-repeat="category in model.reportAttributeCombo.categories" ng-if="model.selectedReport && (model.selectedReport.id === 'SUMMARY' || model.selectedReport.id === 'AGENCY_COMPLETENESS') && category.code === 'agency' && model.reportAttributeCombo && !model.reportAttributeCombo.isDefault">
                                 <div class="row small-vertical-spacing">
                                     <div class="col-sm-4">                            
                                         {{category.displayName}}
