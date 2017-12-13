@@ -155,9 +155,9 @@
                                                 <ui-select ng-model="model.selectedPeriod" 
                                                            theme="select2"                                 
                                                            style="width:100%;">
-                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                                    <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
                                                     <ui-select-choices  repeat="period in model.periods | filter: $select.search | limitTo:maxOptionSize">
-                                                        <span ng-bind-html="period.name | highlight: $select.search"></span>
+                                                        <span ng-bind-html="period.displayName | highlight: $select.search"></span>
                                                     </ui-select-choices>
                                                 </ui-select>
                                                 <span class="input-group-btn">        
@@ -281,9 +281,9 @@
                                         <ui-select ng-model="model.selectedPeriod" 
                                                    theme="select2"                                 
                                                    style="width:100%;">
-                                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
                                             <ui-select-choices  repeat="period in model.reportPeriods | filter: $select.search | limitTo:maxOptionSize">
-                                                <span ng-bind-html="period.name | highlight: $select.search"></span>
+                                                <span ng-bind-html="period.displayName | highlight: $select.search"></span>
                                             </ui-select-choices>
                                         </ui-select>
                                         <span class="input-group-btn">        
@@ -391,9 +391,9 @@
                                         <ui-select ng-model="model.selectedPeriod" 
                                                    theme="select2"                                 
                                                    style="width:100%;">
-                                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                            <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.periods && model.periods.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
                                             <ui-select-choices  repeat="period in model.reportPeriods | filter: $select.search | limitTo:maxOptionSize">
-                                                <span ng-bind-html="period.name | highlight: $select.search"></span>
+                                                <span ng-bind-html="period.displayName | highlight: $select.search"></span>
                                             </ui-select-choices>
                                         </ui-select>
                                         <span class="input-group-btn">        
@@ -425,9 +425,9 @@
                                     <ui-select ng-model="model.selectedReport"                                        
                                                theme="select2"
                                                style="width:100%;">
-                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes && model.reportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.name|| $select.selected}}</ui-select-match>
+                                        <ui-select-match allow-clear="true" class="form-control-ui-select" placeholder="{{model.reportTypes && model.reportTypes.length > 0 ? 'select_or_search' : 'empty'| translate}}">{{$select.selected.displayName|| $select.selected}}</ui-select-match>
                                         <ui-select-choices  repeat="rt in model.reportTypes | filter: $select.search | limitTo:maxOptionSize">
-                                            <span ng-bind-html="rt.name | highlight: $select.search"></span>
+                                            <span ng-bind-html="rt.displayName | highlight: $select.search"></span>
                                         </ui-select-choices>
                                     </ui-select>
                                 </div>

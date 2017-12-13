@@ -21,7 +21,7 @@
                                     {{model.instanceCategory.displayName}}
                                 </div>
                             </th>
-                            <th ng-if="categoryOptionGroup.name !== 'Action conducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
+                            <th ng-if="categoryOptionGroup.code !== 'actionconducted'" ng-repeat="categoryOptionGroup in model.categoryOptionGroups| orderBy: 'order'"> 
                                 <div class="cell-container">
                                     {{categoryOptionGroup.shortName}}
                                 </div>
@@ -52,7 +52,7 @@
                                     {{key}}
                                 </div>
                             </td>
-                            <td ng-if="co.name !== 'Action conducted'" ng-repeat="co in model.categoryOptionGroups| orderBy: 'order'"> 
+                            <td ng-if="co.code !== 'actionconducted'" ng-repeat="co in model.categoryOptionGroups| orderBy: 'order'"> 
                                 <div class="cell-container">
                                     <span ng-if="co.dimensionEntryMode === 'SINGLE'">
                                         {{reportData.mappedValues[deId][key][co.id]}}

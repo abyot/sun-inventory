@@ -16,17 +16,17 @@
                             <th>                        
                             </th>
                             <th class="pull-center" ng-repeat="header in model.agencyCategory.categoryOptions">
-                                {{header.name}}
+                                {{header.displayName}}
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr ng-repeat="row in locationHeader.categoryOptions">
                             <td>
-                                {{row.name}}
+                                {{row.displayName}}
                             </td>
                             <td class="pull-center" ng-repeat="header in model.agencyCategory.categoryOptions">
-                                {{agencyDataExists(header.name, row.name)}}
+                                {{agencyDataExists(header.displayName, row.displayName)}}
                             </td>
                         </tr>
                     </tbody>

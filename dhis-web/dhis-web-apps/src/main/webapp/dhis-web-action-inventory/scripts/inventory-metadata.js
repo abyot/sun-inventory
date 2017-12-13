@@ -194,7 +194,7 @@ function filterMissingCategoryCombos( objs ){
 }
 
 function getCategoryCombos( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'categoryCombos', 'categoryCombos', '../api/categoryCombos.json', 'paging=false&fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName,categoryOptions[id,organisationUnits[id]]],categories[id,name,code,displayName,shortName,dimension,dataDimensionType,attributeValues[value,attribute[id,name,valueType,code]],categoryOptions[id,name,displayName,code,organisationUnits[id]]]', 'idb', dhis2.sunpmt.store);
+    return dhis2.metadata.getBatches( ids, batchSize, 'categoryCombos', 'categoryCombos', '../api/categoryCombos.json', 'paging=false&fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName,categoryOptions[id,organisationUnits[id]]],categories[id,code,displayName,shortName,dimension,dataDimensionType,attributeValues[value,attribute[id,displayName,valueType,code]],categoryOptions[id,displayName,code,organisationUnits[id]]]', 'idb', dhis2.sunpmt.store);
 }
 
 function getMetaCategoryOptionGroups(){
@@ -206,7 +206,7 @@ function filterMissingCategoryOptionGroups( objs ){
 }
 
 function getCategoryOptionGroups( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'categoryOptionGroups', 'categoryOptionGroups', '../api/categoryOptionGroups.json', 'paging=false&fields=id,name,shortName,attributeValues[value,attribute[id,name,code,valueType]],categoryOptions[id,name]', 'idb', dhis2.sunpmt.store);
+    return dhis2.metadata.getBatches( ids, batchSize, 'categoryOptionGroups', 'categoryOptionGroups', '../api/categoryOptionGroups.json', 'paging=false&fields=id,displayName,code,shortName,attributeValues[value,attribute[id,displayName,code,valueType]],categoryOptions[id,displayName,code]', 'idb', dhis2.sunpmt.store);
 }
 
 function getMetaDataSets(){
@@ -218,7 +218,7 @@ function filterMissingDataSets( objs ){
 }
 
 function getDataSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', '../api/dataSets.json', 'paging=false&fields=id,code,periodType,openFuturePeriods,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,description,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', '../api/dataSets.json', 'paging=false&fields=id,code,periodType,openFuturePeriods,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,displayName,valueType,code]],organisationUnits[id,displayName],dataSetElements[id,dataElement[id,code,displayName,description,attributeValues[value,attribute[id,displayName,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
 }
 
 function getMetaDataElementGroupSets(){
@@ -230,7 +230,7 @@ function filterMissingDataElementGroupSets( objs ){
 }
 
 function getDataElementGroupSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'dataElementGroupSets', 'dataElementGroupSets', '../api/dataElementGroupSets.json', 'paging=false&filter=dataDimension:eq:false&fields=id,displayName,dataElementGroups[id,displayName,attributeValues[value,attribute[id,name,valueType,code]],dataElements[id]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'dataElementGroupSets', 'dataElementGroupSets', '../api/dataElementGroupSets.json', 'paging=false&filter=dataDimension:eq:false&fields=id,displayName,dataElementGroups[id,displayName,attributeValues[value,attribute[id,displayName,valueType,code]],dataElements[id]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
 }
 
 function getMetaOptionSets(){
@@ -242,7 +242,7 @@ function filterMissingOptionSets( objs ){
 }
 
 function getOptionSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'optionSets', 'optionSets', '../api/optionSets.json', 'paging=false&fields=id,code,displayName,version,attributeValues[value,attribute[id,name,valueType,code]],options[id,name,displayName,code]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'optionSets', 'optionSets', '../api/optionSets.json', 'paging=false&fields=id,code,displayName,version,attributeValues[value,attribute[id,displayName,valueType,code]],options[id,displayName,code]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
 }
 
 function getMetaPrograms(){
@@ -254,7 +254,7 @@ function filterMissingPrograms( objs ){
 }
 
 function getPrograms( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'programs', 'programs', '../api/programs.json', 'paging=false&fields=id,displayName,attributeValues[value,attribute[id,name,valueType,code]],categoryCombo[id],organisationUnits[id,displayName],programStages[id,displayName,programStageDataElements[*,dataElement[*,optionSet[id]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'programs', 'programs', '../api/programs.json', 'paging=false&fields=id,displayName,attributeValues[value,attribute[id,displayName,valueType,code]],categoryCombo[id],organisationUnits[id,displayName],programStages[id,displayName,programStageDataElements[*,dataElement[*,optionSet[id]]]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
 }
 
 function getMetaIndicatorGroups(){
@@ -266,5 +266,5 @@ function filterMissingIndicatorGroups( objs ){
 }
 
 function getIndicatorGroups( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'indicatorGroups', 'indicatorGroups', '../api/indicatorGroups.json', 'paging=false&fields=id,displayName,attributeValues[value,attribute[id,name,valueType,code]],indicators[id,displayName,denominatorDescription,numeratorDescription,dimensionItem,numerator,denominator,annualized,dimensionType,indicatorType[id,displayName,factor,number]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'indicatorGroups', 'indicatorGroups', '../api/indicatorGroups.json', 'paging=false&fields=id,displayName,attributeValues[value,attribute[id,displayName,valueType,code]],indicators[id,displayName,denominatorDescription,numeratorDescription,dimensionItem,numerator,denominator,annualized,dimensionType,indicatorType[id,displayName,factor,number]]', 'idb', dhis2.sunpmt.store, dhis2.metadata.processObject);
 }

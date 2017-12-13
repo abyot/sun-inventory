@@ -298,7 +298,7 @@ dhis2.metadata.getMetaObject = function( id, store, url, filter, storage, db )
 dhis2.metadata.processObject = function(obj, prop){    
     var oo = {};
     _.each(_.values( obj[prop]), function(o){
-        oo[o.id] = o.name;
+        oo[o.id] = o.displayName;
     });
     obj[prop] = oo;
     return obj;

@@ -58,7 +58,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             
             p.endDate = DateUtils.formatFromApiToUser(p.endDate);
             p.startDate = DateUtils.formatFromApiToUser(p.startDate);
-            
+            p.displayName = p.name;
             if( !moment(p.startDate).isAfter(lastPeriod.startDate) &&
                 moment(p.endDate).isAfter(startingDate) ){
                 availablePeriods.push( p );
@@ -149,7 +149,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                         angular.forEach(cc.categoryOptionCombos, function(oco){
                             oco.categories = [];
                             angular.forEach(cc.categories, function(c){
-                                oco.categories.push({id: c.id, name: c.name});
+                                oco.categories.push({id: c.id, displayName: c.displayName});
                             });
                             optionCombos[oco.id] = oco;
                         });
@@ -463,60 +463,6 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     };
 })
 
-.service('StakeholderService', function($http, ActionMappingUtils) {   
-    
-    return {        
-        addCategoryOption: function( categoryOption ){
-            var promise = $http.post('../api/categoryOptions.json' , categoryOption ).then(function(response){
-                return response.data;
-            }, function(response){
-                ActionMappingUtils.errorNotifier(response);
-            });
-            return promise;
-        },
-        updateCategory: function( category ){
-            var promise = $http.put('../api/categories/' + category.id + '.json&mergeMode=MERGE', category ).then(function(response){
-                return response.data;
-            }, function(response){
-                ActionMappingUtils.errorNotifier(response);
-            });
-            return promise;
-        },
-        getCategoryCombo: function(uid){
-            var promise = $http.get('../api/categoryCombos/' + uid + '.json?fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,categoryOptions[id,name,displayName,code]]').then(function(response){
-                return response.data;
-            }, function(response){
-                ActionMappingUtils.errorNotifier(response);
-            });
-            return promise;
-        },
-        addOption: function( opt ){
-            var promise = $http.post('../api/options.json' , opt ).then(function(response){
-                return response.data;
-            }, function(response){
-                ActionMappingUtils.errorNotifier(response);
-            });
-            return promise;
-        },
-        updateOptionSet: function( optionSet ){
-            var promise = $http.put('../api/optionSets/' + optionSet.id + '.json&mergeMode=MERGE', optionSet ).then(function(response){
-                return response.data;
-            }, function(response){
-                ActionMappingUtils.errorNotifier(response);
-            });
-            return promise;
-        },
-        getOptionSet: function( uid ){
-            var promise = $http.get('../api/optionSets/' + uid + '.json?paging=false&fields=id,name,displayName,version,attributeValues[value,attribute[id,name,code]],options[id,name,displayName,code]').then(function(response){
-                return response.data;
-            }, function(response){
-                ActionMappingUtils.errorNotifier(response);
-            });
-            return promise;
-        }
-    };    
-})
-
 .service('OrgUnitService', function($http){
     var orgUnit, orgUnitPromise;
     return {
@@ -549,9 +495,9 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
         },
         getRoleHeaders: function(){
             var headers = [];            
-            headers.push({id: 'catalyst', name: $translate.instant('catalyst')});
-            headers.push({id: 'funder', name: $translate.instant('funder')});
-            headers.push({id: 'responsibleMinistry', name: $translate.instant('responsible_ministry')});
+            headers.push({id: 'catalyst', displayName: $translate.instant('catalyst')});
+            headers.push({id: 'funder', displayName: $translate.instant('funder')});
+            headers.push({id: 'responsibleMinistry', displayName: $translate.instant('responsible_ministry')});
             
             return headers;
         },
@@ -621,20 +567,6 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             den = den.split('.');            
             return {numerator: num[0], numeratorOptionCombo: num[1], denominator: den[0], denominatorOptionCombo: den[1]};
         },
-        getStakeholderCategoryFromDataSet: function(dataSet, availableCombos, existingCategories, categoryIds){
-            if( dataSet.categoryCombo && dataSet.categoryCombo.id){
-                var cc = availableCombos[dataSet.categoryCombo.id];
-                if( cc && cc.categories ){
-                    angular.forEach(cc.categories, function(c){
-                        if( c.name === 'Field Implementer' && categoryIds.indexOf( c.id )){
-                            existingCategories.push( c );
-                            categoryIds.push( c.id );
-                        }
-                    });
-                }
-            }
-            return {categories: existingCategories, categoryIds: categoryIds};
-        },
         getRequiredCols: function(availableRoles, selectedRole){
             var cols = [];
             for (var k in availableRoles[selectedRole.id]){
@@ -658,11 +590,11 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             return cols.sort();
         },
         populateOuLevels: function( orgUnit, ouLevels ){
-            var ouModes = [{name: $translate.instant('selected_level') , value: 'SELECTED', level: orgUnit.l}];
+            var ouModes = [{displayName: $translate.instant('selected_level') , value: 'SELECTED', level: orgUnit.l}];
             var limit = orgUnit.l === 1 ? 2 : 3;
             for( var i=orgUnit.l+1; i<=limit; i++ ){
                 var lvl = ouLevels[i];
-                ouModes.push({value: lvl, name: lvl + ' ' + $translate.instant('level'), level: i});
+                ouModes.push({value: lvl, displayName: lvl + ' ' + $translate.instant('level'), level: i});
             }
             var selectedOuMode = ouModes[0];            
             return {ouModes: ouModes, selectedOuMode: selectedOuMode};

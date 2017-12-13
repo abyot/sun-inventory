@@ -17,7 +17,7 @@
                                 {{'cna_report_header'| translate}}
                             </th>
                             <th class="pull-center" colspan="{{model.agencyCategory.categoryOptions.length}}" ng-repeat="header in locationHeader.categoryOptions">
-                                {{header.name}}
+                                {{header.displayName}}
                             </th>
                         </tr>
                         <tr>                
@@ -29,10 +29,10 @@
                     <tbody>
                         <tr ng-repeat="row in cnaRow.categoryOptions">
                             <td>
-                                {{row.name}}
+                                {{row.displayName}}
                             </td>
                             <td class="pull-center" ng-repeat="col in model.cnaCols">
-                                {{cnaDataExists(col.displayName, row.name, col.parent.name)}}
+                                {{cnaDataExists(col.displayName, row.displayName, col.parent.displayName)}}
                             </td>
                         </tr>
                     </tbody>

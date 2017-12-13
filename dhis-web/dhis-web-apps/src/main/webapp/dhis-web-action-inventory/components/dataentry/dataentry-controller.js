@@ -199,7 +199,7 @@ sunInventory.controller('dataEntryController',
                     angular.forEach(categoryOptionGroups, function(cog){                    
                         if( cog.dataSetDomain === 'INVENTORY' ){                        
                             angular.forEach(cog.categoryOptions, function(co){
-                                optionGroupByMembers[co.name] = cog;
+                                optionGroupByMembers[co.displayName] = cog;
                             });
                             $scope.model.categoryOptionGroups.push(cog);
 
@@ -249,8 +249,8 @@ sunInventory.controller('dataEntryController',
 
                                         angular.forEach($scope.model.categoryOptionGroups, function(cog){
                                             angular.forEach(cog.categoryOptions, function(o){                                            
-                                                if( $scope.model.mappedOptionCombos[o.name] && $scope.model.mappedOptionCombos[o.name].order ){
-                                                    o.order = $scope.model.mappedOptionCombos[o.name].order;
+                                                if( $scope.model.mappedOptionCombos[o.displayName] && $scope.model.mappedOptionCombos[o.displayName].order ){
+                                                    o.order = $scope.model.mappedOptionCombos[o.displayName].order;
                                                 } 
                                             });
                                         });
@@ -266,8 +266,7 @@ sunInventory.controller('dataEntryController',
                             }
 
                             $scope.model.mappedCategoryCombos[cc.id] = cc;
-                        });
-                        
+                        });                        
                         
                         DataSetFactory.getDataSetsByProperty( 'dataSetDomain', 'INVENTORY' ).then(function(dataSets){            
                             $scope.model.dataSets = dataSets;                
@@ -324,12 +323,12 @@ sunInventory.controller('dataEntryController',
                             }
                             
                             $scope.model.reportTypes = [];
-                            $scope.model.reportTypes.push({id: 'SUMMARY', name: $translate.instant('summary_report')});
-                            $scope.model.reportTypes.push({id: 'NUM_AGENCIES', name: $translate.instant('number_of_agencies')});
-                            $scope.model.reportTypes.push({id: 'LOGO_MAP', name: $translate.instant('logo_map_agencies')});                            
-                            $scope.model.reportTypes.push({id: 'CNA', name: $translate.instant('cnas')});
-                            $scope.model.reportTypes.push({id: 'ALIGNED_INVESTMENT', name: $translate.instant('align_invest')});
-                            $scope.model.reportTypes.push({id: 'AGENCY_COMPLETENESS', name: $translate.instant('agency_completness')});                            
+                            $scope.model.reportTypes.push({id: 'SUMMARY', displayName: $translate.instant('summary_report')});
+                            $scope.model.reportTypes.push({id: 'NUM_AGENCIES', displayName: $translate.instant('number_of_agencies')});
+                            $scope.model.reportTypes.push({id: 'LOGO_MAP', displayName: $translate.instant('logo_map_agencies')});                            
+                            $scope.model.reportTypes.push({id: 'CNA', displayName: $translate.instant('cnas')});
+                            $scope.model.reportTypes.push({id: 'ALIGNED_INVESTMENT', displayName: $translate.instant('align_invest')});
+                            $scope.model.reportTypes.push({id: 'AGENCY_COMPLETENESS', displayName: $translate.instant('agency_completness')});                            
                             $scope.model.selectedReport = $scope.model.reportTypes[0];
 
                             console.log( 'Finished downloading meta-data' );
@@ -476,15 +475,18 @@ sunInventory.controller('dataEntryController',
                         $scope.model.selectedAttributeCategoryCombo.categories.length && 
                         $scope.model.selectedAttributeCategoryCombo.categories.length > 0 ){                
                     for( var i=0; i<$scope.model.selectedAttributeCategoryCombo.categories.length; i++){
-                        if( $scope.model.selectedAttributeCategoryCombo.categories[i].displayName === 'Action Instance' ){
-                            if( $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions &&
-                                    $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions.length && 
-                                    $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions.length > 0){
-                                
-                                $scope.model.selectedAttributeCategoryCombo.categories[i].selectedOption = $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions[0];
-                            }                            
-                            break;
-                        }
+                        if( $scope.model.selectedAttributeCategoryCombo.categories[i].code ) {
+                            $scope.model.selectedAttributeCategoryCombo.categories[i].code = $scope.model.selectedAttributeCategoryCombo.categories[i].code.toLowerCase()
+                            if( $scope.model.selectedAttributeCategoryCombo.categories[i].code === 'actioninstance' ){
+                                if( $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions &&
+                                        $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions.length && 
+                                        $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions.length > 0){
+
+                                    $scope.model.selectedAttributeCategoryCombo.categories[i].selectedOption = $scope.model.selectedAttributeCategoryCombo.categories[i].categoryOptions[0];
+                                }                            
+                                break;
+                            }
+                        }                        
                     }
                 }
             }
@@ -1064,7 +1066,7 @@ sunInventory.controller('dataEntryController',
                                 angular.forEach($scope.model.agencyCategory.categoryOptions, function(ag){
                                     $scope.cnaData[ag.displayName] = {};
                                     angular.forEach($scope.cnaRow.categoryOptions, function(op){
-                                        $scope.cnaData[ag.displayName][op.name] = [];
+                                        $scope.cnaData[ag.displayName][op.displayName] = [];
                                     });
                                 });
 
@@ -1090,16 +1092,16 @@ sunInventory.controller('dataEntryController',
                                 $scope.nnpInvestData = {};
 
                                 angular.forEach($scope.cnaRow.categoryOptions, function(op){                                
-                                    $scope.cnaInvestData[op.name] = {};
+                                    $scope.cnaInvestData[op.displayName] = {};
                                     angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
-                                        $scope.cnaInvestData[op.name][h.name] = 0;
+                                        $scope.cnaInvestData[op.displayName][h.displayName] = 0;
                                     });                                
                                 });
 
                                 angular.forEach($scope.nnpRow.categoryOptions, function(op){                                
-                                    $scope.nnpInvestData[op.name] = {};
+                                    $scope.nnpInvestData[op.displayName] = {};
                                     angular.forEach($scope.investmentHeader.categoryOptions, function(h){                                
-                                        $scope.nnpInvestData[op.name][h.name] = 0;
+                                        $scope.nnpInvestData[op.displayName][h.displayName] = 0;
                                     });                                
                                 });
 
@@ -1151,7 +1153,7 @@ sunInventory.controller('dataEntryController',
                             else if( $scope.model.selectedReport.id === 'NUM_AGENCIES' ){                            
                                 $scope.regionData = {};
                                 angular.forEach($scope.locationHeader.categoryOptions, function(l){
-                                    $scope.regionData[l.name] = [];
+                                    $scope.regionData[l.displayName] = [];
                                 });
 
                                 for( var k in $scope.reportData.allValues ){
@@ -1197,10 +1199,10 @@ sunInventory.controller('dataEntryController',
         
         if( $scope.model.selectedReport ){
             if( $scope.model.selectedReport.id === 'SUMMARY' ){
-                reportName = $scope.selectedOrgUnit.displayName + '-' + $scope.model.selectedPeriod.name + '-' +  $scope.model.agencyCategory.selectedOption.displayName +'.xls';
+                reportName = $scope.selectedOrgUnit.displayName + '-' + $scope.model.selectedPeriod.displayName + '-' +  $scope.model.agencyCategory.selectedOption.displayName +'.xls';
             }
             else{
-                reportName = $scope.selectedOrgUnit.displayName + '-' + $scope.model.selectedPeriod.name + '-' +  $scope.model.selectedReport.name +'.xls';               
+                reportName = $scope.selectedOrgUnit.displayName + '-' + $scope.model.selectedPeriod.displayName + '-' +  $scope.model.selectedReport.displayName +'.xls';               
             }
         }
         

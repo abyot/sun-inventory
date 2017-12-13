@@ -19,7 +19,7 @@
                                 {{'investment_report_nnp_header'| translate}}
                             </th>
                             <th class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
-                                {{header.name}}
+                                {{header.displayName}}
                             </th>
                             <th class="pull-center">
                                 {{'total_aligned_any'| translate}}
@@ -29,13 +29,13 @@
                     <tbody>
                         <tr ng-repeat="row in nnpRow.categoryOptions">
                             <td>
-                                {{row.name}}
+                                {{row.displayName}}
                             </td>
                             <td class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
-                                {{nnpInvestData[row.name][header.name]}}
+                                {{nnpInvestData[row.displayName][header.displayName]}}
                             </td>
                             <td class="pull-center">
-                                {{getInvestTotal(nnpInvestData[row.name])}}
+                                {{getInvestTotal(nnpInvestData[row.displayName])}}
                             </td>
                         </tr>
                     </tbody>
@@ -54,7 +54,7 @@
                                 {{'investment_report_cna_header'| translate}}
                             </th>
                             <th class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
-                                {{header.name}}
+                                {{header.displayName}}
                             </th>
                             <th class="pull-center">
                                 {{'total_aligned_any'| translate}}
@@ -64,13 +64,13 @@
                     <tbody>
                         <tr ng-repeat="row in cnaRow.categoryOptions">
                             <td>
-                                {{row.name}}
+                                {{row.displayName}}
                             </td>
                             <td class="pull-center" ng-repeat="header in investmentHeader.categoryOptions">
-                                {{cnaInvestData[row.name][header.name]}}
+                                {{cnaInvestData[row.displayName][header.displayName]}}
                             </td>
                             <td class="pull-center">
-                                {{getInvestTotal(cnaInvestData[row.name])}}
+                                {{getInvestTotal(cnaInvestData[row.displayName])}}
                             </td>
                         </tr>
                     </tbody>
