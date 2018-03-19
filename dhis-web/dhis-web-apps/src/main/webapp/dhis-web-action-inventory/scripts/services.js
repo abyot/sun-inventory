@@ -739,7 +739,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             var aoco = mappedOptionCombosById[dv.attributeOptionCombo];
             if( dv.value === "1" && reportData.agency && reportData.agency.displayName && aoco && aoco.displayName ){
                 aoco = aoco.displayName.split(", ");
-                if( aoco.indexOf( reportData.agency.displayName ) !== -1 && aoco.length === 2 ){                                
+                if( aoco.indexOf( reportData.agency.displayName ) !== -1 && aoco.length === 2 ){
+                    reportData.noDataExists = false;
                     if( !mappedValues[dv.dataElement] ){
                         mappedValues[dv.dataElement] = {};
                     }
@@ -793,6 +794,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                     var coco = mappedOptionCombosById[dv.categoryOptionCombo];                                
                     if ( coco && coco.categoryOptionGroup && coco.categoryOptionGroup.id ){                                    
                         if( coco.categoryOptionGroup.actionConducted ){
+                            reportData.noDataExists = false;
                             /*if( !reportData.comments[dv.dataElement] ){
                                 reportData.comments[dv.dataElement] = {};
                                 reportData.comments[dv.dataElement][aoco[0]] = {};
@@ -813,6 +815,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                         }
                         else{
                             if( coco.categoryOptionGroup.dimensionEntryMode ){
+                                reportData.noDataExists = false;
                                 if( coco.categoryOptionGroup.dimensionEntryMode === 'SINGLE'){
                                     reportData.allValues[dv.dataElement][aoco[0]][aoco[1]][coco.categoryOptionGroup.id] = coco.displayName;
                                 }
@@ -835,6 +838,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             var def = $q.defer();            
             reportData.comments = {};
             DataValueService.getDataValueSet( reportParams.url ).then(function( response ){
+                reportData.noDataExists = true;
                 if( response && response.dataValues && reportData.reportType ){                    
                     if( reportData.reportType.id === 'SUMMARY' || reportData.reportType.id  === 'AGENCY_COMPLETENESS' ){
                         reportData = getSummaryReport( response, reportData, mappedOptionCombosById );
@@ -842,11 +846,9 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                     else /*if( reportData.reportType.id === 'CNA' || reportData.reportType.id === 'ALIGNED_INVESTMENT' )*/{
                         reportData = getCnaReport( response, reportData, mappedOptionCombosById );
                     }
-                    reportData.noDataExists = false;
                 }
                 else{                    
                     reportData.showReportFilters = false;
-                    reportData.noDataExists = true;
                 }  
 
                 reportData.reportReady = true;
