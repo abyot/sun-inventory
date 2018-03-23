@@ -677,57 +677,78 @@ sunInventory.controller('dataEntryController',
         var oldValues = angular.copy( $scope.dataValuesCopy[dataElement.id] );
         var processedCos = [];
         
-        angular.forEach($scope.model.mappedCategoryCombos[dataElement.categoryCombo.id].categoryOptionCombos, function(oco){
-            var cog = oco.categoryOptionGroup;
-            if( cog && cog.dimensionEntryMode ){
-                var val = {dataElement: dataElement.id, categoryOptionCombo: oco.id, attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, value: ''};
+        angular.forEach($scope.model.categoryOptionGroups, function(cog){
             
-                if( oco.id === $scope.model.actionConductedDimensionKey.id ){
-                    val.value = 1;
-                    val.comment = $scope.dataValues[dataElement.id].comment ? $scope.dataValues[dataElement.id].comment : "";
-                    dataValueSet.dataValues.push( val );
-                    processedCos.push( oco.id );
-                }            
-                else{
-                    if( cog.dimensionEntryMode === 'MULTIPLE' ){                
-                        if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] && $scope.dataValues[dataElement.id][cog.id].length ){
-                            for( var i=0; i<$scope.dataValues[dataElement.id][cog.id].length; i++){
-                                if( $scope.dataValues[dataElement.id][cog.id][i] && $scope.dataValues[dataElement.id][cog.id][i].id === oco.id ){
-                                    val.value = 1;
-                                    dataValueSet.dataValues.push( val );
-                                    processedCos.push( oco.id );
-                                    break;
-                                }
-                            }
-                        }
+            if( cog.actionConducted ){
+                var val = {
+                            dataElement: dataElement.id, 
+                            categoryOptionCombo: $scope.model.actionConductedDimensionKey.id, 
+                            attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, 
+                            value: ''
+                        };
+                val.value = 1;
+                val.comment = $scope.dataValues[dataElement.id].comment ? $scope.dataValues[dataElement.id].comment : "";
+                dataValueSet.dataValues.push( val );
+            }
+            else {
+                
+                switch( cog.dimensionEntryMode )
+                {
+                    case 'SINGLE':                        
+                        var newVal = $scope.dataValues[dataElement.id][cog.id];
+                        var oldVal = oldValues && oldValues[cog.id] ? oldValues[cog.id] : [];
 
-                        if( processedCos.indexOf( oco.id) === -1 ){
-                            if( oldValues && oldValues[cog.id] && oldValues[cog.id].length ){                        
-                                for( var i=0; i<oldValues[cog.id].length; i++){                            
-                                    if( oldValues[cog.id][i] && oldValues[cog.id][i].id === oco.id ){                                    
-                                        dataValueSet.dataValues.push( val );
-                                        processedCos.push( oco.id );                                
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else{
-                        if( $scope.dataValues[dataElement.id] && $scope.dataValues[dataElement.id][cog.id] ){
-                            if( $scope.dataValues[dataElement.id][cog.id].id === oco.id ){                    
-                                val.value = 1;                            
-                                dataValueSet.dataValues.push( val );
-                                processedCos.push( oco.id );                            
-                            }                        
-                        }
-
-                        if( oldValues && oldValues[cog.id] && oldValues[cog.id].id !== oco.id && processedCos.indexOf(oldValues[cog.id].id) === -1){                        
-                            val.categoryOptionCombo = oldValues[cog.id].id;
+                        if( newVal && newVal.id && $scope.model.mappedOptionCombosById[newVal.id] ){
+                            var val = {
+                                    dataElement: dataElement.id, 
+                                    categoryOptionCombo: newVal.id, 
+                                    attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, 
+                                    value: 1
+                                };
                             dataValueSet.dataValues.push( val );
-                            processedCos.push(oldValues[cog.id].id );
-                        }                    
-                    }
+                            processedCos.push( newVal.id );
+                        }
+
+                        if( oldVal && oldVal.id && $scope.model.mappedOptionCombosById[oldVal.id] && processedCos.indexOf(oldVal.id) === -1){
+                            var val = {
+                                    dataElement: dataElement.id, 
+                                    categoryOptionCombo: oldVal.id, 
+                                    attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, 
+                                    value: ""
+                                };                            
+                            dataValueSet.dataValues.push( val );
+                        }
+                        break;
+                    case 'MULTIPLE':
+                        var newVals = $scope.dataValues[dataElement.id][cog.id];                        
+                        var oldVals = oldValues && oldValues[cog.id] ? oldValues[cog.id] : [];
+
+                        angular.forEach(newVals, function(newVal){                        
+                            if( newVal.id && $scope.model.mappedOptionCombosById[newVal.id] ){
+                                var val = {
+                                        dataElement: dataElement.id, 
+                                        categoryOptionCombo: newVal.id, 
+                                        attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, 
+                                        value: 1
+                                    };
+                                dataValueSet.dataValues.push( val );
+                                processedCos.push( newVal.id );
+                            }
+                        });
+
+                        angular.forEach(oldVals, function(oldVal){                        
+                            if( oldVal.id && $scope.model.mappedOptionCombosById[oldVal.id] && processedCos.indexOf(oldVal.id) === -1){
+                                var val = {
+                                        dataElement: dataElement.id, 
+                                        categoryOptionCombo: oldVal.id, 
+                                        attributeOptionCombo: $scope.model.selectedAttributeOptionCombo, 
+                                        value: ""
+                                    };
+                                dataValueSet.dataValues.push( val );
+                                processedCos.push( oldVal.id );
+                            }
+                        });
+                        break;                    
                 }
             }
         });

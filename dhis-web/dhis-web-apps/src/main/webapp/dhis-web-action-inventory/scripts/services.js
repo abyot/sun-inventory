@@ -18,54 +18,37 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
 })
 
 /* Period generator */
-.service('PeriodService', function(DateUtils){
+.service('PeriodService', function(DateUtils, CalendarService){
     
-    this.getPeriods = function(periodType, periodOffset, futurePeriod){
-        periodOffset = angular.isUndefined(periodOffset) ? 0 : periodOffset;
-        periodOffset += futurePeriod;
+    this.getPeriods = function(periodType, periodOffset, futurePeriods){
+        futurePeriods = 1;
         
-        var availablePeriods = [];
         if(!periodType){
-            return availablePeriods;
-        }        
-
-        var pt = new PeriodType();
-        var d2Periods = pt.get(periodType).generatePeriods({offset: periodOffset, filterFuturePeriods: false, reversePeriods: true});
-        
-        if( !d2Periods || d2Periods.length && d2Periods.length < 1 ){
-            return availablePeriods;
+            return [];
         }
         
-        var currentPeriod = null, lastPeriod = {};
-        for( var i=0; i<d2Periods.length; i++){            
-            d2Periods[i].endDate = DateUtils.formatFromApiToUser(d2Periods[i].endDate);
-            d2Periods[i].startDate = DateUtils.formatFromApiToUser(d2Periods[i].startDate);
-            
-            if( moment(DateUtils.getToday()).isAfter(d2Periods[i].endDate) ){                    
-                currentPeriod = d2Periods[i];
-                break;
-            }
-        }        
+        var calendarSetting = CalendarService.getSetting();
+                
+        dhis2.period.format = calendarSetting.keyDateFormat;
         
-        if( currentPeriod ){            
-            lastPeriod.startDate = DateUtils.formatFromApiToUser( moment(currentPeriod.startDate).add(futurePeriod, 'years') );
-            lastPeriod.endDate = DateUtils.formatFromApiToUser( moment(currentPeriod.endDate).add(futurePeriod, 'years') );
-        }
+        dhis2.period.calendar = $.calendars.instance( calendarSetting.keyCalendar );
+                
+        dhis2.period.generator = new dhis2.period.PeriodGenerator( dhis2.period.calendar, dhis2.period.format );
         
-        var startingDate = DateUtils.formatFromApiToUser( moment('2016-01-01') );        
-            
-        angular.forEach(d2Periods, function(p){
-            
+        dhis2.period.picker = new dhis2.period.DatePicker( dhis2.period.calendar, dhis2.period.format );
+        
+        var d2Periods = dhis2.period.generator.generateReversedPeriods( periodType, periodOffset );
+                
+        d2Periods = dhis2.period.generator.filterOpenPeriods( periodType, d2Periods, futurePeriods, null, null );
+                
+        angular.forEach(d2Periods, function(p){            
             p.endDate = DateUtils.formatFromApiToUser(p.endDate);
             p.startDate = DateUtils.formatFromApiToUser(p.startDate);
             p.displayName = p.name;
-            if( !moment(p.startDate).isAfter(lastPeriod.startDate) &&
-                moment(p.endDate).isAfter(startingDate) ){
-                availablePeriods.push( p );
-            }
-        });        
+            p.id = p.iso;
+        });
         
-        return availablePeriods.reverse();
+        return d2Periods;        
     };
 })
 
