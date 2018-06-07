@@ -149,7 +149,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                         angular.forEach(cc.categoryOptionCombos, function(oco){
                             oco.categories = [];
                             angular.forEach(cc.categories, function(c){
-                                oco.categories.push({id: c.id, name: c.name});
+                                oco.categories.push({id: c.id, displayName: c.displayName});
                             });
                             optionCombos[oco.id] = oco;
                         });
@@ -711,7 +711,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                 var cc = availableCombos[dataSet.categoryCombo.id];
                 if( cc && cc.categories ){
                     angular.forEach(cc.categories, function(c){
-                        if( c.name === 'Field Implementer' && categoryIds.indexOf( c.id )){
+                        if( c.displayName === 'Field Implementer' && categoryIds.indexOf( c.id )){
                             existingCategories.push( c );
                             categoryIds.push( c.id );
                         }
@@ -806,7 +806,7 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
                     dv.value = parseInt( dv.value );
                 }
             }
-                        
+            
             return dv.value;
         },
         processDataSet: function( ds ){

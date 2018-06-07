@@ -227,7 +227,7 @@ function filterMissingDataSets( objs ){
 }
 
 function getDataSets( ids ){    
-    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', APIURL + 'dataSets.json', 'paging=false&fields=id,periodType,openFuturePeriods,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,name],dataSetElements[id,dataElement[id,code,displayName,displayDescription,url,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
+    return dhis2.metadata.getBatches( ids, batchSize, 'dataSets', 'dataSets', APIURL + 'dataSets.json', 'paging=false&fields=id,periodType,openFuturePeriods,displayName,version,categoryCombo[id],attributeValues[value,attribute[id,name,valueType,code]],organisationUnits[id,displayName],dataSetElements[id,dataElement[id,code,displayName,displayDescription,url,attributeValues[value,attribute[id,name,valueType,code]],description,formName,valueType,optionSetValue,optionSet[id],categoryCombo[id,isDefault,categories[id]]]]', 'idb', dhis2.sunSurvey.store, dhis2.metadata.processObject);
 }
 
 function getMetaDataElementGroupSets(){

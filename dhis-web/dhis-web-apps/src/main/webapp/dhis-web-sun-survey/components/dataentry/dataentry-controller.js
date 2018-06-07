@@ -396,6 +396,8 @@ sunSurvey.controller('dataEntryController',
             
             $scope.model.selectedAttributeOptionCombo = ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.selectedAttributeOptionCombos, $scope.model.selectedOptions, $scope.model.selectedAttributeCategoryCombo);
 
+            console.log('$scope.model.mappedCategoryCombos:  ', $scope.model.mappedCategoryCombos );
+            
             //fetch data values...
             DataValueService.getDataValueSet( dataValueSetUrl ).then(function(response){
                 if( response && response.dataValues && response.dataValues.length > 0 ){                    
