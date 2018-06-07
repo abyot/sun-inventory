@@ -42,6 +42,8 @@ $(window).load(function() {
 	
 	console.log("Loading public dashboard...");
 	
+    var url = apiBase + "api/dashboards.json?filter=publicAccess:eq:r-------&paging=false&fields=id,name,dashboardItems[:all]";
+    
 	$.ajax({
         xhrFields: {
             withCredentials: true
@@ -49,7 +51,7 @@ $(window).load(function() {
         beforeSend: function (xhr) {
             xhr.setRequestHeader('Authorization', 'Basic ' + btoa('publicdashboard:Public123'));
         },
-        url: apiBase + "api/dashboards.json?filter=publicAccess:eq:r-------&paging=false&fields=id,name,dashboardItems[:all]",
+        url: encodeURI(url),
         type: 'GET',
         success: function( data ){
         	fetchPublicDashboard( data );
