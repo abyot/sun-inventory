@@ -573,7 +573,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             return promise;
         },
         getCategoryCombo: function(uid){
-            var promise = $http.get('../api/categoryCombos/' + uid + '.json?fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,categoryOptions[id,name,displayName,code]]').then(function(response){
+            var url = '../api/categoryCombos/' + uid + '.json?fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,categoryOptions[id,name,displayName,code]]';
+            var promise = $http.get( encodeURI(url) ).then(function(response){
                 return response.data;
             }, function(response){
                 ActionMappingUtils.errorNotifier(response);
@@ -597,7 +598,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
             return promise;
         },
         getOptionSet: function( uid ){
-            var promise = $http.get('../api/optionSets/' + uid + '.json?paging=false&fields=id,name,displayName,version,attributeValues[value,attribute[id,name,code]],options[id,name,displayName,code]').then(function(response){
+            var url = '../api/optionSets/' + uid + '.json?paging=false&fields=id,name,displayName,version,attributeValues[value,attribute[id,name,code]],options[id,name,displayName,code]';
+            var promise = $http.get( encodeURI(url) ).then(function(response){
                 return response.data;
             }, function(response){
                 ActionMappingUtils.errorNotifier(response);
@@ -612,7 +614,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     return {
         get: function( uid ){
             if( orgUnit !== uid ){
-                orgUnitPromise = $http.get( '../api/organisationUnits.json?filter=path:like:/' + uid + '&fields=id,displayName,path,level,parent[id]&paging=false' ).then(function(response){
+                var url = '../api/organisationUnits.json?filter=path:like:/' + uid + '&fields=id,displayName,path,level,parent[id]&paging=false';
+                orgUnitPromise = $http.get( encodeURI(url) ).then(function(response){
                     orgUnit = response.data.id;
                     return response.data;
                 });

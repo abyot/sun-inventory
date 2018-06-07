@@ -77,7 +77,7 @@ dhis2.metadata.getMetaObjectIds = function( objNames, url, filter )
     var def = $.Deferred();
     var objs = [];
     $.ajax({
-        url: url,
+        url: encodeURI(url),
         type: 'GET',
         data:filter
     }).done( function(response) {
@@ -193,7 +193,7 @@ dhis2.metadata.getMetaObjects = function( store, objs, url, filter, storage, db,
     var def = $.Deferred();
 
     $.ajax({
-        url: url,
+        url: encodeURI(url),
         type: 'GET',
         data: filter
     }).done(function(response) {
@@ -270,7 +270,7 @@ dhis2.metadata.getMetaObject = function( id, store, url, filter, storage, db )
     }
         
     $.ajax({
-        url: url,
+        url: encodeURI(url),
         type: 'GET',            
         data: filter
     }).done( function( response ){
