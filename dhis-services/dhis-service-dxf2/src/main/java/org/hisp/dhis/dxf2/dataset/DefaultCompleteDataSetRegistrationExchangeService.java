@@ -57,6 +57,7 @@ import org.hisp.dhis.i18n.I18n;
 import org.hisp.dhis.i18n.I18nManager;
 import org.hisp.dhis.importexport.ImportStrategy;
 import org.hisp.dhis.jdbc.batchhandler.CompleteDataSetRegistrationBatchHandler;
+import org.hisp.dhis.message.MessageService;
 import org.hisp.dhis.organisationunit.OrganisationUnit;
 import org.hisp.dhis.organisationunit.OrganisationUnitGroup;
 import org.hisp.dhis.organisationunit.OrganisationUnitService;
@@ -132,6 +133,9 @@ public class DefaultCompleteDataSetRegistrationExchangeService
 
     @Autowired
     private CurrentUserService currentUserService;
+    
+    @Autowired
+    private MessageService messageService;
 
     // -------------------------------------------------------------------------
     // CompleteDataSetRegistrationService implementation
@@ -552,6 +556,8 @@ public class DefaultCompleteDataSetRegistrationExchangeService
                         if ( !isDryRun )
                         {
                             added = batchHandler.addObject( internalCdsr );
+                            
+                            messageService.sendCompletenessMessage( internalCdsr );
                         }
 
                         if ( isDryRun || added )
