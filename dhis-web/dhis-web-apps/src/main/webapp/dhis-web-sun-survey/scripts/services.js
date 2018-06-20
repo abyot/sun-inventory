@@ -574,7 +574,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
         },
         getCategoryCombo: function(uid){
             var url = '../api/categoryCombos/' + uid + '.json?fields=id,displayName,code,skipTotal,isDefault,categoryOptionCombos[id,displayName],categories[id,name,displayName,shortName,dimension,dataDimensionType,categoryOptions[id,name,displayName,code]]';
-            var promise = $http.get( encodeURI(url) ).then(function(response){
+            url = encodeURI(url);
+            var promise = $http.get( url ).then(function(response){
                 return response.data;
             }, function(response){
                 ActionMappingUtils.errorNotifier(response);
@@ -599,7 +600,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
         },
         getOptionSet: function( uid ){
             var url = '../api/optionSets/' + uid + '.json?paging=false&fields=id,name,displayName,version,attributeValues[value,attribute[id,name,code]],options[id,name,displayName,code]';
-            var promise = $http.get( encodeURI(url) ).then(function(response){
+            url = encodeURI(url);
+            var promise = $http.get( url ).then(function(response){
                 return response.data;
             }, function(response){
                 ActionMappingUtils.errorNotifier(response);
@@ -615,7 +617,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
         get: function( uid ){
             if( orgUnit !== uid ){
                 var url = '../api/organisationUnits.json?filter=path:like:/' + uid + '&fields=id,displayName,path,level,parent[id]&paging=false';
-                orgUnitPromise = $http.get( encodeURI(url) ).then(function(response){
+                url = encodeURI(url);
+                orgUnitPromise = $http.get( url ).then(function(response){
                     orgUnit = response.data.id;
                     return response.data;
                 });

@@ -451,7 +451,8 @@ var actionMappingServices = angular.module('actionMappingServices', ['ngResource
     return {
         get: function( uid ){
             if( orgUnit !== uid ){
-                orgUnitPromise = $http.get( '../api/organisationUnits.json?filter=path:like:/' + uid + '&fields=id,displayName,path,level,parent[id]&paging=false' ).then(function(response){
+                var url = '../api/organisationUnits.json?filter=path:like:/' + uid + '&fields=id,displayName,path,level,parent[id]&paging=false';
+                orgUnitPromise = $http.get( encodeURI(url) ).then(function(response){
                     orgUnit = response.data.id;
                     return response.data;
                 });
