@@ -179,7 +179,21 @@ sunSurvey.controller('dataEntryController',
                     MetaDataFactory.getAll('dataElementGroupSets').then(function(dataElementGroupSets){                        
                         $scope.model.dataElementGroupSets = [];                        
                         angular.forEach(dataElementGroupSets, function(degs){
-                            angular.forEach(degs.dataElementGroups, function(deg){
+                            if( degs.survey ){
+                                degs.active = false;
+                                $scope.model.dataElementGroupSets.push( degs );
+                                
+                                angular.forEach(degs.dataElementGroups, function(deg){
+                                    angular.forEach(deg.dataElements, function(de){
+                                        de = dhis2.metadata.processMetaDataAttribute( de );
+                                        $scope.model.degs[de.id] = {displayName: degs.displayName, id: degs.id, code: degs.code};
+                                        $scope.model.deg[de.id] = {displayName: deg.displayName, id: deg.id, code: deg.code};
+                                    });
+
+                                    deg.dataElements = orderByFilter(deg.dataElements, '-order').reverse();
+                                });                                
+                            }
+                            /*angular.forEach(degs.dataElementGroups, function(deg){
                                 deg = dhis2.metadata.processMetaDataAttribute( deg );
                                 if( deg.survey ){                                    
                                     if( deg.survey && $scope.model.dataElementGroupSets.indexOf( degs ) === -1 ){
@@ -196,7 +210,7 @@ sunSurvey.controller('dataEntryController',
                                     deg.dataElements = orderByFilter(deg.dataElements, '-order').reverse(); 
                                 }
                                 $scope.model.dataElementGroupsById[deg.id] = deg;
-                            });
+                            });*/
                         });
                         
                         $scope.model.dataElementGroupSets = orderByFilter($scope.model.dataElementGroupSets, '-code').reverse();
@@ -395,8 +409,6 @@ sunSurvey.controller('dataEntryController',
             var dataValueSetUrl = 'dataSet=' + $scope.model.selectedDataSet.id + '&period=' + $scope.model.selectedPeriod.id + '&orgUnit=' + $scope.selectedOrgUnit.id;            
             
             $scope.model.selectedAttributeOptionCombo = ActionMappingUtils.getOptionComboIdFromOptionNames($scope.model.selectedAttributeOptionCombos, $scope.model.selectedOptions, $scope.model.selectedAttributeCategoryCombo);
-
-            console.log('$scope.model.mappedCategoryCombos:  ', $scope.model.mappedCategoryCombos );
             
             //fetch data values...
             DataValueService.getDataValueSet( dataValueSetUrl ).then(function(response){
