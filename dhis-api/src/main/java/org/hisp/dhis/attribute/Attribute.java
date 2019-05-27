@@ -43,6 +43,7 @@ import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementGroup;
+import org.hisp.dhis.dataelement.DataElementGroupSet;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.Section;
 import org.hisp.dhis.document.Document;
@@ -125,6 +126,8 @@ public class Attribute
     private boolean sectionAttribute;
 
     private boolean categoryOptionComboAttribute;
+    
+    private boolean dataElementGroupSetAttribute;
 
     private boolean mandatory;
 
@@ -148,7 +151,7 @@ public class Attribute
     @Override
     public int hashCode()
     {
-        return 31 * super.hashCode() + Objects.hash( valueType, dataElementAttribute, dataElementGroupAttribute, indicatorAttribute, indicatorGroupAttribute,
+        return 31 * super.hashCode() + Objects.hash( valueType, dataElementAttribute, dataElementGroupAttribute, dataElementGroupSetAttribute, indicatorAttribute, indicatorGroupAttribute,
             dataSetAttribute, organisationUnitAttribute, organisationUnitGroupAttribute, organisationUnitGroupSetAttribute, userAttribute, userGroupAttribute,
             programAttribute, programStageAttribute, trackedEntityAttribute, trackedEntityAttributeAttribute, categoryOptionAttribute, categoryOptionGroupAttribute,
             mandatory, unique, optionSet, optionAttribute, constantAttribute, legendSetAttribute, programIndicatorAttribute, sqlViewAttribute, sectionAttribute, categoryOptionComboAttribute );
@@ -175,6 +178,7 @@ public class Attribute
         return Objects.equals( this.valueType, other.valueType )
             && Objects.equals( this.dataElementAttribute, other.dataElementAttribute )
             && Objects.equals( this.dataElementGroupAttribute, other.dataElementGroupAttribute )
+            && Objects.equals( this.dataElementGroupSetAttribute, other.dataElementGroupSetAttribute )
             && Objects.equals( this.indicatorAttribute, other.indicatorAttribute )
             && Objects.equals( this.indicatorGroupAttribute, other.indicatorGroupAttribute )
             && Objects.equals( this.dataSetAttribute, other.dataSetAttribute )
@@ -260,6 +264,18 @@ public class Attribute
     public void setDataElementGroupAttribute( Boolean dataElementGroupAttribute )
     {
         this.dataElementGroupAttribute = dataElementGroupAttribute;
+    }
+    
+    @JsonProperty
+    @JacksonXmlProperty( namespace = DxfNamespaces.DXF_2_0 )
+    public boolean isDataElementGroupSetAttribute()
+    {
+        return dataElementGroupSetAttribute;
+    }
+
+    public void setDataElementGroupSetAttribute( boolean dataElementGroupSetAttribute )
+    {
+        this.dataElementGroupSetAttribute = dataElementGroupSetAttribute;
     }
 
     @JsonProperty
@@ -568,6 +584,7 @@ public class Attribute
 
         if ( dataElementAttribute ) klasses.add( DataElement.class );
         if ( dataElementGroupAttribute ) klasses.add( DataElementGroup.class );
+        if ( dataElementGroupSetAttribute ) klasses.add( DataElementGroupSet.class );
         if ( categoryOptionAttribute ) klasses.add( DataElementCategoryOption.class );
         if ( categoryOptionGroupAttribute ) klasses.add( CategoryOptionGroup.class );
         if ( indicatorAttribute ) klasses.add( Indicator.class );
@@ -603,6 +620,7 @@ public class Attribute
             .add( "valueType", valueType )
             .add( "dataElementAttribute", dataElementAttribute )
             .add( "dataElementGroupAttribute", dataElementGroupAttribute )
+            .add( "dataElementGroupSetAttribute", dataElementGroupSetAttribute )
             .add( "indicatorAttribute", indicatorAttribute )
             .add( "indicatorGroupAttribute", indicatorGroupAttribute )
             .add( "dataSetAttribute", dataSetAttribute )
@@ -622,7 +640,7 @@ public class Attribute
             .add( "programIndicatorAttribute", programIndicatorAttribute )
             .add( "sqlViewAttribute", sqlViewAttribute )
             .add( "sectionAttribute", sectionAttribute )
-            .add( "categoryOptionComboAttribute", categoryOptionComboAttribute )
+            .add( "categoryOptionComboAttribute", categoryOptionComboAttribute )                        
             .add( "mandatory", mandatory )
             .toString();
     }

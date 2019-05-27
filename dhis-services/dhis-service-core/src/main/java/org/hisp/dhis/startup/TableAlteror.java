@@ -790,6 +790,7 @@ public class TableAlteror
         // set attribute defaults
         executeSql( "UPDATE attribute SET dataelementattribute=false WHERE dataelementattribute IS NULL" );
         executeSql( "UPDATE attribute SET dataelementgroupattribute=false WHERE dataelementgroupattribute IS NULL" );
+        executeSql( "UPDATE attribute SET dataelementgroupsetattribute=false WHERE dataelementgroupsetattribute IS NULL" );
         executeSql( "UPDATE attribute SET indicatorattribute=false WHERE indicatorattribute IS NULL" );
         executeSql( "UPDATE attribute SET indicatorgroupattribute=false WHERE indicatorgroupattribute IS NULL" );
         executeSql( "UPDATE attribute SET organisationunitattribute=false WHERE organisationunitattribute IS NULL" );

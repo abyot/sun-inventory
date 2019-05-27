@@ -36,6 +36,7 @@ import org.hisp.dhis.dataelement.DataElement;
 import org.hisp.dhis.dataelement.DataElementCategoryOption;
 import org.hisp.dhis.dataelement.DataElementCategoryOptionCombo;
 import org.hisp.dhis.dataelement.DataElementGroup;
+import org.hisp.dhis.dataelement.DataElementGroupSet;
 import org.hisp.dhis.dataset.DataSet;
 import org.hisp.dhis.dataset.Section;
 import org.hisp.dhis.document.Document;
@@ -69,6 +70,7 @@ public interface AttributeStore
     ImmutableMap<Class<?>, String> CLASS_ATTRIBUTE_MAP = ImmutableMap.<Class<?>, String>builder()
         .put( DataElement.class, "dataElementAttribute" )
         .put( DataElementGroup.class, "dataElementGroupAttribute" )
+        .put( DataElementGroupSet.class, "dataElementGroupSetAttribute" )
         .put( Indicator.class, "indicatorAttribute" )
         .put( IndicatorGroup.class, "indicatorGroupAttribute" )
         .put( DataSet.class, "dataSetAttribute" )
