@@ -656,7 +656,22 @@ sunInventory.controller('dataEntryController',
             }
         }        
     };
-    
+
+    $scope.getReportPeriods = function(mode){        
+        if( $scope.model.reportDataSet && $scope.model.reportDataSet.periodType ){
+            if( mode === 'NXT'){
+                $scope.periodOffset = $scope.periodOffset + 1;
+                $scope.model.selectedPeriod = null;
+                $scope.model.reportPeriods = PeriodService.getPeriods($scope.model.reportDataSet.periodType, $scope.periodOffset, $scope.model.reportDataSet.openFuturePeriods);
+            }
+            else{
+                $scope.periodOffset = $scope.periodOffset - 1;
+                $scope.model.selectedPeriod = null;
+                $scope.model.reportPeriods = PeriodService.getPeriods($scope.model.reportDataSet.periodType, $scope.periodOffset, $scope.model.reportDataSet.openFuturePeriods);
+            }
+        }        
+    };            
+                
     $scope.saveData = function(){
         
         //check for form validity
